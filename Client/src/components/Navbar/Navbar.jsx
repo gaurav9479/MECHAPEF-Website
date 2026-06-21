@@ -1,19 +1,27 @@
+import { FaCog } from "react-icons/fa";
 import "./Navbar.css";
 
 const Navbar = () => {
   return (
     <nav className="navbar">
-      <div className="logo">MECHAPEF</div>
+      <div className="logo">
+        <FaCog className="logo-icon" />
+        <div className="logo-text">
+          <div className="logo-main">Mecha<span>PEF</span></div>
+          <div className="logo-sub">MNNIT</div>
+        </div>
+      </div>
 
       <ul>
-        <li>Home</li>
+        <li className="active">Home</li>
         <li>About</li>
-        <li>Domains</li>
         <li>Events</li>
-        <li>Team</li>
+        <li>Gallery</li>
+        <li>Our Team</li>
+        <li>Our Sponsors</li>
       </ul>
 
-      <button>Join Us</button>
+      <button className="contact-btn">Contact Us</button>
     </nav>
   );
 };

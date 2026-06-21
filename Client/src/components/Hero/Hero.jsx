@@ -1,33 +1,77 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { assets } from "../../assets/assets";
+import { FaArrowRight, FaUsers } from "react-icons/fa";
+import RedInclinedStrips from "../RedInclinedStrips/RedInclinedStrips";
 import "./Hero.css";
 
 const Hero = () => {
+  const containerRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
+
+  // Left text moves to the left and fades out on scroll
+  const textX = useTransform(scrollYProgress, [0, 1], [0, -800]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  // Image moves to the right and fades out on scroll
+  const imgX = useTransform(scrollYProgress, [0, 1], [0, 800]);
+  const imgOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
   return (
-    <section className="hero">
+    <div ref={containerRef} className="hero-scroll-wrapper">
+      <section className="hero">
+        <RedInclinedStrips />
+        
+        <motion.div
+          className="hero-left"
+          style={{ x: textX, opacity: textOpacity }}
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <div className="hero-badge">
+            <span className="dot"></span> EST. 2021 &bull; MNNIT ALLAHABAD
+          </div>
 
-      <motion.div
-        className="hero-left"
-        initial={{ x: -100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-      >
-        <h1>MECHAPEF</h1>
-        <p>
-          Engineering Beyond Limits
-        </p>
+          <h2>MECHANICAL</h2>
+          <h2>COMMUNITY OF MNNIT</h2>
+          <h1>MECHAPEF</h1>
 
-        <button>
-          Explore
-        </button>
-      </motion.div>
+          <p>
+            The Official Club of Mechanical and Production<br />
+            & Industrial Engineering at MNNIT Allahabad
+          </p>
 
-      <motion.img
-        src={assets.heroBot}
-        className="hero-bot"
-        initial={{ x: 200 }}
-        animate={{ x: 0 }}
-      />
-    </section>
+          <div className="hero-features">
+            <span>&bull; INSPIRING GROWTH</span>
+            <span>&bull; INNOVATION</span>
+            <span>&bull; TOGETHERNESS</span>
+          </div>
+
+          <div className="hero-buttons">
+            <button className="primary-btn">
+              EXPLORE EVENTS <FaArrowRight />
+            </button>
+            <button className="secondary-btn">
+              MEET THE TEAM <FaUsers />
+            </button>
+          </div>
+        </motion.div>
+
+        <motion.img
+          src={assets.heroBot}
+          className="hero-bot"
+          style={{ x: imgX, opacity: imgOpacity, originX: 0.50, originY: 0.50 }}
+          initial={{ x: 200, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        />
+      </section>
+    </div>
   );
 };
 
