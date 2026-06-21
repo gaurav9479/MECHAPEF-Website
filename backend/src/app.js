@@ -3,7 +3,7 @@ import 'dotenv/config';
 import {
     corsConfig,
     helmetConfig,
-    generalLimiter,
+    // generalLimiter,
     errorHandler,
     requestLogger,
     cookieParserConfig,
@@ -24,7 +24,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(helmetConfig);
 app.use(corsConfig);
 app.use(cookieParserConfig);
-app.use(generalLimiter);
+// app.use(generalLimiter);
 app.use(requestLogger);
 app.use('/api', apiRoutes);
 

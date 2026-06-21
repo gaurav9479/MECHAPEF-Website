@@ -1,0 +1,25 @@
+.about {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+}
+
+.about-text h2 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.about-text p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.7;
+  max-width: 400px;
+}
+
+.drone {
+  width: 40%;
+  max-width: 400px;
+  filter: drop-shadow(0 0 30px rgba(255, 72, 0, 0.753));
+}
