@@ -1,0 +1,48 @@
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 80px;
+}
+
+.hero-left h1 {
+  font-size: 4.5rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #ffffff 0%, #ff3c00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-left p {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 20px 0 36px;
+}
+
+.hero-left button {
+  padding: 14px 36px;
+  background: #ff3c00;
+  color: #050505;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hero-left button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 25, 0, 0.712);
+}
+
+.hero-bot {
+  width: 45%;
+  max-width: 500px;
+  filter: drop-shadow(0 0 40px rgba(255, 25, 0, 0.712));
+}
