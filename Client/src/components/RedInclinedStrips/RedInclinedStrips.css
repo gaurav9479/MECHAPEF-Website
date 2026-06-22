@@ -6,47 +6,33 @@
   height: 100%;
   overflow: hidden;
   z-index: 0;
-  pointer-events: none; /* Ensures the shapes never block clicks on underlying buttons */
+  pointer-events: none;
 }
 
-/* 1st STRIP (Right-most) */
+/* Base rules shared by all strips */
+.strip-main, .strip-secondary, .strip-third {
+  position: absolute;
+  top: -10%;
+  height: 120%;
+  transform: skewX(-25deg);
+  filter: blur(8px);
+}
+
+/* Specific widths and colors */
 .strip-main {
-  position: absolute;
-  top: -10%;
-  right: -10%; 
-  width: 30%; 
-  height: 120%;
+  width: 30%;
   background: linear-gradient(to right, #7a0006, #ff1f01);
-  transform: skewX(-25deg);
-  /* NEW: Adds the blurring effect to diffuse the edges nicely into the background */
-  filter: blur(8px); 
   box-shadow: 0 0 30px rgba(255, 31, 1, 0.2);
 }
 
-/* 2nd STRIP (Middle) */
 .strip-secondary {
-  position: absolute;
-  top: -10%;
-  right: 15%; 
-  width: 20%; 
-  height: 120%;
+  width: 20%;
   background: linear-gradient(to right, #e10712, #ff1f01);
-  transform: skewX(-25deg);
-  /* NEW: Adds the blurring effect to diffuse the edges nicely into the background */
-  filter: blur(8px); 
   box-shadow: 0 0 30px rgba(255, 31, 1, 0.2);
 }
 
-/* 3rd STRIP (Left-most) */
 .strip-third {
-  position: absolute;
-  top: -10%;
-  right: 35%; 
-  width: 30%; 
-  height: 120%;
+  width: 30%;
   background: linear-gradient(to right, #33090b, #660e03);
-  transform: skewX(-25deg);
-  /* NEW: Adds the blurring effect to diffuse the edges nicely into the background */
-  filter: blur(8px); 
   box-shadow: 0 0 30px rgba(116, 16, 3, 0.2);
 }

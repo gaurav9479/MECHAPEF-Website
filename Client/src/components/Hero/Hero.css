@@ -12,33 +12,32 @@
   justify-content: flex-start; 
   padding: 120px 0 50px 6%; 
   overflow: hidden;
-  background-color: #050505;
+  background-color: transparent;
 }
-.hero::before {
-  content: "";
+
+/* THE FIX: This is the new class that Framer Motion animates! */
+.hero-bottom-gradient {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 25%; /* Controls how far up the bottom shadow reaches */
-  /* Fades from solid background black at the absolute bottom to transparent moving up */
+  height: 25%;
   background: linear-gradient(to top, #050505 0%, #050505 15%, transparent 100%);
   pointer-events: none;
-  z-index: 2; /* Sits on the same layer as the right shadow, above the robot */
+  z-index: 2;
 }
-.hero::after {
-  content: "";
+
+
+.hero-right-gradient {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   width: 35%; 
   background: linear-gradient(to left, #050505 0%, transparent 100%);
-  
   pointer-events: none; 
   z-index: 2; 
 }
-
 
 .hero-left {
   max-width: 650px;

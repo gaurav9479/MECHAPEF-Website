@@ -2,29 +2,43 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { assets } from "../../assets/assets";
 import { FaArrowRight, FaUsers } from "react-icons/fa";
-import RedInclinedStrips from "../RedInclinedStrips/RedInclinedStrips";
+import RedStrips from "../RedInclinedStrips/RedInclinedStrips"; 
 import "./Hero.css";
 
 const Hero = () => {
   const containerRef = useRef(null);
 
-  const { scrollYProgress } = useScroll({
+  const { scrollYProgress, scrollY } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
   });
 
-  // Left text moves to the left and fades out on scroll
   const textX = useTransform(scrollYProgress, [0, 1], [0, -800]);
   const textOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
-  // Image moves to the right and fades out on scroll
   const imgX = useTransform(scrollYProgress, [0, 1], [0, 800]);
   const imgOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  // Fades from 1 to 0 instantly (between 0px and 50px of scrolling)
+  const fastFadeOpacity = useTransform(scrollY, [0, 100], [1, 0]);
 
   return (
     <div ref={containerRef} className="hero-scroll-wrapper">
       <section className="hero">
-        <RedInclinedStrips />
+        
+        <RedStrips index={0} />
+        
+        {/* Animated Bottom Gradient */}
+        <motion.div 
+          className="hero-bottom-gradient"
+          style={{ opacity: fastFadeOpacity }}
+        />
+
+        {/* NEW: Animated Right Gradient */}
+        <motion.div 
+          className="hero-right-gradient"
+          style={{ opacity: fastFadeOpacity }}
+        />
         
         <motion.div
           className="hero-left"
