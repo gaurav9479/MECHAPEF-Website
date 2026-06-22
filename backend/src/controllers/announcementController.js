@@ -1,0 +1,31 @@
+import asyncHandler from '../utils/asyncHandler.js';
+import ApiError from '../utils/ApiError.js';
+import APIResponse from '../utils/APIResponse.js';
+import Announcement from '../models/Announcement.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
+export const getAnnouncements = asyncHandler(async (req, res) => {
+    const announcements = await Announcement.find({ deletedAt: null }).sort({ priority: -1, displayOrder: 1 });
+    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { announcements }, 'Announcements fetched'));
+});
+
+export const createAnnouncement = asyncHandler(async (req, res) => {
+    const { title, description } = req.body;
+    if (!title || !description) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'title and description are required');
+    // createdBy is required by schema — for testing, use a dummy ObjectId
+    const createdBy = req.user?.userId || '000000000000000000000000';
+    const item = await Announcement.create({ ...req.body, createdBy });
+    return res.status(HTTP_STATUS.CREATED).json(new APIResponse(HTTP_STATUS.CREATED, { item }, 'Announcement created'));
+});
+
+export const updateAnnouncement = asyncHandler(async (req, res) => {
+    const item = await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!item) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Announcement not found');
+    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { item }, 'Updated'));
+});
+
+export const deleteAnnouncement = asyncHandler(async (req, res) => {
+    const item = await Announcement.findByIdAndUpdate(req.params.id, { deletedAt: new Date() }, { new: true });
+    if (!item) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Announcement not found');
+    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, {}, 'Deleted'));
+});
