@@ -1,0 +1,52 @@
+.cinematic-wrapper {
+  position: relative;
+  width: 100%;
+  /* Height is set dynamically by inline style based on number of sections */
+  background: #050505;
+}
+
+.cinematic-camera {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #050505; /* Black background to cover up normal scrolling */
+}
+
+.cinematic-bg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.cinematic-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6%;
+  z-index: 1;
+}
+
+.cinematic-left, .cinematic-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cinematic-right {
+  align-items: flex-end;
+}
+
+.cinematic-left {
+  align-items: flex-start;
+}

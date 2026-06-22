@@ -1,17 +1,19 @@
 import Navbar from "../components/Navbar/Navbar";
-import Hero from "../components/Hero/Hero";
-import About from "../components/About/About";
+import CinematicHero from "../components/CinematicHero/CinematicHero";
+import OurTeam from "../components/OurTeam/OurTeam";
 import Stats from "../components/Stats/Stats";
 import Domains from "../components/Domains/Domains";
 import Join from "../components/Join/Join";
 import Footer from "../components/Footer/Footer";
 
+
+
 const Home = () => {
   return (
     <>
       <Navbar />
-      <Hero />
-      <About />
+      <CinematicHero />
+      <OurTeam />
       <Stats />
       <Domains />
       <Join />
