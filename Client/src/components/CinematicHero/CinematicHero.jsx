@@ -14,81 +14,121 @@ import '../About/About.css';
 const CinematicHero = () => {
   const containerRef = useRef(null);
 
-  // Using "end end" means progress goes from 0 to 1 as you scroll from top to bottom of the 900vh wrapper
+  // Using "end end" means progress goes from 0 to 1 as you scroll from top to bottom of the 1200vh wrapper
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  // ================= SCROLL MATH FOR 900vh =================
-  // Each 0.05 is 45vh. Each 0.10 is 90vh.
+  // ================= SCROLL MATH FOR 1700vh =================
+  // Scene 1-3 take exact physical height as original (0 to 855vh)
+  // Gap from 855vh to 900vh
+  // Scene 4 Appears: 900vh to 1300vh (4 scrolls)
+  // Scene 4 Hold: 1300vh to 1400vh (1 scroll)\n  // Scene 4 Disappears: 1400vh to 1700vh (3 scrolls)
   
-  // --- SCENE 1: Hero Bot (0.00 to 0.10) ---
-  const scene1TextX = useTransform(scrollYProgress, [0, 0.10], [0, -1000]);
-  const scene1ImgX = useTransform(scrollYProgress, [0, 0.10], [0, 1000]);
-  const scene1Opacity = useTransform(scrollYProgress, [0, 0.10], [1, 0]);
-  const bg1Opacity = useTransform(scrollYProgress, [0, 0.10], [1, 0]);
-  const bg1Display = useTransform(scrollYProgress, (val) => val >= 0.10 ? "none" : "block");
-  const scene1PointerEvents = useTransform(scrollYProgress, (val) => val >= 0.10 ? "none" : "auto");
+  // --- SCENE 1: Hero Bot (0.00 to 0.05625) ---
+  const scene1TextX = useTransform(scrollYProgress, [0/1700, 90/1700], [0, -1000]);
+  const scene1ImgX = useTransform(scrollYProgress, [0/1700, 90/1700], [0, 1000]);
+  const scene1Opacity = useTransform(scrollYProgress, [0/1700, 90/1700], [1, 0]);
+  const bg1Opacity = useTransform(scrollYProgress, [0/1700, 90/1700], [1, 0]);
+  const bg1Display = useTransform(scrollYProgress, (val) => val >= 90/1700 ? "none" : "block");
+  const scene1PointerEvents = useTransform(scrollYProgress, (val) => val >= 90/1700 ? "none" : "auto");
 
-  // --- SCENE 2: Drone Dashboard (0.10 to 0.60) ---
-  // Left Strips Enter (0.10 to 0.15) & Exit (0.55 to 0.60)
-  const bg2Opacity = useTransform(scrollYProgress, [0.10, 0.15, 0.55, 0.60], [0, 1, 1, 0]);
-  const bg2X = useTransform(scrollYProgress, [0.10, 0.15, 0.55, 0.60], [-200, 0, 0, -200]); 
+  // --- SCENE 2: Drone Dashboard (0.05625 to 0.3375) ---
+  // Left Strips Enter (0.05625 to 0.084375) & Exit (0.309375 to 0.3375)
+  const bg2Opacity = useTransform(scrollYProgress, [90/1700, 135/1700, 495/1700, 540/1700], [0, 1, 1, 0]);
+  const bg2X = useTransform(scrollYProgress, [90/1700, 135/1700, 495/1700, 540/1700], [-200, 0, 0, -200]); 
   
-  // Drone Enters (0.15 to 0.20) & Exits (0.50 to 0.55)
-  const droneOpacity = useTransform(scrollYProgress, [0.15, 0.20, 0.50, 0.55], [0, 1, 1, 0]);
-  const droneY = useTransform(scrollYProgress, [0.15, 0.20, 0.50, 0.55], [-800, 0, 0, 800]); 
-  const droneX = useTransform(scrollYProgress, [0.15, 0.20, 0.50, 0.55], [373, 0, 0, -373]);
+  // Drone Enters (0.084375 to 0.1125) & Exits (0.28125 to 0.309375)
+  const droneOpacity = useTransform(scrollYProgress, [135/1700, 180/1700, 450/1700, 495/1700], [0, 1, 1, 0]);
+  const droneY = useTransform(scrollYProgress, [135/1700, 180/1700, 450/1700, 495/1700], [-800, 0, 0, 800]); 
+  const droneX = useTransform(scrollYProgress, [135/1700, 180/1700, 450/1700, 495/1700], [373, 0, 0, -373]);
 
-  // Cards Enter (0.20 to 0.25) & Exit (0.45 to 0.50)
-  const text2Opacity = useTransform(scrollYProgress, [0.20, 0.25, 0.45, 0.50], [0, 1, 1, 0]);
-  const card1Y = useTransform(scrollYProgress, [0.20, 0.25, 0.45, 0.50], [-500, 0, 0, -500]); // Top
-  const card2X = useTransform(scrollYProgress, [0.20, 0.25, 0.45, 0.50], [500, 0, 0, 500]); // Right
-  const card3X = useTransform(scrollYProgress, [0.20, 0.25, 0.45, 0.50], [-500, 0, 0, -500]); // Left
-  const card4Y = useTransform(scrollYProgress, [0.20, 0.25, 0.45, 0.50], [500, 0, 0, 500]); // Bottom
-  const scene2PointerEvents = useTransform(scrollYProgress, (val) => (val >= 0.20 && val <= 0.45) ? "auto" : "none");
+  // Cards Enter (0.1125 to 0.140625) & Exit (0.253125 to 0.28125)
+  const text2Opacity = useTransform(scrollYProgress, [180/1700, 225/1700, 405/1700, 450/1700], [0, 1, 1, 0]);
+  const card1Y = useTransform(scrollYProgress, [180/1700, 225/1700, 405/1700, 450/1700], [-500, 0, 0, -500]); // Top
+  const card2X = useTransform(scrollYProgress, [180/1700, 225/1700, 405/1700, 450/1700], [500, 0, 0, 500]); // Right
+  const card3X = useTransform(scrollYProgress, [180/1700, 225/1700, 405/1700, 450/1700], [-500, 0, 0, -500]); // Left
+  const card4Y = useTransform(scrollYProgress, [180/1700, 225/1700, 405/1700, 450/1700], [500, 0, 0, 500]); // Bottom
+  const scene2PointerEvents = useTransform(scrollYProgress, (val) => (val >= 180/1700 && val <= 405/1700) ? "auto" : "none");
 
-  // --- SCENE 3: Spirit of Mechanical Engineering (0.60 to 1.00) ---
-  // Right Strips Enter (0.60 to 0.65)
-  const bg3Opacity = useTransform(scrollYProgress, [0.60, 0.65], [0, 1]);
-  const bg3Y = useTransform(scrollYProgress, [0.60, 0.65], [1000, 0]);
-  const bg3X = useTransform(scrollYProgress, [0.60, 0.65], [466, 0]); // From bottom right along -25deg slope
+  // --- SCENE 3: Spirit of Mechanical Engineering (0.3375 to 0.5625) ---
+  // Right Strips Enter (0.3375 to 0.365625) & Exit (0.478125 to 0.534375)
+  const bg3Opacity = useTransform(scrollYProgress, [540/1700, 585/1700, 765/1700, 855/1700], [0, 1, 1, 0]);
+  const bg3Y = useTransform(scrollYProgress, [540/1700, 585/1700], [1000, 0]);
+  const bg3X = useTransform(scrollYProgress, [540/1700, 585/1700], [466, 0]);
 
-  // Wheel Enters (0.65 to 0.70) & Exits (0.85 to 0.95) towards Right (forward)
-  // Keep opacity 1 until the very end so the exit movement is clearly visible
-  const wheelOpacity = useTransform(scrollYProgress, [0.65, 0.70, 0.95, 1.0], [0, 1, 1, 0]);
-  const wheelX = useTransform(scrollYProgress, [0.65, 0.70, 0.85, 0.95], ["-80vw", "0vw", "0vw", "50vw"]);
-  const wheelY = useTransform(scrollYProgress, [0.65, 0.70, 0.85, 0.95], ["-50vh", "0vh", "0vh", "20vh"]);
-  const wheelScale = useTransform(scrollYProgress, [0.65, 0.70, 0.85, 0.95], [0.05, 1, 1, 4]);
+  // Wheel Enters (0.365625 to 0.39375) & Exits (0.478125 to 0.534375)
+  const wheelOpacity = useTransform(scrollYProgress, [585/1700, 630/1700, 855/1700, 900/1700], [0, 1, 1, 0]);
+  const wheelX = useTransform(scrollYProgress, [585/1700, 630/1700, 765/1700, 855/1700], ["-80vw", "0vw", "0vw", "50vw"]);
+  const wheelY = useTransform(scrollYProgress, [585/1700, 630/1700, 765/1700, 855/1700], ["-50vh", "0vh", "0vh", "20vh"]);
+  const wheelScale = useTransform(scrollYProgress, [585/1700, 630/1700, 765/1700, 855/1700], [0.05, 1, 1, 4]);
 
-  // Spirit Content Enters (0.70 to 0.75) & Exits (0.85 to 0.95)
-  const spiritContentOpacity = useTransform(scrollYProgress, [0.70, 0.75, 0.85, 0.95], [0, 1, 1, 0]);
+  // Spirit Content Enters (0.39375 to 0.421875) & Exits (0.478125 to 0.534375)
+  const spiritContentOpacity = useTransform(scrollYProgress, [630/1700, 675/1700, 765/1700, 855/1700], [0, 1, 1, 0]);
   
-  // "Celebrating the Spirit of" -> Enters from left, exits to left
-  const title1X = useTransform(scrollYProgress, [0.70, 0.73, 0.75, 0.85, 0.95], [-800, 30, 0, 0, -800]);
-  // "Mechanical Engineering" -> Enters from right, exits to right
-  const title2X = useTransform(scrollYProgress, [0.70, 0.75, 0.85, 0.95], [800, 0, 0, 800]);
-  // Subtitle & Desc -> fade/slide up, then slide back down
-  const descY = useTransform(scrollYProgress, [0.70, 0.75, 0.85, 0.95], [100, 0, 0, 100]);
+  // "Celebrating the Spirit of"
+  const title1X = useTransform(scrollYProgress, [630/1700, 657/1700, 675/1700, 765/1700, 855/1700], [-800, 30, 0, 0, -800]);
+  // "Mechanical Engineering"
+  const title2X = useTransform(scrollYProgress, [630/1700, 675/1700, 765/1700, 855/1700], [800, 0, 0, 800]);
+  // Subtitle & Desc
+  const descY = useTransform(scrollYProgress, [630/1700, 675/1700, 765/1700, 855/1700], [100, 0, 0, 100]);
 
-  // Cards from bottom, staggered entry, synchronous exit to bottom
-  const s3Card1Y = useTransform(scrollYProgress, [0.70, 0.73, 0.85, 0.95], [200, 0, 0, 200]);
-  const s3Card1Op = useTransform(scrollYProgress, [0.70, 0.73, 0.85, 0.95], [0, 1, 1, 0]);
+  // Cards
+  const s3Card1Y = useTransform(scrollYProgress, [630/1700, 657/1700, 765/1700, 855/1700], [200, 0, 0, 200]);
+  const s3Card1Op = useTransform(scrollYProgress, [630/1700, 657/1700, 765/1700, 855/1700], [0, 1, 1, 0]);
   
-  const s3Card2Y = useTransform(scrollYProgress, [0.71, 0.74, 0.85, 0.95], [200, 0, 0, 200]);
-  const s3Card2Op = useTransform(scrollYProgress, [0.71, 0.74, 0.85, 0.95], [0, 1, 1, 0]);
+  const s3Card2Y = useTransform(scrollYProgress, [639/1700, 666/1700, 765/1700, 855/1700], [200, 0, 0, 200]);
+  const s3Card2Op = useTransform(scrollYProgress, [639/1700, 666/1700, 765/1700, 855/1700], [0, 1, 1, 0]);
   
-  const s3Card3Y = useTransform(scrollYProgress, [0.72, 0.75, 0.85, 0.95], [200, 0, 0, 200]);
-  const s3Card3Op = useTransform(scrollYProgress, [0.72, 0.75, 0.85, 0.95], [0, 1, 1, 0]);
+  const s3Card3Y = useTransform(scrollYProgress, [648/1700, 675/1700, 765/1700, 855/1700], [200, 0, 0, 200]);
+  const s3Card3Op = useTransform(scrollYProgress, [648/1700, 675/1700, 765/1700, 855/1700], [0, 1, 1, 0]);
 
-  // Radiating lines fade in with content but fade out between 0.85 and 0.95
-  const linesOpacity = useTransform(scrollYProgress, [0.70, 0.75, 0.85, 0.95], [0, 1, 1, 0]);
+  // Radiating lines fade in with content but fade out between 0.478125 and 0.534375
+  const linesOpacity = useTransform(scrollYProgress, [630/1700, 675/1700, 765/1700, 855/1700], [0, 1, 1, 0]);
 
-  const scene3PointerEvents = useTransform(scrollYProgress, (val) => val >= 0.70 ? "auto" : "none");
+  const scene3PointerEvents = useTransform(scrollYProgress, (val) => (val >= 630/1700 && val <= 855/1700) ? "auto" : "none");
+
+  // --- SCENE 4: Our Department (0.5625 to 1.00) ---
+  // Notice the gap from 0.534375 to 0.5625 (pure black scroll delay)
+  // Appears over [0.5625, 0.8125] (400vh)
+  // Disappears over [0.8125, 1.0] (300vh) with staggered exit and massive fly-off distances!
+  const scene4Opacity = useTransform(scrollYProgress, [900/1700, 960/1700, 1636/1700, 1700/1700], [0, 1, 1, 0]);
+  const scene4PointerEvents = useTransform(scrollYProgress, (val) => val >= 900/1700 && val <= 1.0 ? "auto" : "none");
+
+  // Scene 4 Background (Opposite Side Strips)
+  const bg4Opacity = useTransform(scrollYProgress, [900/1700, 960/1700, 1636/1700, 1700/1700], [0, 1, 1, 0]);
+  const bg4X = useTransform(scrollYProgress, [900/1700, 960/1700, 1636/1700, 1700/1700], [-1000, 0, 0, -1000]);
+
+  // Text & Button
+  const deptTextOp = useTransform(scrollYProgress, [928/1700, 1008/1700, 1620/1700, 1684/1700], [0, 1, 1, 0]);
+  const deptTextX = useTransform(scrollYProgress, [928/1700, 1008/1700, 1620/1700, 1684/1700], [1000, 0, 0, 1000]);
+
+  // Big Image 1
+  const img1Op = useTransform(scrollYProgress, [976/1700, 1056/1700, 1588/1700, 1652/1700], [0, 1, 1, 0]);
+  const img1Y = useTransform(scrollYProgress, [976/1700, 1056/1700, 1588/1700, 1652/1700], [1000, 0, 0, 1000]);
+
+  // Stacked Images
+  const img2Op = useTransform(scrollYProgress, [1024/1700, 1104/1700, 1556/1700, 1620/1700], [0, 1, 1, 0]);
+  const img2Y = useTransform(scrollYProgress, [1024/1700, 1104/1700, 1556/1700, 1620/1700], [-1000, 0, 0, -1000]);
+  const img3Op = useTransform(scrollYProgress, [1072/1700, 1152/1700, 1524/1700, 1588/1700], [0, 1, 1, 0]);
+  const img3Y = useTransform(scrollYProgress, [1072/1700, 1152/1700, 1524/1700, 1588/1700], [1000, 0, 0, 1000]);
+
+  // Bottom Row
+  const img4Op = useTransform(scrollYProgress, [1120/1700, 1200/1700, 1492/1700, 1556/1700], [0, 1, 1, 0]);
+  const img4Y = useTransform(scrollYProgress, [1120/1700, 1200/1700, 1492/1700, 1556/1700], [1000, 0, 0, 1000]);
+  
+  const img5Op = useTransform(scrollYProgress, [1152/1700, 1232/1700, 1460/1700, 1524/1700], [0, 1, 1, 0]);
+  const img5Y = useTransform(scrollYProgress, [1152/1700, 1232/1700, 1460/1700, 1524/1700], [1000, 0, 0, 1000]);
+  
+  const img6Op = useTransform(scrollYProgress, [1184/1700, 1264/1700, 1428/1700, 1492/1700], [0, 1, 1, 0]);
+  const img6Y = useTransform(scrollYProgress, [1184/1700, 1264/1700, 1428/1700, 1492/1700], [1000, 0, 0, 1000]);
+  
+  const img7Op = useTransform(scrollYProgress, [1216/1700, 1300/1700, 1400/1700, 1460/1700], [0, 1, 1, 0]);
+  const img7Y = useTransform(scrollYProgress, [1216/1700, 1300/1700, 1400/1700, 1460/1700], [1000, 0, 0, 1000]);
 
   return (
-    <div ref={containerRef} className="cinematic-wrapper" style={{ height: "900vh" }}>
+    <div ref={containerRef} className="cinematic-wrapper" style={{ height: "1700vh" }}>
       <div className="cinematic-camera">
         
         {/* ================= SCENE 1 BACKGROUND ================= */}
@@ -122,6 +162,15 @@ const CinematicHero = () => {
           ></motion.div>
         </motion.div>
 
+
+        {/* ================= SCENE 4 BACKGROUND ================= */}
+        <motion.div 
+          className="cinematic-bg-layer"
+          style={{ opacity: bg4Opacity, x: bg4X }}
+        >
+          {/* Shift 80% to move it to the far left side */}
+          <RedStrips index={0} shiftX="60%" />
+        </motion.div>
 
         {/* ================= SCENE 1 CONTENT ================= */}
         <motion.div 
@@ -229,10 +278,10 @@ const CinematicHero = () => {
           <motion.svg 
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, mixBlendMode: 'screen', opacity: linesOpacity, pointerEvents: 'none' }}
           >
-            <line x1="0%" y1="0%" x2="80%" y2="22%" stroke="rgba(255, 0, 0, 0.5)" strokeWidth="1" />
+            <line x1="0%" y1="0%" x2="80%" y2="20%" stroke="rgba(255, 0, 0, 0.5)" strokeWidth="1" />
             <line x1="0%" y1="0%" x2="90%" y2="40%" stroke="rgba(255, 0, 0, 0.8)" strokeWidth="2" />
             <line x1="0%" y1="0%" x2="85%" y2="60%" stroke="rgba(255, 0, 0, 0.5)" strokeWidth="1.5" />
-            <line x1="0%" y1="0%" x2="70%" y2="81%" stroke="rgba(255, 0, 0, 0.3)" strokeWidth="1" />
+            <line x1="0%" y1="0%" x2="70%" y2="80%" stroke="rgba(255, 0, 0, 0.3)" strokeWidth="1" />
             <line x1="0%" y1="0%" x2="50%" y2="100%" stroke="rgba(255, 0, 0, 0.2)" strokeWidth="0.5" />
           </motion.svg>
 
@@ -297,6 +346,36 @@ const CinematicHero = () => {
                 />
               </motion.div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* ================= SCENE 4 CONTENT (OUR DEPARTMENT) ================= */}
+        <motion.div 
+          className="cinematic-scene department-scene"
+          style={{ pointerEvents: scene4PointerEvents, opacity: scene4Opacity }}
+        >
+          <div className="dept-container">
+            {/* Row 1 & 2 */}
+            <motion.div className="gallery-item img-1" style={{ opacity: img1Op, y: img1Y }}>Image 1</motion.div>
+            <motion.div className="gallery-item img-2" style={{ opacity: img2Op, y: img2Y }}>Image 2</motion.div>
+            <motion.div className="gallery-item img-3" style={{ opacity: img3Op, y: img3Y }}>Image 3</motion.div>
+            
+            <motion.div className="dept-content" style={{ opacity: deptTextOp, x: deptTextX }}>
+              <h2 className="dept-title">
+                Our <br />
+                <span>Department</span>
+              </h2>
+              <p className="dept-desc">
+                MechaPEF continues to bridge knowledge, ideas, and people – fostering a culture of innovation and belonging within the department.
+              </p>
+              <button className="gallery-btn">View Gallery -{'>'}</button>
+            </motion.div>
+
+            {/* Row 3 */}
+            <motion.div className="gallery-item img-4" style={{ opacity: img4Op, y: img4Y }}>Image 4</motion.div>
+            <motion.div className="gallery-item img-5" style={{ opacity: img5Op, y: img5Y }}>Image 5</motion.div>
+            <motion.div className="gallery-item img-6" style={{ opacity: img6Op, y: img6Y }}>Image 6</motion.div>
+            <motion.div className="gallery-item img-7" style={{ opacity: img7Op, y: img7Y }}>Image 7</motion.div>
           </div>
         </motion.div>
 
