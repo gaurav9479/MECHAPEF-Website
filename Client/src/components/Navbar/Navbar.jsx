@@ -50,7 +50,7 @@ const Navbar = () => {
         <li>Our Sponsors</li>
       </ul>
 
-      <button className="contact-btn">Contact Us</button>
+      <button className="contact-btn">Join Now</button>
     </nav>
     </>
   );
