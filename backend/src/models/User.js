@@ -18,14 +18,38 @@ const userSchema = new mongoose.Schema(
             required: [true, 'Email is required'],
             unique: true,
             lowercase: true,
-            validate: [validator.isEmail, 'Please provide a valid email address']
+            validate: {
+                validator: function (value) {
+                    // Only allow MNNIT format: firstname.regno@mnnit.ac.in
+                    return /^[a-z]+\.[0-9]+@mnnit\.ac\.in$/.test(value);
+                },
+                message: 'Only MNNIT emails are allowed. Format: firstname.regno@mnnit.ac.in'
+            }
         },
 
         password: {
             type: String,
             required: [true, 'Password is required'],
             minlength: [8, 'Password must be at least 8 characters'],
-            select: false // Don't return password by default
+            select: false
+        },
+
+        // College Registration Number — required for GeneralUser self-registration
+        // SuperAdmin/EventHead/PRTeam/Alumni are pre-seeded so not strictly required for them
+        collegeRegNo: {
+            type: String,
+            trim: true,
+            uppercase: true,
+            sparse: true, // allows null/undefined for pre-seeded admins
+            validate: {
+                validator: function (value) {
+                    // Only validate format if value is provided
+                    if (!value) return true;
+                    // MNNIT Allahabad reg no format: e.g. 22114048, MCA2024001 etc.
+                    return /^[A-Z0-9]{4,20}$/.test(value);
+                },
+                message: 'College registration number must be 4-20 alphanumeric characters'
+            }
         },
 
         role: {
@@ -37,9 +61,17 @@ const userSchema = new mongoose.Schema(
             default: 'GeneralUser'
         },
 
+        // isVerified = true means admin has verified the user's college reg no
+        // Pre-seeded admin accounts are verified by default
+        // Self-registered GeneralUsers start as unverified
         isVerified: {
             type: Boolean,
             default: false
+        },
+
+        // Request life of 7 days if unverified. Handled via TTL index.
+        unverifiedRequestExpiresAt: {
+            type: Date
         },
 
         emailVerificationToken: {
@@ -90,7 +122,7 @@ const userSchema = new mongoose.Schema(
 
         deletedAt: {
             type: Date,
-            default: null // For soft delete
+            default: null
         },
 
         lastLogin: Date,
@@ -106,19 +138,23 @@ const userSchema = new mongoose.Schema(
         toObject: { virtuals: true }
     }
 );
+
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ isActive: 1, deletedAt: 1 });
+userSchema.index({ collegeRegNo: 1 }, { sparse: true }); // sparse so null values are allowed
+// TTL index: auto delete document when current time > unverifiedRequestExpiresAt
+userSchema.index({ unverifiedRequestExpiresAt: 1 }, { expireAfterSeconds: 0 });
 
 userSchema.virtual('initials').get(function () {
     const names = this.name.split(' ');
     return names.map(n => n[0]).join('').toUpperCase();
 });
 
+// Hash password before save
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
-
     try {
         const salt = await bcryptjs.genSalt(10);
         this.password = await bcryptjs.hash(this.password, salt);
@@ -128,6 +164,7 @@ userSchema.pre('save', async function (next) {
     }
 });
 
+// Auto-update updatedAt
 userSchema.pre('save', function (next) {
     if (this.isModified()) {
         this.updatedAt = Date.now();
@@ -146,9 +183,11 @@ userSchema.methods.getPublicProfile = function () {
     delete user.emailVerificationExpiry;
     return user;
 };
+
 userSchema.query.notDeleted = function () {
     return this.where({ deletedAt: null });
 };
+
 userSchema.statics.softDelete = async function (userId) {
     return await this.findByIdAndUpdate(
         userId,
