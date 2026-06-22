@@ -1,35 +1,26 @@
-import React from "react";
-import "./RedInclinedStrips.css";
+import React from 'react';
+import './RedInclinedStrips.css';
 
-// Added 'shiftX' prop. It defaults to "0%" so it behaves exactly as it did before if you don't use it.
-const RedStrips = ({ index = 0, shiftX = "0%" }) => {
+const RedInclinedStrips = ({ index = 0, shiftX = "-20%" }) => {
   
-  // THE MAGIC MATH: Keeps the continuous diagonal slice across sections
-  const offset = `${index * 46.63}vh`;
+  const offsetVh = index * 46.63;
 
   return (
     <div className="red-strips-container">
-      {/* We add shiftX to every calculation. 
-          Because it is anchored to the 'right' side of the screen:
-          - A positive value (like "10%") pushes the strips to the LEFT.
-          - A negative value (like "-10%") pulls the strips to the RIGHT.
-      */}
       <div 
-        className="strip-main" 
-        style={{ right: `calc(-10% + ${offset} + ${shiftX})` }}
+        className="strip-main"
+        style={{ right: `calc(0% + ${shiftX} + ${offsetVh}vh)` }}
       ></div>
-      
       <div 
-        className="strip-secondary" 
-        style={{ right: `calc(15% + ${offset} + ${shiftX})` }}
+        className="strip-secondary"
+        style={{ right: `calc(30% + ${shiftX} + ${offsetVh}vh)` }}
       ></div>
-      
       <div 
-        className="strip-third" 
-        style={{ right: `calc(35% + ${offset} + ${shiftX})` }}
+        className="strip-third"
+        style={{ right: `calc(39% + ${shiftX} + ${offsetVh}vh)` }}
       ></div>
     </div>
   );
 };
 
-export default RedStrips;
+export default RedInclinedStrips;

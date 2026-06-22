@@ -5,34 +5,32 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  z-index: 0;
   pointer-events: none;
+  z-index: 0;
 }
 
-/* Base rules shared by all strips */
 .strip-main, .strip-secondary, .strip-third {
   position: absolute;
-  top: -10%;
+  top: -5%;
   height: 120%;
+  transform-origin: top right;
   transform: skewX(-25deg);
   filter: blur(8px);
 }
 
-/* Specific widths and colors */
 .strip-main {
   width: 30%;
-  background: linear-gradient(to right, #7a0006, #ff1f01);
-  box-shadow: 0 0 30px rgba(255, 31, 1, 0.2);
+  background: linear-gradient(to right, #9e0312, #ff1f01, #9e0312);
+  box-shadow: -20px 0 50px rgba(169, 24, 5, 0.2);
 }
 
 .strip-secondary {
-  width: 20%;
-  background: linear-gradient(to right, #e10712, #ff1f01);
-  box-shadow: 0 0 30px rgba(255, 31, 1, 0.2);
+  width: 10%;
+  background: #ff1f01;
 }
 
 .strip-third {
-  width: 30%;
-  background: linear-gradient(to right, #33090b, #660e03);
+  width: 10%;
+  background: linear-gradient(to right, #90070e, #660e03);
   box-shadow: 0 0 30px rgba(116, 16, 3, 0.2);
 }

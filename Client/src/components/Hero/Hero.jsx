@@ -26,7 +26,7 @@ const Hero = () => {
     <div ref={containerRef} className="hero-scroll-wrapper">
       <section className="hero">
         
-        <RedStrips index={0} />
+        <RedStrips index={0} shiftX = "-20%" />
         
         <motion.div
           className="hero-left"
