@@ -28,18 +28,6 @@ const Hero = () => {
         
         <RedStrips index={0} />
         
-        {/* Animated Bottom Gradient */}
-        <motion.div 
-          className="hero-bottom-gradient"
-          style={{ opacity: fastFadeOpacity }}
-        />
-
-        {/* NEW: Animated Right Gradient */}
-        <motion.div 
-          className="hero-right-gradient"
-          style={{ opacity: fastFadeOpacity }}
-        />
-        
         <motion.div
           className="hero-left"
           style={{ x: textX, opacity: textOpacity }}

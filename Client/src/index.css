@@ -18,3 +18,28 @@ body{
 section{
   padding:100px 10%;
 }
+
+/* Global Fixed Gradients (Right and Bottom) */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 35vw;
+  background: linear-gradient(to left, #050505 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 25vh;
+  background: linear-gradient(to top, #050505 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 9999;
+}

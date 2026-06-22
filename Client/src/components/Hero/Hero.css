@@ -15,29 +15,7 @@
   background-color: transparent;
 }
 
-/* THE FIX: This is the new class that Framer Motion animates! */
-.hero-bottom-gradient {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 25%;
-  background: linear-gradient(to top, #050505 0%, #050505 15%, transparent 100%);
-  pointer-events: none;
-  z-index: 2;
-}
 
-
-.hero-right-gradient {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 35%; 
-  background: linear-gradient(to left, #050505 0%, transparent 100%);
-  pointer-events: none; 
-  z-index: 2; 
-}
 
 .hero-left {
   max-width: 650px;
