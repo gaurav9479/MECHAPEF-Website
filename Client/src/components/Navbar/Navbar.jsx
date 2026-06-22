@@ -1,10 +1,29 @@
 import { useState, useEffect } from "react";
-import { FaCog } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaCog, FaUserShield, FaSignOutAlt } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
 import { animate } from "framer-motion";
 import "./Navbar.css";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAuthBtn = async () => {
+    if (user) {
+      // If logged in, go to admin
+      navigate('/admin');
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleLogout = async (e) => {
+    e.stopPropagation();
+    await logout();
+    navigate('/');
+  };
 
   const scrollToSection = (vhMultiplier) => {
     const targetY = window.innerHeight * vhMultiplier;
@@ -13,6 +32,18 @@ const Navbar = () => {
       ease: "easeOut",
       onUpdate: (latest) => window.scrollTo(0, latest)
     });
+  };
+
+  const scrollToElement = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const targetY = el.getBoundingClientRect().top + window.scrollY;
+      animate(window.scrollY, targetY, {
+        duration: 1.2,
+        ease: "easeOut",
+        onUpdate: (latest) => window.scrollTo(0, latest)
+      });
+    }
   };
 
   useEffect(() => {
@@ -46,11 +77,24 @@ const Navbar = () => {
         <li style={{cursor: 'pointer'}} onClick={() => scrollToSection(3.15)}>About</li>
         <li style={{cursor: 'pointer'}} onClick={() => scrollToSection(7.2)}>Events</li>
         <li style={{cursor: 'pointer'}} onClick={() => scrollToSection(13.5)}>Gallery</li>
-        <li>Our Team</li>
-        <li>Our Sponsors</li>
+        <li style={{cursor: 'pointer'}} onClick={() => scrollToElement('our-team')}>Our Team</li>
+        <li style={{cursor: 'pointer'}} onClick={() => scrollToElement('notices')}>Notice Board</li>
       </ul>
 
-      <button className="contact-btn">Join Now</button>
+      <button className="contact-btn" onClick={handleAuthBtn}>
+        {user ? (
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaUserShield /> Admin
+            <span
+              onClick={handleLogout}
+              style={{ marginLeft: '6px', fontSize: '0.75rem', opacity: 0.7, cursor: 'pointer' }}
+              title="Logout"
+            >
+              <FaSignOutAlt />
+            </span>
+          </span>
+        ) : 'Login'}
+      </button>
     </nav>
     </>
   );

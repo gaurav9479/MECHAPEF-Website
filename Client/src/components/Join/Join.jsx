@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { assets } from "../../assets/assets";
 import "./Join.css";
 
 const Join = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="join">
 
@@ -26,7 +29,7 @@ const Join = () => {
           MechaPEF?
         </h1>
 
-        <button>
+        <button onClick={() => navigate('/register')}>
           Apply Now
         </button>
       </motion.div>

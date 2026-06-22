@@ -5,10 +5,11 @@ import cookieParser from 'cookie-parser';
 import ApiError from '../utils/ApiError.js';
 import APIResponse from '../utils/APIResponse.js';
 import { HTTP_STATUS, ERROR_MESSAGES } from '../constants/index.js';
+import { sendError } from '../utils/response.js';
 
 
 export const corsConfig = cors({
-    origin: (process.env.CORS_ORIGIN || 'http://localhost:3000').split(','),
+    origin: true, // This reflects the incoming origin header, effectively acting as '*' while allowing credentials
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
