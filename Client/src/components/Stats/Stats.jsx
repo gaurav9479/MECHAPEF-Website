@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import "./Stats.css";
 
 const Stats = () => {
@@ -14,10 +15,17 @@ const Stats = () => {
 
       {
         data.map((item,index)=>(
-          <div className="card" key={index}>
+          <motion.div 
+            className="card" 
+            key={index}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, delay: index * 0.15 }}
+          >
             <h1>{item[0]}</h1>
             <p>{item[1]}</p>
-          </div>
+          </motion.div>
         ))
       }
 
