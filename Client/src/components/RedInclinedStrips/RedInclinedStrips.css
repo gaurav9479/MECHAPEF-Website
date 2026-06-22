@@ -19,7 +19,7 @@
 }
 
 .strip-main {
-  width: 30%;
+  width: 15%;
   background: linear-gradient(to right, #9e0312, #ff1f01, #9e0312);
   box-shadow: -20px 0 50px rgba(169, 24, 5, 0.2);
 }
@@ -30,7 +30,7 @@
 }
 
 .strip-third {
-  width: 10%;
+  width: 15%;
   background: linear-gradient(to right, #90070e, #660e03);
   box-shadow: 0 0 30px rgba(116, 16, 3, 0.2);
 }
