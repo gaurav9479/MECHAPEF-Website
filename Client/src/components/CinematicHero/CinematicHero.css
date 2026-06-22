@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
+
+.cinematic-wrapper {
+  height: 500vh;
+  position: relative;
+}
+
+.cinematic-camera {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+}
+
+.cinematic-bg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* Black gradients to blend the strips into the background smoothly */
+.fade-right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 35vw;
+  background: linear-gradient(to left, #050505 0%, transparent 100%);
+  z-index: 1; /* Above the strips, but behind content */
+}
+
+.fade-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 35vw;
+  background: linear-gradient(to right, #050505 0%, transparent 100%);
+  z-index: 1;
+}
+
+.cinematic-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6%; /* Matched the padding from your Hero section */
+  z-index: 1;
+}
+
+.cinematic-left {
+  flex: 1;
+  max-width: 650px; /* Wider to accommodate the massive Hero text */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cinematic-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center; /* Vertically center the assets */
+}
+
+
+.drone-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+}
+
+.drone-container .drone {
+  width: 120%;
+  max-width: 900px;
+  transform: translateX(-10%) scale(1.1);
+  z-index: 2;
+  filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5));
+}
+
+.drone-dashboard-text {
+  font-family: 'Michroma', sans-serif;
+  font-size: 4.5rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #ffffff;
+  position: absolute;
+  bottom: -40px;
+  left: 0px;
+  text-transform: uppercase;
+  z-index: 3;
+}
+
+.dashboard-grid {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.dash-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+/* Offset the right column slightly downwards for a masonry look */
+.dash-col.col-right {
+  margin-top: 40px;
+}
+
+.dash-card {
+  background: rgba(10, 0, 0, 0.4);
+  border: 1px solid rgba(255, 31, 1, 0.2);
+  border-radius: 16px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.dash-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 31, 1, 0.6);
+  box-shadow: 0 10px 30px rgba(255, 31, 1, 0.1);
+}
+
+.card-tall {
+  min-height: 240px;
+  background: rgba(80, 5, 5, 0.85); /* Solid dark red */
+  border-color: rgba(255, 31, 1, 0.4);
+}
+
+.card-wide {
+  min-height: 160px;
+  background: rgba(10, 5, 5, 0.85); /* Very dark, almost black */
+  border-color: rgba(255, 31, 1, 0.15);
+}
+
+.dash-num {
+  font-family: 'Michroma', sans-serif;
+  font-size: 2.2rem;
+  color: #ff1f01;
+  margin-bottom: 15px;
+}
+
+.dash-title {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dash-sub {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.text-red {
+  color: #ff3333;
+}
