@@ -1,115 +1,203 @@
-/* ═══════════════════════════════════════════════════
-   SCROLL STORY — Full-page pinned GSAP storytelling
-═══════════════════════════════════════════════════ */
-
-/* Tall wrapper — height set dynamically via inline style */
 .scroll-story-wrapper {
+  height: 400vh;
   position: relative;
-  width: 100%;
 }
 
-/* ── CAMERA: pinned 100vh viewport ── */
 .scroll-story-camera {
-  position: relative;
-  width: 100%;
+  position: sticky;
+  top: 0;
   height: 100vh;
+  width: 100%;
   overflow: hidden;
   display: flex;
   align-items: center;
-  justify-content: center;
+  background-color: transparent;
 }
 
-/* ══ BACKGROUNDS ══════════════════════════════════════ */
-.scroll-story-backgrounds {
+.spirit-bg-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
 }
 
-.story-bg {
+.fade-bottom-right {
   position: absolute;
-  inset: 0;
+  bottom: 0;
+  right: 0;
+  width: 50vw;
+  height: 50vh;
+  background: radial-gradient(ellipse at bottom right, rgba(5,5,5,0) 0%, #050505 100%);
+  z-index: 1;
+}
+
+.spirit-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  will-change: opacity;
-}
-
-/* ══ CARD GROUPS ══════════════════════════════════════ */
-.story-card-group {
-  position: absolute;
-  inset: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 0 6%;
   z-index: 2;
-  pointer-events: none;
-  will-change: opacity, transform;
 }
 
-.story-stage-label {
-  position: absolute;
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-  white-space: nowrap;
+.spirit-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 60px;
 }
 
-/* ══ INDIVIDUAL CARDS ═════════════════════════════════ */
-.story-card {
-  position: absolute;  /* All stacked at center via absolute + no offset */
+.spirit-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 60px;
+}
+
+.spirit-left {
+  flex: 1;
+  max-width: 60%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 160px;
-  height: 200px;
-  border-radius: 20px;
-  pointer-events: auto;
-  cursor: pointer;
-  will-change: transform, opacity;
-
-  /* Glassmorphism base */
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
-  /* Subtle red glow on hover */
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  gap: 60px;
 }
 
-.story-card:hover {
-  box-shadow:
-    0 16px 48px rgba(255, 31, 1, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 31, 1, 0.35);
+.spirit-header {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.card-id {
-  font-size: 2.8rem;
-  font-weight: 900;
-  line-height: 1;
-  /* Dynamic hue from inline --card-hue var */
-  color: hsl(var(--card-hue, 0deg), 80%, 65%);
-  letter-spacing: -1px;
-}
-
-.card-label {
-  font-size: 0.78rem;
-  font-weight: 600;
+.spirit-subtitle {
+  color: #ff1f01;
+  font-size: 0.9rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-  text-align: center;
-  padding: 0 12px;
+  font-weight: 700;
+}
+
+.spirit-title {
+  font-family: 'Michroma', sans-serif;
+  font-size: 3.2rem;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.spirit-title .text-red {
+  color: #ff1f01;
+  text-shadow: 0 0 20px rgba(255, 31, 1, 0.4);
+}
+
+.spirit-desc {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-width: 85%;
+}
+
+.spirit-cards-container {
+  display: flex;
+  gap: 20px;
+}
+
+.spirit-card {
+  background: rgba(15, 5, 5, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 30px 25px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.spirit-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255, 31, 1, 0.5);
+  background: rgba(30, 5, 5, 0.8);
+  box-shadow: 0 10px 30px rgba(255, 31, 1, 0.15);
+}
+
+.card-icon {
+  font-size: 2.5rem;
+  color: #ff1f01;
+  margin-bottom: 10px;
+}
+
+.spirit-card h3 {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 700;
   line-height: 1.4;
+}
+
+.spirit-card p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.spirit-right {
+  flex: 0.4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.spirit-wheel {
+  width: 100%;
+  max-width: 650px;
+  filter: drop-shadow(0 0 40px rgba(255, 31, 1, 0.5));
+  z-index: 2;
+  transform-origin: center center;
+}
+
+/* Extra glow behind the wheel */
+.wheel-glow {
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(255, 31, 1, 0.3) 0%, transparent 60%);
+  z-index: 1;
+  filter: blur(40px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .spirit-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .spirit-left {
+    max-width: 100%;
+    align-items: center;
+  }
+  
+  .spirit-desc {
+    max-width: 100%;
+  }
+
+  .spirit-cards-container {
+    flex-direction: column;
+  }
+  
+  .spirit-wheel {
+    max-width: 400px;
+  }
 }

@@ -1,9 +1,28 @@
+import { useState, useEffect } from "react";
 import { FaCog } from "react-icons/fa";
 import "./Navbar.css";
 
 const Navbar = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Hide the navbar and switch to hover mode after scrolling past 80% of the first screen
+      if (window.scrollY > window.innerHeight * 0.8) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <nav className="navbar">
+    <>
+      <div className="navbar-hover-zone"></div>
+      <nav className={`navbar ${isScrolled ? 'navbar-hidden' : 'navbar-visible'}`}>
       <div className="logo">
         <FaCog className="logo-icon" />
         <div className="logo-text">
@@ -23,6 +42,7 @@ const Navbar = () => {
 
       <button className="contact-btn">Contact Us</button>
     </nav>
+    </>
   );
 };
 

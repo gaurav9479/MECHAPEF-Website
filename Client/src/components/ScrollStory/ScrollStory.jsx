@@ -1,212 +1,115 @@
-import React, { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import RedStrips from "../RedInclinedStrips/RedInclinedStrips";
 import "./ScrollStory.css";
+import wheelImg from "../../assets/wheel.png";
+import { FaCalendarAlt, FaUsers, FaTrophy } from "react-icons/fa";
 
-gsap.registerPlugin(ScrollTrigger);
+const ScrollStory = () => {
+  const containerRef = useRef(null);
 
-/**
- * <ScrollStory />
- *
- * Props:
- *   stages: Array of {
- *     background: string (CSS gradient / color / image url),
- *     label: string (stage name),
- *     items: Array of { id, label, x, y }
- *       x, y → the SPREAD target position in px (e.g. x:-300, y:-150)
- *   }
- */
-const ScrollStory = ({ stages = [] }) => {
-  const wrapperRef = useRef(null);   // The tall 300vh+ wrapper
-  const cameraRef = useRef(null);    // The pinned 100vh camera
-  const bgRefs = useRef([]);         // One background div per stage
-  const cardGroupRefs = useRef([]);  // One card-group div per stage
-  const cardRefs = useRef([]);       // Flat array of all card divs
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
 
-  useEffect(() => {
-    if (!stages.length) return;
+  // --- 1. Red Strips Enter from Bottom-Right (0.00 to 0.15) ---
+  const stripsOpacity = useTransform(scrollYProgress, [0.0, 0.10], [0, 1]);
+  const stripsY = useTransform(scrollYProgress, [0.0, 0.15], [1000, 0]);
+  const stripsX = useTransform(scrollYProgress, [0.0, 0.15], [466, 0]); // 1000 * tan(25) = ~466
 
-    const ctx = gsap.context(() => {
-      const totalStages = stages.length;
+  // --- 2. Wheel Enters from Top-Left, small to large (0.05 to 0.20) ---
+  const wheelOpacity = useTransform(scrollYProgress, [0.05, 0.15], [0, 1]);
+  const wheelX = useTransform(scrollYProgress, [0.05, 0.20], [-1500, 0]);
+  const wheelY = useTransform(scrollYProgress, [0.05, 0.20], [-800, 0]);
+  const wheelScale = useTransform(scrollYProgress, [0.05, 0.20], [0.2, 1]);
 
-      // ─── PIN the camera once for the entire wrapper ──────────────────
-      ScrollTrigger.create({
-        trigger: wrapperRef.current,
-        start: "top top",
-        end: () => `+=${totalStages * 100}vh`,
-        pin: cameraRef.current,
-        pinSpacing: false,
-        id: "master-pin",
-      });
-
-      // ─── PER-STAGE timelines ──────────────────────────────────────────
-      stages.forEach((stage, stageIdx) => {
-        const isLast = stageIdx === totalStages - 1;
-
-        // start / end expressed as scroll offsets into wrapperRef
-        const stageStart = `top+=${stageIdx * 100}vh`;
-        const stageEnd   = `top+=${(stageIdx + 1) * 100}vh`;
-
-        // ── 1. SPREAD timeline (scrubbed to scroll = feels physical) ──
-        const spreadTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: wrapperRef.current,
-            start: stageStart,
-            end: stageEnd,
-            scrub: 1.2,
-            id: `spread-${stageIdx}`,
-          },
-        });
-
-        // Grab card elements for this stage
-        const group = cardGroupRefs.current[stageIdx];
-        if (group) {
-          const cards = group.querySelectorAll(".story-card");
-
-          // Phase 0→40%  : cards spread apart to their x/y targets
-          cards.forEach((card, i) => {
-            const item = stage.items[i] || {};
-            spreadTl.to(
-              card,
-              {
-                x: item.x ?? 0,
-                y: item.y ?? 0,
-                scale: 1.05,
-                duration: 0.5,
-                ease: "power2.out",
-              },
-              0   // all start together at position 0 in timeline
-            );
-          });
-
-          // Phase 60→100%: entire group fades + scales out (exit)
-          if (!isLast) {
-            spreadTl.to(
-              group,
-              { opacity: 0, scale: 0.8, duration: 0.4, ease: "power1.in" },
-              0.6
-            );
-          }
-        }
-
-        // ── 2. BACKGROUND crossfade (lower scrub = silkier transition) ──
-        const bgCurrent  = bgRefs.current[stageIdx];
-        const bgNext     = bgRefs.current[stageIdx + 1];
-
-        if (bgCurrent && !isLast) {
-          const bgTl = gsap.timeline({
-            scrollTrigger: {
-              trigger: wrapperRef.current,
-              start: `top+=${stageIdx * 100 + 70}vh`,   // starts at 70% through stage
-              end: stageEnd,
-              scrub: 2,                                  // smooth/slow for crossfade
-              id: `bg-${stageIdx}`,
-            },
-          });
-
-          bgTl
-            .to(bgCurrent, { opacity: 0, duration: 1 }, 0)
-            .fromTo(
-              bgNext,
-              { opacity: 0 },
-              { opacity: 1, duration: 1 },
-              0
-            );
-        }
-
-        // ── 3. ENTER animation for the NEXT stage's cards ──
-        //    runs at the very end of this stage's scroll range
-        if (!isLast) {
-          const nextGroup = cardGroupRefs.current[stageIdx + 1];
-          if (nextGroup) {
-            // Reset next group to stacked/center before it appears
-            gsap.set(nextGroup, { opacity: 0, scale: 0.9 });
-            const nextCards = nextGroup.querySelectorAll(".story-card");
-            gsap.set(nextCards, { x: 0, y: 0 });
-
-            ScrollTrigger.create({
-              trigger: wrapperRef.current,
-              start: `top+=${stageIdx * 100 + 85}vh`,
-              id: `enter-${stageIdx}`,
-              onEnter: () => {
-                gsap.to(nextGroup, {
-                  opacity: 1,
-                  scale: 1,
-                  duration: 0.6,
-                  ease: "back.out(1.4)",
-                });
-              },
-              onLeaveBack: () => {
-                gsap.to(nextGroup, { opacity: 0, scale: 0.9, duration: 0.3 });
-              },
-            });
-          }
-        }
-      });
-    }, wrapperRef); // scoped context
-
-    // ─── CLEANUP ──────────────────────────────────────────────────────
-    return () => ctx.revert();
-  }, [stages]);
+  // --- 3. Text and Cards Enter (0.15 to 0.30) ---
+  const contentOpacity = useTransform(scrollYProgress, [0.15, 0.25], [0, 1]);
+  const contentX = useTransform(scrollYProgress, [0.15, 0.30], [-500, 0]);
+  const pointerEvents = useTransform(scrollYProgress, (val) => val > 0.25 ? "auto" : "none");
 
   return (
-    // ── TALL WRAPPER — gives scroll distance ──
-    <div
-      ref={wrapperRef}
-      className="scroll-story-wrapper"
-      style={{ height: `${stages.length * 100}vh` }}
-    >
-      {/* ── CAMERA — pinned, 100vh ── */}
-      <div ref={cameraRef} className="scroll-story-camera">
+    <div ref={containerRef} className="scroll-story-wrapper">
+      <div className="scroll-story-camera">
+        
+        {/* Red Strips Layer */}
+        <motion.div 
+          className="spirit-bg-layer"
+          style={{ x: stripsX, y: stripsY, opacity: stripsOpacity }}
+        >
+          <RedStrips index={0} shiftX="-20%" />
+        </motion.div>
 
-        {/* ── BACKGROUND LAYERS (all stacked, opacity controlled by GSAP) ── */}
-        <div className="scroll-story-backgrounds">
-          {stages.map((stage, i) => (
-            <div
-              key={`bg-${i}`}
-              ref={(el) => (bgRefs.current[i] = el)}
-              className="story-bg"
-              style={{
-                background: stage.background,
-                opacity: i === 0 ? 1 : 0, // only first visible initially
-              }}
-            />
-          ))}
-        </div>
+        {/* Removed black gradient fade here per user request */}
 
-        {/* ── CARD GROUPS (all stacked at center, opacity controlled by GSAP) ── */}
-        {stages.map((stage, stageIdx) => (
-          <div
-            key={`group-${stageIdx}`}
-            ref={(el) => (cardGroupRefs.current[stageIdx] = el)}
-            className="story-card-group"
-            style={{ opacity: stageIdx === 0 ? 1 : 0 }}
-          >
-            {/* Stage label */}
-            <p className="story-stage-label">{stage.label}</p>
+        {/* Content Scene */}
+        <motion.div 
+          className="spirit-scene"
+          style={{ pointerEvents }}
+        >
+          {/* Background Rays */}
+          <motion.div 
+            className="spirit-bg-rays"
+            style={{ opacity: contentOpacity }}
+          ></motion.div>
 
-            {/* Cards — all start at center (x:0, y:0) */}
-            {stage.items.map((item, itemIdx) => (
-              <div
-                key={item.id}
-                ref={(el) => {
-                  if (!cardRefs.current[stageIdx])
-                    cardRefs.current[stageIdx] = [];
-                  cardRefs.current[stageIdx][itemIdx] = el;
-                }}
-                className="story-card"
-                data-label={item.label}
-                style={{
-                  // Hue shift per card for visual variety
-                  "--card-hue": `${(itemIdx * 60) % 360}deg`,
-                }}
-              >
-                <span className="card-id">0{itemIdx + 1}</span>
-                <span className="card-label">{item.label}</span>
+          <div className="spirit-content">
+            
+            <motion.div 
+              className="spirit-left"
+              style={{ x: contentX, opacity: contentOpacity }}
+            >
+              <div className="spirit-header">
+                <p className="spirit-subtitle">WHAT WE STAND FOR</p>
+                <h2 className="spirit-title">
+                  Celebrating the Spirit of <br/>
+                  <span className="text-red">Mechanical Engineering</span>
+                </h2>
+                <p className="spirit-desc">
+                  MechaPEF continues to bridge knowledge, ideas, and people – fostering a culture of innovation and belonging within the department.
+                </p>
               </div>
-            ))}
+
+              <div className="spirit-cards-container">
+                <div className="spirit-card">
+                  <div className="card-icon"><FaCalendarAlt /></div>
+                  <h3>Workshops <br/>& Meets</h3>
+                  <p>From professional development to alumni interactions, we create opportunities for learning and growth.</p>
+                </div>
+
+                <div className="spirit-card">
+                  <div className="card-icon"><FaUsers /></div>
+                  <h3>Collaborative <br/>Community</h3>
+                  <p>A vibrant network united by curiosity, teamwork, and the spirit of mechanical engineering.</p>
+                </div>
+
+                <div className="spirit-card">
+                  <div className="card-icon"><FaTrophy /></div>
+                  <h3>Legacy of <br/>Learning</h3>
+                  <p>Continuing a tradition of knowledge sharing, mentorship, and departmental unity across batches.</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="spirit-right">
+              {/* Extra glow behind the wheel */}
+              <motion.div 
+                className="wheel-glow"
+                style={{ opacity: wheelOpacity }}
+              ></motion.div>
+
+              {/* Wheel scales up and flies in from Top-Left without spinning */}
+              <motion.img 
+                src={wheelImg} 
+                alt="Mechanical Wheel" 
+                className="spirit-wheel"
+                style={{ x: wheelX, y: wheelY, scale: wheelScale, opacity: wheelOpacity }}
+              />
+            </div>
+            
           </div>
-        ))}
+        </motion.div>
 
       </div>
     </div>
