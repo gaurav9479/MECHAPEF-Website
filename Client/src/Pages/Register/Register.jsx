@@ -20,7 +20,8 @@ const Register = () => {
     confirmPassword: '',
     yearOfStudy: '1',
     branch: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    requestedRole: 'GeneralUser'
   });
 
   const handleChange = (e) => {
@@ -177,6 +178,24 @@ const Register = () => {
                 required
               />
             </div>
+          </div>
+
+          <div className="auth-input-group" style={{ marginBottom: '20px' }}>
+            <FaUser className="auth-icon" />
+            <select
+              name="requestedRole"
+              value={form.requestedRole}
+              onChange={handleChange}
+              className="auth-select"
+            >
+              <option value="GeneralUser">General User (No Admin Access)</option>
+              <option value="EventLead">Event Lead</option>
+              <option value="EventHead">Event Head</option>
+              <option value="DesignTeam">Design Team</option>
+              <option value="WebTeam">Web Team</option>
+              <option value="PRTeam">PR Team</option>
+              <option value="Alumni">Alumni</option>
+            </select>
           </div>
 
           <div className="form-row">
