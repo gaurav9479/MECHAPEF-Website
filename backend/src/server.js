@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import app from './app.js';
 import connectDB from './config/database.js';
+import { startCronJobs } from './utils/cron.js';
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -12,6 +13,9 @@ const startServer = async () => {
 
         const server = app.listen(PORT, () => {
             console.log(`DB-connected server started`);
+            
+            // Start background jobs
+            startCronJobs();
         });
     } catch (error) {
         console.error('Failed to start server:', error.message);

@@ -13,6 +13,7 @@ import AdminManagement from './Pages/Admin/AdminManagement';
 import AdminGallery from './Pages/Admin/AdminGallery';
 import Gallery from './Pages/Gallery/Gallery';
 import AlbumView from './Pages/Gallery/AlbumView';
+import Profile from './Pages/Profile/Profile';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
 // Unauthorized page
@@ -35,6 +36,9 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/gallery/:id" element={<AlbumView />} />
+          <Route path="/profile" element={
+            <ProtectedRoute requiredRole="GeneralUser"><Profile /></ProtectedRoute>
+          } />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Admin Routes */}

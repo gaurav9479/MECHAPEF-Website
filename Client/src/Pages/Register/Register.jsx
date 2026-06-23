@@ -49,7 +49,7 @@ const Register = () => {
 
     const regnoFromEmail = form.email.toLowerCase().split('.')[1]?.split('@')[0];
     if (regnoFromEmail !== form.collegeRegNo.toLowerCase()) {
-      setError("College Registration Number must match the one in your email address");
+      setError("Wrong credential");
       return;
     }
 

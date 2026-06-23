@@ -131,6 +131,9 @@ const Navbar = () => {
                     <span>{user.email}</span>
                   </div>
                   <div className="dropdown-divider"></div>
+                  <button onClick={() => { setAvatarMenuOpen(false); setMenuOpen(false); navigate('/profile'); }}>
+                    <FaUserCircle /> My Profile
+                  </button>
                   {hasRole('EventHead') && (
                     <button onClick={() => { setAvatarMenuOpen(false); setMenuOpen(false); navigate('/admin'); }}>
                       <FaUserShield /> Admin Portal
@@ -161,6 +164,9 @@ const Navbar = () => {
                   <span>{user.email}</span>
                 </div>
                 <div className="dropdown-divider"></div>
+                <button onClick={() => { setAvatarMenuOpen(false); navigate('/profile'); }}>
+                  <FaUserCircle /> My Profile
+                </button>
                 {hasRole('EventHead') && (
                   <button onClick={() => { setAvatarMenuOpen(false); navigate('/admin'); }}>
                     <FaUserShield /> Admin Portal
