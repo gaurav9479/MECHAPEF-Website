@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaCog, FaSignOutAlt, FaHome } from 'react-icons/fa';
+import { FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaCog, FaImages, FaSignOutAlt, FaHome } from 'react-icons/fa';
 import api from '../../services/api';
+import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import './AdminDashboard.css';
+
 const AdminDashboard = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -16,6 +18,9 @@ const AdminDashboard = () => {
       setRecentEvents(events.slice(0, 5));
       setStats(s => ({ ...s, events: res.data.data?.pagination?.totalCount || events.length }));
     }).catch(() => {});
+    api.get('/auth/users').then(res => {
+      setStats(s => ({ ...s, users: res.data.data?.pagination?.totalCount || 0 }));
+    }).catch(() => {});
   }, []);
   const adminLinks = [
     { to: '/admin/events', icon: <FaCalendarAlt />, label: 'Manage Events', desc: 'Create, edit & delete events' },
@@ -26,27 +31,7 @@ const AdminDashboard = () => {
   return (
     <div className="admin-layout">
       {/* Sidebar */}
-      <aside className="admin-sidebar">
-        <div className="sidebar-logo">
-          <FaCog className="sidebar-logo-icon" />
-          <div>
-            <div className="sidebar-logo-main">Mecha<span>PEF</span></div>
-            <div className="sidebar-logo-sub">Admin Portal</div>
-          </div>
-        </div>
-        <nav className="sidebar-nav">
-          <Link to="/admin" className="sidebar-link active"><FaCalendarAlt /> Dashboard</Link>
-          <Link to="/admin/events" className="sidebar-link"><FaCalendarAlt /> Events</Link>
-          <Link to="/admin/team" className="sidebar-link"><FaUsers /> Team</Link>
-          <Link to="/admin/announcements" className="sidebar-link"><FaBullhorn /> Announcements</Link>
-          <Link to="/admin/sponsors" className="sidebar-link"><FaHandshake /> Sponsors</Link>
-          <Link to="/admin/management" className="sidebar-link"><FaCog /> Management</Link>
-        </nav>
-        <div className="sidebar-bottom">
-          <Link to="/" className="sidebar-link"><FaHome /> View Site</Link>
-          <button onClick={handleLogout} className="sidebar-logout"><FaSignOutAlt /> Logout</button>
-        </div>
-      </aside>
+      <AdminSidebar />
       {/* Main Content */}
       <main className="admin-main">
         <div className="admin-header">
@@ -65,8 +50,8 @@ const AdminDashboard = () => {
           <div className="admin-stat-card">
             <FaUsers className="stat-icon" />
             <div>
-              <div className="stat-num">—</div>
-              <div className="stat-label">Team Members</div>
+              <div className="stat-num">{stats.users || 0}</div>
+              <div className="stat-label">Total Users</div>
             </div>
           </div>
           <div className="admin-stat-card">

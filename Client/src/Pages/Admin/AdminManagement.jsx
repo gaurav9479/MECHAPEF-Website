@@ -5,10 +5,11 @@ import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 import {
   FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake,
-  FaHome, FaSignOutAlt, FaCog, FaCheckCircle, FaTimesCircle,
+  FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle, FaTimesCircle,
   FaImage, FaUpload, FaEdit, FaCrop, FaSearch
 } from 'react-icons/fa';
 import api from '../../services/api';
+import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import '../Admin/AdminDashboard.css';
 import './AdminManagement.css';
 // All section keys that can have their images changed
@@ -60,8 +61,9 @@ const AdminManagement = () => {
   const [cropSrc, setCropSrc] = useState(null);
   const [cropping, setCropping] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const cropperRef = useRef(null);
+  const [deletingImage, setDeletingImage] = useState(false);
   const fileInputRef = useRef(null);
+  const cropperRef = useRef(null);
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
@@ -83,12 +85,11 @@ const AdminManagement = () => {
     setVerifyingId(userId);
     try {
       if (currentlyVerified) {
-        // Un-verify: just update isVerified to false via a generic update
-        await api.put(`/auth/users/${userId}/verify`, { isVerified: false });
-        showToast('User unverified');
+        await api.patch(`/auth/users/${userId}/verify`, { isVerified: false });
+        showToast('User verification revoked');
       } else {
-        await api.put(`/auth/users/${userId}/verify`);
-        showToast('User verified ✓');
+        await api.patch(`/auth/users/${userId}/verify`, { isVerified: true });
+        showToast('User verified successfully');
       }
       fetchUsers();
     } catch { showToast('Failed to update', 'error'); }
@@ -143,6 +144,27 @@ const AdminManagement = () => {
     setSectionImages(map);
   };
   useEffect(() => { if (activeTab === 'images') fetchSectionImages(); }, [activeTab]);
+
+  const deleteImage = async () => {
+    const currentSectionLabel = SECTION_KEYS.find(s => s.key === selectedSection)?.label;
+    if (!window.confirm(`Are you sure you want to delete the image for ${currentSectionLabel}?`)) return;
+    setDeletingImage(true);
+    try {
+      await api.delete(`/upload/sections/${selectedSection}`);
+      setSectionImages(prev => {
+        const copy = { ...prev };
+        delete copy[selectedSection];
+        return copy;
+      });
+      showToast('Image deleted');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete image: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setDeletingImage(false);
+    }
+  };
+
   const onFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -184,32 +206,10 @@ const AdminManagement = () => {
     } finally { setUploading(false); }
   };
   const currentSectionLabel = SECTION_KEYS.find(s => s.key === selectedSection)?.label;
-  // ── Sidebar (shared) ─────────────────────────────────────────────────────
-  const Sidebar = () => (
-    <aside className="admin-sidebar">
-      <div className="sidebar-logo">
-        <FaCog className="sidebar-logo-icon" />
-        <div>
-          <div className="sidebar-logo-main">Mecha<span>PEF</span></div>
-          <div className="sidebar-logo-sub">Admin Portal</div>
-        </div>
-      </div>
-      <nav className="sidebar-nav">
-        <Link to="/admin" className="sidebar-link"><FaCalendarAlt /> Dashboard</Link>
-        <Link to="/admin/events" className="sidebar-link"><FaCalendarAlt /> Events</Link>
-        <Link to="/admin/team" className="sidebar-link"><FaUsers /> Team</Link>
-        <Link to="/admin/announcements" className="sidebar-link"><FaBullhorn /> Announcements</Link>
-        <Link to="/admin/sponsors" className="sidebar-link"><FaHandshake /> Sponsors</Link>
-        <Link to="/admin/management" className="sidebar-link active"><FaCog /> Management</Link>
-      </nav>
-      <div className="sidebar-bottom">
-        <Link to="/" className="sidebar-link"><FaHome /> View Site</Link>
-      </div>
-    </aside>
-  );
+
   return (
     <div className="admin-layout">
-      <Sidebar />
+      <AdminSidebar />
       <main className="admin-form-page">
         <div className="admin-form-topbar">
           <h1>Management</h1>
@@ -268,6 +268,7 @@ const AdminManagement = () => {
                     <th>Email</th>
                     <th>Reg No</th>
                     <th>Role</th>
+                    <th>Requested</th>
                     <th>Year</th>
                     <th>Verified</th>
                     <th>Toggle</th>
@@ -284,6 +285,13 @@ const AdminManagement = () => {
                       <td style={{ fontFamily: 'sans-serif', fontSize: '0.85rem' }}>{u.email}</td>
                       <td style={{ fontFamily: 'monospace', color: '#aaa' }}>{u.collegeRegNo || '—'}</td>
                       <td><span className="tag">{u.role}</span></td>
+                      <td>
+                        {u.requestedRole ? (
+                          <span className="tag" style={{ border: '1px solid #ffaa00', color: '#ffaa00', background: 'transparent' }}>
+                            {u.requestedRole}
+                          </span>
+                        ) : '—'}
+                      </td>
                       <td>{u.yearOfStudy ? `Year ${u.yearOfStudy}` : '—'}</td>
                       <td>
                         {u.isVerified
@@ -410,7 +418,7 @@ const AdminManagement = () => {
                 >
                   {SECTION_KEYS.filter(s => selectedCategory === 'Our Team' ? s.key.startsWith('team_') : !s.key.startsWith('team_')).map(s => (
                     <option key={s.key} value={s.key}>
-                      {s.label} {sectionImages[s.key] ? ' (✓ Image set)' : ' (No image)'}
+                      {s.label} {sectionImages[s.key]?.imageURL ? ' (✓ Image set)' : ' (No image)'}
                     </option>
                   ))}
                 </select>
@@ -423,8 +431,17 @@ const AdminManagement = () => {
               </h3>
               {/* Current Image Preview */}
               {sectionImages[selectedSection]?.imageURL && (
-                <div className="current-img-preview">
-                  <div className="current-img-label">Current Image</div>
+                <div className="current-img-preview" style={{ position: 'relative' }}>
+                  <div className="current-img-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Current Image</span>
+                    <button 
+                      onClick={deleteImage} 
+                      disabled={deletingImage}
+                      style={{ background: '#ff0000', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                    >
+                      {deletingImage ? 'Deleting...' : 'Delete Image'}
+                    </button>
+                  </div>
                   <img 
                     src={sectionImages[selectedSection].imageURL} 
                     alt="current" 
@@ -487,6 +504,63 @@ const AdminManagement = () => {
                       Cancel
                     </button>
                   </div>
+                </div>
+              )}
+              
+              {/* Extra Inputs for Team Details */}
+              {selectedSection.startsWith('team_') && (
+                <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', background: '#111', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
+                  <h4 style={{ color: '#fff', margin: 0 }}>Team Member Details</h4>
+                  <div style={{ display: 'flex', gap: '15px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Name</label>
+                      <input 
+                        type="text" 
+                        value={sectionImages[selectedSection]?.name || ''} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], name: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
+                        placeholder="Enter name"
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Registration Number / Role</label>
+                      <input 
+                        type="text" 
+                        value={sectionImages[selectedSection]?.regNo || ''} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], regNo: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
+                        placeholder="Enter Reg No or Role"
+                      />
+                    </div>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const imgData = sectionImages[selectedSection];
+                        await api.post('/upload/sections', {
+                          sectionKey: selectedSection,
+                          name: imgData?.name || '',
+                          regNo: imgData?.regNo || ''
+                        });
+                        showToast('Details saved!');
+                      } catch (error) {
+                        showToast('Failed to save details', 'error');
+                      }
+                    }}
+                    style={{ alignSelf: 'flex-start', background: '#007bff', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    Save Details
+                  </button>
                 </div>
               )}
             </div>
