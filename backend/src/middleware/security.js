@@ -9,7 +9,7 @@ import { sendError } from '../utils/response.js';
 
 
 export const corsConfig = cors({
-    origin: true, // This reflects the incoming origin header, effectively acting as '*' while allowing credentials
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()) : ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

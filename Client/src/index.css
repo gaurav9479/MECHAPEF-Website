@@ -19,6 +19,12 @@ section{
   padding:100px 10%;
 }
 
+@media (max-width: 768px) {
+  section {
+    padding: 60px 5%;
+  }
+}
+
 /* Global Fixed Gradient (Bottom) */
 body::after {
   content: "";
