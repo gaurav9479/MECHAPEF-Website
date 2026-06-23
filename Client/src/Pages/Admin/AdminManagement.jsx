@@ -95,6 +95,17 @@ const AdminManagement = () => {
     } catch { showToast('Failed to update', 'error'); }
     finally { setVerifyingId(null); }
   };
+
+  const updateRole = async (userId, newRole) => {
+    try {
+      await api.patch(`/auth/users/${userId}/role`, { role: newRole });
+      showToast('User role updated successfully');
+      fetchUsers();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update role', 'error');
+    }
+  };
+
   const filteredUsers = users.filter(u =>
     !search ||
     u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -284,7 +295,22 @@ const AdminManagement = () => {
                       <td style={{ fontWeight: 600, color: '#fff' }}>{u.name}</td>
                       <td style={{ fontFamily: 'sans-serif', fontSize: '0.85rem' }}>{u.email}</td>
                       <td style={{ fontFamily: 'monospace', color: '#aaa' }}>{u.collegeRegNo || '—'}</td>
-                      <td><span className="tag">{u.role}</span></td>
+                      <td>
+                        <select 
+                          value={u.role} 
+                          onChange={(e) => updateRole(u._id, e.target.value)}
+                          style={{ padding: '4px', fontSize: '0.8rem', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          <option value="SuperAdmin">SuperAdmin</option>
+                          <option value="EventLead">EventLead</option>
+                          <option value="EventHead">EventHead</option>
+                          <option value="DesignTeam">DesignTeam</option>
+                          <option value="WebTeam">WebTeam</option>
+                          <option value="PRTeam">PRTeam</option>
+                          <option value="Alumni">Alumni</option>
+                          <option value="GeneralUser">GeneralUser</option>
+                        </select>
+                      </td>
                       <td>
                         {u.requestedRole ? (
                           <span className="tag" style={{ border: '1px solid #ffaa00', color: '#ffaa00', background: 'transparent' }}>

@@ -189,6 +189,7 @@ const Register = () => {
               className="auth-select"
             >
               <option value="GeneralUser">General User (No Admin Access)</option>
+              <option value="SuperAdmin">Super Admin</option>
               <option value="EventLead">Event Lead</option>
               <option value="EventHead">Event Head</option>
               <option value="DesignTeam">Design Team</option>
