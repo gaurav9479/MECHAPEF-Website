@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
+import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages } from 'react-icons/fa';
 import api from '../../services/api';
 import './AdminDashboard.css';
 const PRIORITIES = ['Low', 'Medium', 'High'];
@@ -75,27 +76,7 @@ const AdminAnnouncements = () => {
   const priorityColor = { High: '#ff4444', Medium: '#ffaa00', Low: '#00c864' };
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
-        <div className="sidebar-logo">
-          <FaCog className="sidebar-logo-icon" />
-          <div>
-            <div className="sidebar-logo-main">Mecha<span>PEF</span></div>
-            <div className="sidebar-logo-sub">Admin Portal</div>
-          </div>
-        </div>
-        <nav className="sidebar-nav">
-          <Link to="/admin" className="sidebar-link"><FaCalendarAlt /> Dashboard</Link>
-          <Link to="/admin/events" className="sidebar-link"><FaCalendarAlt /> Events</Link>
-          <Link to="/admin/team" className="sidebar-link"><FaUsers /> Team</Link>
-          <Link to="/admin/announcements" className="sidebar-link active"><FaBullhorn /> Announcements</Link>
-          <Link to="/admin/sponsors" className="sidebar-link"><FaHandshake /> Sponsors</Link>
-          <Link to="/admin/management" className="sidebar-link"><FaCog /> Management</Link>
-        </nav>
-        <div className="sidebar-bottom">
-          <Link to="/" className="sidebar-link"><FaHome /> View Site</Link>
-          <button onClick={handleLogout} className="sidebar-logout"><FaSignOutAlt /> Logout</button>
-        </div>
-      </aside>
+      <AdminSidebar />
       <main className="admin-form-page">
         <div className="admin-form-topbar">
           <h1>Announcements</h1>

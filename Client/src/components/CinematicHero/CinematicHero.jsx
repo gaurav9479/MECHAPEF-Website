@@ -13,6 +13,7 @@ import '../Hero/Hero.css';
 import '../About/About.css';
 import api from '../../services/api';
 import EditableImage from '../EditableImage/EditableImage';
+import { Link } from 'react-router-dom';
 
 const CinematicHero = () => {
   const navigate = useNavigate();
@@ -71,10 +72,23 @@ const CinematicHero = () => {
 
   // Cards Enter (0.1125 to 0.140625) & Exit (0.253125 to 0.28125)
   const text2Opacity = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 1, 1, 0]);
-  const card1Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [-500, 0, 0, -500]); // Top
-  const card2X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [500, 0, 0, 500]); // Right
-  const card3X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [-500, 0, 0, -500]); // Left
-  const card4Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [500, 0, 0, 500]); // Bottom
+  
+  // Card 1 (45+): Enters from Top (90° -> Y=-500), Exits to Left (180° -> X=-500)
+  const card1Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [-500, 0, 0, 0]);
+  const card1X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 0, 0, -500]);
+
+  // Card 3 (1000+): Enters from Left (180° -> X=-500), Exits to Bottom (270° -> Y=500)
+  const card3X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [-500, 0, 0, 0]);
+  const card3Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 0, 0, 500]);
+
+  // Card 2 (5+ Years): Enters from Right (0° -> X=500), Exits to Top (90° -> Y=-500)
+  const card2X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [500, 0, 0, 0]);
+  const card2Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 0, 0, -500]);
+
+  // Card 4 (50+ Events): Enters from Bottom (270° -> Y=500), Exits to Right (0° -> X=500)
+  const card4Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [500, 0, 0, 0]);
+  const card4X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 0, 0, 500]);
+
   const scene2PointerEvents = useTransform(scrollYProgress, (val) => (val >= 180/2500 && val <= 405/2500) ? "auto" : "none");
 
   // --- SCENE 3: Spirit of Mechanical Engineering (0.3375 to 0.5625) ---
@@ -280,7 +294,7 @@ const CinematicHero = () => {
               <div className="dash-col col-left">
                 <motion.div 
                   className="dash-card card-tall"
-                  style={{ y: card1Y }}
+                  style={{ y: card1Y, x: card1X }}
                 >
                   <h3 className="dash-num">45+</h3>
                   <h4 className="dash-title">Projects Completed</h4>
@@ -288,7 +302,7 @@ const CinematicHero = () => {
                 </motion.div>
                 <motion.div 
                   className="dash-card card-wide"
-                  style={{ x: card3X }}
+                  style={{ x: card3X, y: card3Y }}
                 >
                   <h3 className="dash-num">1000+</h3>
                   <h4 className="dash-title">Students Impacted</h4>
@@ -299,7 +313,7 @@ const CinematicHero = () => {
               <div className="dash-col col-right">
                 <motion.div 
                   className="dash-card card-wide"
-                  style={{ x: card2X }}
+                  style={{ x: card2X, y: card2Y }}
                 >
                   <h3 className="dash-num">5+</h3>
                   <h4 className="dash-title">Years of Legacy</h4>
@@ -307,7 +321,7 @@ const CinematicHero = () => {
                 </motion.div>
                 <motion.div 
                   className="dash-card card-tall"
-                  style={{ y: card4Y }}
+                  style={{ y: card4Y, x: card4X }}
                 >
                   <h3 className="dash-num">50+</h3>
                   <h4 className="dash-title">Events Conducted</h4>
@@ -430,7 +444,9 @@ const CinematicHero = () => {
               <p className="dept-desc">
                 MechaPEF continues to bridge knowledge, ideas, and people – fostering a culture of innovation and belonging within the department.
               </p>
-              <button className="gallery-btn">View Gallery -{'>'}</button>
+              <Link to="/gallery" className="gallery-btn" style={{ textDecoration: 'none', display: 'inline-block', textAlign: 'center' }}>
+                View Gallery -{'>'}
+              </Link>
             </motion.div>
 
             {/* Row 3 */}

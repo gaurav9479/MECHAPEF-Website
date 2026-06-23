@@ -10,6 +10,10 @@ import AdminTeam from './Pages/Admin/AdminTeam';
 import AdminAnnouncements from './Pages/Admin/AdminAnnouncements';
 import AdminSponsors from './Pages/Admin/AdminSponsors';
 import AdminManagement from './Pages/Admin/AdminManagement';
+import AdminGallery from './Pages/Admin/AdminGallery';
+import Gallery from './Pages/Gallery/Gallery';
+import AlbumView from './Pages/Gallery/AlbumView';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
 // Unauthorized page
 const Unauthorized = () => (
@@ -29,15 +33,32 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/gallery/:id" element={<AlbumView />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Admin Routes — JWT protection disabled for now (testing phase) */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/events" element={<AdminEvents />} />
-          <Route path="/admin/team" element={<AdminTeam />} />
-          <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-          <Route path="/admin/sponsors" element={<AdminSponsors />} />
-          <Route path="/admin/management" element={<AdminManagement />} />
+          {/* Admin Routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminDashboard /></ProtectedRoute>
+          } />
+          <Route path="/admin/events" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminEvents /></ProtectedRoute>
+          } />
+          <Route path="/admin/team" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminTeam /></ProtectedRoute>
+          } />
+          <Route path="/admin/announcements" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminAnnouncements /></ProtectedRoute>
+          } />
+          <Route path="/admin/sponsors" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminSponsors /></ProtectedRoute>
+          } />
+          <Route path="/admin/management" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminManagement /></ProtectedRoute>
+          } />
+          <Route path="/admin/gallery" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminGallery /></ProtectedRoute>
+          } />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

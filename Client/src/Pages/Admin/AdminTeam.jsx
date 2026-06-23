@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
+import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages } from 'react-icons/fa';
 import api from '../../services/api';
 import './AdminDashboard.css';
 const SUB_TEAMS = ['Core', 'WebDev', 'PR', 'Logistics', 'Graphics', 'GeneralUser'];
 const emptyForm = {
   name: '', role: '', subTeam: 'Core', yearOfStudy: 2,
-  linkedinURL: '', githubURL: '', email: '', bio: '', displayOrder: 0
+  linkedinURL: '', githubURL: '', email: '', bio: '', displayOrder: 0, imageURL: '', isActive: true
 };
 const AdminTeam = () => {
   const { logout } = useAuth();
@@ -21,25 +22,27 @@ const AdminTeam = () => {
   const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [filterSubTeam, setFilterSubTeam] = useState('');
+  const [imageFile, setImageFile] = useState(null);
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
   const fetchMembers = async () => {
     try {
-      const res = await api.get('/team', { params: filterSubTeam ? { subTeam: filterSubTeam } : {} });
+      const res = await api.get('/team', { params: filterSubTeam ? { subTeam: filterSubTeam, all: true } : { all: true } });
       setMembers(res.data.data?.members || res.data.data || []);
     } catch {
       showToast('Failed to load team members', 'error');
     } finally { setLoading(false); }
   };
   useEffect(() => { fetchMembers(); }, [filterSubTeam]);
-  const openCreate = () => { setEditingMember(null); setForm(emptyForm); setShowModal(true); };
+  const openCreate = () => { setEditingMember(null); setForm(emptyForm); setImageFile(null); setShowModal(true); };
   const openEdit = (m) => {
     setEditingMember(m);
+    setImageFile(null);
     setForm({ name: m.name, role: m.role, subTeam: m.subTeam, yearOfStudy: m.yearOfStudy,
       linkedinURL: m.linkedinURL || '', githubURL: m.githubURL || '', email: m.email || '',
-      bio: m.bio || '', displayOrder: m.displayOrder || 0 });
+      bio: m.bio || '', displayOrder: m.displayOrder || 0, imageURL: m.imageURL || '', isActive: m.isActive !== false });
     setShowModal(true);
   };
   const handleDelete = async (id) => {
@@ -54,11 +57,21 @@ const AdminTeam = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      let finalForm = { ...form };
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        const uploadRes = await api.post('/upload/image', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        finalForm.imageURL = uploadRes.data.data.url;
+      }
+
       if (editingMember) {
-        await api.put(`/team/${editingMember._id}`, form);
+        await api.put(`/team/${editingMember._id}`, finalForm);
         showToast('Member updated!');
       } else {
-        await api.post('/team', form);
+        await api.post('/team', finalForm);
         showToast('Member added!');
       }
       setShowModal(false);
@@ -70,27 +83,7 @@ const AdminTeam = () => {
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
-        <div className="sidebar-logo">
-          <FaCog className="sidebar-logo-icon" />
-          <div>
-            <div className="sidebar-logo-main">Mecha<span>PEF</span></div>
-            <div className="sidebar-logo-sub">Admin Portal</div>
-          </div>
-        </div>
-        <nav className="sidebar-nav">
-          <Link to="/admin" className="sidebar-link"><FaCalendarAlt /> Dashboard</Link>
-          <Link to="/admin/events" className="sidebar-link"><FaCalendarAlt /> Events</Link>
-          <Link to="/admin/team" className="sidebar-link active"><FaUsers /> Team</Link>
-          <Link to="/admin/announcements" className="sidebar-link"><FaBullhorn /> Announcements</Link>
-          <Link to="/admin/sponsors" className="sidebar-link"><FaHandshake /> Sponsors</Link>
-          <Link to="/admin/management" className="sidebar-link"><FaCog /> Management</Link>
-        </nav>
-        <div className="sidebar-bottom">
-          <Link to="/" className="sidebar-link"><FaHome /> View Site</Link>
-          <button onClick={handleLogout} className="sidebar-logout"><FaSignOutAlt /> Logout</button>
-        </div>
-      </aside>
+      <AdminSidebar />
       <main className="admin-form-page">
         <div className="admin-form-topbar">
           <h1>Team Members</h1>
@@ -109,7 +102,7 @@ const AdminTeam = () => {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Name</th><th>Role</th><th>Sub-Team</th><th>Year</th><th>Active</th><th>Actions</th></tr>
+              <tr><th>Photo</th><th>Name</th><th>Role</th><th>Sub-Team</th><th>Year</th><th>Active</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -118,6 +111,13 @@ const AdminTeam = () => {
                 <tr><td colSpan="6" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No members yet.</td></tr>
               ) : members.map(m => (
                 <tr key={m._id}>
+                  <td>
+                    {m.imageURL ? (
+                      <img src={m.imageURL} alt={m.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>?</div>
+                    )}
+                  </td>
                   <td style={{ fontWeight: 600, color: '#fff' }}>{m.name}</td>
                   <td>{m.role}</td>
                   <td><span className="tag">{m.subTeam}</span></td>
@@ -139,6 +139,19 @@ const AdminTeam = () => {
             <h2>{editingMember ? 'Edit Member' : 'Add Team Member'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Profile Image</label>
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    {(imageFile || form.imageURL) && (
+                      <img 
+                        src={imageFile ? URL.createObjectURL(imageFile) : form.imageURL} 
+                        alt="preview" 
+                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '50%' }}
+                      />
+                    )}
+                    <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} />
+                  </div>
+                </div>
                 <div className="form-group">
                   <label>Name *</label>
                   <input value={form.name} onChange={e => f('name', e.target.value)} required placeholder="Full name" />
@@ -178,6 +191,16 @@ const AdminTeam = () => {
                 <div className="form-group full">
                   <label>Bio</label>
                   <textarea value={form.bio} onChange={e => f('bio', e.target.value)} placeholder="Short bio..." />
+                </div>
+                <div className="form-group full" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input 
+                    type="checkbox" 
+                    id="isActive" 
+                    checked={form.isActive} 
+                    onChange={e => f('isActive', e.target.checked)} 
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  <label htmlFor="isActive" style={{ margin: 0, cursor: 'pointer' }}>Show this member on the website (Visible to public)</label>
                 </div>
               </div>
               <div className="modal-actions">
