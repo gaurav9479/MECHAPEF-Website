@@ -201,6 +201,25 @@ export const verifyUser = asyncHandler(async (req, res) => {
     );
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE USER ROLE — SuperAdmin only: change any user's role directly
+// ─────────────────────────────────────────────────────────────────────────────
+export const updateUserRole = asyncHandler(async (req, res) => {
+    const { role } = req.body;
+    
+    if (!role) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Role is required');
+
+    const user = await User.findById(req.params.userId);
+    if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
+
+    user.role = role;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { user: user.getPublicProfile() }, 'User role updated successfully')
+    );
+});
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET ALL USERS — SuperAdmin only (for admin panel user management)

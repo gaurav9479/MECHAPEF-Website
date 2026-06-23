@@ -14,5 +14,6 @@ router.put('/profile', authenticate, authController.updateProfile);
 // SuperAdmin-only routes
 router.get('/users', authenticate, checkRole(['SuperAdmin']), authController.getAllUsers);
 router.patch('/users/:userId/verify', authenticate, checkRole(['SuperAdmin']), authController.verifyUser);
+router.patch('/users/:userId/role', authenticate, checkRole(['SuperAdmin']), authController.updateUserRole);
 
 export default router;
