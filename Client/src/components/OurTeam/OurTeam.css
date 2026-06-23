@@ -112,3 +112,14 @@
   color: #ff0000;
   font-family: sans-serif;
 }
+
+@media (max-width: 768px) {
+  .team-heading {
+    font-size: 2rem;
+    margin-bottom: 30px;
+  }
+  .team-scroll-container {
+    gap: 30px;
+    padding: 0 5vw 20px 5vw;
+  }
+}

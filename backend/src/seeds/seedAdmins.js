@@ -11,7 +11,7 @@
 
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import User from '../models/User.js';
+import User from '../models/user.model.js';
 
 const SEED_USERS = [
     // ──── SUPER ADMIN ────
@@ -20,6 +20,7 @@ const SEED_USERS = [
         email: 'gaurav.20249013@mnnit.ac.in',
         password: 'gaurav',
         collegeRegNo: '20249013',
+        yearOfStudy: 2,
         role: 'SuperAdmin',
         isVerified: true,
         isActive: true,
@@ -27,9 +28,10 @@ const SEED_USERS = [
     },
     {
         name: 'Honey',
-        email: 'honey.20249014@mnnit.ac.in',
+        email: 'honey.20249013@mnnit.ac.in',
         password: 'honey',
         collegeRegNo: '20240029',
+        yearOfStudy: 2,
         role: 'SuperAdmin',
         isVerified: true,
         isActive: true,
@@ -74,7 +76,8 @@ const seed = async () => {
         for (const userData of SEED_USERS) {
             const exists = await User.findOne({ email: userData.email });
             if (exists) {
-                console.log(`⏭️  Skipped (already exists): ${userData.email} [${userData.role}]`);
+                await User.updateOne({ email: userData.email }, { $set: userData });
+                console.log(`✅ Updated: ${userData.email} [${userData.role}]`);
                 skipped++;
                 continue;
             }
