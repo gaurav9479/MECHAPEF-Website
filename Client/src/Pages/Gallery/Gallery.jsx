@@ -11,9 +11,9 @@ const Gallery = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Scroll to top
+
     window.scrollTo(0, 0);
-    // Fetch albums
+
     api.get('/gallery').then(res => {
       setAlbums(res.data.data.albums);
     }).catch(err => {

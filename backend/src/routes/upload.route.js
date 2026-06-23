@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { uploadImage, getSectionImages, updateSectionImage, deleteSectionImage } from '../controllers/upload.controller.js';
-import { uploadSingle } from '../middleware/upload.js';
-import { authenticate, checkRole } from '../middleware/auth.js';
+import { uploadSingle } from '../middleware/upload.middleware.js';
+import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

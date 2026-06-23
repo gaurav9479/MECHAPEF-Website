@@ -22,7 +22,7 @@ const Login = () => {
     setLoading(true);
     try {
       const user = await login(email, password);
-      // Redirect based on role
+
       if (['SuperAdmin', 'EventHead', 'PRTeam'].includes(user.role)) {
         navigate(from, { replace: true });
       } else {
@@ -37,12 +37,12 @@ const Login = () => {
 
   return (
     <div className="login-page">
-      {/* Background strips */}
+
       <div className="login-bg-strip login-strip-1"></div>
       <div className="login-bg-strip login-strip-2"></div>
 
       <div className="login-card">
-        {/* Logo */}
+
         <div className="login-logo">
           <FaCog className="login-logo-icon" />
           <div>

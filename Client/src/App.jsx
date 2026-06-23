@@ -16,7 +16,7 @@ import AlbumView from './Pages/Gallery/AlbumView';
 import Profile from './Pages/Profile/Profile';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
-// Unauthorized page
+
 const Unauthorized = () => (
   <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#000', color: '#fff', fontFamily: 'Orbitron, sans-serif', gap: '20px' }}>
     <h1 style={{ color: '#ff0000', fontSize: '3rem' }}>403</h1>

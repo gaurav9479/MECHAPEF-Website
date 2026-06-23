@@ -251,7 +251,7 @@
   }
 }
 
-/* Hide global body gradients on gallery page */
+
 body:has(.gallery-page)::after,
 body:has(.gallery-page)::before {
   display: none !important;

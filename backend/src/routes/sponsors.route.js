@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as sponsorController from '../controllers/sponsor.controller.js';
-import { authenticate, checkRole } from '../middleware/auth.js';
+import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

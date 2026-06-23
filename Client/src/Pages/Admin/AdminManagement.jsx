@@ -12,7 +12,7 @@ import api from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import '../Admin/AdminDashboard.css';
 import './AdminManagement.css';
-// All section keys that can have their images changed
+
 const SECTION_KEYS = [
   { key: 'dept_1', label: 'Dept Image 1 (Big Left)', aspectRatio: 690/520 },
   { key: 'dept_2', label: 'Dept Image 2 (Stacked Top)', aspectRatio: 216/250 },

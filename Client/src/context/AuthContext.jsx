@@ -3,7 +3,7 @@ import { authService } from '../services/services';
 
 const AuthContext = createContext(null);
 
-// Role hierarchy mapping — matches backend constants
+
 export const ROLES = {
   SUPER_ADMIN: 'SuperAdmin',
   EVENT_HEAD: 'EventHead',
@@ -50,19 +50,19 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // Check if current user has at least this role level
+
   const hasRole = (requiredRole) => {
     if (!user) return false;
     return (ROLE_POWER[user.role] || 0) >= (ROLE_POWER[requiredRole] || 0);
   };
 
-  // Check exact role membership
+
   const isRole = (...roles) => {
     if (!user) return false;
     return roles.includes(user.role);
   };
 
-  // Can the user edit content? (EventHead and above)
+
   const canEdit = isRole(ROLES.SUPER_ADMIN, ROLES.EVENT_HEAD, ROLES.PR_TEAM);
   const isAdmin = isRole(ROLES.SUPER_ADMIN, ROLES.EVENT_HEAD);
   const isSuperAdmin = isRole(ROLES.SUPER_ADMIN);

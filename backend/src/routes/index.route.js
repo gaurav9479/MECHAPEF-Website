@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import authRoutes from './auth.js';
-import eventRoutes from './events.js';
-import registrationRoutes from './registrations.js';
-import teamRoutes from './team.js';
-import announcementRoutes from './announcements.js';
-import sponsorRoutes from './sponsors.js';
-import uploadRoutes from './upload.js';
-import albumRoutes from './albums.js';
+import authRoutes from './auth.route.js';
+import eventRoutes from './events.route.js';
+import registrationRoutes from './registrations.route.js';
+import teamRoutes from './team.route.js';
+import announcementRoutes from './announcements.routes.js';
+import sponsorRoutes from './sponsors.route.js';
+import uploadRoutes from './upload.route.js';
+import albumRoutes from './albums.routes.js';
 
 const router = Router();
 
