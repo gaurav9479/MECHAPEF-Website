@@ -1,0 +1,79 @@
+/* AdminSidebar.css */
+
+/* Hide the hamburger button and backdrop on desktop */
+.admin-mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1050;
+  background: #c9182b;
+  border: none;
+  color: white;
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3);
+  display: none; /* explicitly block */
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 1030;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.admin-sidebar-backdrop.active {
+  display: none; /* Still hidden on desktop */
+}
+
+/* Base Desktop Sidebar overrides */
+/* Inherits from AdminDashboard.css but we ensure it works everywhere */
+
+/* ====== MOBILE SLIDER ====== */
+@media (max-width: 768px) {
+  .admin-mobile-toggle {
+    display: flex;
+  }
+
+  .admin-sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+  }
+
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: -100% !important; /* hide off canvas */
+    width: 260px !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    z-index: 1040;
+    transition: left 0.3s ease;
+    border-right: 1px solid rgba(255, 0, 0, 0.15) !important;
+    border-bottom: none !important;
+  }
+
+  .admin-sidebar.open {
+    left: 0 !important;
+  }
+
+  .sidebar-nav {
+    flex-direction: column !important;
+    overflow-y: auto;
+    padding: 20px !important;
+    height: auto;
+  }
+}
