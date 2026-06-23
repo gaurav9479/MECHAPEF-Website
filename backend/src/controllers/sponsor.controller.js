@@ -1,7 +1,7 @@
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import APIResponse from '../utils/APIResponse.js';
-import Sponsor from '../models/Sponsor.js';
+import Sponsor from '../models/sponsor.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
 export const getSponsors = asyncHandler(async (req, res) => {
