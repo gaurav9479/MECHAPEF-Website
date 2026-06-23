@@ -338,11 +338,11 @@ const CinematicHero = () => {
           className="cinematic-scene"
           style={{ pointerEvents: scene3PointerEvents }}
         >
-          {/* Radiating Perspective Lines indicating Wheel size/speed */}
+
           <motion.svg 
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, mixBlendMode: 'screen', opacity: linesOpacity, pointerEvents: 'none' }}
           >
-            <line x1="0%" y1="0%" x2="80%" y2="20%" stroke="rgba(255, 0, 0, 0.5)" strokeWidth="1" />
+            <line x1="0%" y1="0%" x2="80%" y2="23.5%" stroke="rgba(255, 0, 0, 0.5)" strokeWidth="1" />
             <line x1="0%" y1="0%" x2="90%" y2="40%" stroke="rgba(255, 0, 0, 0.8)" strokeWidth="2" />
             <line x1="0%" y1="0%" x2="85%" y2="60%" stroke="rgba(255, 0, 0, 0.5)" strokeWidth="1.5" />
             <line x1="0%" y1="0%" x2="70%" y2="80%" stroke="rgba(255, 0, 0, 0.3)" strokeWidth="1" />
