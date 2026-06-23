@@ -4,8 +4,6 @@ import User from '../models/user.model.js';
 // Run every year on May 15 at 00:00 (Midnight)
 // cron expression format: minute hour dayOfMonth month dayOfWeek
 export const startCronJobs = () => {
-    console.log('⏳ Initializing background cron jobs...');
-
     cron.schedule('0 0 15 5 *', async () => {
         console.log('🔄 Executing Annual Academic Year Promotion Cron Job (May 15)...');
         
