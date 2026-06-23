@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       authService.getMe()
-        .then((res) => setUser(res.data.data))
+        .then((res) => setUser(res.data.data.user))
         .catch(() => localStorage.removeItem('accessToken'))
         .finally(() => setLoading(false));
     } else {

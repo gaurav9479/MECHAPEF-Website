@@ -1,0 +1,97 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { 
+  FaCog, 
+  FaCalendarAlt, 
+  FaUsers, 
+  FaBullhorn, 
+  FaHandshake, 
+  FaImages, 
+  FaHome, 
+  FaSignOutAlt,
+  FaBars,
+  FaTimes
+} from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
+import './AdminSidebar.css';
+
+const AdminSidebar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    await logout();
+    navigate('/');
+  };
+
+  const closeSidebar = () => {
+    setIsOpen(false);
+  };
+
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+
+  return (
+    <>
+      {/* Mobile Hamburger Button */}
+      <button 
+        className="admin-mobile-toggle" 
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Toggle Admin Sidebar"
+      >
+        {isOpen ? <FaTimes /> : <FaBars />}
+      </button>
+
+      {/* Backdrop for mobile */}
+      <div 
+        className={`admin-sidebar-backdrop ${isOpen ? 'active' : ''}`}
+        onClick={closeSidebar}
+      ></div>
+
+      {/* Sidebar */}
+      <aside className={`admin-sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sidebar-logo">
+          <FaCog className="sidebar-logo-icon" />
+          <div>
+            <div className="sidebar-logo-main">Mecha<span>PEF</span></div>
+            <div className="sidebar-logo-sub">Admin Portal</div>
+          </div>
+        </div>
+        <nav className="sidebar-nav">
+          <Link to="/admin" className={`sidebar-link ${location.pathname === '/admin' ? 'active' : ''}`}>
+            <FaCalendarAlt /> Dashboard
+          </Link>
+          <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`}>
+            <FaCalendarAlt /> Events
+          </Link>
+          <Link to="/admin/team" className={`sidebar-link ${location.pathname === '/admin/team' ? 'active' : ''}`}>
+            <FaUsers /> Team
+          </Link>
+          <Link to="/admin/announcements" className={`sidebar-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>
+            <FaBullhorn /> Announcements
+          </Link>
+          <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`}>
+            <FaHandshake /> Sponsors
+          </Link>
+          <Link to="/admin/gallery" className={`sidebar-link ${location.pathname === '/admin/gallery' ? 'active' : ''}`}>
+            <FaImages /> Gallery
+          </Link>
+          <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`}>
+            <FaCog /> Management
+          </Link>
+        </nav>
+        <div className="sidebar-bottom">
+          <Link to="/" className="sidebar-link"><FaHome /> View Site</Link>
+          <button onClick={handleLogout} className="sidebar-logout"><FaSignOutAlt /> Logout</button>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+export default AdminSidebar;
