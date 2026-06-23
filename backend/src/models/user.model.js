@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema(
             type: String,
             trim: true,
             uppercase: true,
+            unique: true,
             sparse: true, // allows null/undefined for pre-seeded admins
             validate: {
                 validator: function (value) {
@@ -109,10 +110,25 @@ const userSchema = new mongoose.Schema(
         yearOfStudy: {
             type: Number,
             min: 1,
-            max: 4
+            max: 5 // Allow 5 for Alumni
         },
 
         branch: String,
+
+        githubURL: {
+            type: String,
+            trim: true
+        },
+
+        linkedinURL: {
+            type: String,
+            trim: true
+        },
+
+        otherLinks: {
+            type: String,
+            trim: true
+        },
 
         registeredEvents: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -152,7 +168,7 @@ userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ isActive: 1, deletedAt: 1 });
-userSchema.index({ collegeRegNo: 1 }, { sparse: true }); // sparse so null values are allowed
+userSchema.index({ collegeRegNo: 1 }, { sparse: true, unique: true }); // sparse so null values are allowed
 // TTL index: auto delete document when current time > unverifiedRequestExpiresAt
 userSchema.index({ unverifiedRequestExpiresAt: 1 }, { expireAfterSeconds: 0 });
 

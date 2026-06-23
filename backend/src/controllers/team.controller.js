@@ -2,15 +2,20 @@ import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import APIResponse from '../utils/APIResponse.js';
 import Team from '../models/team.model.js';
+import User from '../models/user.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
 export const getAllTeam = asyncHandler(async (req, res) => {
-    const { subTeam, all } = req.query;
-    const filter = { deletedAt: null };
-    if (!all) filter.isActive = true;
-    if (subTeam) filter.subTeam = subTeam;
-    const members = await Team.find(filter).sort({ displayOrder: 1 });
-    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { members }, 'Team fetched'));
+    // Fetch all verified users who have a role other than GeneralUser
+    const members = await User.find({
+        role: { $ne: 'GeneralUser' },
+        isVerified: true,
+        deletedAt: null
+    })
+    .select('name email role yearOfStudy branch collegeRegNo profileImage')
+    .sort({ yearOfStudy: -1, name: 1 });
+
+    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { members }, 'Team fetched from Users'));
 });
 
 export const createTeamMember = asyncHandler(async (req, res) => {

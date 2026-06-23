@@ -30,7 +30,7 @@ export const register = asyncHandler(async (req, res) => {
     // Extract regno from email and verify it matches the collegeRegNo field
     const regnoFromEmail = email.toLowerCase().split('.')[1].split('@')[0];
     if (regnoFromEmail !== collegeRegNo.toLowerCase()) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'College registration number must match the one in your email address');
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Wrong credential');
     }
 
     // Block privileged roles from self-registering
@@ -160,7 +160,7 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 // UPDATE PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
 export const updateProfile = asyncHandler(async (req, res) => {
-    const allowed = ['name', 'phoneNumber', 'branch', 'yearOfStudy', 'profileImage'];
+    const allowed = ['name', 'phoneNumber', 'branch', 'yearOfStudy', 'profileImage', 'githubURL', 'linkedinURL', 'otherLinks'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
 
