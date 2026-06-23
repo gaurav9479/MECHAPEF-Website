@@ -53,8 +53,8 @@ const CinematicHero = () => {
   // Scene 4 Hold: 1300vh to 1400vh (1 scroll)\n  // Scene 4 Disappears: 1400vh to 2500vh (3 scrolls)
   
   // --- SCENE 1: Hero Bot (0.00 to 0.05625) ---
-  const scene1TextX = useTransform(scrollYProgress, [0/2500, 90/2500], [0, -1000]);
-  const scene1ImgX = useTransform(scrollYProgress, [0/2500, 90/2500], [0, 1000]);
+  const scene1TextX = useTransform(scrollYProgress, [0/2500, 90/2500], ["0vw", "-100vw"]);
+  const scene1ImgX = useTransform(scrollYProgress, [0/2500, 90/2500], ["0vw", "100vw"]);
   const scene1Opacity = useTransform(scrollYProgress, [0/2500, 90/2500], [1, 0]);
   const bg1Opacity = useTransform(scrollYProgress, [0/2500, 90/2500], [1, 0]);
   const bg1Display = useTransform(scrollYProgress, (val) => val >= 90/2500 ? "none" : "block");
@@ -63,39 +63,39 @@ const CinematicHero = () => {
   // --- SCENE 2: Drone Dashboard (0.05625 to 0.3375) ---
   // Left Strips Enter (0.05625 to 0.084375) & Exit (0.309375 to 0.3375)
   const bg2Opacity = useTransform(scrollYProgress, [90/2500, 135/2500, 495/2500, 540/2500], [0, 1, 1, 0]);
-  const bg2X = useTransform(scrollYProgress, [90/2500, 135/2500, 495/2500, 540/2500], [-200, 0, 0, -200]); 
+  const bg2X = useTransform(scrollYProgress, [90/2500, 135/2500, 495/2500, 540/2500], ["-20vw", "0vw", "0vw", "-20vw"]); 
   
   // Drone Enters (0.084375 to 0.1125) & Exits (0.28125 to 0.309375)
   const droneOpacity = useTransform(scrollYProgress, [135/2500, 180/2500, 450/2500, 495/2500], [0, 1, 1, 0]);
-  const droneY = useTransform(scrollYProgress, [135/2500, 180/2500, 450/2500, 495/2500], [-800, 0, 0, 800]); 
-  const droneX = useTransform(scrollYProgress, [135/2500, 180/2500, 450/2500, 495/2500], [373, 0, 0, -373]);
+  const droneY = useTransform(scrollYProgress, [135/2500, 180/2500, 450/2500, 495/2500], ["-100vh", "0vh", "0vh", "100vh"]); 
+  const droneX = useTransform(scrollYProgress, [135/2500, 180/2500, 450/2500, 495/2500], ["50vw", "0vw", "0vw", "-50vw"]);
 
   // Cards Enter (0.1125 to 0.140625) & Exit (0.253125 to 0.28125)
   const text2Opacity = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 1, 1, 0]);
   
   // Card 1 (45+): Enters from Top (90° -> Y=-500), Exits to Left (180° -> X=-500)
-  const card1Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [-500, 0, 0, 0]);
-  const card1X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 0, 0, -500]);
+  const card1Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["-50vh", "0vh", "0vh", "0vh"]);
+  const card1X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vw", "0vw", "0vw", "-50vw"]);
 
   // Card 3 (1000+): Enters from Left (180° -> X=-500), Exits to Bottom (270° -> Y=500)
-  const card3X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [-500, 0, 0, 0]);
-  const card3Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 0, 0, 500]);
+  const card3X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["-50vw", "0vw", "0vw", "0vw"]);
+  const card3Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vh", "0vh", "0vh", "50vh"]);
 
   // Card 2 (5+ Years): Enters from Right (0° -> X=500), Exits to Top (90° -> Y=-500)
-  const card2X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [500, 0, 0, 0]);
-  const card2Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 0, 0, -500]);
+  const card2X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["50vw", "0vw", "0vw", "0vw"]);
+  const card2Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vh", "0vh", "0vh", "-50vh"]);
 
   // Card 4 (50+ Events): Enters from Bottom (270° -> Y=500), Exits to Right (0° -> X=500)
-  const card4Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [500, 0, 0, 0]);
-  const card4X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 0, 0, 500]);
+  const card4Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["50vh", "0vh", "0vh", "0vh"]);
+  const card4X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vw", "0vw", "0vw", "50vw"]);
 
   const scene2PointerEvents = useTransform(scrollYProgress, (val) => (val >= 180/2500 && val <= 405/2500) ? "auto" : "none");
 
   // --- SCENE 3: Spirit of Mechanical Engineering (0.3375 to 0.5625) ---
   // Right Strips Enter (0.3375 to 0.365625) & Exit (0.478125 to 0.534375)
   const bg3Opacity = useTransform(scrollYProgress, [540/2500, 585/2500, 765/2500, 855/2500], [0, 1, 1, 0]);
-  const bg3Y = useTransform(scrollYProgress, [540/2500, 585/2500], [1000, 0]);
-  const bg3X = useTransform(scrollYProgress, [540/2500, 585/2500], [466, 0]);
+  const bg3Y = useTransform(scrollYProgress, [540/2500, 585/2500], ["100vh", "0vh"]);
+  const bg3X = useTransform(scrollYProgress, [540/2500, 585/2500], ["50vw", "0vw"]);
 
   // Wheel Enters (0.365625 to 0.39375) & Exits (0.478125 to 0.534375)
   const wheelOpacity = useTransform(scrollYProgress, [585/2500, 630/2500, 855/2500, 900/2500], [0, 1, 1, 0]);
@@ -107,20 +107,20 @@ const CinematicHero = () => {
   const spiritContentOpacity = useTransform(scrollYProgress, [630/2500, 675/2500, 765/2500, 855/2500], [0, 1, 1, 0]);
   
   // "Celebrating the Spirit of"
-  const title1X = useTransform(scrollYProgress, [630/2500, 657/2500, 675/2500, 765/2500, 855/2500], [-800, 30, 0, 0, -800]);
+  const title1X = useTransform(scrollYProgress, [630/2500, 657/2500, 675/2500, 765/2500, 855/2500], ["-100vw", "5vw", "0vw", "0vw", "-100vw"]);
   // "Mechanical Engineering"
-  const title2X = useTransform(scrollYProgress, [630/2500, 675/2500, 765/2500, 855/2500], [800, 0, 0, 800]);
+  const title2X = useTransform(scrollYProgress, [630/2500, 675/2500, 765/2500, 855/2500], ["100vw", "0vw", "0vw", "100vw"]);
   // Subtitle & Desc
-  const descY = useTransform(scrollYProgress, [630/2500, 675/2500, 765/2500, 855/2500], [100, 0, 0, 100]);
+  const descY = useTransform(scrollYProgress, [630/2500, 675/2500, 765/2500, 855/2500], ["10vh", "0vh", "0vh", "10vh"]);
 
   // Cards
-  const s3Card1Y = useTransform(scrollYProgress, [630/2500, 657/2500, 765/2500, 855/2500], [200, 0, 0, 200]);
+  const s3Card1Y = useTransform(scrollYProgress, [630/2500, 657/2500, 765/2500, 855/2500], ["20vh", "0vh", "0vh", "20vh"]);
   const s3Card1Op = useTransform(scrollYProgress, [630/2500, 657/2500, 765/2500, 855/2500], [0, 1, 1, 0]);
   
-  const s3Card2Y = useTransform(scrollYProgress, [639/2500, 666/2500, 765/2500, 855/2500], [200, 0, 0, 200]);
+  const s3Card2Y = useTransform(scrollYProgress, [639/2500, 666/2500, 765/2500, 855/2500], ["20vh", "0vh", "0vh", "20vh"]);
   const s3Card2Op = useTransform(scrollYProgress, [639/2500, 666/2500, 765/2500, 855/2500], [0, 1, 1, 0]);
   
-  const s3Card3Y = useTransform(scrollYProgress, [648/2500, 675/2500, 765/2500, 855/2500], [200, 0, 0, 200]);
+  const s3Card3Y = useTransform(scrollYProgress, [648/2500, 675/2500, 765/2500, 855/2500], ["20vh", "0vh", "0vh", "20vh"]);
   const s3Card3Op = useTransform(scrollYProgress, [648/2500, 675/2500, 765/2500, 855/2500], [0, 1, 1, 0]);
 
   // Radiating lines fade in with content but fade out between 0.478125 and 0.534375
@@ -137,58 +137,58 @@ const CinematicHero = () => {
 
   // Scene 4 Background (Opposite Side Strips)
   const bg4Opacity = useTransform(scrollYProgress, [900/2500, 960/2500, 1636/2500, 1700/2500], [0, 1, 1, 0]);
-  const bg4X = useTransform(scrollYProgress, [900/2500, 960/2500, 1636/2500, 1700/2500], [-1000, 0, 0, -1000]);
+  const bg4X = useTransform(scrollYProgress, [900/2500, 960/2500, 1636/2500, 1700/2500], ["-100vw", "0vw", "0vw", "-100vw"]);
 
   // Text & Button
   const deptTextOp = useTransform(scrollYProgress, [928/2500, 1008/2500, 1620/2500, 1684/2500], [0, 1, 1, 0]);
-  const deptTextX = useTransform(scrollYProgress, [928/2500, 1008/2500, 1620/2500, 1684/2500], [1000, 0, 0, 1000]);
+  const deptTextX = useTransform(scrollYProgress, [928/2500, 1008/2500, 1620/2500, 1684/2500], ["100vw", "0vw", "0vw", "100vw"]);
 
   // Big Image 1
   const img1Op = useTransform(scrollYProgress, [976/2500, 1056/2500, 1588/2500, 1652/2500], [0, 1, 1, 0]);
-  const img1Y = useTransform(scrollYProgress, [976/2500, 1056/2500, 1588/2500, 1652/2500], [1000, 0, 0, 1000]);
+  const img1Y = useTransform(scrollYProgress, [976/2500, 1056/2500, 1588/2500, 1652/2500], ["100vh", "0vh", "0vh", "100vh"]);
 
   // Stacked Images
   const img2Op = useTransform(scrollYProgress, [1024/2500, 1104/2500, 1556/2500, 1620/2500], [0, 1, 1, 0]);
-  const img2Y = useTransform(scrollYProgress, [1024/2500, 1104/2500, 1556/2500, 1620/2500], [-1000, 0, 0, -1000]);
+  const img2Y = useTransform(scrollYProgress, [1024/2500, 1104/2500, 1556/2500, 1620/2500], ["-100vh", "0vh", "0vh", "-100vh"]);
   const img3Op = useTransform(scrollYProgress, [1072/2500, 1152/2500, 1524/2500, 1588/2500], [0, 1, 1, 0]);
-  const img3Y = useTransform(scrollYProgress, [1072/2500, 1152/2500, 1524/2500, 1588/2500], [1000, 0, 0, 1000]);
+  const img3Y = useTransform(scrollYProgress, [1072/2500, 1152/2500, 1524/2500, 1588/2500], ["100vh", "0vh", "0vh", "100vh"]);
 
   // Bottom Row
   const img4Op = useTransform(scrollYProgress, [1120/2500, 1200/2500, 1492/2500, 1556/2500], [0, 1, 1, 0]);
-  const img4Y = useTransform(scrollYProgress, [1120/2500, 1200/2500, 1492/2500, 1556/2500], [1000, 0, 0, 1000]);
+  const img4Y = useTransform(scrollYProgress, [1120/2500, 1200/2500, 1492/2500, 1556/2500], ["100vh", "0vh", "0vh", "100vh"]);
   
   const img5Op = useTransform(scrollYProgress, [1152/2500, 1232/2500, 1460/2500, 1524/2500], [0, 1, 1, 0]);
-  const img5Y = useTransform(scrollYProgress, [1152/2500, 1232/2500, 1460/2500, 1524/2500], [1000, 0, 0, 1000]);
+  const img5Y = useTransform(scrollYProgress, [1152/2500, 1232/2500, 1460/2500, 1524/2500], ["100vh", "0vh", "0vh", "100vh"]);
   
   const img6Op = useTransform(scrollYProgress, [1184/2500, 1264/2500, 1428/2500, 1492/2500], [0, 1, 1, 0]);
-  const img6Y = useTransform(scrollYProgress, [1184/2500, 1264/2500, 1428/2500, 1492/2500], [1000, 0, 0, 1000]);
+  const img6Y = useTransform(scrollYProgress, [1184/2500, 1264/2500, 1428/2500, 1492/2500], ["100vh", "0vh", "0vh", "100vh"]);
   
   const img7Op = useTransform(scrollYProgress, [1216/2500, 1300/2500, 1400/2500, 1460/2500], [0, 1, 1, 0]);
-  const img7Y = useTransform(scrollYProgress, [1216/2500, 1300/2500, 1400/2500, 1460/2500], [1000, 0, 0, 1000]);
+  const img7Y = useTransform(scrollYProgress, [1216/2500, 1300/2500, 1400/2500, 1460/2500], ["100vh", "0vh", "0vh", "100vh"]);
 
   // --- SCENE 5: Join Us (1800vh to 2500vh) ---
   const scene5PointerEvents = useTransform(scrollYProgress, (val) => (val >= 1800/2500 && val <= 2450/2500) ? "auto" : "none");
   const scene5Opacity = useTransform(scrollYProgress, [1800/2500, 1850/2500, 2450/2500, 2500/2500], [0, 1, 1, 0]);
   
   // Background strips & bot appear TOGETHER over 300vh, hold 200vh, disperse 200vh
-  const bg5X = useTransform(scrollYProgress, [1800/2500, 2100/2500, 2300/2500, 2500/2500], [-100, 0, 0, 100]);
+  const bg5X = useTransform(scrollYProgress, [1800/2500, 2100/2500, 2300/2500, 2500/2500], ["-10vw", "0vw", "0vw", "10vw"]);
   const bg5Opacity = useTransform(scrollYProgress, [1800/2500, 2100/2500, 2300/2500, 2500/2500], [0, 1, 1, 0]);
 
   // Bot slides in from LEFT and disperses to LEFT
-  const botX = useTransform(scrollYProgress, [1800/2500, 2100/2500, 2300/2500, 2500/2500], [-1000, 0, 0, -1000]);
+  const botX = useTransform(scrollYProgress, [1800/2500, 2100/2500, 2300/2500, 2500/2500], ["-100vw", "0vw", "0vw", "-100vw"]);
   const botOpacity = useTransform(scrollYProgress, [1800/2500, 2100/2500, 2300/2500, 2500/2500], [0, 1, 1, 0]);
 
   // Content lines slide in from RIGHT line by line
-  const s5Line1X = useTransform(scrollYProgress, [1800/2500, 1950/2500, 2300/2500, 2400/2500], [1000, 0, 0, 1000]);
+  const s5Line1X = useTransform(scrollYProgress, [1800/2500, 1950/2500, 2300/2500, 2400/2500], ["100vw", "0vw", "0vw", "100vw"]);
   const s5Line1Op = useTransform(scrollYProgress, [1800/2500, 1950/2500, 2300/2500, 2400/2500], [0, 1, 1, 0]);
 
-  const s5Line2X = useTransform(scrollYProgress, [1850/2500, 2000/2500, 2333/2500, 2433/2500], [1000, 0, 0, 1000]);
+  const s5Line2X = useTransform(scrollYProgress, [1850/2500, 2000/2500, 2333/2500, 2433/2500], ["100vw", "0vw", "0vw", "100vw"]);
   const s5Line2Op = useTransform(scrollYProgress, [1850/2500, 2000/2500, 2333/2500, 2433/2500], [0, 1, 1, 0]);
 
-  const s5Line3X = useTransform(scrollYProgress, [1900/2500, 2050/2500, 2366/2500, 2466/2500], [1000, 0, 0, 1000]);
+  const s5Line3X = useTransform(scrollYProgress, [1900/2500, 2050/2500, 2366/2500, 2466/2500], ["100vw", "0vw", "0vw", "100vw"]);
   const s5Line3Op = useTransform(scrollYProgress, [1900/2500, 2050/2500, 2366/2500, 2466/2500], [0, 1, 1, 0]);
 
-  const s5Line4X = useTransform(scrollYProgress, [1950/2500, 2100/2500, 2400/2500, 2500/2500], [1000, 0, 0, 1000]);
+  const s5Line4X = useTransform(scrollYProgress, [1950/2500, 2100/2500, 2400/2500, 2500/2500], ["100vw", "0vw", "0vw", "100vw"]);
   const s5Line4Op = useTransform(scrollYProgress, [1950/2500, 2100/2500, 2400/2500, 2500/2500], [0, 1, 1, 0]);
 
   return (
