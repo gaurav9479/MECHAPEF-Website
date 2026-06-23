@@ -724,3 +724,86 @@
   background: rgba(255, 0, 0, 0.2);
   transform: translateY(-5px);
 }
+
+/* ====== GLOBAL MOBILE OVERRIDES ====== */
+@media (max-width: 768px) {
+  .drone-dashboard-text {
+    font-size: 2.5rem !important;
+  }
+  .hero-title {
+    font-size: 3.5rem !important;
+    line-height: 1.1;
+  }
+  .scene-title {
+    font-size: 2.5rem !important;
+  }
+  .scene-subtitle {
+    font-size: 1rem !important;
+  }
+  .join-title {
+    font-size: 2.5rem !important;
+  }
+  .wheel-container {
+    width: 90vw !important;
+    height: 90vw !important;
+    margin-top: 40px;
+  }
+  .cinematic-left {
+    max-width: 100%;
+  }
+  .cinematic-scene {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 0 5%;
+  }
+  .cinematic-right {
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .drone-container .drone {
+    width: 100%;
+    transform: none;
+  }
+  .hero-desc {
+    font-size: 0.9rem;
+  }
+  .s5-layout {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 5%;
+  }
+  .s5-left {
+    max-width: 100%;
+    margin-bottom: 30px;
+  }
+  .s5-right {
+    justify-content: center;
+    width: 100%;
+  }
+  .s5-bot-img {
+    max-width: 80%;
+  }
+}
+
+/* Fix bot image scaling and stacking on mobile */
+@media (max-width: 768px) {
+  .hero-bot-img {
+    max-width: 80%;
+    max-height: 40vh;
+    object-fit: contain;
+    margin: 0 auto;
+  }
+  .cinematic-scene {
+    flex-direction: column-reverse; /* Put bot above intro text */
+    justify-content: flex-end; /* Push to bottom to accommodate bot at top */
+    gap: 20px;
+    padding-top: 100px; /* Space for navbar */
+  }
+  .hero-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+}

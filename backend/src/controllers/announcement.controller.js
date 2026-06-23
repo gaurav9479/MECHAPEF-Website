@@ -1,7 +1,7 @@
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import APIResponse from '../utils/APIResponse.js';
-import Announcement from '../models/Announcement.js';
+import Announcement from '../models/announcement.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
 export const getAnnouncements = asyncHandler(async (req, res) => {

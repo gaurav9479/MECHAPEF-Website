@@ -4,7 +4,7 @@ import path from 'path';
 import asyncHandler from '../utils/asyncHandler.js';
 import APIResponse from '../utils/APIResponse.js';
 import ApiError from '../utils/ApiError.js';
-import SectionImage from '../models/SectionImage.js';
+import SectionImage from '../models/sectionImage.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
 const imagekit = new ImageKit({
@@ -57,16 +57,38 @@ export const getSectionImages = asyncHandler(async (req, res) => {
 
 // ── Update a section image ───────────────────────────────────────────────────
 export const updateSectionImage = asyncHandler(async (req, res) => {
-    const { sectionKey, label, imageURL, imagekitFileId } = req.body;
-    if (!sectionKey || !imageURL) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey and imageURL are required');
+    const { sectionKey, label, imageURL, imagekitFileId, name, regNo } = req.body;
+    if (!sectionKey) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey is required');
+
+    const updateData = { sectionKey, label: label || sectionKey, updatedBy: req.user?.userId || null };
+    if (imageURL !== undefined) updateData.imageURL = imageURL;
+    if (imagekitFileId !== undefined) updateData.imagekitFileId = imagekitFileId;
+    if (name !== undefined) updateData.name = name;
+    if (regNo !== undefined) updateData.regNo = regNo;
 
     const image = await SectionImage.findOneAndUpdate(
         { sectionKey },
-        { sectionKey, label: label || sectionKey, imageURL, imagekitFileId, updatedBy: req.user?.userId || null },
+        updateData,
         { new: true, upsert: true, runValidators: true }
     );
 
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, { image }, 'Section image updated')
+    );
+});
+
+// ── Delete a section image ───────────────────────────────────────────────────
+export const deleteSectionImage = asyncHandler(async (req, res) => {
+    const { sectionKey } = req.params;
+    if (!sectionKey) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey is required');
+
+    const image = await SectionImage.findOneAndUpdate(
+        { sectionKey },
+        { imageURL: null, imagekitFileId: null, updatedBy: req.user?.userId || null },
+        { new: true }
+    );
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { image }, 'Section image removed')
     );
 });

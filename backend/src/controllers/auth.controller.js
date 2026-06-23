@@ -1,4 +1,4 @@
-import User from '../models/User.js';
+import User from '../models/user.model.js';
 import APIResponse from '../utils/APIResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
@@ -56,6 +56,7 @@ export const register = asyncHandler(async (req, res) => {
         password,
         collegeRegNo: collegeRegNo.toUpperCase(),
         role: 'GeneralUser',   // Always GeneralUser for self-registration
+        requestedRole: req.body.requestedRole || null,
         isVerified: false,     // Admin must verify before full access
         unverifiedRequestExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Request deleted after 7 days if unverified
         yearOfStudy: yearOfStudy || undefined,
@@ -176,21 +177,25 @@ export const updateProfile = asyncHandler(async (req, res) => {
 // VERIFY USER — SuperAdmin only: mark a user's registration as verified
 // ─────────────────────────────────────────────────────────────────────────────
 export const verifyUser = asyncHandler(async (req, res) => {
-    const isVerified = req.body.isVerified !== undefined ? req.body.isVerified : true;
+    const isVerified = req.body?.isVerified !== undefined ? req.body.isVerified : true;
 
-    let updateDoc = { isVerified };
+    const user = await User.findById(req.params.userId);
+    if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
+
     if (isVerified) {
-        updateDoc.$unset = { unverifiedRequestExpiresAt: 1 };
+        user.isVerified = true;
+        user.unverifiedRequestExpiresAt = undefined;
+        if (user.requestedRole) {
+            user.role = user.requestedRole;
+            user.requestedRole = undefined;
+        }
     } else {
-        updateDoc.unverifiedRequestExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        user.isVerified = false;
+        user.unverifiedRequestExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     }
 
-    const user = await User.findByIdAndUpdate(
-        req.params.userId,
-        updateDoc,
-        { new: true }
-    );
-    if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
+    await user.save({ validateBeforeSave: false });
+
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, { user: user.getPublicProfile() }, 'User verified successfully')
     );

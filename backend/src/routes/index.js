@@ -6,6 +6,7 @@ import teamRoutes from './team.js';
 import announcementRoutes from './announcements.js';
 import sponsorRoutes from './sponsors.js';
 import uploadRoutes from './upload.js';
+import albumRoutes from './albums.js';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/team', teamRoutes);
 router.use('/announcements', announcementRoutes);
 router.use('/sponsors', sponsorRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/gallery', albumRoutes);
 
 router.get('/health', (req, res) => {
     res.status(200).json({

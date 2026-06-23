@@ -1,12 +1,13 @@
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import APIResponse from '../utils/APIResponse.js';
-import Team from '../models/Team.js';
+import Team from '../models/team.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
 export const getAllTeam = asyncHandler(async (req, res) => {
-    const { subTeam } = req.query;
-    const filter = { deletedAt: null, isActive: true };
+    const { subTeam, all } = req.query;
+    const filter = { deletedAt: null };
+    if (!all) filter.isActive = true;
     if (subTeam) filter.subTeam = subTeam;
     const members = await Team.find(filter).sort({ displayOrder: 1 });
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { members }, 'Team fetched'));
