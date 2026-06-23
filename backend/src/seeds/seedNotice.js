@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import Announcement from '../models/Announcement.js';
+import Announcement from '../models/announcement.model.js';
 import 'dotenv/config';
 
 const seedNotice = async () => {

@@ -9,12 +9,14 @@ import Footer from "../components/Footer/Footer";
 
 
 
+
 const Home = () => {
   return (
     <>
       <Navbar />
       <CinematicHero />
       <OurTeam />
+
       {/* <Stats /> */}
       {/* <Domains /> */}
       {/* <Join /> */}
