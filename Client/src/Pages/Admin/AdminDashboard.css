@@ -1,6 +1,13 @@
 /* ============ SHARED ADMIN LAYOUT ============ */
 * { box-sizing: border-box; }
 
+/* Hide global gradients (bottom/left) from the body when in admin mode */
+body:has(.admin-layout)::before,
+body:has(.admin-layout)::after {
+  display: none !important;
+  background: none !important;
+}
+
 .admin-layout {
   display: flex;
   min-height: 100vh;
@@ -342,3 +349,35 @@
 .admin-toast.success { border-color: rgba(0,200,100,0.4); color: #00c864; }
 .admin-toast.error { border-color: rgba(255,0,0,0.4); color: #ff4444; }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ====== RESPONSIVE OVERRIDES ====== */
+@media (max-width: 1024px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-main {
+    padding: 20px;
+    padding-top: 60px; /* Space for the hamburger toggle */
+  }
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-quick-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-group.full {
+    grid-column: span 1;
+  }
+  .admin-table-wrap {
+    overflow-x: auto;
+  }
+}
