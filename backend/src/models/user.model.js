@@ -61,6 +61,15 @@ const userSchema = new mongoose.Schema(
             default: 'GeneralUser'
         },
 
+        requestedRole: {
+            type: String,
+            enum: {
+                values: ROLES_ARRAY,
+                message: `Requested Role must be one of: ${ROLES_ARRAY.join(', ')}`
+            },
+            default: null
+        },
+
         // isVerified = true means admin has verified the user's college reg no
         // Pre-seeded admin accounts are verified by default
         // Self-registered GeneralUsers start as unverified

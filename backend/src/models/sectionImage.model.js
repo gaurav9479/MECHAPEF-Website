@@ -22,6 +22,14 @@ const sectionImageSchema = new mongoose.Schema({
         type: String,  // ImageKit file ID for deletion/replacement
         default: null,
     },
+    name: {
+        type: String,
+        default: null,
+    },
+    regNo: {
+        type: String,
+        default: null,
+    },
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
