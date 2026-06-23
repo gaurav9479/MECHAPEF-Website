@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as eventController from '../controllers/eventController.js';
-import * as registrationController from '../controllers/registrationController.js';
+import * as eventController from '../controllers/event.controller.js';
+import * as registrationController from '../controllers/registration.controller.js';
 import { authenticate, checkRole } from '../middleware/auth.js';
 // import { imiter } from '../middleware/security.js';
 

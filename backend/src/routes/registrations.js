@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as registrationController from '../controllers/registrationController.js';
+import * as registrationController from '../controllers/registration.controller.js';
 import { authenticate, checkRole } from '../middleware/auth.js';
 
 const router = Router();

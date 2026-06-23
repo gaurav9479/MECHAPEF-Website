@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as authController from '../controllers/authController.js';
+import * as authController from '../controllers/auth.controller.js';
 import { authenticate, checkRole } from '../middleware/auth.js';
 
 const router = Router();
@@ -13,6 +13,6 @@ router.put('/profile', authenticate, authController.updateProfile);
 
 // SuperAdmin-only routes
 router.get('/users', authenticate, checkRole(['SuperAdmin']), authController.getAllUsers);
-router.put('/users/:userId/verify', authenticate, checkRole(['SuperAdmin']), authController.verifyUser);
+router.patch('/users/:userId/verify', authenticate, checkRole(['SuperAdmin']), authController.verifyUser);
 
 export default router;

@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import * as sponsorController from '../controllers/sponsorController.js';
+import * as sponsorController from '../controllers/sponsor.controller.js';
+import { authenticate, checkRole } from '../middleware/auth.js';
 
 const router = Router();
 
 router.get('/', sponsorController.getSponsors);
-router.post('/', sponsorController.createSponsor);
-router.put('/:id', sponsorController.updateSponsor);
-router.delete('/:id', sponsorController.deleteSponsor);
+router.post('/', authenticate, checkRole(['SuperAdmin', 'EventHead']), sponsorController.createSponsor);
+router.put('/:id', authenticate, checkRole(['SuperAdmin', 'EventHead']), sponsorController.updateSponsor);
+router.delete('/:id', authenticate, checkRole(['SuperAdmin']), sponsorController.deleteSponsor);
 
 export default router;
