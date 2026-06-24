@@ -1,0 +1,238 @@
+.chalkboard-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  pointer-events: none; /* Let clicks pass through overlay area */
+}
+
+.chalkboard-close-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: auto; /* Catch clicks to close */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeInBg 0.5s ease forwards;
+}
+
+@keyframes fadeInBg {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.chalkboard-container {
+  position: relative;
+  margin-top: -50px; /* Start higher up so ropes go offscreen */
+  transform-origin: top center;
+  animation: swing 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite alternate;
+  pointer-events: auto;
+  z-index: 10001;
+}
+
+/* Initial drop animation combined with infinite swing */
+@keyframes swing {
+  0% { transform: rotate(4deg); }
+  100% { transform: rotate(-4deg); }
+}
+
+/* Ropes */
+.chalkboard-ropes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 120px;
+  z-index: 2;
+}
+
+.rope {
+  position: absolute;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: #c29b62; /* Rope color */
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.2) 2px,
+    rgba(0,0,0,0.2) 4px
+  );
+  box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+}
+
+.left-rope {
+  left: 15%;
+}
+
+.right-rope {
+  right: 15%;
+}
+
+/* Main Board */
+.chalkboard {
+  position: relative;
+  margin-top: 100px; /* Space for ropes */
+  width: 90vw;
+  max-width: 600px;
+  filter: drop-shadow(0 20px 30px rgba(0,0,0,0.7));
+}
+
+.chalkboard-wood-frame {
+  background: #5c3a21; /* Wood color */
+  background-image: linear-gradient(
+    to bottom right,
+    #5c3a21,
+    #3b2210 50%,
+    #2a1608
+  );
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.5);
+  border: 2px solid #2a1608;
+}
+
+.chalkboard-inner {
+  background: #232c25; /* Dark chalkboard green/black */
+  background-image: 
+    radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%),
+    linear-gradient(rgba(255,255,255,0.01) 50%, transparent 50%);
+  background-size: 100% 100%, 100% 4px;
+  border-radius: 4px;
+  padding: 30px;
+  min-height: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+  font-family: 'Caveat', cursive; /* Chalk font */
+  color: #f4f4f4; /* Chalk white */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5), 0 0 5px rgba(255,255,255,0.2);
+}
+
+/* Custom Scrollbar for Chalkboard */
+.chalkboard-inner::-webkit-scrollbar {
+  width: 8px;
+}
+.chalkboard-inner::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chalkboard-inner::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+}
+
+.chalk-title {
+  text-align: center;
+  font-size: 3.5rem;
+  margin: 0;
+  letter-spacing: 2px;
+  transform: rotate(-2deg); /* Slightly skewed handwriting */
+}
+
+.chalk-divider {
+  height: 2px;
+  width: 80%;
+  margin: 15px auto 30px auto;
+  background: #f4f4f4;
+  box-shadow: 0 0 5px rgba(255,255,255,0.3);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+
+.chalk-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chalk-item {
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  animation: chalkWrite 0.5s ease forwards;
+  position: relative;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(255,255,255,0.2);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.chalk-item.clickable:hover {
+  transform: translateX(10px);
+  color: #ffaa00; /* Yellow chalk glow on hover */
+}
+
+.chalk-item.clickable:hover .chalk-item-date {
+  color: #fff;
+}
+
+.chalk-item:last-child {
+  border-bottom: none;
+}
+
+@keyframes chalkWrite {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.chalk-item-date {
+  font-size: 1.2rem;
+  color: #ffaa00; /* Yellow chalk */
+  margin-bottom: 5px;
+  transform: rotate(1deg);
+}
+
+.chalk-item-text {
+  font-size: 1.8rem;
+  line-height: 1.3;
+}
+
+.chalk-loading, .chalk-empty {
+  text-align: center;
+  font-size: 2rem;
+  opacity: 0.7;
+  margin-top: 50px;
+}
+
+.chalkboard-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+  background: rgba(0,0,0,0.5);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chalkboard-close:hover {
+  opacity: 1;
+}
+
+/* Drop-in initial animation */
+.chalkboard-container {
+  animation: dropIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, swing 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite alternate 1s;
+}
+
+@keyframes dropIn {
+  0% { transform: translateY(-100vh) rotate(15deg); }
+  100% { transform: translateY(0) rotate(4deg); } /* Ends at swing start */
+}

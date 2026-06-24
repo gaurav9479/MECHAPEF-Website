@@ -81,7 +81,7 @@ const AlbumView = () => {
       </div>
       <Footer />
 
-      {/* Fullscreen Image Modal */}
+
       {fullscreenImage && (
         <div className="fullscreen-overlay" onClick={() => setFullscreenImage(null)}>
           <button className="close-fullscreen" onClick={() => setFullscreenImage(null)}>&times;</button>

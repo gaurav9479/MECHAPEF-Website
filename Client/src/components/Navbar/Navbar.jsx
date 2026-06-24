@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaCog, FaUserShield, FaSignOutAlt, FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { animate } from "framer-motion";
+import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -14,6 +15,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [showNotices, setShowNotices] = useState(false);
   const navRefs = useRef([]);
   const [pillStyle, setPillStyle] = useState({ left: 0, width: 0, opacity: 0 });
 
@@ -44,19 +46,35 @@ const Navbar = () => {
   };
 
   const scrollToSection = (vhMultiplier) => {
-    window.scrollTo({
-      top: vhMultiplier * window.innerHeight,
-      behavior: 'smooth'
-    });
     setMenuOpen(false);
+    if (window.location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        window.scrollTo({
+          top: vhMultiplier * window.innerHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
+    } else {
+      window.scrollTo({
+        top: vhMultiplier * window.innerHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   const scrollToElement = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
     setMenuOpen(false);
+    if (window.location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
@@ -98,7 +116,7 @@ const Navbar = () => {
     <>
       <div className="navbar-hover-zone"></div>
       <nav className={`navbar ${isScrolled ? 'navbar-hidden' : 'navbar-visible'}`}>
-      <div className="logo">
+      <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
         <FaCog className="logo-icon" />
         <div className="logo-text">
           <div className="logo-main">Mecha<span>PEF</span></div>
@@ -114,10 +132,10 @@ const Navbar = () => {
         <div className="nav-sliding-pill" style={pillStyle}></div>
         <li ref={el => navRefs.current[0] = el} className={activeIndex === 0 ? "active" : ""} onClick={() => scrollToSection(0)}>Home</li>
         <li ref={el => navRefs.current[1] = el} className={activeIndex === 1 ? "active" : ""} onClick={() => scrollToSection(3.15)}>About</li>
-        <li ref={el => navRefs.current[2] = el} className={activeIndex === 2 ? "active" : ""} onClick={() => scrollToSection(7.2)}>Events</li>
+        <li ref={el => navRefs.current[2] = el} className={activeIndex === 2 ? "active" : ""} onClick={() => { setMenuOpen(false); navigate('/events'); }}>Events</li>
         <li ref={el => navRefs.current[3] = el} className={activeIndex === 3 ? "active" : ""} onClick={() => scrollToSection(13.5)}>Gallery</li>
         <li ref={el => navRefs.current[4] = el} className={activeIndex === 4 ? "active" : ""} onClick={() => scrollToElement('our-team')}>Our Team</li>
-        <li style={{cursor: 'pointer'}} onClick={() => scrollToElement('notices')}>Notice Board</li>
+        <li style={{cursor: 'pointer'}} onClick={() => { setMenuOpen(false); setShowNotices(true); }}>Notice Board</li>
         <li className="mobile-only-btn">
           {user ? (
             <div className="nav-avatar-container" ref={dropdownRef}>
@@ -182,7 +200,8 @@ const Navbar = () => {
           <button className="contact-btn" onClick={handleAuthBtn}>Login</button>
         )}
       </div>
-    </nav>
+      </nav>
+      {showNotices && <HangingNoticeBoard onClose={() => setShowNotices(false)} />}
     </>
   );
 };

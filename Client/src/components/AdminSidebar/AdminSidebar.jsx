@@ -10,7 +10,8 @@ import {
   FaHome, 
   FaSignOutAlt,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaQrcode
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import './AdminSidebar.css';
@@ -83,6 +84,9 @@ const AdminSidebar = () => {
           </Link>
           <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`}>
             <FaCog /> Management
+          </Link>
+          <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`}>
+            <FaQrcode /> Scan Tickets
           </Link>
         </nav>
         <div className="sidebar-bottom">

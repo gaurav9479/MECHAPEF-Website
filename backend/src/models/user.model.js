@@ -122,17 +122,26 @@ const userSchema = new mongoose.Schema(
 
         linkedinURL: {
             type: String,
-            trim: true
+            default: null
         },
 
         otherLinks: {
             type: String,
-            trim: true
+            default: null
+        },
+
+        sessionVersion: {
+            type: Number,
+            default: 1
         },
 
         registeredEvents: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Registration'
+        }],
+
+        participatedEventNames: [{
+            type: String
         }],
 
         createdAt: {

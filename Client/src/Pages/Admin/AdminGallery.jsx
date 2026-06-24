@@ -20,13 +20,13 @@ const AdminGallery = () => {
     setTimeout(() => setToast({ show: false, msg: '', type: '' }), 3000);
   };
 
-  // UI States
+
   const [showModal, setShowModal] = useState(false);
   const [editingAlbum, setEditingAlbum] = useState(null);
   const [form, setForm] = useState({ title: '', description: '', coverImageURL: '', isActive: true });
   const [submitting, setSubmitting] = useState(false);
 
-  // Manage Images Modal States
+
   const [manageImagesAlbum, setManageImagesAlbum] = useState(null);
   const [albumImages, setAlbumImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -85,7 +85,7 @@ const AdminGallery = () => {
 
   const openManageImages = async (album) => {
     setManageImagesAlbum(album);
-    // Fetch album details to get full images array
+
     try {
       const res = await api.get(`/gallery/${album._id}`);
       setAlbumImages(res.data.data.album.images || []);
@@ -114,10 +114,10 @@ const AdminGallery = () => {
       await api.post(`/gallery/${manageImagesAlbum._id}/images`, { images: uploadedImages });
       showToast(`${uploadedImages.length} images added successfully`);
       
-      // Refresh album images
+
       const res = await api.get(`/gallery/${manageImagesAlbum._id}`);
       setAlbumImages(res.data.data.album.images || []);
-      fetchAlbums(); // refresh list to update cover image if needed
+      fetchAlbums(); 
     } catch (err) {
       showToast('Error uploading images', 'error');
     } finally {

@@ -125,6 +125,7 @@
   max-width: 950px; 
   z-index: 1; 
   position: relative;
+  top: 5vh;
   filter: drop-shadow(0px 20px 30px rgba(0, 0, 0, 0.4));
   transform: scale(1.35);
   margin-right: -1px; 

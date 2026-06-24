@@ -7,19 +7,10 @@ const CinematicScene = ({ index, section, scrollYProgress, totalSections }) => {
   // Determine alternating origins
   const isLeft = index % 2 !== 0; // 0 = right, 1 = left, 2 = right, etc.
   
-  // Mathematical bounds mapping
-  // Each section gets exactly 1.0 "progress units" from scrollYProgress?
-  // No, scrollYProgress goes from 0 to 1 over the ENTIRE wrapper.
-  // We divide the 0 to 1 space into chunks.
-  // Chunk size for 1 segment (e.g. fade out) = 1 / (totalSections * 2 - 1).
-  // Wait, easier: let's map it based on fixed viewport distances, assuming 200vh per transition.
 
   
   const totalChunks = (totalSections - 1) * 2; 
-  // For 2 sections: 2 chunks (0->0.5 fade out 1, 0.5->1 fade in 2).
-  // For 3 sections: 4 chunks (0->0.25 out1, 0.25->0.5 in2, 0.5->0.75 out2, 0.75->1 in3)
-  
-  // Calculate enter and exit progress thresholds
+
   const enterStart = index === 0 ? 0 : (index * 2 - 1) / totalChunks;
   const enterEnd   = index === 0 ? 0 : (index * 2) / totalChunks;
   

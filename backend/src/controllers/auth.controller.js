@@ -69,7 +69,8 @@ export const register = asyncHandler(async (req, res) => {
     const tokens = generateTokenPair({
         userId: newUser._id,
         email: newUser.email,
-        role: newUser.role
+        role: newUser.role,
+        sessionVersion: newUser.sessionVersion
     });
 
     res.cookie('refreshToken', tokens.refreshToken, {
@@ -111,12 +112,14 @@ export const login = asyncHandler(async (req, res) => {
     }
 
     user.lastLogin = new Date();
+    user.sessionVersion = (user.sessionVersion || 1) + 1;
     await user.save({ validateBeforeSave: false });
 
     const tokens = generateTokenPair({
         userId: user._id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        sessionVersion: user.sessionVersion
     });
 
     res.cookie('refreshToken', tokens.refreshToken, {
@@ -139,6 +142,13 @@ export const login = asyncHandler(async (req, res) => {
 // LOGOUT
 // ─────────────────────────────────────────────────────────────────────────────
 export const logout = asyncHandler(async (req, res) => {
+    if (req.user && req.user.userId) {
+        const user = await User.findById(req.user.userId);
+        if (user) {
+            user.sessionVersion = (user.sessionVersion || 1) + 1;
+            await user.save({ validateBeforeSave: false });
+        }
+    }
     res.clearCookie('refreshToken');
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, {}, SUCCESS_MESSAGES.LOGOUT_SUCCESS));
 });

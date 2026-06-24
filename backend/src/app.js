@@ -9,9 +9,9 @@ import {
     cookieParserConfig,
     notFoundHandler,
     trustProxy
-} from './middleware/security.js';
-import apiRoutes from './routes/index.js';
-import { bodyParserConfig } from './middleware/security.js';
+} from './middleware/security.middleware.js';
+import apiRoutes from './routes/index.route.js';
+import { bodyParserConfig } from './middleware/security.middleware.js';
 
 const app = express();
 

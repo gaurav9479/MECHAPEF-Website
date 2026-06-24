@@ -5,6 +5,7 @@ import APIResponse from '../utils/APIResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, PAGINATION } from '../constants/index.js';
+import ImageKit from 'imagekit';
 
 export const createEvent = asyncHandler(async (req, res) => {
     const {
@@ -19,7 +20,8 @@ export const createEvent = asyncHandler(async (req, res) => {
         featured,
         rules,
         prizes,
-        registrationFee
+        registrationFee,
+        customFormFields
     } = req.body;
     if (!title || !description || !category || !startTime || !endTime || !venue || !registrationDeadline) {
         throw new ApiError(
@@ -41,6 +43,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         rules: rules || [],
         prizes: prizes || null,
         registrationFee: registrationFee || 0,
+        customFormFields: customFormFields || [],
         createdBy: req.user.userId
     });
 
@@ -130,7 +133,8 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'rules',
         'prizes',
         'registrationFee',
-        'isActive'
+        'isActive',
+        'customFormFields'
     ];
 
     const updates = {};
@@ -167,9 +171,35 @@ export const deleteEvent = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
 
+    // Also delete all associated registrations
+    await Registration.updateMany(
+        { eventId: event._id },
+        { deletedAt: new Date() }
+    );
+
     return res
         .status(HTTP_STATUS.OK)
         .json(new APIResponse(HTTP_STATUS.OK, {}, 'Event deleted successfully'));
+});
+
+export const endEvent = asyncHandler(async (req, res) => {
+    const event = await Event.findById(req.params.id);
+    
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (event.status === 'Ended') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event is already ended');
+    }
+
+    event.status = 'Ended';
+    event.endedAt = new Date();
+    await event.save();
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event ended successfully'));
 });
 
 export const getEventStats = asyncHandler(async (req, res) => {
@@ -195,5 +225,52 @@ export const getEventStats = asyncHandler(async (req, res) => {
                         : '0%'
                 }
             }, 'Event statistics retrieved')
+        );
+});
+
+export const wipeEventData = asyncHandler(async (req, res) => {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (event.status !== 'Ended') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You can only wipe data for events that have ended');
+    }
+
+    const imagekit = new ImageKit({
+        publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+        privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+        urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+    });
+
+    const registrations = await Registration.find({ eventId: event._id });
+    let deletedFilesCount = 0;
+
+    for (const reg of registrations) {
+        let hasChanges = false;
+        const newCustomData = { ...reg.customData };
+
+        for (const [key, value] of Object.entries(newCustomData)) {
+            if (value && typeof value === 'object' && value.fileId) {
+                try {
+                    await imagekit.deleteFile(value.fileId);
+                    deletedFilesCount++;
+                } catch (err) {
+                    console.error(`Failed to delete file from ImageKit (${value.fileId}):`, err.message);
+                }
+            }
+        }
+        
+        // Clear the custom data entirely
+        reg.customData = { wiped: "Data has been wiped to save storage" };
+        await reg.save();
+    }
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(
+            new APIResponse(HTTP_STATUS.OK, { deletedFilesCount }, 'Event inputs and files wiped successfully')
         );
 });

@@ -1,8 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-// Protects routes — redirects to /login if not authenticated
-// Optional: requiredRole for role-level protection
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading, hasRole } = useAuth();
   const location = useLocation();

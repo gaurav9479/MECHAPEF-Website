@@ -10,6 +10,22 @@ const eventSchema = new mongoose.Schema(
             maxlength: [100, 'Title cannot exceed 100 characters']
         },
 
+        status: {
+            type: String,
+            enum: ['Upcoming', 'Ongoing', 'Ended'],
+            default: 'Upcoming'
+        },
+        
+        endedAt: {
+            type: Date,
+            default: null
+        },
+
+        totalRegistrations: {
+            type: Number,
+            default: 0
+        },
+
         description: {
             type: String,
             required: [true, 'Event description is required'],
@@ -90,6 +106,16 @@ const eventSchema = new mongoose.Schema(
             min: 0
         },
 
+        customFormFields: [{
+            fieldName: { type: String, required: true },
+            fieldType: { 
+                type: String, 
+                enum: ['text', 'textarea', 'checkbox', 'file'],
+                required: true 
+            },
+            isRequired: { type: Boolean, default: false }
+        }],
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -145,10 +171,12 @@ eventSchema.index({ featured: 1, startTime: 1 });
 eventSchema.index({ registrationDeadline: 1 });
 eventSchema.index({ createdAt: -1 });
 eventSchema.virtual('isRegistrationOpen').get(function () {
+    if (!this.registrationDeadline) return false;
     return new Date() < this.registrationDeadline;
 });
 
 eventSchema.virtual('formattedDate').get(function () {
+    if (!this.startTime) return null;
     return this.startTime.toLocaleDateString('en-IN', {
         year: 'numeric',
         month: 'long',
