@@ -1,5 +1,5 @@
 import { SponsorConfig } from '../models/sponsorConfig.model.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import asyncHandler from '../utils/asyncHandler.js';
 import APIResponse from '../utils/APIResponse.js';
 
 const getDefaultConfig = () => ({
