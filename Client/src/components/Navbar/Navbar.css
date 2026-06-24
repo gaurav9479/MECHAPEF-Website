@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 25px 8%;
+  padding: 20px clamp(18px, 5vw, 8%);
   z-index: 1001;
   transition: top 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease; /* Instant but smooth drop */
 }
@@ -87,7 +87,7 @@
 .navbar ul {
   display: flex;
   list-style: none;
-  gap: 35px;
+  gap: clamp(8px, 2vw, 28px);
 }
 
 .navbar ul li {
@@ -96,8 +96,9 @@
   color: rgba(255, 255, 255, 0.7);
   transition: color 0.2s;
   font-weight: 500;
-  padding: 8px 16px;
+  padding: 10px 12px;
   z-index: 1;
+  white-space: nowrap;
 }
 
 .navbar ul li.active {
@@ -142,17 +143,20 @@
     position: fixed;
     top: 0;
     right: -100%;
-    height: 100vh;
-    width: 250px;
-    background: rgba(10, 10, 10, 0.95);
+    height: 100dvh;
+    width: min(86vw, 340px);
+    background: rgba(10, 10, 10, 0.98);
     backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 8px;
     transition: right 0.3s ease;
     z-index: 1005;
+    padding: 90px 22px 28px;
+    border-left: 1px solid rgba(255, 0, 0, 0.2);
+    overflow-y: auto;
   }
 
   .nav-links.open {
@@ -160,7 +164,24 @@
   }
 
   .navbar {
-    padding: 15px 5%;
+    padding: 14px 18px;
+    background: rgba(5, 5, 5, 0.8);
+    backdrop-filter: blur(10px);
+  }
+
+  .navbar-hidden {
+    top: 0;
+  }
+
+  .navbar ul li {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
   }
 
   .desktop-only-btn {
@@ -193,7 +214,7 @@
 @media (max-width: 768px) {
   .mobile-only-btn {
     display: block;
-    margin-top: 20px;
+    margin-top: 12px;
   }
 }
 
@@ -303,6 +324,7 @@
     right: auto;
     left: 50%;
     transform: translateX(-50%);
+    width: min(280px, 78vw);
   }
 }
 @media (min-width: 769px) {
@@ -327,5 +349,20 @@
 @media (max-width: 768px) {
   .nav-sliding-pill {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-main {
+    font-size: 1.2rem;
+  }
+
+  .logo-icon {
+    font-size: 24px;
+  }
+
+  .contact-btn {
+    width: 100%;
+    padding: 12px 20px;
   }
 }

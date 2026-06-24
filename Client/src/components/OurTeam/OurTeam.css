@@ -8,7 +8,7 @@
 
 .team-heading {
   text-align: center;
-  font-size: 3rem;
+  font-size: clamp(2rem, 6vw, 3rem);
   color: #ff0000;
   margin-bottom: 60px;
   letter-spacing: 2px;
@@ -65,7 +65,7 @@
 }
 
 .team-card {
-  width: 250px;
+  width: clamp(190px, 28vw, 250px);
   background-color: #111;
   border: 1px solid #333;
   border-radius: 8px;
@@ -82,7 +82,7 @@
 
 .card-img-placeholder {
   width: 100%;
-  height: 250px;
+  height: clamp(190px, 28vw, 250px);
   background: linear-gradient(135deg, #222, #111);
   display: flex;
   align-items: center;
@@ -120,6 +120,14 @@
   }
   .team-scroll-container {
     gap: 30px;
-    padding: 0 5vw 20px 5vw;
+    padding: 0 16px 20px;
+  }
+
+  .layer-track {
+    gap: 14px;
+  }
+
+  .card-info h4 {
+    font-size: 1rem;
   }
 }

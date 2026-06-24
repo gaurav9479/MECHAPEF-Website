@@ -4,6 +4,7 @@
 .mgmt-tabs {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .mgmt-tab {
   display: flex;
@@ -78,6 +79,7 @@
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 .chip {
   padding: 5px 14px;
@@ -296,4 +298,46 @@
   gap: 12px;
   padding: 16px;
   background: rgba(0,0,0,0.4);
+}
+
+@media (max-width: 900px) {
+  .notices-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .mgmt-tab,
+  .mgmt-select {
+    width: 100%;
+    justify-content: center;
+    min-height: 46px;
+  }
+
+  .mgmt-search {
+    min-width: 100%;
+  }
+
+  .notice-form-card {
+    padding: 20px;
+  }
+
+  .notice-card-actions,
+  .cropper-actions {
+    flex-direction: column;
+  }
+
+  .notice-card-actions button,
+  .cropper-actions button {
+    width: 100%;
+  }
+
+  .image-manager-header {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .upload-zone {
+    padding: 32px 18px;
+  }
 }

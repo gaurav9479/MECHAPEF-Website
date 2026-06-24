@@ -56,7 +56,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 6%; /* Matched the padding from your Hero section */
+  padding: 0 clamp(16px, 5vw, 6%);
   z-index: 1;
 }
 
@@ -127,8 +127,8 @@
 .dash-card {
   background: rgba(10, 0, 0, 0.4);
   border: 1px solid rgba(255, 31, 1, 0.2);
-  border-radius: 16px;
-  padding: 30px;
+  border-radius: 12px;
+  padding: clamp(18px, 2.4vw, 30px);
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
@@ -156,7 +156,7 @@
 
 .dash-num {
   font-family: 'Michroma', sans-serif;
-  font-size: 2.2rem;
+  font-size: clamp(1.65rem, 3vw, 2.2rem);
   color: #ff1f01;
   margin-bottom: 15px;
 }
@@ -269,7 +269,7 @@
 
 .spirit-title {
   font-family: 'Michroma', sans-serif;
-  font-size: 2.8rem;
+  font-size: clamp(2rem, 4.2vw, 2.8rem);
   color: #ffffff;
   line-height: 1.2;
 }
@@ -359,6 +359,22 @@
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
+  .cinematic-scene {
+    gap: 28px;
+  }
+
+  .dashboard-grid {
+    max-width: 520px;
+  }
+
+  .card-tall {
+    min-height: 190px;
+  }
+
+  .card-wide {
+    min-height: 140px;
+  }
+
   .spirit-content {
     flex-direction: column;
     text-align: center;
@@ -374,7 +390,8 @@
   }
 
   .spirit-cards-container {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   
   .spirit-wheel {
@@ -473,7 +490,7 @@
 }
 
 .dept-title {
-  font-size: 3.5rem;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
   font-weight: 800;
   color: #ffffff;
   line-height: 1.1;
@@ -657,7 +674,7 @@
 
 .s5-title {
   color: #ffffff;
-  font-size: 3.5rem;
+  font-size: clamp(2.1rem, 5.4vw, 3.5rem);
   font-weight: 700;
   line-height: 1.2;
   font-family: 'Orbitron', sans-serif;
@@ -775,7 +792,7 @@
     flex-direction: column;
     justify-content: center;
     text-align: center;
-    padding: 0 5%;
+    padding: 82px 16px 32px;
   }
   .cinematic-right {
     justify-content: center;
@@ -798,7 +815,8 @@
   .s5-layout {
     flex-direction: column;
     text-align: center;
-    padding: 20px 5%;
+    justify-content: center;
+    padding: 86px 16px 32px;
   }
   .s5-left {
     max-width: 100%;
@@ -828,15 +846,117 @@
   }
   
   .cinematic-scene {
-    flex-direction: column-reverse; /* Put bot above intro text */
-    justify-content: flex-end; /* Push to bottom to accommodate bot at top */
+    flex-direction: column;
+    justify-content: center;
     gap: 20px;
-    padding-top: 100px; /* Space for navbar */
   }
   .hero-buttons {
     display: flex;
     flex-direction: column;
     gap: 10px;
     align-items: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-width: 100%;
+  }
+
+  .dash-col,
+  .dash-col.col-right {
+    gap: 12px;
+    margin-top: 0;
+  }
+
+  .dash-card,
+  .card-tall,
+  .card-wide {
+    min-height: auto;
+    padding: 18px;
+  }
+
+  .dash-title {
+    font-size: 1rem;
+  }
+
+  .spirit-content {
+    gap: 22px;
+  }
+
+  .spirit-left {
+    gap: 18px;
+  }
+
+  .spirit-title {
+    font-size: 1.8rem;
+  }
+
+  .spirit-desc {
+    font-size: 0.95rem;
+  }
+
+  .spirit-cards-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .spirit-card {
+    padding: 16px;
+  }
+
+  .dept-container {
+    gap: 12px;
+  }
+
+  .gallery-item {
+    min-height: 150px;
+  }
+
+  .dept-desc {
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
+
+  .gallery-btn,
+  .btn-contact-us,
+  .btn-learn-more {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .s5-content {
+    align-items: stretch;
+    text-align: center;
+    padding-right: 0;
+    width: 100%;
+  }
+
+  .s5-buttons,
+  .s5-social-grid {
+    justify-content: center;
+  }
+
+  .s5-buttons {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .cinematic-scene {
+    padding: 0 4%;
+  }
+
+  .hero-bot {
+    transform: scale(1.05);
+  }
+
+  .spirit-left {
+    max-width: 100%;
   }
 }

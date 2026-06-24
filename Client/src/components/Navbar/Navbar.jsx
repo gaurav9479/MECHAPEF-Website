@@ -133,7 +133,8 @@ const Navbar = () => {
         <li ref={el => navRefs.current[0] = el} className={activeIndex === 0 ? "active" : ""} onClick={() => scrollToSection(0)}>Home</li>
         <li ref={el => navRefs.current[1] = el} className={activeIndex === 1 ? "active" : ""} onClick={() => scrollToSection(3.15)}>About</li>
         <li ref={el => navRefs.current[2] = el} className={activeIndex === 2 ? "active" : ""} onClick={() => { setMenuOpen(false); navigate('/events'); }}>Events</li>
-        <li ref={el => navRefs.current[3] = el} className={activeIndex === 3 ? "active" : ""} onClick={() => scrollToSection(13.5)}>Gallery</li>
+        <li ref={el => navRefs.current[3] = el} className={activeIndex === 3 ? "active" : ""} onClick={() => { setMenuOpen(false); navigate('/gallery'); }}>Gallery</li>
+        <li onClick={() => { setMenuOpen(false); navigate('/sponsors'); }}>Sponsors</li>
         <li ref={el => navRefs.current[4] = el} className={activeIndex === 4 ? "active" : ""} onClick={() => scrollToElement('our-team')}>Our Team</li>
         <li style={{cursor: 'pointer'}} onClick={() => { setMenuOpen(false); setShowNotices(true); }}>Notice Board</li>
         <li className="mobile-only-btn">

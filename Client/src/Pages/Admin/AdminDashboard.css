@@ -102,8 +102,9 @@ body:has(.admin-layout)::after {
 /* ---- MAIN CONTENT ---- */
 .admin-main {
   flex: 1;
-  padding: 40px 48px;
+  padding: 40px clamp(20px, 4vw, 48px);
   overflow-y: auto;
+  min-width: 0;
 }
 
 .admin-header { margin-bottom: 36px; }
@@ -170,10 +171,12 @@ body:has(.admin-layout)::after {
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .admin-table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   font-family: sans-serif;
   font-size: 0.9rem;
@@ -234,6 +237,7 @@ body:has(.admin-layout)::after {
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 44px;
 }
 .btn-primary:hover { background: #cc0000; box-shadow: 0 0 14px rgba(255,0,0,0.4); }
 .btn-secondary {
@@ -246,6 +250,7 @@ body:has(.admin-layout)::after {
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 44px;
 }
 .btn-secondary:hover { border-color: #ff0000; color: #ff0000; }
 .btn-danger {
@@ -276,7 +281,7 @@ body:has(.admin-layout)::after {
   background: #111;
   border: 1px solid rgba(255,0,0,0.25);
   border-radius: 16px;
-  padding: 36px;
+  padding: clamp(22px, 4vw, 36px);
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
@@ -355,6 +360,11 @@ body:has(.admin-layout)::after {
   .admin-stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .admin-form-page {
+    padding: 32px 24px;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 768px) {
@@ -379,5 +389,50 @@ body:has(.admin-layout)::after {
   }
   .admin-table-wrap {
     overflow-x: auto;
+  }
+
+  .admin-form-page {
+    padding: 72px 16px 24px;
+    min-width: 0;
+  }
+
+  .admin-form-topbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .admin-form-topbar h1,
+  .admin-header h1 {
+    font-size: 1.45rem;
+  }
+
+  .admin-stat-card,
+  .admin-quick-card {
+    padding: 18px;
+  }
+
+  .modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .modal-box {
+    border-radius: 12px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+
+  .admin-toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    text-align: center;
   }
 }
