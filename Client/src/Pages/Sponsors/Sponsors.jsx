@@ -9,9 +9,10 @@ import {
   FaMedal,
   FaUsers,
 } from 'react-icons/fa';
+import * as FaIcons from 'react-icons/fa';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
-import { sponsorService } from '../../services/services';
+import { sponsorService, sponsorConfigService } from '../../services/services';
 import './Sponsors.css';
 
 const fallbackSponsors = [
@@ -35,46 +36,10 @@ const fallbackSponsors = [
   },
 ];
 
-const normalizeTier = (tier = '') => {
-  const value = tier.toLowerCase();
-  if (value === 'title' || value === 'platinum') return 'Platinum';
-  if (value === 'gold') return 'Gold';
-  if (value === 'silver' || value === 'bronze') return 'Silver';
-  return 'Silver';
+const DynamicIcon = ({ name }) => {
+  const IconComponent = FaIcons[name] || FaIcons.FaMedal;
+  return <IconComponent />;
 };
-
-const tierMeta = {
-  Platinum: {
-    icon: FaMedal,
-    copy: 'Flagship partners with premium visibility across the MechaPEF ecosystem.',
-  },
-  Gold: {
-    icon: FaLayerGroup,
-    copy: 'High-impact partners featured across events, workshops, and digital channels.',
-  },
-  Silver: {
-    icon: FaHandshake,
-    copy: 'Community partners helping us widen access to technical learning and collaboration.',
-  },
-};
-
-const benefits = [
-  {
-    icon: FaBullhorn,
-    title: 'Brand Visibility',
-    desc: 'Prominent logo placement across event pages, banners, sessions, and social promotions.',
-  },
-  {
-    icon: FaUsers,
-    title: 'Student Connect',
-    desc: 'Engage with a focused mechanical and production engineering student community.',
-  },
-  {
-    icon: FaLayerGroup,
-    title: 'Event Integration',
-    desc: 'Partner presence in workshops, competitions, showcases, and department initiatives.',
-  },
-];
 
 const SponsorLogo = ({ sponsor }) => {
   const initials = sponsor.companyName
@@ -103,7 +68,7 @@ const SponsorLogo = ({ sponsor }) => {
 
 const SponsorCard = ({ sponsor, index }) => (
   <motion.article
-    className={`sponsor-card tier-${normalizeTier(sponsor.tier).toLowerCase()}`}
+    className={`sponsor-card tier-${(sponsor.tier || '').toLowerCase()}`}
     initial={{ opacity: 0, y: 22 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.25 }}
@@ -117,7 +82,7 @@ const SponsorCard = ({ sponsor, index }) => (
       )}
     </div>
     <div>
-      <p className="sponsor-tier">{normalizeTier(sponsor.tier)}</p>
+      <p className="sponsor-tier">{sponsor.tier}</p>
       <h3>{sponsor.companyName}</h3>
       {sponsor.description && <p className="sponsor-desc">{sponsor.description}</p>}
     </div>
@@ -126,30 +91,43 @@ const SponsorCard = ({ sponsor, index }) => (
 
 const Sponsors = () => {
   const [sponsors, setSponsors] = useState([]);
+  const [config, setConfig] = useState({ tiers: [], deliverables: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    sponsorService.getAll()
-      .then(res => {
-        const data = res.data.data?.sponsors || res.data.data || [];
-        const activeSponsors = data
-          .filter(sponsor => sponsor.isActive !== false)
-          .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-        setSponsors(activeSponsors);
-      })
-      .catch(() => setSponsors([]))
-      .finally(() => setLoading(false));
+    
+    Promise.all([
+      sponsorService.getAll(),
+      sponsorConfigService.getConfig()
+    ]).then(([sponsorsRes, configRes]) => {
+      const data = sponsorsRes.data.data?.sponsors || sponsorsRes.data.data || [];
+      const activeSponsors = data
+        .filter(sponsor => sponsor.isActive !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      setSponsors(activeSponsors);
+      
+      const configData = configRes.data.data || { tiers: [], deliverables: [] };
+      configData.tiers.sort((a, b) => a.order - b.order);
+      configData.deliverables.sort((a, b) => a.order - b.order);
+      setConfig(configData);
+    })
+    .catch(() => setSponsors([]))
+    .finally(() => setLoading(false));
   }, []);
 
   const visibleSponsors = sponsors.length > 0 ? sponsors : fallbackSponsors;
-  const sponsorsByTier = useMemo(() => (
-    visibleSponsors.reduce((acc, sponsor) => {
-      const tier = normalizeTier(sponsor.tier);
-      acc[tier].push(sponsor);
-      return acc;
-    }, { Platinum: [], Gold: [], Silver: [] })
-  ), [visibleSponsors]);
+  
+  const sponsorsByTier = useMemo(() => {
+    const grouped = {};
+    config.tiers.forEach(t => { grouped[t.name] = []; });
+    visibleSponsors.forEach(sponsor => {
+      const t = sponsor.tier || 'Silver';
+      if (!grouped[t]) grouped[t] = [];
+      grouped[t].push(sponsor);
+    });
+    return grouped;
+  }, [visibleSponsors, config]);
 
   return (
     <div className="sponsors-page">
@@ -192,15 +170,16 @@ const Sponsors = () => {
           )}
         </section>
 
-        {Object.entries(sponsorsByTier).map(([tier, tierSponsors]) => {
-          const Icon = tierMeta[tier].icon;
+        {config.tiers.map((tierConfig) => {
+          const tier = tierConfig.name;
+          const tierSponsors = sponsorsByTier[tier] || [];
           return (
             <section className="sponsor-tier-section" key={tier}>
               <div className="sponsor-section-header tier-header">
-                <div className="tier-icon"><Icon /></div>
+                <div className="tier-icon"><DynamicIcon name={tierConfig.icon} /></div>
                 <div>
                   <p>{tier} Sponsors</p>
-                  <h2>{tierMeta[tier].copy}</h2>
+                  <h2>{tierConfig.description}</h2>
                 </div>
               </div>
               <div className="sponsor-card-grid">
@@ -222,8 +201,7 @@ const Sponsors = () => {
             <h2>Why Partner With MechaPEF</h2>
           </div>
           <div className="benefits-grid">
-            {benefits.map((benefit, index) => {
-              const Icon = benefit.icon;
+            {config.deliverables.map((benefit, index) => {
               return (
                 <motion.div
                   className="benefit-card"
@@ -233,9 +211,9 @@ const Sponsors = () => {
                   viewport={{ once: true, amount: 0.25 }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
                 >
-                  <Icon />
+                  <DynamicIcon name={benefit.icon} />
                   <h3>{benefit.title}</h3>
-                  <p>{benefit.desc}</p>
+                  <p>{benefit.description}</p>
                 </motion.div>
               );
             })}

@@ -12,10 +12,6 @@ const sponsorSchema = new mongoose.Schema(
 
         tier: {
             type: String,
-            enum: {
-                values: SPONSOR_TIERS_ARRAY,
-                message: `Tier must be one of: ${SPONSOR_TIERS_ARRAY.join(', ')}`
-            },
             required: [true, 'Sponsor tier is required'],
             index: true
         },

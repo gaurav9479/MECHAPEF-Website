@@ -335,7 +335,7 @@ body:has(.sponsors-page)::after {
 
 @media (max-width: 768px) {
   .sponsors-hero {
-    min-height: auto;
+    min-height: 400px;
     padding-top: 110px;
     padding-bottom: 70px;
   }

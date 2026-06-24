@@ -47,3 +47,8 @@ export const sponsorService = {
   update: (id, data) => api.put(`/sponsors/${id}`, data),
   delete: (id) => api.delete(`/sponsors/${id}`),
 };
+
+export const sponsorConfigService = {
+  getConfig: () => api.get('/sponsors/config'),
+  updateConfig: (data) => api.put('/sponsors/config', data),
+};
