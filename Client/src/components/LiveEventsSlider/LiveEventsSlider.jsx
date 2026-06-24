@@ -135,17 +135,18 @@ const LiveEventsSlider = () => {
             gap: '20px', 
             overflowX: 'auto', 
             overflowY: 'hidden',
-            paddingBottom: '20px', 
+            padding: '5px 20px', 
             width: '100%', 
             maxWidth: '1200px',
             scrollSnapType: 'x mandatory',
-            justifyContent: slides[currentIdx].eventSponsors.length < 4 ? 'center' : 'flex-start'
           }}>
+            <div style={{ margin: 'auto' }} />
             {slides[currentIdx].eventSponsors.map((sp, idx) => (
               <div key={idx} style={{ flex: '0 0 auto', scrollSnapAlign: 'center' }}>
                 <PremiumSponsorPanel sponsor={sp} />
               </div>
             ))}
+            <div style={{ margin: 'auto' }} />
           </div>
         </div>
       )}

@@ -13,7 +13,6 @@
 .premium-sponsor-panel {
   position: relative;
   width: 100%;
-  animation: float 6s ease-in-out infinite;
 }
 
 .sponsor-glow-orb {
