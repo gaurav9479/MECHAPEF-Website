@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import Navbar from '../../components/Navbar/Navbar';
+import TicketModal from './TicketModal';
+import { FaTicketAlt } from 'react-icons/fa';
 import './Profile.css';
 
 const Profile = () => {
@@ -16,6 +18,9 @@ const Profile = () => {
   });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  
+  const [registrations, setRegistrations] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   useEffect(() => {
     if (user) {
@@ -27,8 +32,18 @@ const Profile = () => {
         linkedinURL: user.linkedinURL || '',
         otherLinks: user.otherLinks || ''
       });
+      fetchRegistrations();
     }
   }, [user]);
+
+  const fetchRegistrations = async () => {
+    try {
+      const res = await api.get('/registrations/my-registrations');
+      setRegistrations(res.data.data.registrations || []);
+    } catch (err) {
+      console.error('Failed to fetch registrations:', err);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,7 +77,8 @@ const Profile = () => {
         </div>
 
         <div className="profile-content">
-          <div className="profile-header">
+          <div className="profile-main-section">
+            <div className="profile-header">
             {user?.profileImage ? (
               <img src={user.profileImage} alt="Profile" className="profile-img-large" />
             ) : (
@@ -110,18 +126,54 @@ const Profile = () => {
               <input type="text" name="otherLinks" placeholder="https://yourportfolio.com" value={formData.otherLinks} onChange={handleChange} />
             </div>
 
-            <button type="submit" className="profile-submit-btn" disabled={loading}>
+            <button type="submit" className="primary-btn submit-btn" disabled={loading}>
               {loading ? 'Saving...' : 'Save Profile'}
             </button>
           </form>
-        </div>
-
-        {toast && (
-          <div className={`profile-toast ${toast.type}`}>
-            {toast.msg}
           </div>
-        )}
+
+          <div className="profile-sidebar">
+          <div className="registrations-card">
+            <h3>My Event Tickets</h3>
+            {registrations.length === 0 ? (
+              <p className="no-data">You haven't registered for any events yet.</p>
+            ) : (
+              <div className="registrations-list">
+                {registrations.map(reg => (
+                  <div key={reg._id} className="registration-item">
+                    <div className="reg-info">
+                      <h4>{reg.eventId?.title}</h4>
+                      <span className={`reg-status ${reg.attendanceMarked ? 'attended' : 'upcoming'}`}>
+                        {reg.attendanceMarked ? 'Attended' : 'Registered'}
+                      </span>
+                    </div>
+                    <button 
+                      className="btn-secondary ticket-btn"
+                      onClick={() => setSelectedTicket(reg)}
+                    >
+                      <FaTicketAlt /> View Ticket
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+      </div>
+      
+      {selectedTicket && (
+        <TicketModal 
+          registration={selectedTicket} 
+          onClose={() => setSelectedTicket(null)} 
+        />
+      )}
+
+      {toast && (
+        <div className={`profile-toast ${toast.type}`}>
+          {toast.msg}
+        </div>
+      )}
     </>
   );
 };

@@ -110,6 +110,17 @@ const registrationSchema = new mongoose.Schema(
             ref: 'Certificate'
         },
 
+        customData: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
+        },
+
+        isVerified: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+
         notes: String,
 
         registeredAt: {

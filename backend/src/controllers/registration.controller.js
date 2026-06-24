@@ -5,10 +5,11 @@ import APIResponse from '../utils/APIResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, REGISTRATION_TYPES } from '../constants/index.js';
+import { enqueueRegistration } from '../queues/registrationQueue.js';
 
 export const registerForEvent = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
-    const { registrationType, teamName, teamMemberIds } = req.body;
+    const { registrationType, teamName, teamMemberIds, customData } = req.body;
 
     if (!registrationType) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Registration type is required');
@@ -70,21 +71,42 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         }));
     }
 
-    const registration = new Registration({
+    const payload = {
         eventId,
         registeredBy: req.user.userId,
         registrationType,
         teamName: teamName || null,
         teamMembers,
-        paymentStatus: event.registrationFee > 0 ? 'Pending' : 'NotApplicable'
-    });
+        paymentStatus: event.registrationFee > 0 ? 'Pending' : 'NotApplicable',
+        customData: customData || {}
+    };
 
+    if (process.env.REDIS_URL) {
+        await enqueueRegistration(payload);
+        return res
+            .status(HTTP_STATUS.ACCEPTED)
+            .json(
+                new APIResponse(
+                    HTTP_STATUS.ACCEPTED,
+                    null,
+                    "Registration queued due to high traffic. Please check your Profile after 10-60 minutes for your Ticket."
+                )
+            );
+    }
+
+    const registration = new Registration(payload);
     await registration.save();
     await registration.populate('eventId', 'title');
     await registration.populate('registeredBy', 'name email');
 
     event.totalRegistrations = await Registration.getEventRegistrationCount(eventId);
     await event.save();
+
+    const user = await User.findById(req.user.userId);
+    if (user && !user.participatedEventNames.includes(event.title)) {
+        user.participatedEventNames.push(event.title);
+        await user.save();
+    }
 
     return res
         .status(HTTP_STATUS.CREATED)
@@ -212,3 +234,93 @@ export const cancelRegistration = asyncHandler(async (req, res) => {
         .status(HTTP_STATUS.OK)
         .json(new APIResponse(HTTP_STATUS.OK, {}, 'Registration cancelled successfully'));
 });
+
+export const verifyRegistration = asyncHandler(async (req, res) => {
+    const { isVerified } = req.body;
+    
+    if (isVerified === undefined) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'isVerified status is required');
+    }
+
+    const registration = await Registration.findByIdAndUpdate(
+        req.params.id,
+        { isVerified },
+        { new: true }
+    ).populate('eventId', 'title');
+
+    if (!registration) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
+    }
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(new APIResponse(HTTP_STATUS.OK, { registration }, `Registration ${isVerified ? 'verified' : 'unverified'} successfully`));
+});
+
+export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
+    const { eventId } = req.params;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    const registrations = await Registration.find({ eventId, deletedAt: null })
+        .populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy');
+
+    if (registrations.length === 0) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'No registrations found for this event');
+    }
+
+    // Identify all custom fields
+    const customFieldsSet = new Set();
+    registrations.forEach(reg => {
+        if (reg.customData) {
+            Object.keys(reg.customData).forEach(key => customFieldsSet.add(key));
+        }
+    });
+    const customFields = Array.from(customFieldsSet);
+
+    // Build CSV Header
+    let csvString = 'Name,Email,College Reg No,Phone Number,Branch,Year of Study,Registration Type,Team Name,Verified,';
+    csvString += customFields.join(',') + '\\n';
+
+    // Build CSV Rows
+    registrations.forEach(reg => {
+        const user = reg.registeredBy || {};
+        
+        // Helper to escape commas and quotes in CSV
+        const escapeCSV = (val) => {
+            if (val === null || val === undefined) return '';
+            const str = String(val);
+            if (str.includes(',') || str.includes('"') || str.includes('\\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const row = [
+            escapeCSV(user.name),
+            escapeCSV(user.email),
+            escapeCSV(user.collegeRegNo),
+            escapeCSV(user.phoneNumber),
+            escapeCSV(user.branch),
+            escapeCSV(user.yearOfStudy),
+            escapeCSV(reg.registrationType),
+            escapeCSV(reg.teamName),
+            escapeCSV(reg.isVerified ? 'Yes' : 'No')
+        ];
+
+        // Append custom data columns
+        customFields.forEach(field => {
+            row.push(escapeCSV(reg.customData ? reg.customData[field] : ''));
+        });
+
+        csvString += row.join(',') + '\\n';
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=event-${eventId}-registrations.csv`);
+    res.status(HTTP_STATUS.OK).send(csvString);
+});
+

@@ -6,5 +6,6 @@ const router = Router();
 
 router.get('/my-registrations', authenticate, registrationController.getUserRegistrations);
 router.delete('/:id', authenticate, registrationController.cancelRegistration);
+router.patch('/:id/verify', authenticate, checkRole(['SuperAdmin', 'EventHead']), registrationController.verifyRegistration);
 
 export default router;

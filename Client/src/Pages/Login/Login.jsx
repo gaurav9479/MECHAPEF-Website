@@ -14,7 +14,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/admin';
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,11 +23,7 @@ const Login = () => {
     try {
       const user = await login(email, password);
 
-      if (['SuperAdmin', 'EventHead', 'PRTeam'].includes(user.role)) {
-        navigate(from, { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {

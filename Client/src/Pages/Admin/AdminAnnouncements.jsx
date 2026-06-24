@@ -10,7 +10,8 @@ const TARGET_TYPES = ['None', 'Event', 'External', 'Internal'];
 const emptyForm = {
   title: '', description: '', priority: 'Medium',
   targetType: 'None', targetLink: '',
-  startDate: '', endDate: '', isActive: true, displayOrder: 0
+  startDate: '', endDate: '', isActive: true, displayOrder: 0,
+  bannerURL: ''
 };
 const AdminAnnouncements = () => {
   const { logout } = useAuth();
@@ -23,6 +24,8 @@ const AdminAnnouncements = () => {
   const [form, setForm] = useState(emptyForm);
   const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
@@ -43,7 +46,8 @@ const AdminAnnouncements = () => {
       targetType: item.targetType || 'None', targetLink: item.targetLink || '',
       startDate: item.startDate?.slice(0, 10) || '',
       endDate: item.endDate?.slice(0, 10) || '',
-      isActive: item.isActive, displayOrder: item.displayOrder || 0
+      isActive: item.isActive, displayOrder: item.displayOrder || 0,
+      bannerURL: item.bannerURL || ''
     });
     setShowModal(true);
   };
@@ -72,6 +76,28 @@ const AdminAnnouncements = () => {
       showToast(err.response?.data?.message || 'Error saving', 'error');
     } finally { setSubmitting(false); }
   };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setUploading(true);
+    try {
+      const res = await api.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setForm(p => ({ ...p, bannerURL: res.data.data.url }));
+      showToast('Banner uploaded successfully!');
+    } catch (err) {
+      showToast('Failed to upload banner', 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
   const priorityColor = { High: '#ff4444', Medium: '#ffaa00', Low: '#00c864' };
   return (
@@ -137,10 +163,21 @@ const AdminAnnouncements = () => {
                 </div>
                 {form.targetType !== 'None' && (
                   <div className="form-group full">
-                    <label>Target Link / ID</label>
-                    <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="https://... or event ID" />
+                    <label>Target Link / Event ID</label>
+                    <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="/events/EVENT_ID or https://..." />
                   </div>
                 )}
+                <div className="form-group full">
+                  <label>Banner Image (For Live Events Slider)</label>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} />
+                  {uploading && <small style={{ color: '#ffaa00' }}>Uploading...</small>}
+                  {form.bannerURL && !uploading && (
+                    <div style={{ marginTop: '10px' }}>
+                      <img src={form.bannerURL} alt="Banner Preview" style={{ maxWidth: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                      <button type="button" className="btn-danger" style={{ marginTop: '5px', padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => f('bannerURL', '')}>Remove Banner</button>
+                    </div>
+                  )}
+                </div>
                 <div className="form-group">
                   <label>Start Date</label>
                   <input type="date" value={form.startDate} onChange={e => f('startDate', e.target.value)} />
