@@ -526,19 +526,39 @@
 @media (max-width: 768px) {
   .dept-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    gap: 15px;
+    padding-bottom: 20px; /* Space for scrollbar */
+    /* Hide scrollbar for a cleaner look */
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+  }
+  
+  .dept-container::-webkit-scrollbar {
+    display: none;
   }
   
   .gallery-item {
-    min-height: 200px;
+    min-width: 80vw;
+    height: 300px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
   }
   
   .dept-content {
-    align-items: flex-start;
-    text-align: left;
-    padding-left: 0;
-    margin-bottom: 40px;
-    order: -1; /* Move text above images on mobile */
+    min-width: 85vw;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    order: -1; /* Keep text as the first slide */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 10px;
   }
   
   .dept-title {
@@ -767,6 +787,13 @@
   }
   .hero-desc {
     font-size: 0.9rem;
+  }
+  .dashboard-grid {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dash-col.col-right {
+    margin-top: 0; /* Remove offset on mobile */
   }
   .s5-layout {
     flex-direction: column;

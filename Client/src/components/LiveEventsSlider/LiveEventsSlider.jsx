@@ -53,7 +53,23 @@ const LiveEventsSlider = () => {
   };
 
   if (loading) return null;
-  if (slides.length === 0) return null; // Don't show anything if no banners
+  
+  if (slides.length === 0) {
+    return (
+      <section className="live-events-slider-wrapper">
+        <div className="slider-container">
+          <div className="slide active" style={{ backgroundColor: '#0a0a0a' }}>
+            <div className="slide-overlay" style={{ justifyContent: 'center', textAlign: 'center', background: 'radial-gradient(circle, rgba(255,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%)' }}>
+              <div className="slide-content" style={{ transform: 'translateY(0)', opacity: 1, margin: '0 auto' }}>
+                <h2>More Events Coming Soon</h2>
+                <p>Stay tuned! We are brewing some exciting workshops and competitions for you.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="live-events-slider-wrapper">

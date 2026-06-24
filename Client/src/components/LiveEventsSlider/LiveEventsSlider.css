@@ -158,6 +158,15 @@
 }
 
 @media (max-width: 768px) {
+  .live-events-slider-wrapper {
+    width: 100%;
+    left: 0;
+    right: 0;
+    margin-left: 0;
+    margin-right: 0;
+    min-height: 350px;
+    height: 50vh;
+  }
   .slide-content h2 { font-size: 2rem; }
   .explore-btn { font-size: 1rem; padding: 10px 20px; }
   .slider-arrow { width: 40px; height: 40px; font-size: 1.2rem; }

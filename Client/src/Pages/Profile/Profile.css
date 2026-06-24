@@ -304,3 +304,15 @@
   background: #ff1f01;
   color: #fff;
 }
+
+@media (max-width: 600px) {
+  .registration-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .ticket-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

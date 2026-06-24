@@ -188,3 +188,10 @@
   color: #fff;
   border-color: rgba(255, 255, 255, 0.3);
 }
+
+@media (max-width: 600px) {
+  .login-card {
+    padding: 40px 24px;
+    margin: 0 16px;
+  }
+}

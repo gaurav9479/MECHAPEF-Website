@@ -166,6 +166,16 @@
   .desktop-only-btn {
     display: none;
   }
+
+  /* Fix for hamburger menu not clickable and navbar disappearing on mobile */
+  .navbar-hover-zone {
+    display: none;
+  }
+  
+  .navbar-hidden {
+    top: 0;
+    background: rgba(5, 5, 5, 0.95);
+  }
 }
 
 .mobile-only-btn {

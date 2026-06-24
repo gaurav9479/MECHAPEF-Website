@@ -186,3 +186,13 @@
   }
   .auth-container { padding: 30px 24px; }
 }
+
+@media (max-width: 600px) {
+  .auth-container {
+    padding: 30px 24px;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
