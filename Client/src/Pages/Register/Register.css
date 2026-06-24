@@ -186,3 +186,27 @@
   }
   .auth-container { padding: 30px 24px; }
 }
+
+@media (max-width: 420px) {
+  .auth-page {
+    padding: 24px 14px;
+    align-items: flex-start;
+  }
+
+  .auth-container {
+    padding: 28px 18px;
+    border-radius: 12px;
+  }
+
+  .auth-header h2 {
+    font-size: 1.45rem;
+  }
+
+  .auth-header p {
+    letter-spacing: 1px;
+  }
+
+  .auth-btn {
+    min-height: 48px;
+  }
+}

@@ -13,7 +13,7 @@
 .profile-banner {
   background: linear-gradient(135deg, rgba(0, 200, 100, 0.2), rgba(0, 100, 50, 0.1));
   border: 1px solid #00c864;
-  padding: 20px 40px;
+  padding: 20px clamp(18px, 5vw, 40px);
   border-radius: 12px;
   text-align: center;
   margin-bottom: 40px;
@@ -40,7 +40,7 @@
   border-radius: 12px;
   width: 90%;
   max-width: 800px;
-  padding: 40px;
+  padding: clamp(18px, 4vw, 40px);
 }
 
 .profile-header {
@@ -75,7 +75,7 @@
 
 .profile-header-info h1 {
   margin: 0 0 5px 0;
-  font-size: 2rem;
+  font-size: clamp(1.45rem, 4vw, 2rem);
   color: #fff;
 }
 
@@ -214,7 +214,38 @@
   }
   
   .profile-page-container {
-    padding: 15px;
+    padding: 88px 14px 24px;
+  }
+
+  .profile-banner,
+  .profile-content {
+    width: 100%;
+  }
+
+  .profile-banner h2 {
+    font-size: 1.35rem;
+  }
+
+  .profile-banner p {
+    font-size: 0.95rem;
+  }
+
+  .registration-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .ticket-btn {
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .profile-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    text-align: center;
   }
 }
 

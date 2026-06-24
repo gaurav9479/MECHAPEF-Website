@@ -18,6 +18,7 @@ import AlbumView from './Pages/Gallery/AlbumView';
 import Profile from './Pages/Profile/Profile';
 import Events from './Pages/Events/Events';
 import EventDetails from './Pages/Events/EventDetails';
+import Sponsors from './Pages/Sponsors/Sponsors';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
 
@@ -42,6 +43,7 @@ function App() {
           <Route path="/gallery/:id" element={<AlbumView />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />
+          <Route path="/sponsors" element={<Sponsors />} />
           <Route path="/profile" element={
             <ProtectedRoute requiredRole="GeneralUser"><Profile /></ProtectedRoute>
           } />

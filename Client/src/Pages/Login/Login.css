@@ -7,6 +7,7 @@
   position: relative;
   overflow: hidden;
   font-family: 'Orbitron', sans-serif;
+  padding: 24px 16px;
 }
 
 .login-bg-strip {
@@ -54,6 +55,26 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 520px) {
+  .login-card {
+    padding: 34px 22px;
+    border-radius: 12px;
+  }
+
+  .login-title {
+    font-size: 1.45rem;
+  }
+
+  .login-logo {
+    margin-bottom: 24px;
+  }
+
+  .login-submit,
+  .back-home-btn {
+    min-height: 48px;
+  }
 }
 .login-logo-main {
   font-size: 1.4rem;
