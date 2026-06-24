@@ -6,16 +6,13 @@
 
 html{
   scroll-behavior:smooth;
-  width:100%;
-  overflow-x:hidden;
 }
 
 body{
   background:#050505;
   color:white;
   font-family:Poppins,sans-serif;
-  overflow-x:hidden;
-  width:100%;
+  overflow-x:clip;
 }
 
 section{
