@@ -134,6 +134,7 @@ const LiveEventsSlider = () => {
             display: 'flex', 
             gap: '20px', 
             overflowX: 'auto', 
+            overflowY: 'hidden',
             paddingBottom: '20px', 
             width: '100%', 
             maxWidth: '1200px',
