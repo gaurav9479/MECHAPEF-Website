@@ -18,12 +18,19 @@ export const authenticate = async (req, res, next) => {
         }
         const decoded = verifyAccessToken(token);
 
-        const user = await User.findById(decoded.userId).select('+isActive');
+        const user = await User.findById(decoded.userId).select('+isActive +sessionVersion');
 
         if (!user || !user.isActive) {
             throw new ApiError(
                 HTTP_STATUS.UNAUTHORIZED,
                 'User not found or inactive'
+            );
+        }
+
+        if (decoded.sessionVersion && decoded.sessionVersion !== user.sessionVersion) {
+            throw new ApiError(
+                HTTP_STATUS.UNAUTHORIZED,
+                'Session expired. You have logged in from another device.'
             );
         }
         req.user = {

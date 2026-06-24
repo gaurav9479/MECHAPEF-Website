@@ -19,6 +19,7 @@ export const eventService = {
   register: (eventId, data) => api.post(`/events/${eventId}/register`, data),
   getRegistrations: (eventId) => api.get(`/events/${eventId}/registrations`),
   markAttendance: (registrationId, data) => api.put(`/registrations/${registrationId}/attendance`, data),
+  wipeData: (id) => api.delete(`/events/${id}/wipe-data`),
 };
 
 export const registrationService = {

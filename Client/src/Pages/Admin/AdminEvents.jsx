@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
-import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle } from 'react-icons/fa';
+import api from '../../services/api';
 import { eventService } from '../../services/services';
 import './AdminDashboard.css';
 const CATEGORIES = ['MechapefEvent', 'Departmental'];
 const emptyForm = {
   title: '', description: '', category: 'MechapefEvent',
   startTime: '', endTime: '', venue: '', registrationDeadline: '',
-  maxTeamSize: 1, registrationFee: 0, featured: false, rules: '', prizes: ''
+  maxTeamSize: 1, registrationFee: 0, featured: false, rules: '', prizes: '',
+  customFormFields: []
 };
 const AdminEvents = () => {
   const { logout } = useAuth();
@@ -50,18 +52,41 @@ const AdminEvents = () => {
       maxTeamSize: ev.maxTeamSize, registrationFee: ev.registrationFee,
       featured: ev.featured,
       rules: Array.isArray(ev.rules) ? ev.rules.join('\n') : '',
-      prizes: ev.prizes || ''
+      prizes: ev.prizes || '',
+      customFormFields: ev.customFormFields || []
     });
     setShowModal(true);
   };
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this event?')) return;
+    if (!window.confirm('WARNING: Are you sure you want to permanently delete this event? All associated registrations and data will be permanently wiped out!')) return;
     try {
       await eventService.delete(id);
       showToast('Event deleted');
       fetchEvents();
     } catch { showToast('Failed to delete', 'error'); }
   };
+
+  const handleEndEvent = async (id) => {
+    if (!window.confirm('Are you sure you want to end this event? Its history will be saved, but photo data will be scheduled for auto-deletion in 4 days.')) return;
+    try {
+      await api.patch(`/events/${id}/end`);
+      showToast('Event marked as ended');
+      fetchEvents();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to end event', 'error');
+    }
+  };
+
+  const handleWipeData = async (id) => {
+    if (!window.confirm('⚠️ Are you sure? This will permanently delete all files and custom form inputs submitted for this event to save storage. This action CANNOT be undone!')) return;
+    try {
+      const res = await eventService.wipeData(id);
+      showToast(`Wiped successfully. ${res.data.data.deletedFilesCount} files removed from ImageKit.`);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to wipe data', 'error');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -86,6 +111,29 @@ const AdminEvents = () => {
     } finally { setSubmitting(false); }
   };
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const addCustomField = () => {
+    setForm(p => ({
+      ...p,
+      customFormFields: [...p.customFormFields, { fieldName: '', fieldType: 'text', isRequired: false }]
+    }));
+  };
+
+  const removeCustomField = (index) => {
+    setForm(p => ({
+      ...p,
+      customFormFields: p.customFormFields.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateCustomField = (index, key, value) => {
+    setForm(p => {
+      const updatedFields = [...p.customFormFields];
+      updatedFields[index][key] = value;
+      return { ...p, customFormFields: updatedFields };
+    });
+  };
+
   return (
     <div className="admin-layout">
       <AdminSidebar />
@@ -97,23 +145,40 @@ const AdminEvents = () => {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Title</th><th>Category</th><th>Venue</th><th>Start</th><th>Featured</th><th>Actions</th></tr>
+              <tr><th>Title</th><th>Start</th><th>Venue</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" style={{textAlign:'center', color:'#555', padding:'30px'}}>Loading...</td></tr>
+                <tr><td colSpan="5" style={{textAlign:'center', color:'#555', padding:'30px'}}>Loading...</td></tr>
               ) : events.length === 0 ? (
-                <tr><td colSpan="6" style={{textAlign:'center', color:'#555', padding:'30px'}}>No events yet. Create one!</td></tr>
+                <tr><td colSpan="5" style={{textAlign:'center', color:'#555', padding:'30px'}}>No events yet. Create one!</td></tr>
               ) : events.map(ev => (
                 <tr key={ev._id}>
-                  <td style={{fontWeight:600, color:'#fff'}}>{ev.title}</td>
-                  <td><span className="tag">{ev.category}</span></td>
-                  <td>{ev.venue}</td>
+                  <td>
+                    <strong style={{color:'#fff'}}>{ev.title}</strong>
+                    {ev.featured && <span className="tag" style={{marginLeft:'8px', backgroundColor:'#222'}}>Featured</span>}
+                  </td>
                   <td>{new Date(ev.startTime).toLocaleDateString()}</td>
-                  <td>{ev.featured ? <span style={{color:'#00c864'}}>✓</span> : <span style={{color:'#555'}}>—</span>}</td>
+                  <td>{ev.venue}</td>
+                  <td>
+                    <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`}>
+                      {ev.status || 'Upcoming'}
+                    </span>
+                  </td>
                   <td style={{display:'flex', gap:'8px'}}>
-                    <button className="btn-secondary" style={{padding:'6px 12px', fontSize:'0.8rem'}} onClick={() => openEdit(ev)}><FaEdit /></button>
-                    <button className="btn-danger" onClick={() => handleDelete(ev._id)}><FaTrash /></button>
+                    {ev.status !== 'Ended' && (
+                      <button className="btn-secondary" title="End Event" onClick={() => handleEndEvent(ev._id)} style={{padding:'6px 10px'}}>
+                        <FaCheckCircle style={{color: '#ffaa00'}} />
+                      </button>
+                    )}
+                    {ev.status === 'Ended' && (
+                      <button className="btn-danger" title="Wipe Form Data & Files" onClick={() => handleWipeData(ev._id)} style={{padding:'6px 10px'}}>
+                        🧹
+                      </button>
+                    )}
+                    <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{padding:'6px 10px'}}><FaUsers /></Link>
+                    <button className="btn-secondary" style={{padding:'6px 10px'}} onClick={() => openEdit(ev)}><FaEdit /></button>
+                    <button className="btn-danger" style={{padding:'6px 10px'}} onClick={() => handleDelete(ev._id)}><FaTrash /></button>
                   </td>
                 </tr>
               ))}
@@ -179,6 +244,48 @@ const AdminEvents = () => {
                 <div className="form-group full">
                   <label>Prizes</label>
                   <input value={form.prizes} onChange={e => f('prizes', e.target.value)} placeholder="1st: ₹5000, 2nd: ₹3000" />
+                </div>
+
+                <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h3>Custom Registration Form Fields</h3>
+                    <button type="button" className="btn-secondary" onClick={addCustomField} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+                      <FaPlus /> Add Field
+                    </button>
+                  </div>
+                  {form.customFormFields.map((field, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center', backgroundColor: '#111', padding: '10px', borderRadius: '8px' }}>
+                      <input 
+                        value={field.fieldName} 
+                        onChange={e => updateCustomField(idx, 'fieldName', e.target.value)} 
+                        placeholder="Field Name (e.g. GitHub Link)" 
+                        required 
+                        style={{ flex: 2 }}
+                      />
+                      <select 
+                        value={field.fieldType} 
+                        onChange={e => updateCustomField(idx, 'fieldType', e.target.value)}
+                        style={{ flex: 1 }}
+                      >
+                        <option value="text">Text (Short)</option>
+                        <option value="textarea">Textarea (Long)</option>
+                        <option value="checkbox">Checkbox (Yes/No)</option>
+                        <option value="file">File Upload (Image/PDF)</option>
+                      </select>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={field.isRequired} 
+                          onChange={e => updateCustomField(idx, 'isRequired', e.target.checked)} 
+                          style={{ width: 'auto' }}
+                        /> Req
+                      </label>
+                      <button type="button" className="btn-danger" onClick={() => removeCustomField(idx)} style={{ padding: '8px' }}>
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ))}
+                  {form.customFormFields.length === 0 && <p style={{ color: '#888', fontSize: '0.9rem' }}>No custom fields added. Default fields (Name, Email, Reg No) are always included.</p>}
                 </div>
               </div>
               <div className="modal-actions">

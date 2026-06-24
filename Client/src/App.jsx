@@ -6,14 +6,18 @@ import Login from './Pages/Login/Login';
 import Register from './Pages/Register/Register';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import AdminEvents from './Pages/Admin/AdminEvents';
+import AdminRegistrations from './Pages/Admin/AdminRegistrations';
 import AdminTeam from './Pages/Admin/AdminTeam';
 import AdminAnnouncements from './Pages/Admin/AdminAnnouncements';
 import AdminSponsors from './Pages/Admin/AdminSponsors';
 import AdminManagement from './Pages/Admin/AdminManagement';
 import AdminGallery from './Pages/Admin/AdminGallery';
+import AdminScanner from './Pages/Admin/AdminScanner';
 import Gallery from './Pages/Gallery/Gallery';
 import AlbumView from './Pages/Gallery/AlbumView';
 import Profile from './Pages/Profile/Profile';
+import Events from './Pages/Events/Events';
+import EventDetails from './Pages/Events/EventDetails';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
 
@@ -36,6 +40,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/gallery/:id" element={<AlbumView />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/:id" element={<EventDetails />} />
           <Route path="/profile" element={
             <ProtectedRoute requiredRole="GeneralUser"><Profile /></ProtectedRoute>
           } />
@@ -47,6 +53,9 @@ function App() {
           } />
           <Route path="/admin/events" element={
             <ProtectedRoute requiredRole="EventHead"><AdminEvents /></ProtectedRoute>
+          } />
+          <Route path="/admin/events/:eventId/registrations" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminRegistrations /></ProtectedRoute>
           } />
           <Route path="/admin/team" element={
             <ProtectedRoute requiredRole="EventHead"><AdminTeam /></ProtectedRoute>
@@ -62,6 +71,9 @@ function App() {
           } />
           <Route path="/admin/gallery" element={
             <ProtectedRoute requiredRole="EventHead"><AdminGallery /></ProtectedRoute>
+          } />
+          <Route path="/admin/scanner" element={
+            <ProtectedRoute requiredRole="EventHead"><AdminScanner /></ProtectedRoute>
           } />
         </Routes>
       </BrowserRouter>

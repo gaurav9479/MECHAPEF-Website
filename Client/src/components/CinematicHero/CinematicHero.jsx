@@ -257,10 +257,10 @@ const CinematicHero = () => {
               </p>
 
               <div className="hero-buttons">
-                <button className="primary-btn">
+                <button className="primary-btn" onClick={() => navigate('/events')}>
                   EXPLORE MORE <FaArrowRight />
                 </button>
-                <button className="secondary-btn">
+                <button className="secondary-btn" onClick={() => document.getElementById('our-team')?.scrollIntoView({ behavior: 'smooth' })}>
                   MEET THE TEAM <FaUsers />
                 </button>
               </div>
