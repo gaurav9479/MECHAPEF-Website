@@ -50,6 +50,20 @@ VITE_API_URL=https://your-backend-domain.onrender.com/api
 4. Add the `VITE_API_URL` to the Environment Variables.
 5. Click **Deploy**.
 
-## 4. Handling Traffic Spikes (Event Day)
+## 4. Local Development (Docker) 🐳
+For local development, especially on Windows where setting up Redis can be challenging, the project is fully containerized. You do not need to install Node.js, MongoDB, or Redis locally.
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+2. Run the following command in the root directory:
+   ```bash
+   docker-compose up -d --build
+   ```
+3. This single command will start:
+   - **Frontend (Vite)** on `http://localhost:5173`
+   - **Backend (Express)** on `http://localhost:5000`
+   - **Redis (Alpine)** on `localhost:6379` (Automatically connected to BullMQ)
+4. Hot-reloading is configured. Any changes you make to the code will reflect instantly in the containers.
+
+## 5. Handling Traffic Spikes (Event Day)
 - **Redis Connection**: The presence of `REDIS_URL` in your backend automatically shifts registrations into the BullMQ queue to prevent MongoDB crashes.
 - **Render Sleep Avoidance**: The backend has a cron job that pings itself every 10 minutes, but *only* on the day of the event. Make sure you create the event in the Admin Dashboard with the correct start date!
