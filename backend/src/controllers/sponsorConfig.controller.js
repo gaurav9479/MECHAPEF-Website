@@ -1,6 +1,6 @@
 import { SponsorConfig } from '../models/sponsorConfig.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/ApiResponse.js';
+import APIResponse from '../utils/APIResponse.js';
 
 const getDefaultConfig = () => ({
   tiers: [
@@ -22,7 +22,7 @@ export const getConfig = asyncHandler(async (req, res) => {
     config = await SponsorConfig.create(getDefaultConfig());
   }
 
-  res.status(200).json(new ApiResponse(200, config, 'Sponsor config retrieved successfully'));
+  res.status(200).json(new APIResponse(200, config, 'Sponsor config retrieved successfully'));
 });
 
 export const updateConfig = asyncHandler(async (req, res) => {
@@ -39,5 +39,5 @@ export const updateConfig = asyncHandler(async (req, res) => {
 
   await config.save();
 
-  res.status(200).json(new ApiResponse(200, config, 'Sponsor config updated successfully'));
+  res.status(200).json(new APIResponse(200, config, 'Sponsor config updated successfully'));
 });
