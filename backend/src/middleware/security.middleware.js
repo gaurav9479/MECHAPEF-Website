@@ -130,14 +130,17 @@ export const notFoundHandler = (req, res) => {
 };
 
 export const requestLogger = (req, res, next) => {
-    const start = Date.now();
+    // Ignore health check routes to prevent log spam
+    if (req.path === '/health' || req.path === '/api/health') {
+        return next();
+    }
 
+    const start = Date.now();
 
     console.log(`📨 ${req.method} ${req.path}`, {
         ip: req.ip,
         userId: req.user?.userId
     });
-
 
     res.on('finish', () => {
         const duration = Date.now() - start;
