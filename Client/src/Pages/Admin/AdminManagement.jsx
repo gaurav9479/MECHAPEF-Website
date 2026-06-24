@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Cropper from 'react-cropper';
@@ -69,9 +69,10 @@ const AdminManagement = () => {
   const [toast, setToast] = useState(null);
   // ── Notices Tab State ──
   const [notices, setNotices] = useState([]);
-  const [noticeForm, setNoticeForm] = useState({ title: '', description: '', priority: 'Medium', isActive: true });
+  const [noticeForm, setNoticeForm] = useState({ title: '', description: '', priority: 'Medium', targetType: 'None', isActive: true, eventSponsors: [] });
   const [noticeSubmitting, setNoticeSubmitting] = useState(false);
   const [editingNotice, setEditingNotice] = useState(null);
+  const [allSponsors, setAllSponsors] = useState([]);
   // ── Image Manager Tab State ──
   const [sectionImages, setSectionImages] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('Our Department');
@@ -132,8 +133,13 @@ const AdminManagement = () => {
   );
   // ── Fetch Notices ────────────────────────────────────────────────────────
   const fetchNotices = async () => {
-    const res = await api.get('/announcements');
-    setNotices(res.data.data?.announcements || []);
+    const [annRes, sponRes] = await Promise.all([
+      api.get('/announcements'),
+      api.get('/sponsors').catch(() => ({ data: { data: [] } }))
+    ]);
+    setNotices(annRes.data.data?.announcements || []);
+    const sp = sponRes.data.data?.sponsors || sponRes.data.data || [];
+    setAllSponsors(sp.filter(s => s.isActive !== false));
   };
   useEffect(() => { if (activeTab === 'notices') fetchNotices(); }, [activeTab]);
   const submitNotice = async (e) => {
@@ -147,7 +153,7 @@ const AdminManagement = () => {
         await api.post('/announcements', noticeForm);
         showToast('Notice posted!');
       }
-      setNoticeForm({ title: '', description: '', priority: 'Medium', isActive: true });
+      setNoticeForm({ title: '', description: '', priority: 'Medium', targetType: 'None', isActive: true, eventSponsors: [] });
       setEditingNotice(null);
       fetchNotices();
     } catch (err) {
@@ -162,7 +168,7 @@ const AdminManagement = () => {
   };
   const editNotice = (n) => {
     setEditingNotice(n);
-    setNoticeForm({ title: n.title, description: n.description, priority: n.priority, isActive: n.isActive });
+    setNoticeForm({ title: n.title, description: n.description, priority: n.priority, targetType: n.targetType || 'None', isActive: n.isActive, eventSponsors: n.eventSponsors || [] });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   // ── Fetch Section Images ──────────────────────────────────────────────────
@@ -385,7 +391,56 @@ const AdminManagement = () => {
                     required placeholder="Notice content..."
                   />
                 </div>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div className="form-group full">
+                  <label>Target Type</label>
+                  <select value={noticeForm.targetType} onChange={e => setNoticeForm(p => ({ ...p, targetType: e.target.value }))}>
+                    <option value="None">None</option>
+                    <option value="Event">Event</option>
+                    <option value="External">External</option>
+                    <option value="Internal">Internal</option>
+                  </select>
+                </div>
+                {noticeForm.targetType === 'Event' && (
+                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '10px' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Select Event Sponsors (Multiple Allowed)</label>
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', border: '1px solid #333', padding: '10px', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto', marginBottom: '15px' }}>
+                        {allSponsors.map(s => {
+                          const isSelected = noticeForm.eventSponsors?.some(sp => sp.name === s.companyName);
+                          return (
+                            <React.Fragment key={s._id}>
+                              <input 
+                                type="checkbox" 
+                                id={`sponsor-checkbox-notice-${s._id}`}
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setNoticeForm(p => ({
+                                      ...p,
+                                      eventSponsors: [...(p.eventSponsors || []), { name: s.companyName, logoURL: s.logoURL, type: 'Event Sponsor' }]
+                                    }));
+                                  } else {
+                                    setNoticeForm(p => ({
+                                      ...p,
+                                      eventSponsors: (p.eventSponsors || []).filter(sp => sp.name !== s.companyName)
+                                    }));
+                                  }
+                                }}
+                                style={{ display: 'none' }}
+                              />
+                              <label htmlFor={`sponsor-checkbox-notice-${s._id}`} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: isSelected ? '#ff1f0122' : '#222', padding: '5px 10px', borderRadius: '20px', cursor: 'pointer', border: `1px solid ${isSelected ? '#ff1f01' : '#444'}`, margin: 0 }}>
+                                <img src={s.logoURL} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
+                                <span style={{ fontSize: '0.85rem' }}>{s.companyName}</span>
+                              </label>
+                            </React.Fragment>
+                          )
+                        })}
+                        {allSponsors.length === 0 && <span style={{ color: '#888' }}>No sponsors available. Add them in Sponsors panel first.</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginTop: '16px' }}>
                   <div className="form-group">
                     <label>Priority</label>
                     <select value={noticeForm.priority} onChange={e => setNoticeForm(p => ({ ...p, priority: e.target.value }))}>
@@ -404,7 +459,7 @@ const AdminManagement = () => {
                     {noticeSubmitting ? 'Posting...' : editingNotice ? 'Update Notice' : 'Post Notice'}
                   </button>
                   {editingNotice && (
-                    <button type="button" className="btn-secondary" onClick={() => { setEditingNotice(null); setNoticeForm({ title: '', description: '', priority: 'Medium', isActive: true }); }}>
+                    <button type="button" className="btn-secondary" onClick={() => { setEditingNotice(null); setNoticeForm({ title: '', description: '', priority: 'Medium', targetType: 'None', isActive: true, eventSponsors: [] }); }}>
                       Cancel
                     </button>
                   )}

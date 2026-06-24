@@ -103,7 +103,7 @@ const Sponsors = () => {
     ]).then(([sponsorsRes, configRes]) => {
       const data = sponsorsRes.data.data?.sponsors || sponsorsRes.data.data || [];
       const activeSponsors = data
-        .filter(sponsor => sponsor.isActive !== false)
+        .filter(sponsor => sponsor.isActive !== false || sponsor.isPastSponsor)
         .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setSponsors(activeSponsors);
       
@@ -117,17 +117,19 @@ const Sponsors = () => {
   }, []);
 
   const visibleSponsors = sponsors.length > 0 ? sponsors : fallbackSponsors;
+  const currentSponsors = visibleSponsors.filter(s => !s.isPastSponsor);
+  const pastSponsors = visibleSponsors.filter(s => s.isPastSponsor);
   
   const sponsorsByTier = useMemo(() => {
     const grouped = {};
     config.tiers.forEach(t => { grouped[t.name] = []; });
-    visibleSponsors.forEach(sponsor => {
+    currentSponsors.forEach(sponsor => {
       const t = sponsor.tier || 'Silver';
       if (!grouped[t]) grouped[t] = [];
       grouped[t].push(sponsor);
     });
     return grouped;
-  }, [visibleSponsors, config]);
+  }, [currentSponsors, config]);
 
   return (
     <div className="sponsors-page">
@@ -163,7 +165,7 @@ const Sponsors = () => {
             <div className="sponsor-loading">Loading sponsors...</div>
           ) : (
             <div className="sponsor-logo-grid">
-              {visibleSponsors.map(sponsor => (
+              {currentSponsors.map(sponsor => (
                 <SponsorLogo key={sponsor._id || sponsor.companyName} sponsor={sponsor} />
               ))}
             </div>
@@ -194,6 +196,23 @@ const Sponsors = () => {
             </section>
           );
         })}
+
+        {pastSponsors.length > 0 && (
+          <section className="sponsor-tier-section" style={{ marginTop: '40px' }}>
+            <div className="sponsor-section-header tier-header">
+              <div className="tier-icon"><DynamicIcon name="FaHistory" /></div>
+              <div>
+                <p>Past Partners</p>
+                <h2>Our Legacy Sponsors</h2>
+              </div>
+            </div>
+            <div className="sponsor-card-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+              {pastSponsors.map((sponsor, index) => (
+                <SponsorCard key={sponsor._id || sponsor.companyName} sponsor={sponsor} index={index} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="sponsor-benefits">
           <div className="sponsor-section-header">

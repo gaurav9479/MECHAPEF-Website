@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight, FaArrowRight } from 'react-icons/fa';
 import api from '../../services/api';
+import PremiumSponsorPanel from './PremiumSponsorPanel';
+import HeroTicker from '../HeroTicker/HeroTicker';
+// import ICEngine3D from './ICEngine3D'; // User requested to remove from slider but keep the file
 import './LiveEventsSlider.css';
 
 const LiveEventsSlider = () => {
@@ -14,8 +17,8 @@ const LiveEventsSlider = () => {
     api.get('/announcements')
       .then(res => {
         const items = res.data.data?.announcements || res.data.data || [];
-        // Filter for active announcements that have a banner URL
-        const banners = items.filter(n => n.isActive && n.bannerURL);
+        // Filter for active announcements that have a banner URL OR are marked as an Event
+        const banners = items.filter(n => n.isActive && (n.bannerURL || n.targetType === 'Event'));
         // Sort by display order
         banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
         setSlides(banners);
@@ -28,7 +31,7 @@ const LiveEventsSlider = () => {
     if (slides.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIdx(prev => (prev + 1) % slides.length);
-    }, 5000);
+    }, 30000); // Changed to 30 seconds as requested
     return () => clearInterval(interval);
   }, [slides.length]);
 
@@ -78,20 +81,25 @@ const LiveEventsSlider = () => {
           <div 
             key={slide._id} 
             className={`slide ${index === currentIdx ? 'active' : ''}`}
-            style={{ backgroundImage: `url(${slide.bannerURL})` }}
+            style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : {}}
           >
+            
             <div className="slide-overlay">
-              <div className="slide-content">
-                <h2>{slide.title}</h2>
-                <p>{slide.description}</p>
-                {slide.targetLink && (
-                  <button 
-                    className="explore-btn" 
-                    onClick={() => handleExplore(slide.targetLink)}
-                  >
-                    EVENT <FaArrowRight style={{marginLeft: '10px'}} />
-                  </button>
-                )}
+              <div className="slide-content-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '20px' }}>
+                <div className="slide-content" style={{ flex: 1 }}>
+                  <h2>{slide.title}</h2>
+                  <p>{slide.description}</p>
+                  {slide.targetLink && (
+                    <button 
+                      className="explore-btn" 
+                      onClick={() => handleExplore(slide.targetLink)}
+                    >
+                      EVENT <FaArrowRight style={{marginLeft: '10px'}} />
+                    </button>
+                  )}
+                </div>
+                
+                {/* Removed PremiumSponsorPanel from inside the slide */}
               </div>
             </div>
           </div>
@@ -114,6 +122,33 @@ const LiveEventsSlider = () => {
           </>
         )}
       </div>
+
+      <HeroTicker />
+
+      {/* Render the Active Event's Sponsors below the Ticker */}
+      {slides[currentIdx]?.targetType === 'Event' && slides[currentIdx]?.eventSponsors?.length > 0 && (
+        <div className="active-event-sponsors-section" style={{ padding: '20px 20px', backgroundColor: '#050505', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', overflow: 'hidden' }}>
+          <h3 style={{ color: '#ff1f01', fontSize: '1.2rem', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '2px' }}>Event Endorsed Sponsors</h3>
+          
+          <div className="event-sponsors-horizontal-scroll" style={{ 
+            display: 'flex', 
+            gap: '20px', 
+            overflowX: 'auto', 
+            paddingBottom: '20px', 
+            width: '100%', 
+            maxWidth: '1200px',
+            scrollSnapType: 'x mandatory',
+            justifyContent: slides[currentIdx].eventSponsors.length < 4 ? 'center' : 'flex-start'
+          }}>
+            {slides[currentIdx].eventSponsors.map((sp, idx) => (
+              <div key={idx} style={{ flex: '0 0 auto', scrollSnapAlign: 'center' }}>
+                <PremiumSponsorPanel sponsor={sp} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
     </section>
   );
 };

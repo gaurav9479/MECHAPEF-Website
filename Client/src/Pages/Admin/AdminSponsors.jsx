@@ -16,7 +16,7 @@ const currentYear = () => {
 const emptyForm = {
   companyName: '', tier: 'Gold', logoURL: '', websiteURL: '',
   description: '', contactPerson: '', contactEmail: '',
-  academicYear: currentYear(), sponsorshipAmount: 0, displayOrder: 0, isActive: true
+  academicYear: currentYear(), sponsorshipAmount: 0, displayOrder: 0, isActive: true, isPastSponsor: false
 };
 const AdminSponsors = () => {
   const { logout } = useAuth();
@@ -29,6 +29,7 @@ const AdminSponsors = () => {
   const [form, setForm] = useState(emptyForm);
   const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [config, setConfig] = useState({ tiers: [], deliverables: [] });
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [configForm, setConfigForm] = useState({ tiers: [], deliverables: [] });
@@ -58,7 +59,7 @@ const AdminSponsors = () => {
       websiteURL: s.websiteURL || '', description: s.description || '',
       contactPerson: s.contactPerson || '', contactEmail: s.contactEmail || '',
       academicYear: s.academicYear, sponsorshipAmount: s.sponsorshipAmount || 0,
-      displayOrder: s.displayOrder || 0, isActive: s.isActive
+      displayOrder: s.displayOrder || 0, isActive: s.isActive, isPastSponsor: s.isPastSponsor || false
     });
     setShowModal(true);
   };
@@ -88,6 +89,27 @@ const AdminSponsors = () => {
     } finally { setSubmitting(false); }
   };
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    setUploading(true);
+    try {
+      const res = await api.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setForm(p => ({ ...p, logoURL: res.data.data.url }));
+      showToast('Logo uploaded successfully!');
+    } catch (err) {
+      showToast('Failed to upload logo', 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const openConfig = () => {
     setConfigForm(JSON.parse(JSON.stringify(config)));
@@ -122,7 +144,7 @@ const AdminSponsors = () => {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Company</th><th>Tier</th><th>Academic Year</th><th>Amount</th><th>Active</th><th>Actions</th></tr>
+              <tr><th>Company</th><th>Tier</th><th>Past Sponsor?</th><th>Academic Year</th><th>Amount</th><th>Active</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -133,6 +155,7 @@ const AdminSponsors = () => {
                 <tr key={s._id}>
                   <td style={{ fontWeight: 600, color: '#fff' }}>{s.companyName}</td>
                   <td><span style={{ color: TIER_COLOR[s.tier] || '#fff', fontWeight: 700 }}>{s.tier}</span></td>
+                  <td>{s.isPastSponsor ? <span style={{ color: '#ff1f01' }}>Yes</span> : <span style={{ color: '#888' }}>No</span>}</td>
                   <td>{s.academicYear}</td>
                   <td>{s.sponsorshipAmount ? `₹${s.sponsorshipAmount.toLocaleString()}` : '—'}</td>
                   <td>{s.isActive ? <span style={{ color: '#00c864' }}>✓</span> : <span style={{ color: '#555' }}>✗</span>}</td>
@@ -163,8 +186,15 @@ const AdminSponsors = () => {
                   </select>
                 </div>
                 <div className="form-group full">
-                  <label>Logo URL *</label>
-                  <input value={form.logoURL} onChange={e => f('logoURL', e.target.value)} required placeholder="https://imagekit.io/..." />
+                  <label>Sponsor Logo *</label>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} />
+                  {uploading && <small style={{ color: '#ffaa00' }}>Uploading...</small>}
+                  {form.logoURL && !uploading && (
+                    <div style={{ marginTop: '10px' }}>
+                      <img src={form.logoURL} alt="Logo Preview" style={{ maxWidth: '100%', height: '80px', objectFit: 'contain', backgroundColor: '#fff', padding: '5px', borderRadius: '4px' }} />
+                      <button type="button" className="btn-danger" style={{ display: 'block', marginTop: '5px', padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => f('logoURL', '')}>Remove Image</button>
+                    </div>
+                  )}
                 </div>
                 <div className="form-group full">
                   <label>Website URL</label>
@@ -194,7 +224,11 @@ const AdminSponsors = () => {
                   <label>Display Order</label>
                   <input type="number" value={form.displayOrder} onChange={e => f('displayOrder', Number(e.target.value))} />
                 </div>
-                <div className="form-group" style={{ justifyContent: 'flex-end' }}>
+                <div className="form-group" style={{ justifyContent: 'flex-end', gap: '20px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={form.isPastSponsor} onChange={e => f('isPastSponsor', e.target.checked)} style={{ width: 'auto' }} />
+                    Mark as Past Sponsor
+                  </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                     <input type="checkbox" checked={form.isActive} onChange={e => f('isActive', e.target.checked)} style={{ width: 'auto' }} />
                     Active

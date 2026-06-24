@@ -12,8 +12,15 @@ export const getSponsors = asyncHandler(async (req, res) => {
 export const createSponsor = asyncHandler(async (req, res) => {
     const { companyName, tier, logoURL, academicYear } = req.body;
     if (!companyName || !tier || !logoURL || !academicYear) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'companyName, tier, logoURL and academicYear are required');
-    const sponsor = await Sponsor.create(req.body);
-    return res.status(HTTP_STATUS.CREATED).json(new APIResponse(HTTP_STATUS.CREATED, { sponsor }, 'Sponsor added'));
+    try {
+        const sponsor = await Sponsor.create(req.body);
+        return res.status(HTTP_STATUS.CREATED).json(new APIResponse(HTTP_STATUS.CREATED, { sponsor }, 'Sponsor added'));
+    } catch (error) {
+        if (error.code === 11000) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'A sponsor with this company name already exists.');
+        }
+        throw error;
+    }
 });
 
 export const updateSponsor = asyncHandler(async (req, res) => {

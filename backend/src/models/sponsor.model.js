@@ -47,6 +47,11 @@ const sponsorSchema = new mongoose.Schema(
             index: true
         },
 
+        isPastSponsor: {
+            type: Boolean,
+            default: false
+        },
+
         isActive: {
             type: Boolean,
             default: true,

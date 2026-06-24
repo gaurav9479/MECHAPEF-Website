@@ -47,6 +47,12 @@ const announcementSchema = new mongoose.Schema(
 
         targetId: mongoose.Schema.Types.ObjectId,
 
+        eventSponsors: [{
+            name: { type: String, trim: true },
+            type: { type: String, trim: true },
+            logoURL: { type: String }
+        }],
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

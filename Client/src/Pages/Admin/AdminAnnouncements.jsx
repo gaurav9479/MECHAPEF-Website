@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
@@ -9,10 +9,9 @@ const PRIORITIES = ['Low', 'Medium', 'High'];
 const TARGET_TYPES = ['None', 'Event', 'External', 'Internal'];
 const emptyForm = {
   title: '', description: '', priority: 'Medium',
-  targetType: 'None', targetLink: '',
-  startDate: '', endDate: '', isActive: true, displayOrder: 0,
-  bannerURL: ''
-};
+    targetType: 'None', targetLink: '', bannerURL: '', startDate: '', endDate: '', displayOrder: 0, isActive: true,
+    eventSponsors: []
+  };
 const AdminAnnouncements = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +24,7 @@ const AdminAnnouncements = () => {
   const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [allSponsors, setAllSponsors] = useState([]);
   
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -32,22 +32,28 @@ const AdminAnnouncements = () => {
   };
   const fetchItems = async () => {
     try {
-      const res = await api.get('/announcements');
-      setItems(res.data.data?.announcements || res.data.data || []);
-    } catch { showToast('Failed to load announcements', 'error'); }
+      const [annRes, sponRes] = await Promise.all([
+        api.get('/announcements'),
+        api.get('/sponsors')
+      ]);
+      setItems(annRes.data.data?.announcements || annRes.data.data || []);
+      const sp = sponRes.data.data?.sponsors || sponRes.data.data || [];
+      // we can show all active sponsors in dropdown
+      setAllSponsors(sp.filter(s => s.isActive !== false));
+    } catch { showToast('Failed to load data', 'error'); }
     finally { setLoading(false); }
   };
   useEffect(() => { fetchItems(); }, []);
   const openCreate = () => { setEditingItem(null); setForm(emptyForm); setShowModal(true); };
-  const openEdit = (item) => {
-    setEditingItem(item);
+  const openEdit = (a) => {
+    setEditingItem(a);
     setForm({
-      title: item.title, description: item.description, priority: item.priority,
-      targetType: item.targetType || 'None', targetLink: item.targetLink || '',
-      startDate: item.startDate?.slice(0, 10) || '',
-      endDate: item.endDate?.slice(0, 10) || '',
-      isActive: item.isActive, displayOrder: item.displayOrder || 0,
-      bannerURL: item.bannerURL || ''
+      title: a.title, description: a.description, priority: a.priority,
+      targetType: a.targetType || 'None', targetLink: a.targetLink || '',
+      bannerURL: a.bannerURL || '', startDate: a.startDate ? a.startDate.split('T')[0] : '',
+      endDate: a.endDate ? a.endDate.split('T')[0] : '', displayOrder: a.displayOrder || 0,
+      isActive: a.isActive,
+      eventSponsors: a.eventSponsors || []
     });
     setShowModal(true);
   };
@@ -82,7 +88,7 @@ const AdminAnnouncements = () => {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('image', file);
     
     setUploading(true);
     try {
@@ -166,6 +172,46 @@ const AdminAnnouncements = () => {
                     <label>Target Link / Event ID</label>
                     <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="/events/EVENT_ID or https://..." />
                   </div>
+                )}
+                {form.targetType === 'Event' && (
+                  <>
+                    <div className="form-group full">
+                      <label>Select Event Sponsors (Multiple Allowed)</label>
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', border: '1px solid #333', padding: '10px', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto', marginBottom: '15px' }}>
+                        {allSponsors.map(s => {
+                          const isSelected = form.eventSponsors?.some(sp => sp.name === s.companyName);
+                          return (
+                            <React.Fragment key={s._id}>
+                              <input 
+                                type="checkbox" 
+                                id={`sponsor-checkbox-${s._id}`}
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setForm(p => ({
+                                      ...p,
+                                      eventSponsors: [...(p.eventSponsors || []), { name: s.companyName, logoURL: s.logoURL, type: 'Event Sponsor' }]
+                                    }));
+                                  } else {
+                                    setForm(p => ({
+                                      ...p,
+                                      eventSponsors: (p.eventSponsors || []).filter(sp => sp.name !== s.companyName)
+                                    }));
+                                  }
+                                }}
+                                style={{ display: 'none' }}
+                              />
+                              <label htmlFor={`sponsor-checkbox-${s._id}`} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: isSelected ? '#ff1f0122' : '#222', padding: '5px 10px', borderRadius: '20px', cursor: 'pointer', border: `1px solid ${isSelected ? '#ff1f01' : '#444'}`, margin: 0 }}>
+                                <img src={s.logoURL} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
+                                <span style={{ fontSize: '0.85rem' }}>{s.companyName}</span>
+                              </label>
+                            </React.Fragment>
+                          )
+                        })}
+                        {allSponsors.length === 0 && <span style={{ color: '#888' }}>No sponsors available. Add them in Sponsors panel first.</span>}
+                      </div>
+                    </div>
+                  </>
                 )}
                 <div className="form-group full">
                   <label>Banner Image (For Live Events Slider)</label>
