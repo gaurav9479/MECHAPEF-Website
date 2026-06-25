@@ -14,7 +14,7 @@ const currentYear = () => {
   return `${y}-${String(y + 1).slice(-2)}`;
 };
 const emptyForm = {
-  companyName: '', tier: 'Gold', logoURL: '', websiteURL: '',
+  companyName: '', tier: 'Gold', type: '', logoURL: '', websiteURL: '',
   description: '', contactPerson: '', contactEmail: '',
   academicYear: currentYear(), sponsorshipAmount: 0, displayOrder: 0, isActive: true, isPastSponsor: false
 };
@@ -55,7 +55,7 @@ const AdminSponsors = () => {
   const openEdit = (s) => {
     setEditingSponsor(s);
     setForm({
-      companyName: s.companyName, tier: s.tier, logoURL: s.logoURL || '',
+      companyName: s.companyName, tier: s.tier, type: s.type || '', logoURL: s.logoURL || '',
       websiteURL: s.websiteURL || '', description: s.description || '',
       contactPerson: s.contactPerson || '', contactEmail: s.contactEmail || '',
       academicYear: s.academicYear, sponsorshipAmount: s.sponsorshipAmount || 0,
@@ -75,11 +75,16 @@ const AdminSponsors = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const submitData = { ...form };
+      if (submitData.isPastSponsor && !submitData.companyName) {
+        submitData.companyName = `PastSponsor-${Date.now()}`;
+      }
+      
       if (editingSponsor) {
-        await api.put(`/sponsors/${editingSponsor._id}`, form);
+        await api.put(`/sponsors/${editingSponsor._id}`, submitData);
         showToast('Sponsor updated!');
       } else {
-        await api.post('/sponsors', form);
+        await api.post('/sponsors', submitData);
         showToast('Sponsor added!');
       }
       setShowModal(false);
@@ -144,7 +149,7 @@ const AdminSponsors = () => {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Company</th><th>Tier</th><th>Past Sponsor?</th><th>Academic Year</th><th>Amount</th><th>Active</th><th>Actions</th></tr>
+              <tr><th>Company</th><th>Tier / Type</th><th>Past Sponsor?</th><th>Academic Year</th><th>Amount</th><th>Active</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -154,7 +159,13 @@ const AdminSponsors = () => {
               ) : sponsors.map(s => (
                 <tr key={s._id}>
                   <td style={{ fontWeight: 600, color: '#fff' }}>{s.companyName}</td>
-                  <td><span style={{ color: TIER_COLOR[s.tier] || '#fff', fontWeight: 700 }}>{s.tier}</span></td>
+                  <td>
+                    {s.isPastSponsor && s.type ? (
+                      <span style={{ color: '#ff1f01', fontWeight: 700 }}>{s.type}</span>
+                    ) : (
+                      <span style={{ color: TIER_COLOR[s.tier] || '#fff', fontWeight: 700 }}>{s.tier}</span>
+                    )}
+                  </td>
                   <td>{s.isPastSponsor ? <span style={{ color: '#ff1f01' }}>Yes</span> : <span style={{ color: '#888' }}>No</span>}</td>
                   <td>{s.academicYear}</td>
                   <td>{s.sponsorshipAmount ? `₹${s.sponsorshipAmount.toLocaleString()}` : '—'}</td>
@@ -176,8 +187,8 @@ const AdminSponsors = () => {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Company Name *</label>
-                  <input value={form.companyName} onChange={e => f('companyName', e.target.value)} required placeholder="Company name" />
+                  <label>Company Name {form.isPastSponsor ? '' : '*'}</label>
+                  <input value={form.companyName} onChange={e => f('companyName', e.target.value)} required={!form.isPastSponsor} placeholder={form.isPastSponsor ? "Optional (Visible in logo)" : "Company name"} />
                 </div>
                 <div className="form-group">
                   <label>Tier *</label>
@@ -185,6 +196,12 @@ const AdminSponsors = () => {
                     {config.tiers.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
                   </select>
                 </div>
+                {form.isPastSponsor && (
+                  <div className="form-group">
+                    <label>Past Sponsor Type</label>
+                    <input value={form.type} onChange={e => f('type', e.target.value)} placeholder="e.g. Alpha, Beta, etc." />
+                  </div>
+                )}
                 <div className="form-group full">
                   <label>Sponsor Logo *</label>
                   <input type="file" accept="image/*" onChange={handleFileUpload} />

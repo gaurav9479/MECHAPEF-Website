@@ -130,23 +130,26 @@ const LiveEventsSlider = () => {
         <div className="active-event-sponsors-section" style={{ padding: '20px 20px', backgroundColor: '#050505', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', overflow: 'hidden' }}>
           <h3 style={{ color: '#ff1f01', fontSize: '1.2rem', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '2px' }}>Event Endorsed Sponsors</h3>
           
-          <div className="event-sponsors-horizontal-scroll" style={{ 
-            display: 'flex', 
-            gap: '20px', 
-            overflowX: 'auto', 
-            overflowY: 'hidden',
-            padding: '5px 20px', 
-            width: '100%', 
-            maxWidth: '1200px',
-            scrollSnapType: 'x mandatory',
-          }}>
-            <div style={{ margin: 'auto' }} />
-            {slides[currentIdx].eventSponsors.map((sp, idx) => (
-              <div key={idx} style={{ flex: '0 0 auto', scrollSnapAlign: 'center' }}>
-                <PremiumSponsorPanel sponsor={sp} />
-              </div>
-            ))}
-            <div style={{ margin: 'auto' }} />
+          <div className="sponsors-chain-wrapper" style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <div className="event-sponsors-horizontal-scroll" style={{ 
+              display: 'flex', 
+              gap: '20px', 
+              overflowX: 'auto', 
+              overflowY: 'hidden',
+              padding: '5px 20px', 
+              width: '100%', 
+              maxWidth: '1200px',
+              scrollSnapType: 'x mandatory',
+              zIndex: 1,
+            }}>
+              <div style={{ margin: 'auto' }} />
+              {slides[currentIdx].eventSponsors.map((sp, idx) => (
+                <div key={idx} style={{ flex: '0 0 auto', scrollSnapAlign: 'center' }}>
+                  <PremiumSponsorPanel sponsor={sp} />
+                </div>
+              ))}
+              <div style={{ margin: 'auto' }} />
+            </div>
           </div>
         </div>
       )}

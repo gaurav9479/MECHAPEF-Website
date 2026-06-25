@@ -23,6 +23,11 @@ const sponsorSchema = new mongoose.Schema(
 
         websiteURL: String,
 
+        type: {
+            type: String,
+            default: 'Past Sponsors'
+        },
+
         description: String,
 
         contactPerson: String,

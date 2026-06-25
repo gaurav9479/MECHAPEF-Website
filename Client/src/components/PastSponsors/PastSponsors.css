@@ -22,42 +22,45 @@
   display: flex;
 }
 
-.marquee-content {
-  display: flex;
-  gap: 40px;
-  animation: scroll-left 30s linear infinite;
-  white-space: nowrap;
+.past-sponsors-horizontal-scroll::-webkit-scrollbar {
+  display: none;
 }
 
-.marquee-content:hover {
-  animation-play-state: paused;
+.past-tier-wrapper {
+  margin-bottom: 50px;
 }
 
 .past-sponsor-logo-box {
-  width: 180px;
-  height: 100px;
-  background-color: #111;
-  border: 1px solid #222;
+  width: 220px;
+  height: 110px;
+  background: #ffffff;
   border-radius: 8px;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   padding: 15px;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 0px #b91c1c;
+  border: 2px solid #ef4444;
+  position: relative;
+  overflow: hidden;
 }
 
 .past-sponsor-logo-box:hover {
-  transform: translateY(-5px);
-  border-color: #444;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 15px rgba(239, 68, 68, 0.4), 0 4px 0px #991b1b;
 }
 
 .past-sponsor-logo-box img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.past-sponsor-logo-box:hover img {
+  transform: scale(1.05);
 }
 
 @keyframes scroll-left {
@@ -83,3 +86,113 @@
     gap: 20px;
   }
 }
+
+/* --- Mecha Org Tree CSS --- */
+.mecha-org-tree * {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
+.mecha-org-tree ul {
+  padding-top: 40px; 
+  position: relative;
+  display: flex;
+  justify-content: center;
+  transition: all 0.5s;
+}
+.mecha-org-tree li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 40px 10px 0 10px;
+}
+
+/* Horizontal connecting chains */
+.mecha-org-tree li::before, .mecha-org-tree li::after {
+  content: '';
+  position: absolute; 
+  top: 0; 
+  right: 50%;
+  width: 50%; 
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg width='40' height='16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='2' y='4' width='24' height='8' rx='4' fill='none' stroke='%23ff1f01' stroke-width='2'/%3E%3Crect x='26' y='6' width='14' height='4' rx='2' fill='%23ff1f01'/%3E%3C/svg%3E") repeat-x;
+  transform: translateY(-50%);
+  z-index: 0;
+  filter: drop-shadow(0 0 8px rgba(255, 31, 1, 0.8));
+}
+.mecha-org-tree li::after {
+  right: auto; 
+  left: 50%;
+}
+.mecha-org-tree li:only-child::after, .mecha-org-tree li:only-child::before {
+  display: none;
+}
+.mecha-org-tree li:only-child {
+  padding-top: 0;
+}
+.mecha-org-tree li:first-child::before, .mecha-org-tree li:last-child::after {
+  display: none;
+}
+
+/* Vertical drop from parent down to the horizontal chain line */
+.mecha-org-tree ul::before {
+  content: '';
+  position: absolute; 
+  top: 0; 
+  left: 50%;
+  width: 16px; 
+  height: 40px;
+  background: url("data:image/svg+xml,%3Csvg width='16' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='4' y='2' width='8' height='24' rx='4' fill='none' stroke='%23ff1f01' stroke-width='2'/%3E%3Crect x='6' y='26' width='4' height='14' rx='2' fill='%23ff1f01'/%3E%3C/svg%3E") repeat-y;
+  transform: translateX(-50%);
+  z-index: 0;
+  filter: drop-shadow(0 0 8px rgba(255, 31, 1, 0.8));
+}
+.mecha-org-tree ul:first-child::before {
+  display: none; /* No line above the root ul */
+}
+
+/* Vertical drop from the horizontal chain line down to the node */
+.mecha-org-tree li .node-wrapper {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mecha-org-tree li .node-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  width: 16px;
+  height: 40px;
+  background: url("data:image/svg+xml,%3Csvg width='16' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='4' y='2' width='8' height='24' rx='4' fill='none' stroke='%23ff1f01' stroke-width='2'/%3E%3Crect x='6' y='26' width='4' height='14' rx='2' fill='%23ff1f01'/%3E%3C/svg%3E") repeat-y;
+  transform: translateX(-50%);
+  z-index: -1;
+  filter: drop-shadow(0 0 8px rgba(255, 31, 1, 0.8));
+}
+.mecha-org-tree li:only-child .node-wrapper::before {
+  display: none;
+}
+
+.mecha-org-tree .master-pulley-image {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 20px rgba(255, 31, 1, 0.3));
+  z-index: 10;
+  position: relative;
+}
+
+.mecha-org-tree .node-gear-icon {
+  font-size: 24px;
+  color: #ff1f01;
+  background: #050505;
+  border-radius: 50%;
+  padding: 2px;
+  margin-bottom: -10px;
+  z-index: 15;
+  position: relative;
+  filter: drop-shadow(0 0 5px rgba(255, 31, 1, 0.8));
+}
+

@@ -1,9 +1,9 @@
 .hero-ticker-container {
   position: relative;
   width: 100vw;
-  height: 60px;
-  background-color: #111;
-  overflow: hidden;
+  height: 100px;
+  background-color: transparent;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,7 +26,8 @@
 
 .black-band {
   background-color: #050505;
-  transform: rotate(-2deg);
+  top: 50%;
+  transform: translateY(-50%) rotate(-2deg);
   z-index: 1;
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
@@ -34,7 +35,8 @@
 
 .red-band {
   background-color: #d10000; /* Deep vibrant red */
-  transform: rotate(3deg);
+  top: 50%;
+  transform: translateY(-50%) rotate(3deg);
   z-index: 2;
   border-top: 1px solid #ff3333;
   border-bottom: 1px solid #ff3333;
@@ -79,7 +81,7 @@
 
 @media (max-width: 768px) {
   .hero-ticker-container {
-    height: 100px;
+    height: 120px;
   }
   .ticker-text {
     font-size: 1.2rem;
