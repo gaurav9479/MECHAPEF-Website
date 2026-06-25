@@ -91,6 +91,18 @@ const CinematicHero = () => {
 
   const scene2PointerEvents = useTransform(scrollYProgress, (val) => (val >= 180/2500 && val <= 405/2500) ? "auto" : "none");
 
+  // --- DOMAINS SCROLL (225 to 405) ---
+  // Domains slide OVER Scene 2
+  const domainsOpacity = useTransform(scrollYProgress, [225/2500, 240/2500, 390/2500, 405/2500], [0, 1, 1, 0]);
+  
+  // Desktop: Horizontal Scroll
+  const domainsDesktopX = useTransform(scrollYProgress, [225/2500, 405/2500], ["100vw", "-100vw"]);
+
+  // Mobile: Universal Parallax Lanes (Fast & Slow)
+  const domainsMobileLeftY = useTransform(scrollYProgress, [225/2500, 405/2500], ["100vh", "-150vh"]);
+  const domainsMobileRightY = useTransform(scrollYProgress, [225/2500, 405/2500], ["100vh", "-50vh"]);
+  const domainsPointerEvents = useTransform(scrollYProgress, (val) => (val >= 225/2500 && val <= 405/2500) ? "auto" : "none");
+
   // --- SCENE 3: Spirit of Mechanical Engineering (0.3375 to 0.5625) ---
   // Right Strips Enter (0.3375 to 0.365625) & Exit (0.478125 to 0.534375)
   const bg3Opacity = useTransform(scrollYProgress, [540/2500, 585/2500, 765/2500, 855/2500], [0, 1, 1, 0]);
@@ -278,11 +290,14 @@ const CinematicHero = () => {
           style={{ pointerEvents: scene2PointerEvents }}
         >
           <motion.div 
-            className="cinematic-left drone-container" 
+            className="cinematic-left about-us-container" 
             style={{ x: droneX, y: droneY, opacity: droneOpacity }}
           >
-             <img src={assets.drone} className="drone" alt="Autonomous Drone" />
-             <h2 className="drone-dashboard-text">Dashboard</h2>
+             <h2 className="about-us-title">What is <span className="highlight-text">MechaPEF</span> ?</h2>
+             <p className="about-us-mission">
+               We are the official Mechanical and Mechatronics club of MNNIT Allahabad. 
+               We don't just study engineering theory—we actually build machines, innovate, and leave a legacy.
+             </p>
           </motion.div>
 
           <motion.div 
@@ -331,6 +346,72 @@ const CinematicHero = () => {
 
             </div>
           </motion.div>
+        </motion.div>
+
+        {/* ================= DOMAINS SCROLL (OVER SCENE 2) ================= */}
+        <motion.div 
+          className="cinematic-scene domains-overlay"
+          style={{ pointerEvents: domainsPointerEvents, opacity: domainsOpacity }}
+        >
+          {/* Desktop Version (Static Layout, No Parallax/Horizontal Scroll) */}
+          <motion.div className="desktop-domains">
+            <div className="domain-gsap-card">
+              <div className="domain-logo-box">
+                {imagesMap['domain_1'] ? <img src={imagesMap['domain_1']} alt="Automobile Logo" className="domain-logo" /> : <div className="domain-icon">🏎️</div>}
+              </div>
+              <h3>Automobile / SAE</h3><p>(Baja, Go-Kart)</p>
+            </div>
+            <div className="domain-gsap-card">
+              <div className="domain-logo-box">
+                {imagesMap['domain_2'] ? <img src={imagesMap['domain_2']} alt="Robotics Logo" className="domain-logo" /> : <div className="domain-icon">🤖</div>}
+              </div>
+              <h3>Robotics & Automation</h3><p>(Arduino, Sensors, Drones)</p>
+            </div>
+            <div className="domain-gsap-card">
+              <div className="domain-logo-box">
+                {imagesMap['domain_3'] ? <img src={imagesMap['domain_3']} alt="Design Logo" className="domain-logo" /> : <div className="domain-icon">💻</div>}
+              </div>
+              <h3>Design & CAD</h3><p>(SolidWorks, AutoCAD, Ansys)</p>
+            </div>
+            <div className="domain-gsap-card">
+              <div className="domain-logo-box">
+                {imagesMap['domain_4'] ? <img src={imagesMap['domain_4']} alt="Core Mfg Logo" className="domain-logo" /> : <div className="domain-icon">🔧</div>}
+              </div>
+              <h3>Core Manufacturing</h3><p>(Machining, Welding)</p>
+            </div>
+          </motion.div>
+
+          {/* Mobile Version (Two Parallel Vertical Lanes) */}
+          <div className="mobile-domains">
+            <motion.div className="mobile-lane left-lane" style={{ y: domainsMobileLeftY }}>
+              <div className="domain-gsap-card">
+                <div className="domain-logo-box">
+                  {imagesMap['domain_1'] ? <img src={imagesMap['domain_1']} alt="Automobile Logo" className="domain-logo" /> : <div className="domain-icon">🏎️</div>}
+                </div>
+                <h3>Automobile / SAE</h3><p>(Baja, Go-Kart)</p>
+              </div>
+              <div className="domain-gsap-card">
+                <div className="domain-logo-box">
+                  {imagesMap['domain_3'] ? <img src={imagesMap['domain_3']} alt="Design Logo" className="domain-logo" /> : <div className="domain-icon">💻</div>}
+                </div>
+                <h3>Design & CAD</h3><p>(SolidWorks, AutoCAD, Ansys)</p>
+              </div>
+            </motion.div>
+            <motion.div className="mobile-lane right-lane" style={{ y: domainsMobileRightY }}>
+              <div className="domain-gsap-card">
+                <div className="domain-logo-box">
+                  {imagesMap['domain_2'] ? <img src={imagesMap['domain_2']} alt="Robotics Logo" className="domain-logo" /> : <div className="domain-icon">🤖</div>}
+                </div>
+                <h3>Robotics & Automation</h3><p>(Arduino, Sensors, Drones)</p>
+              </div>
+              <div className="domain-gsap-card">
+                <div className="domain-logo-box">
+                  {imagesMap['domain_4'] ? <img src={imagesMap['domain_4']} alt="Core Mfg Logo" className="domain-logo" /> : <div className="domain-icon">🔧</div>}
+                </div>
+                <h3>Core Manufacturing</h3><p>(Machining, Welding)</p>
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
 
         {/* ================= SCENE 3 CONTENT ================= */}
