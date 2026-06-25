@@ -82,11 +82,15 @@ const PastEventsStack = () => {
           
           for(let j = 0; j < index; j++) {
              const diff = index - j;
-             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -20 * diff, duration: 1, ease: 'power2.out' }, index);
+             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: 0, duration: 1, ease: 'power2.out' }, index);
           }
         });
         
-        tl.to({}, { duration: 0.5 }); // Buffer
+        // Wait for a brief moment after stacking is complete
+        tl.to({}, { duration: 0.5 }); 
+        
+        // Shift all cards DOWN together to exit
+        tl.to(cards, { y: "150vh", duration: 1.5, ease: "power2.in" });
       }, sectionRef);
       
       ScrollTrigger.refresh();
@@ -95,6 +99,13 @@ const PastEventsStack = () => {
     return () => {
       clearTimeout(timer);
       if (ctx) ctx.revert();
+      
+      // Force kill any remaining ScrollTriggers created by this component
+      ScrollTrigger.getAll().forEach(t => {
+        if (t.vars.trigger === sectionRef.current) {
+          t.kill(true); 
+        }
+      });
     };
   }, [loading, pastEvents]);
 
