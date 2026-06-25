@@ -20,8 +20,8 @@ const Register = () => {
     confirmPassword: '',
     yearOfStudy: '1',
     branch: '',
-    phoneNumber: '',
-    requestedRole: 'GeneralUser'
+    branch: '',
+    phoneNumber: ''
   });
 
   const handleChange = (e) => {
@@ -31,6 +31,18 @@ const Register = () => {
 
   const validateMnnitEmail = (email) => {
     return /^[a-z]+\.[0-9]+@mnnit\.ac\.in$/.test(email.toLowerCase());
+  };
+
+  const handleMicrosoftLogin = async () => {
+    try {
+      setLoading(true);
+      const { authService } = await import('../../services/services');
+      const res = await authService.getMicrosoftUrl();
+      window.location.href = res.data.data.url;
+    } catch (err) {
+      setError('Failed to initiate Microsoft registration');
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -65,10 +77,8 @@ const Register = () => {
         phoneNumber: form.phoneNumber
       });
 
-      // Show success state
       setSuccess(true);
       
-      // Auto-login after 3 seconds or user can click to login
       setTimeout(() => {
         navigate('/login');
       }, 4000);
@@ -87,8 +97,7 @@ const Register = () => {
           <div style={{ color: '#00c864', fontSize: '4rem', marginBottom: '20px' }}>✓</div>
           <h2 style={{ color: '#fff', marginBottom: '15px' }}>Registration Successful!</h2>
           <p style={{ color: '#aaa', marginBottom: '30px', lineHeight: '1.6' }}>
-            Your account has been created successfully. However, full access to the portal requires 
-            <strong style={{ color: '#ffaa00' }}> Admin Verification</strong>.
+            Your account has been created successfully. You can now login.
           </p>
           <p style={{ color: '#555', fontSize: '0.9rem' }}>Redirecting to login...</p>
           <Link to="/login" className="auth-btn" style={{ display: 'inline-block', marginTop: '20px', textDecoration: 'none' }}>Go to Login</Link>
@@ -180,24 +189,7 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="auth-input-group" style={{ marginBottom: '20px' }}>
-            <FaUser className="auth-icon" />
-            <select
-              name="requestedRole"
-              value={form.requestedRole}
-              onChange={handleChange}
-              className="auth-select"
-            >
-              <option value="GeneralUser">General User (No Admin Access)</option>
-              <option value="SuperAdmin">Super Admin</option>
-              <option value="EventLead">Event Lead</option>
-              <option value="EventHead">Event Head</option>
-              <option value="DesignTeam">Design Team</option>
-              <option value="WebTeam">Web Team</option>
-              <option value="PRTeam">PR Team</option>
-              <option value="Alumni">Alumni</option>
-            </select>
-          </div>
+
 
           <div className="form-row">
             <div className="auth-input-group">
@@ -235,6 +227,14 @@ const Register = () => {
 
           <button type="submit" className="auth-btn" disabled={loading}>
             {loading ? 'Creating Account...' : 'Register'}
+          </button>
+          
+          <div className="login-divider" style={{ margin: '20px 0', textAlign: 'center', color: '#888' }}>
+            <span>OR</span>
+          </div>
+
+          <button type="button" className="auth-btn" style={{ background: '#0078d4', borderColor: '#0078d4' }} onClick={handleMicrosoftLogin} disabled={loading}>
+            Sign up with Microsoft
           </button>
         </form>
 

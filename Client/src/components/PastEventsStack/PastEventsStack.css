@@ -1,0 +1,226 @@
+.pe-gsap-section {
+  position: relative;
+  min-height: 100vh;
+  background: #050505;
+  width: 100%;
+  overflow: hidden; /* Prevent horizontal scroll */
+}
+
+.pe-gsap-container {
+  width: 100%;
+  height: 100vh; /* Fixed height for pinning */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pe-header {
+  text-align: center;
+  margin-top: -5vh;
+  z-index: 10;
+}
+
+.section-title {
+  font-family: 'Michroma', sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 800;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  margin-bottom: 1px;
+}
+
+.section-subtitle {
+  color: #aaa;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.pe-gsap-cards-wrapper {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  width: 90%;
+  max-width: 1000px;
+  height: 60vh;
+  display: flex;
+  justify-content: center;
+  /* GSAP will animate children inside here */
+}
+
+.pe-stack-card {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 31, 1, 0.4);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+  transform-origin: top center;
+  will-change: transform, opacity;
+}
+
+.pe-left {
+  flex: 0 0 45%;
+  position: relative;
+  overflow: hidden;
+}
+
+.pe-left img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pe-right {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pe-date {
+  font-size: 0.9rem;
+  color: #ff1f01;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.pe-right h3 {
+  font-size: 2.2rem;
+  color: #fff;
+  margin-bottom: 15px;
+  font-family: 'Michroma', sans-serif;
+}
+
+.pe-right p {
+  color: #ccc;
+  line-height: 1.6;
+  font-size: 1.1rem;
+}
+
+.pe-mobile-bg-wrapper {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .pe-gsap-section {
+    height: 100vh; /* Fixed height for pinning */
+    min-height: 100vh;
+    padding: 0;
+    overflow: hidden; /* Hide cards outside the viewport */
+  }
+  
+  .desktop-only-header {
+    display: none;
+  }
+
+  .pe-mobile-bg-wrapper {
+    display: block;
+    position: absolute; /* No longer sticky, it sits inside the pinned container */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .pe-mobile-bg-text {
+    width: 100%;
+    font-family: 'Michroma', sans-serif;
+    color: #fff;
+    line-height: 1.2;
+    display: flex;
+    flex-direction: column;
+    padding: 0 15px;
+    opacity: 0.9;
+  }
+
+  .bg-word {
+    font-size: clamp(2rem, 11vw, 4rem);
+    font-weight: bold;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  }
+
+  .w-1 { text-align: center; margin-left: 5%; }
+  .w-2 { text-align: center; }
+  .w-3 { text-align: center; font-size: clamp(2.5rem, 14vw, 5rem); margin-left: -5%; }
+  .w-4 { text-align: center; margin-left: 10%; }
+
+  .pe-mobile-vertical-text {
+    position: absolute;
+    right: 15px;
+    top: 5%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: #888;
+    gap: 2px;
+  }
+
+  .pe-gsap-container {
+    height: 100vh;
+    padding: 0;
+    margin-top: 0;
+    z-index: 5;
+    position: relative;
+  }
+
+  .pe-gsap-cards-wrapper {
+    position: absolute; /* Absolutely positioned so GSAP can move it vertically */
+    top: 0;
+    left: 0;
+    transform: none;
+    height: auto;
+    flex-direction: column;
+    gap: 60px;
+    width: 100%;
+    padding: 20px;
+    margin-top: 0; /* GSAP will control the Y position */
+  }
+
+  /* Card styling with matching clip-paths */
+  .pe-stack-card {
+    position: relative !important;
+    transform: none !important;
+    opacity: 1 !important; 
+    flex-direction: column;
+    height: auto;
+    width: 80%;
+    background: #fff;
+    padding: 5px; /* Creates the white border */
+    border: none; /* Remove desktop red border */
+    clip-path: polygon(0 25px, 25px 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.9);
+  }
+
+  .pe-stack-card:nth-child(odd) {
+    align-self: flex-start;
+  }
+
+  .pe-stack-card:nth-child(even) {
+    align-self: flex-end;
+  }
+  
+  .pe-left {
+    flex: none;
+    height: 280px; 
+    width: 100%;
+    border-radius: 0;
+    /* Inner image must have exactly the same clip-path to maintain uniform border */
+    clip-path: polygon(0 22px, 22px 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
+  }
+  
+  .pe-right {
+    display: none; 
+  }
+}

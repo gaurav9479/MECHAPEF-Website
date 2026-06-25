@@ -6,6 +6,7 @@ import Login from './Pages/Login/Login';
 import Register from './Pages/Register/Register';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import AdminEvents from './Pages/Admin/AdminEvents';
+import PastEventsManager from './Pages/Admin/PastEventsManager';
 import AdminRegistrations from './Pages/Admin/AdminRegistrations';
 import AdminTeam from './Pages/Admin/AdminTeam';
 import AdminAnnouncements from './Pages/Admin/AdminAnnouncements';
@@ -57,6 +58,9 @@ function App() {
           } />
           <Route path="/admin/events" element={
             <ProtectedRoute requiredRole="EventHead"><AdminEvents /></ProtectedRoute>
+          } />
+          <Route path="/admin/past-events" element={
+            <ProtectedRoute requiredRole="EventHead"><PastEventsManager /></ProtectedRoute>
           } />
           <Route path="/admin/events/:eventId/registrations" element={
             <ProtectedRoute requiredRole="EventHead"><AdminRegistrations /></ProtectedRoute>

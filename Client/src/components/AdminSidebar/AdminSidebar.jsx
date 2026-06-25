@@ -68,7 +68,10 @@ const AdminSidebar = () => {
             <FaCalendarAlt /> Dashboard
           </Link>
           <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`}>
-            <FaCalendarAlt /> Events
+            <FaCalendarAlt /> Live Events
+          </Link>
+          <Link to="/admin/past-events" className={`sidebar-link ${location.pathname === '/admin/past-events' ? 'active' : ''}`}>
+            <FaCalendarAlt /> Past Events
           </Link>
           <Link to="/admin/team" className={`sidebar-link ${location.pathname === '/admin/team' ? 'active' : ''}`}>
             <FaUsers /> Team
