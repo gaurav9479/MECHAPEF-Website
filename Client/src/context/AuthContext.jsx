@@ -44,6 +44,14 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
+  const microsoftLogin = async (code) => {
+    const res = await authService.microsoftLogin(code);
+    const { accessToken, user: userData } = res.data.data;
+    localStorage.setItem('accessToken', accessToken);
+    setUser(userData);
+    return userData;
+  };
+
   const logout = async () => {
     await authService.logout();
     localStorage.removeItem('accessToken');
@@ -68,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   const isSuperAdmin = isRole(ROLES.SUPER_ADMIN);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, hasRole, isRole, canEdit, isAdmin, isSuperAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, microsoftLogin, logout, hasRole, isRole, canEdit, isAdmin, isSuperAdmin }}>
       {children}
     </AuthContext.Provider>
   );

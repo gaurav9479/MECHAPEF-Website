@@ -13,6 +13,7 @@ import {
 import api from '../../services/api';
 import HeroTicker from '../HeroTicker/HeroTicker';
 import PastSponsors from '../PastSponsors/PastSponsors';
+import PastEventsStack from '../PastEventsStack/PastEventsStack';
 import './MobileHome.css';
 
 /* ══════════════════════════════════════════════════
@@ -354,6 +355,9 @@ const MobileHome = () => {
           </motion.div>
         ))}
       </motion.div>
+
+      {/* ══════ PAST EVENTS (FLOWING CARDS) ══════ */}
+      <PastEventsStack />
 
       {/* ══════ EVENTS ══════ */}
       <section className="mh-section">

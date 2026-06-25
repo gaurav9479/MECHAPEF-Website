@@ -1,5 +1,7 @@
-import { useState } from 'react';
+
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+
 import { useAuth } from '../../context/AuthContext';
 import { FaCog, FaEye, FaEyeSlash } from 'react-icons/fa';
 import './Login.css';
@@ -11,10 +13,42 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, microsoftLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
+
+  // Handle Microsoft OAuth Callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      setLoading(true);
+      microsoftLogin(code)
+        .then(() => {
+          // Clear URL and redirect
+          window.history.replaceState({}, document.title, window.location.pathname);
+          navigate(from, { replace: true });
+        })
+        .catch((err) => {
+          setError(err.response?.data?.message || 'Microsoft login failed');
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setLoading(false);
+        });
+    }
+  }, [microsoftLogin, navigate, from]);
+
+  const handleMicrosoftLogin = async () => {
+    try {
+      setLoading(true);
+      const { authService } = await import('../../services/services');
+      const res = await authService.getMicrosoftUrl();
+      window.location.href = res.data.data.url;
+    } catch (err) {
+      setError('Failed to initiate Microsoft login');
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,7 +94,7 @@ const Login = () => {
               placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              required={!window.location.search.includes('code')}
             />
           </div>
 
@@ -72,7 +106,7 @@ const Login = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
+                required={!window.location.search.includes('code')}
               />
               <button type="button" className="show-pass-btn" onClick={() => setShowPass(!showPass)}>
                 {showPass ? <FaEyeSlash /> : <FaEye />}
@@ -85,7 +119,15 @@ const Login = () => {
           </div>
 
           <button type="submit" className="login-submit" disabled={loading}>
-            {loading ? 'Signing In...' : 'Sign In →'}
+            {loading && !window.location.search.includes('code') ? 'Signing In...' : 'Sign In →'}
+          </button>
+          
+          <div className="login-divider">
+            <span>OR</span>
+          </div>
+
+          <button type="button" className="ms-login-submit" onClick={handleMicrosoftLogin} disabled={loading}>
+            {loading && window.location.search.includes('code') ? 'Authenticating...' : 'Sign in with Microsoft'}
           </button>
         </form>
 

@@ -9,6 +9,10 @@ router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password/:token', authController.resetPassword);
 
+// Microsoft OAuth2
+router.get('/microsoft/url', authController.getMicrosoftAuthUrl);
+router.post('/microsoft/callback', authController.microsoftLoginCallback);
+
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getCurrentUser);
 router.put('/profile', authenticate, authController.updateProfile);

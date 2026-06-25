@@ -8,6 +8,9 @@ export const authService = {
   register: (data) => api.post('/auth/register', data),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
+  
+  getMicrosoftUrl: () => api.get('/auth/microsoft/url'),
+  microsoftLogin: (code) => api.post('/auth/microsoft/callback', { code }),
 };
 
 export const eventService = {
