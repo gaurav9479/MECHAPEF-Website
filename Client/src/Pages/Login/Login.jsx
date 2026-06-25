@@ -50,7 +50,7 @@ const Login = () => {
         <h1 className="login-title">Welcome Back</h1>
         <p className="login-subtitle">Sign in to manage MechaPEF</p>
 
-        {error && <div className="login-error">{error}</div>}
+        {error && <div key={Date.now()} className="login-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="login-field">
