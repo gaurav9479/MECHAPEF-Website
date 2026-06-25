@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaCog, FaImages, FaSignOutAlt, FaHome } from 'react-icons/fa';
 import api from '../../services/api';
@@ -10,8 +10,19 @@ const AdminDashboard = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => { await logout(); navigate('/login'); };
+  const location = useLocation();
   const [stats, setStats] = useState({ events: 0, team: 0 });
   const [recentEvents, setRecentEvents] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.error) {
+      setToast({ msg: location.state.error, type: 'error' });
+      // Clear the state so the toast doesn't reappear on refresh
+      window.history.replaceState({}, document.title);
+      setTimeout(() => setToast(null), 4000);
+    }
+  }, [location]);
   useEffect(() => {
     api.get('/events').then(res => {
       const events = res.data.data?.events || [];
@@ -104,7 +115,23 @@ const AdminDashboard = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Design Guidelines */}
+        <div className="admin-section-title" style={{ marginTop: '40px' }}>Design Guidelines</div>
+        <div style={{ background: '#111', padding: '20px', borderRadius: '12px', border: '1px solid #333', marginBottom: '40px' }}>
+          <p style={{ color: '#aaa', marginBottom: '15px' }}>
+            To ensure the website looks clean and professional, please ask the design team to export images with these exact dimensions (or equivalent aspect ratios):
+          </p>
+          <ul style={{ color: '#fff', lineHeight: '1.8', paddingLeft: '20px' }}>
+            <li><strong style={{ color: '#ff1f01' }}>Home Slider / Event Banners:</strong> 1920x500px <span style={{ color: '#888' }}>(Ultrawide Landscape)</span></li>
+            <li><strong style={{ color: '#ff1f01' }}>Sponsor Logos:</strong> 400x200px or 1:1 / 2:1 <span style={{ color: '#888' }}>(Transparent PNG required)</span></li>
+            <li><strong style={{ color: '#ff1f01' }}>Gallery Images:</strong> 1920x1080px or 4:3 <span style={{ color: '#888' }}>(High quality JPG)</span></li>
+            <li><strong style={{ color: '#ff1f01' }}>Team Members:</strong> 500x500px <span style={{ color: '#888' }}>(Square Portrait)</span></li>
+          </ul>
+        </div>
       </main>
+
+      {toast && <div className={`admin-toast ${toast.type}`}>{toast.msg}</div>}
     </div>
   );
 };

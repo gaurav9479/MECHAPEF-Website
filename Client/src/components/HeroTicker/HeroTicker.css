@@ -1,7 +1,7 @@
 .hero-ticker-container {
   position: relative;
   width: 100vw;
-  height: 100px;
+  height: 20px;
   background-color: transparent;
   overflow: visible;
   display: flex;
@@ -20,7 +20,7 @@
   left: -10vw;
   display: flex;
   overflow: hidden;
-  padding: 15px 0;
+  padding: 2px 0;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
@@ -54,7 +54,7 @@
 }
 
 .ticker-text {
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   font-weight: 800;
   color: #fff;
   text-transform: uppercase;
@@ -63,7 +63,7 @@
 }
 
 .ticker-icon {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   color: #fff;
   margin: 0 15px;
   opacity: 0.8;
@@ -84,12 +84,12 @@
     height: 120px;
   }
   .ticker-text {
-    font-size: 1.2rem;
-  }
-  .ticker-icon {
     font-size: 1rem;
   }
+  .ticker-icon {
+    font-size: 0.9rem;
+  }
   .ticker-band {
-    padding: 10px 0;
+    padding: 2px 0;
   }
 }

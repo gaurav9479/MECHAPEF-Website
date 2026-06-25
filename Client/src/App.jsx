@@ -66,13 +66,25 @@ function App() {
             <ProtectedRoute requiredRole="EventHead"><AdminAnnouncements /></ProtectedRoute>
           } />
           <Route path="/admin/sponsors" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminSponsors /></ProtectedRoute>
+            <ProtectedRoute 
+              allowedRoles={['PRTeam', 'EventHead', 'SuperAdmin']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only PR/Marketing, Event Leads, and Admins can manage Sponsors."
+            >
+              <AdminSponsors />
+            </ProtectedRoute>
           } />
           <Route path="/admin/management" element={
             <ProtectedRoute requiredRole="EventHead"><AdminManagement /></ProtectedRoute>
           } />
           <Route path="/admin/gallery" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminGallery /></ProtectedRoute>
+            <ProtectedRoute 
+              allowedRoles={['PRTeam', 'SuperAdmin']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Media/PR Team and Admins can manage the Gallery."
+            >
+              <AdminGallery />
+            </ProtectedRoute>
           } />
           <Route path="/admin/scanner" element={
             <ProtectedRoute requiredRole="EventHead"><AdminScanner /></ProtectedRoute>

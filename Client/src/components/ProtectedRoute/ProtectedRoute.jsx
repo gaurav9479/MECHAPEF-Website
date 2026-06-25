@@ -1,8 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const ProtectedRoute = ({ children, requiredRole }) => {
-  const { user, loading, hasRole } = useAuth();
+const ProtectedRoute = ({ children, requiredRole, allowedRoles, toastMessage, fallbackPath }) => {
+  const { user, loading, hasRole, isRole } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -21,7 +21,17 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (allowedRoles && !isRole(...allowedRoles)) {
+    if (toastMessage) {
+      return <Navigate to={fallbackPath || "/unauthorized"} state={{ error: toastMessage }} replace />;
+    }
+    return <Navigate to="/unauthorized" replace />;
+  }
+
   if (requiredRole && !hasRole(requiredRole)) {
+    if (toastMessage) {
+      return <Navigate to={fallbackPath || "/unauthorized"} state={{ error: toastMessage }} replace />;
+    }
     return <Navigate to="/unauthorized" replace />;
   }
 
