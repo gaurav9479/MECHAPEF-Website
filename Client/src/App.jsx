@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import Home from './Pages/Home';
 import Login from './Pages/Login/Login';
 import Register from './Pages/Register/Register';
+import ForgotPassword from './Pages/Login/ForgotPassword';
+import ResetPassword from './Pages/Login/ResetPassword';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import AdminEvents from './Pages/Admin/AdminEvents';
 import PastEventsManager from './Pages/Admin/PastEventsManager';
@@ -40,6 +42,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/gallery/:id" element={<AlbumView />} />
           <Route path="/events" element={<Events />} />

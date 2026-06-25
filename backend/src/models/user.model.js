@@ -94,6 +94,16 @@ const userSchema = new mongoose.Schema(
             select: false
         },
 
+        resetPasswordToken: {
+            type: String,
+            select: false
+        },
+
+        resetPasswordExpire: {
+            type: Date,
+            select: false
+        },
+
         profileImage: {
             type: String,
             default: null
@@ -215,6 +225,8 @@ userSchema.methods.getPublicProfile = function () {
     delete user.password;
     delete user.emailVerificationToken;
     delete user.emailVerificationExpiry;
+    delete user.resetPasswordToken;
+    delete user.resetPasswordExpire;
     return user;
 };
 

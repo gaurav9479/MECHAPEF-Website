@@ -6,6 +6,8 @@ const router = Router();
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password/:token', authController.resetPassword);
 
 // Microsoft OAuth2
 router.get('/microsoft/url', authController.getMicrosoftAuthUrl);
