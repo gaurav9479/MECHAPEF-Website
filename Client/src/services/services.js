@@ -6,6 +6,8 @@ export const authService = {
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
   register: (data) => api.post('/auth/register', data),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
 };
 
 export const eventService = {

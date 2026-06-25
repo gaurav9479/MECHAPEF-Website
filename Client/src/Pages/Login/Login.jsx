@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaCog, FaEye, FaEyeSlash } from 'react-icons/fa';
 import './Login.css';
@@ -21,7 +21,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const user = await login(email, password);
+      await login(email, password);
 
       navigate(from, { replace: true });
     } catch (err) {
@@ -50,7 +50,7 @@ const Login = () => {
         <h1 className="login-title">Welcome Back</h1>
         <p className="login-subtitle">Sign in to manage MechaPEF</p>
 
-        {error && <div key={Date.now()} className="login-error">{error}</div>}
+        {error && <div className="login-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="login-field">
@@ -78,6 +78,10 @@ const Login = () => {
                 {showPass ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+          </div>
+
+          <div className="login-form-meta">
+            <Link to="/forgot-password" className="forgot-password-link">Forgot Password?</Link>
           </div>
 
           <button type="submit" className="login-submit" disabled={loading}>

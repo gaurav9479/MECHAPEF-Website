@@ -3,7 +3,12 @@ import APIResponse from '../utils/APIResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { generateTokenPair } from '../utils/jwt.js';
+import sendEmail from '../utils/sendEmail.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants/index.js';
+import crypto from 'crypto';
+
+const PASSWORD_RESET_SUCCESS_MESSAGE = 'If an account with that email exists, a password reset link has been sent.';
+const PASSWORD_RESET_EXPIRY_MS = 15 * 60 * 1000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REGISTER — Only for GeneralUsers self-registering with college reg no
@@ -145,6 +150,100 @@ export const login = asyncHandler(async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // LOGOUT
 // ─────────────────────────────────────────────────────────────────────────────
+export const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Email is required');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase(), deletedAt: null });
+
+    if (!user) {
+        return res.status(HTTP_STATUS.OK).json(
+            new APIResponse(HTTP_STATUS.OK, {}, PASSWORD_RESET_SUCCESS_MESSAGE)
+        );
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpire = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MS);
+    await user.save({ validateBeforeSave: false });
+
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CORS_ORIGIN?.split(',')[0]?.trim() || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl.replace(/\/$/, '')}/reset-password/${resetToken}`;
+
+    try {
+        await sendEmail({
+            to: user.email,
+            subject: 'Reset your MechaPEF password',
+            text: `Reset your password using this link: ${resetUrl}\n\nThis link expires in 15 minutes. If you did not request this, you can ignore this email.`,
+            html: `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
+                    <h2>Reset your MechaPEF password</h2>
+                    <p>Use the button below to reset your password. This link expires in 15 minutes.</p>
+                    <p>
+                        <a href="${resetUrl}" style="display: inline-block; padding: 12px 18px; background: #ff0000; color: #fff; text-decoration: none; border-radius: 6px;">
+                            Reset Password
+                        </a>
+                    </p>
+                    <p>If the button does not work, copy and paste this link into your browser:</p>
+                    <p>${resetUrl}</p>
+                    <p>If you did not request this, you can ignore this email.</p>
+                </div>
+            `
+        });
+    } catch {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save({ validateBeforeSave: false });
+        throw new ApiError(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Password reset email could not be sent');
+    }
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, {}, PASSWORD_RESET_SUCCESS_MESSAGE)
+    );
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!token || !password) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Token and password are required');
+    }
+
+    const hashedToken = crypto
+        .createHash('sha256')
+        .update(token)
+        .digest('hex');
+
+    const user = await User.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpire: { $gt: new Date() },
+        deletedAt: null
+    }).select('+password +resetPasswordToken +resetPasswordExpire');
+
+    if (!user) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Password reset token is invalid or has expired');
+    }
+
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    user.sessionVersion = (user.sessionVersion || 1) + 1;
+    await user.save();
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, {}, 'Password reset successful. You can now sign in.')
+    );
+});
+
 export const logout = asyncHandler(async (req, res) => {
     if (req.user && req.user.userId) {
         const user = await User.findById(req.user.userId);
