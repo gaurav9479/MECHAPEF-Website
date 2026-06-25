@@ -49,8 +49,12 @@ const SponsorLogo = ({ sponsor }) => {
     .slice(0, 3)
     .toUpperCase();
 
-  const content = sponsor.logoURL ? (
-    <img src={sponsor.logoURL} alt={`${sponsor.companyName} logo`} />
+  const content = sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
+    <img
+      src={sponsor.logoURL}
+      alt={`${sponsor.companyName} logo`}
+      onError={e => { e.target.style.display='none'; e.target.nextSibling && (e.target.nextSibling.style.display='flex'); }}
+    />
   ) : (
     <span>{initials || 'MP'}</span>
   );
@@ -75,8 +79,12 @@ const SponsorCard = ({ sponsor, index }) => (
     transition={{ duration: 0.45, delay: index * 0.06 }}
   >
     <div className="sponsor-card-logo">
-      {sponsor.logoURL ? (
-        <img src={sponsor.logoURL} alt={`${sponsor.companyName} logo`} />
+      {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
+        <img
+          src={sponsor.logoURL}
+          alt={`${sponsor.companyName} logo`}
+          onError={e => { e.target.style.display='none'; e.target.nextSibling && (e.target.nextSibling.style.display='flex'); }}
+        />
       ) : (
         <span>{sponsor.companyName?.charAt(0) || 'M'}</span>
       )}

@@ -26,7 +26,7 @@ const PastSponsors = () => {
     <section className="past-sponsors-home-section">
       <div className="past-sponsors-container">
         <div className="section-header" style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '3rem', fontWeight: '800', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', color: '#ff1f01' }}>Our Past Sponsors</h2>
+          <h2 style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', fontWeight: '800', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', color: '#ff1f01' }}>Our Past Sponsors</h2>
           <p style={{ color: '#888', marginTop: '10px' }}>Partners who have supported us in our journey.</p>
         </div>
         
@@ -78,10 +78,23 @@ const PastSponsors = () => {
                           onClick={() => sponsor.websiteURL ? window.open(sponsor.websiteURL, '_blank') : navigate('/sponsors')}
                           title={sponsor.type || 'Sponsor'}
                         >
-                          {sponsor.logoURL ? (
-                            <img src={sponsor.logoURL} alt={sponsor.type || 'Sponsor'} />
+                          {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
+                            <>
+                              <img
+                                src={sponsor.logoURL}
+                                alt={sponsor.type || 'Sponsor'}
+                                onError={e => {
+                                  e.target.style.display = 'none';
+                                  const fb = e.target.parentNode.querySelector('.logo-fallback');
+                                  if (fb) fb.style.display = 'flex';
+                                }}
+                              />
+                              <span className="logo-fallback" style={{ display: 'none', color: '#333', fontWeight: 'bold', fontSize: '0.75rem', textAlign: 'center', alignItems: 'center', justifyContent: 'center' }}>
+                                {sponsor.type || sponsor.companyName || 'Sponsor'}
+                              </span>
+                            </>
                           ) : (
-                            <span style={{ color: '#333', fontWeight: 'bold' }}>{sponsor.type || 'Sponsor'}</span>
+                            <span style={{ color: '#333', fontWeight: 'bold' }}>{sponsor.type || sponsor.companyName || 'Sponsor'}</span>
                           )}
                         </div>
                       ))}

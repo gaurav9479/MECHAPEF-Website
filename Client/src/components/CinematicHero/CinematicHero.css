@@ -813,6 +813,7 @@
     margin-top: 0; /* Remove offset on mobile */
   }
   .s5-layout {
+    width: 100%;
     flex-direction: column;
     text-align: center;
     justify-content: center;

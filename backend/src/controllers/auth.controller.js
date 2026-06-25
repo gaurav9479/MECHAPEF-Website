@@ -103,8 +103,12 @@ export const login = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase(), deletedAt: null }).select('+password');
 
-    if (!user || !(await user.comparePassword(password))) {
-        throw new ApiError(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.INVALID_CREDENTIALS);
+    if (!user) {
+        throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'User does not exist');
+    }
+
+    if (!(await user.comparePassword(password))) {
+        throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'Incorrect password');
     }
 
     if (!user.isActive) {

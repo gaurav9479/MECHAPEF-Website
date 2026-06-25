@@ -1,0 +1,38 @@
+.ice-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  user-select: none;
+}
+
+.ice-svg {
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(255, 31, 1, 0.15),
+    0 0 40px rgba(255, 31, 1, 0.08),
+    inset 0 1px 0 rgba(255, 80, 0, 0.1);
+}
+
+/* Stroke indicator pills */
+.ice-strokes {
+  display: flex;
+  gap: 6px;
+}
+
+.ice-stroke-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  font-family: 'Orbitron', 'Courier New', monospace;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 31, 1, 0.3);
+  color: rgba(255, 31, 1, 0.6);
+  background: rgba(255, 31, 1, 0.05);
+}
+
+.ice-stroke-pill:nth-child(1) { border-color: rgba(0, 180, 255, 0.4); color: rgba(0, 180, 255, 0.7); }
+.ice-stroke-pill:nth-child(2) { border-color: rgba(255, 200, 0, 0.4); color: rgba(255, 200, 0, 0.7); }
+.ice-stroke-pill:nth-child(3) { border-color: rgba(255, 31, 1, 0.5);  color: rgba(255, 31, 1, 0.9);  }
+.ice-stroke-pill:nth-child(4) { border-color: rgba(255, 100, 0, 0.4); color: rgba(255, 100, 0, 0.7); }
