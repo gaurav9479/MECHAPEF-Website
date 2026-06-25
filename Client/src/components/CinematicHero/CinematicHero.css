@@ -112,6 +112,160 @@
   max-width: 600px;
 }
 
+.about-us-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 4vw;
+  max-width: 700px;
+}
+
+.about-us-title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-family: 'Michroma', sans-serif;
+  color: #ffffff;
+  line-height: 1.1;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+
+.about-us-title .highlight-text {
+  color: #ffffff;
+  -webkit-text-stroke: 0px;
+  text-shadow: 0 0 15px rgba(255, 31, 1, 0.8), 0 0 30px rgba(255, 31, 1, 0.5);
+}
+
+.about-us-mission {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: #ccc;
+  line-height: 1.6;
+  font-weight: 300;
+  max-width: 90%;
+}
+
+/* ================= DOMAINS OVERLAY ================= */
+.domains-overlay {
+  z-index: 5; /* Keep it above Scene 2 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desktop-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+  align-items: center;
+  max-width: 800px;
+}
+
+.mobile-domains {
+  display: none;
+  width: 100%;
+  height: 100%;
+  gap: 15px;
+  padding: 0 15px;
+}
+
+.mobile-lane {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 50%;
+}
+
+.domain-gsap-card {
+  background: rgba(10, 10, 10, 0.85);
+  border: 1px solid rgba(255, 31, 1, 0.4);
+  border-radius: 20px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+
+.desktop-domains .domain-gsap-card {
+  width: 350px;
+  height: 400px;
+}
+
+.mobile-domains .domain-gsap-card {
+  width: 100%;
+  aspect-ratio: 4/5;
+  padding: 15px;
+}
+
+.domain-logo-box {
+  background: #ffffff;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+
+.domain-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px;
+}
+
+.domain-icon {
+  font-size: 3rem;
+  color: #000; /* Fallback icon color inside white circle */
+}
+
+.mobile-domains .domain-logo-box {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 10px;
+}
+
+.mobile-domains .domain-icon {
+  font-size: 2rem;
+}
+
+.domain-gsap-card h3 {
+  font-family: 'Michroma', sans-serif;
+  font-size: 1.2rem;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.mobile-domains .domain-gsap-card h3 {
+  font-size: 0.9rem;
+}
+
+.domain-gsap-card p {
+  font-size: 1rem;
+  color: #ccc;
+}
+
+.mobile-domains .domain-gsap-card p {
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .desktop-domains {
+    display: none !important;
+  }
+  .mobile-domains {
+    display: flex !important;
+  }
+}
+
+
 .dash-col {
   display: flex;
   flex-direction: column;

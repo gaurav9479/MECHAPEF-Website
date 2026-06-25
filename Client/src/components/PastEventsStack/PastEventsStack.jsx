@@ -51,6 +51,13 @@ const PastEventsStack = () => {
             y: () => (window.innerHeight / 2) - mobileCardsWrapper.offsetHeight,
             ease: "none"
           });
+          
+          mobileTl.to({}, { duration: 0.2 }); // brief pause
+          mobileTl.to(mobileCardsWrapper, {
+            y: "150vh", // shift down
+            ease: "power2.in"
+          });
+
           return;
         }
 
@@ -86,11 +93,13 @@ const PastEventsStack = () => {
           }
         });
         
+        // "jaise hi last dive half way pohoc jae neeche shift ho jaenge"
         // Wait for a brief moment after stacking is complete
         tl.to({}, { duration: 0.5 }); 
         
         // Shift all cards DOWN together to exit
         tl.to(cards, { y: "150vh", duration: 1.5, ease: "power2.in" });
+
       }, sectionRef);
       
       ScrollTrigger.refresh();
@@ -98,12 +107,13 @@ const PastEventsStack = () => {
 
     return () => {
       clearTimeout(timer);
-      if (ctx) ctx.revert();
+      if (ctx) ctx.revert(); // This removes GSAP added styles and pin spacers
       
       // Force kill any remaining ScrollTriggers created by this component
+      // to prevent the "leak" onto the /admin route.
       ScrollTrigger.getAll().forEach(t => {
         if (t.vars.trigger === sectionRef.current) {
-          t.kill(true); 
+          t.kill(true); // true = reset animation
         }
       });
     };

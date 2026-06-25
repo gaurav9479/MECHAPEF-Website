@@ -17,8 +17,8 @@
 
 .pe-header {
   text-align: center;
-  margin-top: -5vh;
   z-index: 10;
+  margin-top: 5vh;
 }
 
 .section-title {
