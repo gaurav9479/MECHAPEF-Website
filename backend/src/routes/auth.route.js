@@ -7,6 +7,10 @@ const router = Router();
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 
+// Microsoft OAuth2
+router.get('/microsoft/url', authController.getMicrosoftAuthUrl);
+router.post('/microsoft/callback', authController.microsoftLoginCallback);
+
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getCurrentUser);
 router.put('/profile', authenticate, authController.updateProfile);

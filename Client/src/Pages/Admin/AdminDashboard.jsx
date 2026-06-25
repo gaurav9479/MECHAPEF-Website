@@ -35,6 +35,7 @@ const AdminDashboard = () => {
   }, []);
   const adminLinks = [
     { to: '/admin/events', icon: <FaCalendarAlt />, label: 'Manage Events', desc: 'Create, edit & delete events' },
+    { to: '/admin/past-events', icon: <FaCalendarAlt />, label: 'Past Events', desc: 'Manage past events & photos' },
     { to: '/admin/team', icon: <FaUsers />, label: 'Manage Team', desc: 'Add & update team members' },
     { to: '/admin/announcements', icon: <FaBullhorn />, label: 'Announcements', desc: 'Post & manage announcements' },
     { to: '/admin/sponsors', icon: <FaHandshake />, label: 'Sponsors', desc: 'Manage sponsor listings' },

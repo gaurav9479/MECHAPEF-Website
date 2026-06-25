@@ -6,6 +6,9 @@ export const authService = {
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
   register: (data) => api.post('/auth/register', data),
+  
+  getMicrosoftUrl: () => api.get('/auth/microsoft/url'),
+  microsoftLogin: (code) => api.post('/auth/microsoft/callback', { code }),
 };
 
 export const eventService = {

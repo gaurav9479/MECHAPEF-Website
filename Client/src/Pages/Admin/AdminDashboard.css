@@ -12,7 +12,7 @@ body:has(.admin-layout)::after {
   display: flex;
   min-height: 100vh;
   background: #0a0a0a;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Poppins', sans-serif;
   color: #fff;
 }
 
