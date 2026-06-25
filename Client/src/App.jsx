@@ -51,7 +51,9 @@ function App() {
 
           {/* Admin Routes */}
           <Route path="/admin" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminDashboard /></ProtectedRoute>
+            <ProtectedRoute allowedRoles={['PRTeam', 'EventHead', 'SuperAdmin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
           } />
           <Route path="/admin/events" element={
             <ProtectedRoute requiredRole="EventHead"><AdminEvents /></ProtectedRoute>
