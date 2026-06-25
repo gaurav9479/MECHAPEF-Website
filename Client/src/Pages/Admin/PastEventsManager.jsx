@@ -120,11 +120,11 @@ const PastEventsManager = () => {
       const canvas = cropper.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1440 });
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
       const formDataUpload = new FormData();
-      formDataUpload.append('file', blob, 'pastevent.jpg');
+      formDataUpload.append('image', blob, 'pastevent.jpg');
       formDataUpload.append('folder', 'mechapif/past_events');
 
-      const res = await api.post('/upload', formDataUpload, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setFormData({ ...formData, imageURL: res.data.url, imagekitFileId: res.data.fileId });
+      const res = await api.post('/upload/image', formDataUpload, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setFormData({ ...formData, imageURL: res.data.data.url, imagekitFileId: res.data.data.fileId });
       setShowCropper(false);
       setImageSrc(null);
     } catch (err) {
