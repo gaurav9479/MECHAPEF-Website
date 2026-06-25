@@ -258,3 +258,111 @@ export const getAllUsers = asyncHandler(async (req, res) => {
         }, 'Users retrieved')
     );
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MICROSOFT OAUTH2 LOGIN
+// ─────────────────────────────────────────────────────────────────────────────
+export const getMicrosoftAuthUrl = asyncHandler(async (req, res) => {
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const tenantId = process.env.MICROSOFT_TENANT_ID || 'common';
+    const redirectUri = process.env.MICROSOFT_REDIRECT_URI || (process.env.NODE_ENV === 'production' 
+        ? 'https://mechapef-website.vercel.app/login' 
+        : 'http://localhost:5173/login');
+
+    const scope = 'openid profile email User.Read';
+    
+    const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}`;
+
+    return res.status(200).json(
+        new APIResponse(200, { url: authUrl }, 'Microsoft OAuth URL generated')
+    );
+});
+
+export const microsoftLoginCallback = asyncHandler(async (req, res) => {
+    const { code } = req.body;
+    
+    if (!code) {
+        throw new ApiError(400, 'Authorization code is required');
+    }
+
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+    const tenantId = process.env.MICROSOFT_TENANT_ID || 'common';
+    const redirectUri = process.env.MICROSOFT_REDIRECT_URI || (process.env.NODE_ENV === 'production' 
+        ? 'https://mechapef-website.vercel.app/login' 
+        : 'http://localhost:5173/login');
+
+    const tokenParams = new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+    });
+
+    const tokenResponse = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: tokenParams.toString()
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenResponse.ok) {
+        throw new ApiError(401, 'Failed to exchange authorization code for tokens');
+    }
+
+    const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+        headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+    });
+
+    const profileData = await profileResponse.json();
+
+    if (!profileResponse.ok) {
+        throw new ApiError(401, 'Failed to fetch user profile from Microsoft');
+    }
+
+    const email = profileData.userPrincipalName || profileData.mail;
+    const name = profileData.displayName;
+
+    if (!email || !email.endsWith('@mnnit.ac.in')) {
+        throw new ApiError(403, 'Only MNNIT email addresses (@mnnit.ac.in) are allowed');
+    }
+
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+        const collegeRegNo = email.split('@')[0].split('.').pop() || email.split('@')[0];
+        
+        user = new User({
+            name,
+            email: email.toLowerCase(),
+            collegeRegNo: collegeRegNo.toUpperCase(),
+            role: 'GeneralUser',
+            isVerified: true,
+            password: Math.random().toString(36).slice(-10) + 'A1!' 
+        });
+        await user.save();
+    }
+
+    const tokens = generateTokenPair({
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+        sessionVersion: user.sessionVersion
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    return res.status(200).json(
+        new APIResponse(200, {
+            user: user.getPublicProfile(),
+            accessToken: tokens.accessToken
+        }, 'Logged in successfully via Microsoft')
+    );
+});
