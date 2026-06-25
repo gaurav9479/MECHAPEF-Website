@@ -26,92 +26,77 @@ const PastEventsStack = () => {
 
   useEffect(() => {
     if (loading || pastEvents.length === 0) return;
-    const ctx = gsap.context(() => {
-      
-      // -- MOBILE GSAP PINNING --
-      if (window.innerWidth <= 768) {
-        const mobileCardsWrapper = sectionRef.current.querySelector('.pe-gsap-cards-wrapper');
-        
-        // Start wrapper below the screen
-        gsap.set(mobileCardsWrapper, { y: window.innerHeight });
 
-        const mobileTl = gsap.timeline({
+    let ctx;
+    const timer = setTimeout(() => {
+      ctx = gsap.context(() => {
+        
+        // -- MOBILE GSAP PINNING --
+        if (window.innerWidth <= 768) {
+          const mobileCardsWrapper = sectionRef.current.querySelector('.pe-gsap-cards-wrapper');
+          gsap.set(mobileCardsWrapper, { y: window.innerHeight });
+
+          const mobileTl = gsap.timeline({
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top top",
+              end: "+=200%",
+              pin: true,
+              scrub: 1,
+              pinSpacing: true
+            }
+          });
+
+          mobileTl.to(mobileCardsWrapper, {
+            y: () => (window.innerHeight / 2) - mobileCardsWrapper.offsetHeight,
+            ease: "none"
+          });
+          return;
+        }
+
+        // -- DESKTOP STACKING --
+        const tl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "top top",
-            end: "+=200%", // Scroll distance
+            start: 'top top',
+            end: '+=200%',
             pin: true,
             scrub: 1,
             pinSpacing: true
           }
         });
 
-        // Animate wrapper upwards until the bottom of the last card is in the middle of the screen
-        mobileTl.to(mobileCardsWrapper, {
-          y: () => (window.innerHeight / 2) - mobileCardsWrapper.offsetHeight,
-          ease: "none"
+        const cards = gsap.utils.toArray('.gsap-pe-card');
+
+        gsap.set(cards, { 
+          y: (i) => i === 0 ? 0 : 400, 
+          opacity: (i) => i === 0 ? 1 : 0, 
+          scale: (i) => i === 0 ? 1 : 0.8,
+          rotate: (i) => i % 2 === 0 ? -4 : 4
         });
 
-        return; // Don't run desktop code
-      }
-
-      // -- DESKTOP STACKING --
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: '+=200%', // Scroll distance to pin
-          pin: true,
-          scrub: 1,
-          pinSpacing: true
-        }
-      });
-
-      const cards = gsap.utils.toArray('.gsap-pe-card');
-
-      // Initial state: First card visible and centered. Others pushed down (y:400).
-      gsap.set(cards, { 
-        y: (i) => i === 0 ? 0 : 400, 
-        opacity: (i) => i === 0 ? 1 : 0, 
-        scale: (i) => i === 0 ? 1 : 0.8,
-        rotate: (i) => i % 2 === 0 ? -4 : 4 // Every card has a permanent alternate tilt (-4 or 4)
-      });
-
-      // Animate cards sequentially to stack
-      cards.forEach((card, index) => {
-        if (index === 0) return; // First card is already in position
+        cards.forEach((card, index) => {
+          if (index === 0) return;
+          
+          tl.to(card, { y: 0, opacity: 1, scale: 1, duration: 1, ease: 'power2.out' }, index);
+          
+          for(let j = 0; j < index; j++) {
+             const diff = index - j;
+             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -20 * diff, duration: 1, ease: 'power2.out' }, index);
+          }
+        });
         
-        // Move the current card up to the center (keep its original tilt!)
-        tl.to(card, { 
-          y: 0, 
-          opacity: 1, 
-          scale: 1, 
-          duration: 1, 
-          ease: 'power2.out' 
-        }, index); // Stagger by index
-        
-        // Push previous cards backwards and upwards slightly to create 3D depth (keep their original tilt!)
-        for(let j = 0; j < index; j++) {
-           const diff = index - j;
-           tl.to(cards[j], {
-             scale: 1 - (diff * 0.05),
-             y: -20 * diff,
-             duration: 1,
-             ease: 'power2.out'
-           }, index);
-        }
-      });
+        tl.to({}, { duration: 0.5 }); // Buffer
+      }, sectionRef);
       
-      tl.to({}, { duration: 0.5 }); // Buffer at the end
+      ScrollTrigger.refresh();
+    }, 100);
 
-      return () => {
-        // Cleanup scroll triggers
-        ScrollTrigger.getAll().forEach(t => t.kill());
-      };
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, [loading, pastEvents]); // Re-run GSAP when data is loaded
+    return () => {
+      clearTimeout(timer);
+      if (ctx) ctx.revert();
+    };
+  }, [loading, pastEvents]);
 
   if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
   if (pastEvents.length === 0) return null;

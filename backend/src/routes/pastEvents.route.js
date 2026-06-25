@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyToken, isAdmin } from '../middleware/auth.middleware.js';
+import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 import {
     getPastEvents,
     createPastEvent,
@@ -14,9 +14,11 @@ const router = express.Router();
 router.get('/', getPastEvents);
 
 // Protected Admin routes
-router.post('/', verifyToken, isAdmin, createPastEvent);
-router.put('/order', verifyToken, isAdmin, updatePastEventsOrder);
-router.put('/:id', verifyToken, isAdmin, updatePastEvent);
-router.delete('/:id', verifyToken, isAdmin, deletePastEvent);
+const adminAuth = [authenticate, checkRole(['SuperAdmin', 'EventHead', 'PRTeam'])];
+
+router.post('/', ...adminAuth, createPastEvent);
+router.put('/order', ...adminAuth, updatePastEventsOrder);
+router.put('/:id', ...adminAuth, updatePastEvent);
+router.delete('/:id', ...adminAuth, deletePastEvent);
 
 export default router;

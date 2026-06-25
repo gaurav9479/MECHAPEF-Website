@@ -40,11 +40,11 @@
 
 .pe-gsap-cards-wrapper {
   position: absolute;
-  top: 45%;
+  top: 52%;
   transform: translateY(-50%);
   width: 90%;
-  max-width: 1000px;
-  height: 60vh;
+  max-width: 800px;
+  height: 380px;
   display: flex;
   justify-content: center;
   /* GSAP will animate children inside here */
@@ -57,7 +57,7 @@
   height: 100%;
   display: flex;
   background: #0a0a0a;
-  border: 1px solid rgba(255, 31, 1, 0.4);
+  border: 4px double #ffffff; /* White double boundary */
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 30px 60px rgba(0,0,0,0.8);
