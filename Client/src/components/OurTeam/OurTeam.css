@@ -130,4 +130,13 @@
   .card-info h4 {
     font-size: 1rem;
   }
+  
+  /* Hide images on mobile for a cleaner, compact list look */
+  .card-img-placeholder {
+    display: none !important;
+  }
+  
+  .team-card {
+    width: 140px;
+  }
 }

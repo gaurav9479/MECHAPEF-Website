@@ -77,6 +77,14 @@
     padding: 50px 15px;
   }
   
+  .past-sponsors-marquee {
+    width: 100%;
+    left: 0;
+    right: 0;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   .past-sponsor-logo-box {
     width: 140px;
     height: 80px;

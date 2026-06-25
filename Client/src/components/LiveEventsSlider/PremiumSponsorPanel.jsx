@@ -15,10 +15,10 @@ const PremiumSponsorPanel = ({ sponsor }) => {
           </div>
           
           <div className="sponsor-logo-container">
-            {sponsor.logoURL ? (
+            {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
               <img src={sponsor.logoURL} alt={sponsor.name} className="sponsor-logo-img" />
             ) : (
-              <div className="sponsor-logo-placeholder">{sponsor.name.charAt(0)}</div>
+              <span className="sponsor-text-fallback">{sponsor.name}</span>
             )}
           </div>
           

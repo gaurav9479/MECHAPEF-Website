@@ -54,6 +54,10 @@ textarea{
   section {
     padding: 56px 16px;
   }
+  /* Hide desktop components on mobile */
+  .desktop-only {
+    display: none !important;
+  }
 }
 
 @media (max-width: 480px) {

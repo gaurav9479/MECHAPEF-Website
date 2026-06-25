@@ -81,7 +81,7 @@
 
 @media (max-width: 768px) {
   .hero-ticker-container {
-    height: 120px;
+    height: 80px;
   }
   .ticker-text {
     font-size: 1rem;
@@ -91,5 +91,13 @@
   }
   .ticker-band {
     padding: 2px 0;
+  }
+  .black-band {
+    top: 50%;
+    transform: translateY(-50%) rotate(-4deg);
+  }
+  .red-band {
+    top: 50%;
+    transform: translateY(-50%) rotate(4deg);
   }
 }
