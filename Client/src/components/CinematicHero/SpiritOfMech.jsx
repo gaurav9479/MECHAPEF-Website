@@ -40,7 +40,7 @@ const SpiritOfMech = () => {
   const R = (val) => (val - 540) / 1160;
 
   // --- SCENE 3: Spirit of Mechanical Engineering ---
-  const bg3Opacity = useTransform(scrollYProgress, [R(540), R(560), R(765), R(855)], [0, 1, 1, 0]);
+  const bg3Opacity = useTransform(scrollYProgress, [R(540), R(560), R(765), R(855)], [1, 1, 1, 1]);
   const bg3Y = useTransform(scrollYProgress, [R(540), R(560)], ["100vh", "0vh"]);
   const bg3X = useTransform(scrollYProgress, [R(540), R(560)], ["50vw", "0vw"]);
 
