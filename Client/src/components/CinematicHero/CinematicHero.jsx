@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { assets } from "../../assets/assets";
-import { FaArrowRight, FaUsers, FaCalendarAlt, FaTrophy, FaEnvelope, FaInstagram, FaLinkedinIn, FaFacebookF, FaTwitter } from "react-icons/fa";
+import { FaArrowRight, FaUsers, FaCalendarAlt, FaTrophy, FaEnvelope, FaInstagram, FaLinkedinIn, FaFacebookF, FaTwitter, FaProjectDiagram, FaUserGraduate, FaHistory, FaCalendarCheck } from "react-icons/fa";
 import wheelImg from "../../assets/wheel.png";
 
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
@@ -73,19 +73,19 @@ const CinematicHero = () => {
   // Cards Enter (0.1125 to 0.140625) & Exit (0.253125 to 0.28125)
   const text2Opacity = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], [0, 1, 1, 0]);
   
-  // Card 1 (45+): Enters from Top (90° -> Y=-500), Exits to Left (180° -> X=-500)
-  const card1Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["-50vh", "0vh", "0vh", "0vh"]);
-  const card1X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vw", "0vw", "0vw", "-50vw"]);
+  // Card 1 (Top Left): Enters from Left (-50vw -> 0vw), Exits to Top (0vh -> -50vh)
+  const card1X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["-50vw", "0vw", "0vw", "0vw"]);
+  const card1Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vh", "0vh", "0vh", "-50vh"]);
 
-  // Card 3 (1000+): Enters from Left (180° -> X=-500), Exits to Bottom (270° -> Y=500)
-  const card3X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["-50vw", "0vw", "0vw", "0vw"]);
-  const card3Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vh", "0vh", "0vh", "50vh"]);
+  // Card 3 (Bottom Left): Enters from Bottom (50vh -> 0vh), Exits to Left (0vw -> -50vw)
+  const card3Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["50vh", "0vh", "0vh", "0vh"]);
+  const card3X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vw", "0vw", "0vw", "-50vw"]);
 
-  // Card 2 (5+ Years): Enters from Right (0° -> X=500), Exits to Top (90° -> Y=-500)
+  // Card 2 (Top Right): Enters from Right (50vw -> 0vw), Exits to Top (0vh -> -50vh)
   const card2X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["50vw", "0vw", "0vw", "0vw"]);
   const card2Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vh", "0vh", "0vh", "-50vh"]);
 
-  // Card 4 (50+ Events): Enters from Bottom (270° -> Y=500), Exits to Right (0° -> X=500)
+  // Card 4 (Bottom Right): Enters from Bottom (50vh -> 0vh), Exits to Right (0vw -> 50vw)
   const card4Y = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["50vh", "0vh", "0vh", "0vh"]);
   const card4X = useTransform(scrollYProgress, [180/2500, 225/2500, 405/2500, 450/2500], ["0vw", "0vw", "0vw", "50vw"]);
 
@@ -308,17 +308,19 @@ const CinematicHero = () => {
               
               <div className="dash-col col-left">
                 <motion.div 
-                  className="dash-card card-tall"
+                  className="dash-card card-tall dash-card-glow"
                   style={{ y: card1Y, x: card1X }}
                 >
+                  <div className="dash-icon-bg"><FaProjectDiagram /></div>
                   <h3 className="dash-num">45+</h3>
                   <h4 className="dash-title">Projects Completed</h4>
                   <p className="dash-sub text-red">collaborative and individuals</p>
                 </motion.div>
                 <motion.div 
-                  className="dash-card card-wide"
+                  className="dash-card card-wide dash-card-glow"
                   style={{ x: card3X, y: card3Y }}
                 >
+                  <div className="dash-icon-bg"><FaUserGraduate /></div>
                   <h3 className="dash-num">1000+</h3>
                   <h4 className="dash-title">Students Impacted</h4>
                   <p className="dash-sub">and growing with every semester</p>
@@ -327,17 +329,19 @@ const CinematicHero = () => {
               
               <div className="dash-col col-right">
                 <motion.div 
-                  className="dash-card card-wide"
+                  className="dash-card card-wide dash-card-glow"
                   style={{ x: card2X, y: card2Y }}
                 >
+                  <div className="dash-icon-bg"><FaHistory /></div>
                   <h3 className="dash-num">5+</h3>
                   <h4 className="dash-title">Years of Legacy</h4>
                   <p className="dash-sub">of knowledge and mentorship programmes</p>
                 </motion.div>
                 <motion.div 
-                  className="dash-card card-tall"
+                  className="dash-card card-tall dash-card-glow"
                   style={{ y: card4Y, x: card4X }}
                 >
+                  <div className="dash-icon-bg"><FaCalendarCheck /></div>
                   <h3 className="dash-num">50+</h3>
                   <h4 className="dash-title">Events Conducted</h4>
                   <p className="dash-sub text-red">workshops, competitions and more</p>
@@ -348,71 +352,6 @@ const CinematicHero = () => {
           </motion.div>
         </motion.div>
 
-        {/* ================= DOMAINS SCROLL (OVER SCENE 2) ================= */}
-        <motion.div 
-          className="cinematic-scene domains-overlay"
-          style={{ pointerEvents: domainsPointerEvents, opacity: domainsOpacity }}
-        >
-          {/* Desktop Version (Static Layout, No Parallax/Horizontal Scroll) */}
-          <motion.div className="desktop-domains">
-            <div className="domain-gsap-card">
-              <div className="domain-logo-box">
-                {imagesMap['domain_1'] ? <img src={imagesMap['domain_1']} alt="Automobile Logo" className="domain-logo" /> : <div className="domain-icon">🏎️</div>}
-              </div>
-              <h3>Automobile / SAE</h3><p>(Baja, Go-Kart)</p>
-            </div>
-            <div className="domain-gsap-card">
-              <div className="domain-logo-box">
-                {imagesMap['domain_2'] ? <img src={imagesMap['domain_2']} alt="Robotics Logo" className="domain-logo" /> : <div className="domain-icon">🤖</div>}
-              </div>
-              <h3>Robotics & Automation</h3><p>(Arduino, Sensors, Drones)</p>
-            </div>
-            <div className="domain-gsap-card">
-              <div className="domain-logo-box">
-                {imagesMap['domain_3'] ? <img src={imagesMap['domain_3']} alt="Design Logo" className="domain-logo" /> : <div className="domain-icon">💻</div>}
-              </div>
-              <h3>Design & CAD</h3><p>(SolidWorks, AutoCAD, Ansys)</p>
-            </div>
-            <div className="domain-gsap-card">
-              <div className="domain-logo-box">
-                {imagesMap['domain_4'] ? <img src={imagesMap['domain_4']} alt="Core Mfg Logo" className="domain-logo" /> : <div className="domain-icon">🔧</div>}
-              </div>
-              <h3>Core Manufacturing</h3><p>(Machining, Welding)</p>
-            </div>
-          </motion.div>
-
-          {/* Mobile Version (Two Parallel Vertical Lanes) */}
-          <div className="mobile-domains">
-            <motion.div className="mobile-lane left-lane" style={{ y: domainsMobileLeftY }}>
-              <div className="domain-gsap-card">
-                <div className="domain-logo-box">
-                  {imagesMap['domain_1'] ? <img src={imagesMap['domain_1']} alt="Automobile Logo" className="domain-logo" /> : <div className="domain-icon">🏎️</div>}
-                </div>
-                <h3>Automobile / SAE</h3><p>(Baja, Go-Kart)</p>
-              </div>
-              <div className="domain-gsap-card">
-                <div className="domain-logo-box">
-                  {imagesMap['domain_3'] ? <img src={imagesMap['domain_3']} alt="Design Logo" className="domain-logo" /> : <div className="domain-icon">💻</div>}
-                </div>
-                <h3>Design & CAD</h3><p>(SolidWorks, AutoCAD, Ansys)</p>
-              </div>
-            </motion.div>
-            <motion.div className="mobile-lane right-lane" style={{ y: domainsMobileRightY }}>
-              <div className="domain-gsap-card">
-                <div className="domain-logo-box">
-                  {imagesMap['domain_2'] ? <img src={imagesMap['domain_2']} alt="Robotics Logo" className="domain-logo" /> : <div className="domain-icon">🤖</div>}
-                </div>
-                <h3>Robotics & Automation</h3><p>(Arduino, Sensors, Drones)</p>
-              </div>
-              <div className="domain-gsap-card">
-                <div className="domain-logo-box">
-                  {imagesMap['domain_4'] ? <img src={imagesMap['domain_4']} alt="Core Mfg Logo" className="domain-logo" /> : <div className="domain-icon">🔧</div>}
-                </div>
-                <h3>Core Manufacturing</h3><p>(Machining, Welding)</p>
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
 
         {/* ================= SCENE 3 CONTENT ================= */}
         <motion.div 

@@ -279,33 +279,64 @@
 }
 
 .dash-card {
-  background: rgba(10, 0, 0, 0.4);
-  border: 1px solid rgba(255, 31, 1, 0.2);
-  border-radius: 12px;
-  padding: clamp(18px, 2.4vw, 30px);
-  backdrop-filter: blur(10px);
+  position: relative;
+  background: linear-gradient(145deg, rgba(30, 0, 0, 0.9), rgba(5, 0, 0, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  padding: clamp(20px, 3vw, 35px);
+  backdrop-filter: blur(15px);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(255, 31, 1, 0.05), 0 10px 30px rgba(0,0,0,0.5);
 }
 
-.dash-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(255, 31, 1, 0.6);
-  box-shadow: 0 10px 30px rgba(255, 31, 1, 0.1);
+.dash-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle at top right, rgba(255, 31, 1, 0.15), transparent 70%);
+  pointer-events: none;
+}
+
+.dash-card-glow:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.1), 0 15px 40px rgba(255, 255, 255, 0.15);
+}
+
+.dash-icon-bg {
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  background: rgba(255, 31, 1, 0.1);
+  border: 1px solid rgba(255, 31, 1, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  color: #ff1f01;
+  margin-bottom: 15px;
+  box-shadow: 0 0 15px rgba(255, 31, 1, 0.2);
+  transition: all 0.3s ease;
+}
+
+.dash-card-glow:hover .dash-icon-bg {
+  background: #ff1f01;
+  color: #fff;
+  box-shadow: 0 0 25px rgba(255, 31, 1, 0.6);
+  transform: rotate(-5deg) scale(1.1);
 }
 
 .card-tall {
-  min-height: 240px;
-  background: rgba(80, 5, 5, 0.85); /* Solid dark red */
-  border-color: rgba(255, 31, 1, 0.4);
+  min-height: 260px;
 }
 
 .card-wide {
-  min-height: 160px;
-  background: rgba(10, 5, 5, 0.85); /* Very dark, almost black */
-  border-color: rgba(255, 31, 1, 0.15);
+  min-height: 200px;
 }
 
 .dash-num {

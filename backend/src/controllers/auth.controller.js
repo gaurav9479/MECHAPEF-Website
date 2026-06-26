@@ -361,6 +361,15 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // MICROSOFT OAUTH2 LOGIN
 // ─────────────────────────────────────────────────────────────────────────────
+import crypto from 'crypto';
+
+function base64URLEncode(buffer) {
+    return buffer.toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+}
+
 export const getMicrosoftAuthUrl = asyncHandler(async (req, res) => {
     const clientId = process.env.MICROSOFT_CLIENT_ID;
     const tenantId = process.env.MICROSOFT_TENANT_ID || 'common';
@@ -370,15 +379,18 @@ export const getMicrosoftAuthUrl = asyncHandler(async (req, res) => {
 
     const scope = 'openid profile email User.Read';
     
-    const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}`;
+    const verifier = base64URLEncode(crypto.randomBytes(32));
+    const challenge = base64URLEncode(crypto.createHash('sha256').update(verifier).digest());
+    
+    const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}&code_challenge=${challenge}&code_challenge_method=S256`;
 
     return res.status(200).json(
-        new APIResponse(200, { url: authUrl }, 'Microsoft OAuth URL generated')
+        new APIResponse(200, { url: authUrl, code_verifier: verifier }, 'Microsoft OAuth URL generated')
     );
 });
 
 export const microsoftLoginCallback = asyncHandler(async (req, res) => {
-    const { code } = req.body;
+    const { code, code_verifier } = req.body;
     
     if (!code) {
         throw new ApiError(400, 'Authorization code is required');
@@ -393,11 +405,17 @@ export const microsoftLoginCallback = asyncHandler(async (req, res) => {
 
     const tokenParams = new URLSearchParams({
         client_id: clientId,
-        client_secret: clientSecret,
         code,
         redirect_uri: redirectUri,
         grant_type: 'authorization_code'
     });
+    
+    if (clientSecret) {
+        tokenParams.append('client_secret', clientSecret);
+    }
+    if (code_verifier) {
+        tokenParams.append('code_verifier', code_verifier);
+    }
 
     const tokenResponse = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
         method: 'POST',

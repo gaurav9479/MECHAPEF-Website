@@ -9,6 +9,7 @@
   overflow: visible;
   display: flex;
   flex-direction: column;
+  z-index: 2;
 }
 
 .slider-container {

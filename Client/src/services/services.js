@@ -10,7 +10,7 @@ export const authService = {
   resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
   
   getMicrosoftUrl: () => api.get('/auth/microsoft/url'),
-  microsoftLogin: (code) => api.post('/auth/microsoft/callback', { code }),
+  microsoftLogin: (code, code_verifier) => api.post('/auth/microsoft/callback', { code, code_verifier }),
 };
 
 export const eventService = {

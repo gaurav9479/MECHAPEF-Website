@@ -3,6 +3,8 @@
   background-color: #050505;
   border-top: 1px solid #222;
   overflow: hidden;
+  position: relative;
+  z-index: 3;
 }
 
 .past-sponsors-container {

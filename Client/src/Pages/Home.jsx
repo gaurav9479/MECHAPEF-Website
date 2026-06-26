@@ -1,16 +1,16 @@
 import Navbar from "../components/Navbar/Navbar";
-import CinematicHero from "../components/CinematicHero/CinematicHero";
+import HeroIntro from "../components/CinematicHero/HeroIntro";
+import AboutWheel from "../components/CinematicHero/AboutWheel";
+import LearningLogos from "../components/LearningLogos/LearningLogos";
 import PastEventsStack from "../components/PastEventsStack/PastEventsStack";
 import LiveEventsSlider from "../components/LiveEventsSlider/LiveEventsSlider";
-import PastSponsors from "../components/PastSponsors/PastSponsors";
+import SpiritOfMech from "../components/CinematicHero/SpiritOfMech";
 import OurTeam from "../components/OurTeam/OurTeam";
-import Stats from "../components/Stats/Stats";
-import Join from "../components/Join/Join";
+import PastSponsors from "../components/PastSponsors/PastSponsors";
+import JoinUsBot from "../components/CinematicHero/JoinUsBot";
 import Footer from "../components/Footer/Footer";
 import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
-
-import PastEventsStack from "../components/PastEventsStack/PastEventsStack";
 
 const Home = () => {
   return (
@@ -21,17 +21,20 @@ const Home = () => {
 
       {/* ── Desktop layout (hidden on mobile via CSS) ── */}
       <div className="desktop-only">
-        <CinematicHero />
+        <HeroIntro />
+        <AboutWheel />
+        <LearningLogos />
         <PastEventsStack />
         <LiveEventsSlider />
+        <SpiritOfMech />
         <OurTeam />
         <PastSponsors />
+        <JoinUsBot />
+        <Footer />
       </div>
 
       {/* ── Mobile layout (hidden on desktop via CSS) ── */}
       <MobileHome />
-
-      <Footer />
     </>
   );
 };
