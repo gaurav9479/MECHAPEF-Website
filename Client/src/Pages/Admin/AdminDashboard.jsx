@@ -11,7 +11,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const handleLogout = async () => { await logout(); navigate('/login'); };
   const location = useLocation();
-  const [stats, setStats] = useState({ events: 0, team: 0 });
+  const [stats, setStats] = useState({ events: 0, users: 0, announcements: 0, sponsors: 0 });
   const [recentEvents, setRecentEvents] = useState([]);
   const [toast, setToast] = useState(null);
 
@@ -29,8 +29,19 @@ const AdminDashboard = () => {
       setRecentEvents(events.slice(0, 5));
       setStats(s => ({ ...s, events: res.data.data?.pagination?.totalCount || events.length }));
     }).catch(() => {});
+
     api.get('/auth/users').then(res => {
       setStats(s => ({ ...s, users: res.data.data?.pagination?.totalCount || 0 }));
+    }).catch(() => {});
+
+    api.get('/announcements').then(res => {
+      const count = res.data.data?.announcements?.length || 0;
+      setStats(s => ({ ...s, announcements: count }));
+    }).catch(() => {});
+
+    api.get('/sponsors').then(res => {
+      const count = res.data.data?.sponsors?.length || 0;
+      setStats(s => ({ ...s, sponsors: count }));
     }).catch(() => {});
   }, []);
   const adminLinks = [
@@ -69,14 +80,14 @@ const AdminDashboard = () => {
           <div className="admin-stat-card">
             <FaBullhorn className="stat-icon" />
             <div>
-              <div className="stat-num">—</div>
+              <div className="stat-num">{stats.announcements}</div>
               <div className="stat-label">Announcements</div>
             </div>
           </div>
           <div className="admin-stat-card">
             <FaHandshake className="stat-icon" />
             <div>
-              <div className="stat-num">—</div>
+              <div className="stat-num">{stats.sponsors}</div>
               <div className="stat-label">Sponsors</div>
             </div>
           </div>

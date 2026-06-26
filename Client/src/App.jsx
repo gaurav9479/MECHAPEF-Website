@@ -1,5 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
+import './App.css';
 
 import Home from './Pages/Home';
 import Login from './Pages/Login/Login';
@@ -33,11 +36,64 @@ const Unauthorized = () => (
   </div>
 );
 
-function App() {
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  const [displayLocation, setDisplayLocation] = useState(location);
+  const [adminFade, setAdminFade] = useState(false);
+
+  // If starting on an admin page, skip opening animation entirely
+  const isAdminRoute = (path) => path.startsWith('/admin');
+  const [transitionStage, setTransitionStage] = useState(
+    isAdminRoute(location.pathname) ? "idle" : "opening"
+  );
+
+  useEffect(() => {
+    if (location.pathname !== displayLocation.pathname || location.search !== displayLocation.search) {
+      const fromAdmin = isAdminRoute(displayLocation.pathname);
+      const toAdmin = isAdminRoute(location.pathname);
+
+      if (fromAdmin || toAdmin) {
+        // Admin routes: simple instant swap, no shutter
+        setAdminFade(true);
+        setTimeout(() => {
+          setDisplayLocation(location);
+          window.scrollTo(0, 0);
+          setAdminFade(false);
+        }, 150);
+      } else {
+        // Public routes: full mechanical shutter
+        setTransitionStage("closing");
+      }
+    }
+  }, [location, displayLocation]);
+
+  const handleCloseComplete = () => {
+    setDisplayLocation(location);
+    window.scrollTo(0, 0);
+    setTransitionStage("opening");
+  };
+
+  const handleOpenComplete = () => {
+    setTransitionStage("idle");
+  };
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <div className="app-transition-container" style={{ position: 'relative', minHeight: '100vh' }}>
+
+      {/* Admin fade overlay — shown only for admin navigation */}
+      {adminFade && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9998,
+          background: '#0a0a0a',
+          opacity: adminFade ? 1 : 0,
+          transition: 'opacity 0.15s ease',
+          pointerEvents: 'none'
+        }} />
+      )}
+
+      {/* Route Contents */}
+      <div style={{ opacity: adminFade ? 0 : 1, transition: 'opacity 0.15s ease' }}>
+        <Routes location={displayLocation}>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -76,7 +132,7 @@ function App() {
             <ProtectedRoute requiredRole="EventHead"><AdminAnnouncements /></ProtectedRoute>
           } />
           <Route path="/admin/sponsors" element={
-            <ProtectedRoute 
+            <ProtectedRoute
               allowedRoles={['PRTeam', 'EventHead', 'SuperAdmin']}
               fallbackPath="/admin"
               toastMessage="Access Denied: Only PR/Marketing, Event Leads, and Admins can manage Sponsors."
@@ -88,7 +144,7 @@ function App() {
             <ProtectedRoute requiredRole="EventHead"><AdminManagement /></ProtectedRoute>
           } />
           <Route path="/admin/gallery" element={
-            <ProtectedRoute 
+            <ProtectedRoute
               allowedRoles={['PRTeam', 'SuperAdmin']}
               fallbackPath="/admin"
               toastMessage="Access Denied: Only Media/PR Team and Admins can manage the Gallery."
@@ -100,6 +156,51 @@ function App() {
             <ProtectedRoute requiredRole="EventHead"><AdminScanner /></ProtectedRoute>
           } />
         </Routes>
+      </div>
+
+      {/* Mechanical Shutter — never shown on admin routes */}
+      {!isAdminRoute(displayLocation.pathname) && (
+        <>
+          <motion.div
+            className="mech-shutter mech-shutter-top"
+            initial={{ y: "0vh" }}
+            animate={{ y: transitionStage === "closing" ? "0vh" : "-50vh" }}
+            onAnimationComplete={() => {
+              if (transitionStage === "closing") handleCloseComplete();
+              else if (transitionStage === "opening") handleOpenComplete();
+            }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            style={{ top: 0 }}
+          >
+            <div className="shutter-inner" style={{
+              background: "repeating-linear-gradient(45deg, #050505, #050505 15px, #ff1f01 15px, #ff1f01 30px)",
+              width: "100%", height: "20px", position: "absolute", bottom: 0
+            }} />
+          </motion.div>
+
+          <motion.div
+            className="mech-shutter mech-shutter-bottom"
+            initial={{ y: "0vh" }}
+            animate={{ y: transitionStage === "closing" ? "0vh" : "50vh" }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            style={{ bottom: 0 }}
+          >
+            <div className="shutter-inner" style={{
+              background: "repeating-linear-gradient(45deg, #050505, #050505 15px, #ff1f01 15px, #ff1f01 30px)",
+              width: "100%", height: "20px", position: "absolute", top: 0
+            }} />
+          </motion.div>
+        </>
+      )}
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AnimatedRoutes />
       </BrowserRouter>
     </AuthProvider>
   );

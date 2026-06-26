@@ -91,6 +91,7 @@
 }
 
 .navbar ul li {
+  position: relative;
   cursor: pointer;
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.7);
@@ -335,14 +336,14 @@
 
 .nav-sliding-pill {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 38px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(255, 0, 0, 0.15);
   border: 1px solid rgba(255, 0, 0, 0.4);
-  border-radius: 20px;
+  border-radius: 8px;
   z-index: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 

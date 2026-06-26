@@ -11,13 +11,14 @@ img {
 
 html{
   scroll-behavior:smooth;
+  overflow-x: clip;
 }
 
 body{
   background:#050505;
   color:white;
   font-family:Poppins,sans-serif;
-  overflow-x:clip;
+  overflow-x: clip;
 }
 
 section{

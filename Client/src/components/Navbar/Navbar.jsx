@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCog, FaUserShield, FaSignOutAlt, FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
-import { animate } from "framer-motion";
+import { motion } from "framer-motion";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
 import "./Navbar.css";
 
@@ -16,8 +16,6 @@ const Navbar = () => {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [showNotices, setShowNotices] = useState(false);
-  const navRefs = useRef([]);
-  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0, opacity: 0 });
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -45,21 +43,32 @@ const Navbar = () => {
     navigate('/');
   };
 
-  const scrollToSection = (vhMultiplier) => {
+  const scrollToSection = (vhMultiplier, id) => {
     setMenuOpen(false);
+    const isMobile = window.innerWidth <= 768;
     if (window.location.pathname !== '/') {
       navigate('/');
       setTimeout(() => {
+        if (isMobile && id) {
+          const el = document.getElementById(id);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.scrollTo({
+            top: vhMultiplier * window.innerHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+    } else {
+      if (isMobile && id) {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      } else {
         window.scrollTo({
           top: vhMultiplier * window.innerHeight,
           behavior: 'smooth'
         });
-      }, 100);
-    } else {
-      window.scrollTo({
-        top: vhMultiplier * window.innerHeight,
-        behavior: 'smooth'
-      });
+      }
     }
   };
 
@@ -100,18 +109,7 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    // Update pill position
-    const activeEl = navRefs.current[activeIndex];
-    if (activeEl) {
-      setPillStyle({
-        left: activeEl.offsetLeft,
-        width: activeEl.offsetWidth,
-        opacity: 1
-      });
-    }
-  }, [activeIndex, menuOpen]);
-
+  // Removed manual pillStyle effect
   return (
     <>
       <div className="navbar-hover-zone"></div>
@@ -129,14 +127,33 @@ const Navbar = () => {
       </div>
 
       <ul className={menuOpen ? "nav-links open" : "nav-links"}>
-        <div className="nav-sliding-pill" style={pillStyle}></div>
-        <li ref={el => navRefs.current[0] = el} className={activeIndex === 0 ? "active" : ""} onClick={() => scrollToSection(0)}>Home</li>
-        <li ref={el => navRefs.current[1] = el} className={activeIndex === 1 ? "active" : ""} onClick={() => scrollToSection(3.15)}>About</li>
-        <li ref={el => navRefs.current[2] = el} className={activeIndex === 2 ? "active" : ""} onClick={() => { setMenuOpen(false); navigate('/events'); }}>Events</li>
-        <li ref={el => navRefs.current[3] = el} className={activeIndex === 3 ? "active" : ""} onClick={() => { setMenuOpen(false); navigate('/gallery'); }}>Gallery</li>
-        <li onClick={() => { setMenuOpen(false); navigate('/sponsors'); }}>Sponsors</li>
-        <li ref={el => navRefs.current[4] = el} className={activeIndex === 4 ? "active" : ""} onClick={() => scrollToElement('our-team')}>Our Team</li>
-        <li style={{cursor: 'pointer'}} onClick={() => { setMenuOpen(false); setShowNotices(true); }}>Notice Board</li>
+        <li className={activeIndex === 0 ? "active" : ""} onClick={() => scrollToSection(0)}>
+          {activeIndex === 0 && <motion.div className="nav-sliding-pill" layoutId="navPill" transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
+          <span style={{ position: 'relative', zIndex: 2 }}>Home</span>
+        </li>
+        <li className={activeIndex === 1 ? "active" : ""} onClick={() => scrollToSection(3.15, 'mobile-about')}>
+          {activeIndex === 1 && <motion.div className="nav-sliding-pill" layoutId="navPill" transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
+          <span style={{ position: 'relative', zIndex: 2 }}>About</span>
+        </li>
+        <li className={activeIndex === 2 ? "active" : ""} onClick={() => { setMenuOpen(false); navigate('/events'); }}>
+          {activeIndex === 2 && <motion.div className="nav-sliding-pill" layoutId="navPill" transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
+          <span style={{ position: 'relative', zIndex: 2 }}>Events</span>
+        </li>
+        <li className={activeIndex === 3 ? "active" : ""} onClick={() => { setMenuOpen(false); navigate('/gallery'); }}>
+          {activeIndex === 3 && <motion.div className="nav-sliding-pill" layoutId="navPill" transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
+          <span style={{ position: 'relative', zIndex: 2 }}>Gallery</span>
+        </li>
+        <li className={window.location.pathname === '/sponsors' ? "active" : ""} onClick={() => { setMenuOpen(false); navigate('/sponsors'); }}>
+          {window.location.pathname === '/sponsors' && <motion.div className="nav-sliding-pill" layoutId="navPill" transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
+          <span style={{ position: 'relative', zIndex: 2 }}>Sponsors</span>
+        </li>
+        <li className={activeIndex === 4 ? "active" : ""} onClick={() => scrollToElement(window.innerWidth <= 768 ? 'mh-team' : 'our-team')}>
+          {activeIndex === 4 && <motion.div className="nav-sliding-pill" layoutId="navPill" transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
+          <span style={{ position: 'relative', zIndex: 2 }}>Our Team</span>
+        </li>
+        <li style={{cursor: 'pointer'}} onClick={() => { setMenuOpen(false); setShowNotices(true); }}>
+          <span style={{ position: 'relative', zIndex: 2 }}>Notice Board</span>
+        </li>
         <li className="mobile-only-btn">
           {user ? (
             <div className="nav-avatar-container" ref={dropdownRef}>

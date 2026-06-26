@@ -77,7 +77,7 @@ const HeroIntro = () => {
                 <button className="primary-btn" onClick={() => navigate('/events')}>
                   EXPLORE MORE <FaArrowRight />
                 </button>
-                <button className="secondary-btn" onClick={() => document.getElementById('mh-team')?.scrollIntoView({ behavior: 'smooth' })}>
+                <button className="secondary-btn" onClick={() => document.getElementById('our-team')?.scrollIntoView({ behavior: 'smooth' })}>
                   MEET THE TEAM <FaUsers />
                 </button>
               </motion.div>
