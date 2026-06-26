@@ -1,22 +1,101 @@
+/* ════════════════════════════════════════════════════════════
+   OurTeam — Cyberpunk Spotlight & Glitch Edition
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Keyframes ──────────────────────────────────────────────── */
+@keyframes glitch {
+  0%   { clip-path: inset(20% 0 60% 0); transform: translate(-3px, 0); }
+  20%  { clip-path: inset(60% 0 10% 0); transform: translate( 3px, 0); }
+  40%  { clip-path: inset(10% 0 80% 0); transform: translate(-2px, 0); }
+  60%  { clip-path: inset(80% 0  5% 0); transform: translate( 2px, 0); }
+  80%  { clip-path: inset(40% 0 40% 0); transform: translate(-1px, 0); }
+  100% { clip-path: inset( 0% 0  0% 0); transform: translate(  0,  0); }
+}
+
+@keyframes scanline {
+  0%   { background-position: 0 -100%; }
+  100% { background-position: 0  200%; }
+}
+
+@keyframes badgePop {
+  0%   { opacity: 0; transform: scale(0.6) translateY(-4px); }
+  60%  { transform: scale(1.1) translateY(0);                }
+  100% { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+
+@keyframes cogSpin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Section ────────────────────────────────────────────────── */
 .our-team-section {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
   padding: 80px 0;
-  background-color: #000;
+  background:
+    radial-gradient(
+      600px circle at var(--mouse-x) var(--mouse-y),
+      rgba(255, 31, 1, 0.06),
+      transparent 40%
+    ),
+    #020202;
   color: #fff;
   font-family: 'Orbitron', sans-serif;
   overflow: hidden;
   position: relative;
   z-index: 3;
+  transition: background 0.1s ease;
+}
+
+/* ── Section Header ─────────────────────────────────────────── */
+.team-header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 60px;
+  padding: 0 5vw;
+}
+
+.team-ghost-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  font-size: clamp(5rem, 18vw, 12rem);
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 31, 1, 0.08);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 0;
 }
 
 .team-heading {
-  text-align: center;
-  font-size: clamp(2rem, 6vw, 3rem);
-  color: #ff0000;
-  margin-bottom: 60px;
-  letter-spacing: 2px;
+  position: relative;
+  z-index: 1;
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  color: #ff1f01;
+  margin: 0 0 12px 0;
+  letter-spacing: 4px;
+  text-shadow:
+    0 0 20px rgba(255, 31, 1, 0.5),
+    0 0 60px rgba(255, 31, 1, 0.2);
 }
 
-/* This container creates a native horizontal scrollbar */
+.team-subtitle {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 2px;
+  margin: 0;
+  font-family: sans-serif;
+  text-transform: uppercase;
+}
+
+/* ── Scroll Container ───────────────────────────────────────── */
 .team-scroll-container {
   overflow-x: auto;
   overflow-y: hidden;
@@ -24,27 +103,15 @@
   flex-direction: column;
   gap: 50px;
   padding: 0 5vw 40px 5vw;
-  /* Smooth scrolling on iOS */
   -webkit-overflow-scrolling: touch;
-  
-  /* Hide scrollbar for a cleaner look (optional) */
   scrollbar-width: thin;
-  scrollbar-color: #ff0000 #222;
+  scrollbar-color: #ff1f01 #111;
 }
+.team-scroll-container::-webkit-scrollbar        { height: 6px; }
+.team-scroll-container::-webkit-scrollbar-track  { background: #111; border-radius: 3px; }
+.team-scroll-container::-webkit-scrollbar-thumb  { background: #ff1f01; border-radius: 3px; }
 
-/* Custom Webkit Scrollbar */
-.team-scroll-container::-webkit-scrollbar {
-  height: 8px;
-}
-.team-scroll-container::-webkit-scrollbar-track {
-  background: #222;
-  border-radius: 4px;
-}
-.team-scroll-container::-webkit-scrollbar-thumb {
-  background: #ff0000;
-  border-radius: 4px;
-}
-
+/* ── Layer ──────────────────────────────────────────────────── */
 .team-layer {
   display: flex;
   flex-direction: column;
@@ -52,93 +119,201 @@
 }
 
 .layer-title {
-  font-size: 1.2rem;
-  color: #a0a0a0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  color: #c0c0c0;
   margin: 0;
   position: sticky;
-  left: 0; /* Keeps title visible when scrolling right */
+  left: 0;
   width: max-content;
+  border-left: 3px solid #ff1f01;
+  padding-left: 12px;
+  letter-spacing: 2px;
+}
+
+.layer-icon {
+  color: #ff1f01;
+  font-size: 1rem;
+  transition: transform 0.6s ease;
+}
+.layer-title:hover .layer-icon {
+  animation: cogSpin 1s linear infinite;
 }
 
 .layer-track {
   display: flex;
   gap: 20px;
-  width: max-content; /* Allows track to grow based on contents */
+  width: max-content;
 }
 
+/* ── Team Card ──────────────────────────────────────────────── */
 .team-card {
-  width: clamp(190px, 28vw, 250px);
-  background-color: #111;
-  border: 1px solid #333;
+  position: relative;
+  width: clamp(190px, 28vw, 240px);
+  background-color: #080808;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   overflow: hidden;
-  transition: transform 0.3s ease, border-color 0.3s ease;
-  flex-shrink: 0; /* Prevents cards from squishing */
+  flex-shrink: 0;
+  transition:
+    transform       0.35s ease,
+    border-color    0.35s ease,
+    box-shadow      0.35s ease;
 }
 
+/* Hover: neon border glow + lift */
 .team-card:hover {
-  transform: translateY(-5px);
-  border-color: #ff0000;
-  box-shadow: 0 5px 15px rgba(255, 0, 0, 0.2);
+  transform: translateY(-6px);
+  border-color: rgba(255, 31, 1, 0.7);
+  box-shadow:
+    0 0 20px rgba(255, 31, 1, 0.4),
+    inset 0 0 20px rgba(255, 31, 1, 0.05);
 }
 
+/* ── Corner Accents ─────────────────────────────────────────── */
+.corner-accent {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: #ff1f01;
+  border-style: solid;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+  pointer-events: none;
+}
+.corner-tr {
+  top: 6px; right: 6px;
+  border-width: 2px 2px 0 0;
+  border-radius: 0 4px 0 0;
+}
+.corner-bl {
+  bottom: 6px; left: 6px;
+  border-width: 0 0 2px 2px;
+  border-radius: 0 0 0 4px;
+}
+.team-card:hover .corner-accent {
+  opacity: 1;
+}
+
+/* ── SCANNED Badge ──────────────────────────────────────────── */
+.scanned-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  font-size: 0.55rem;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 2px;
+  color: #ff1f01;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 31, 1, 0.5);
+  padding: 3px 7px;
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  /* scanline shimmer on the badge */
+  background-image: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(255, 31, 1, 0.06) 50%
+  );
+  background-size: 100% 4px;
+}
+.team-card:hover .scanned-badge {
+  animation: badgePop 0.35s ease forwards;
+}
+
+/* ── Card Image Wrapper ─────────────────────────────────────── */
 .card-img-placeholder {
+  position: relative;
   width: 100%;
-  height: clamp(190px, 28vw, 250px);
-  background: linear-gradient(135deg, #222, #111);
+  height: clamp(190px, 28vw, 240px);
+  background: linear-gradient(135deg, #141414, #0a0a0a);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+/* ── Card Image (grayscale default) ─────────────────────────── */
+.card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.1) brightness(0.8);
+  transition: filter 0.4s ease;
+}
+
+/* On hover: full color */
+.team-card:hover .card-img {
+  filter: grayscale(0%) contrast(1) brightness(1);
+}
+
+/* ── Glitch Overlay Image ───────────────────────────────────── */
+.card-img-glitch {
+  filter: grayscale(0%) contrast(1.2) brightness(1.1) !important;
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  clip-path: inset(0% 0 0% 0);
+  /* No transition — snappy glitch only */
+  transition: none;
+}
+.team-card:hover .card-img-glitch {
+  animation: glitch 0.3s steps(1, end) forwards;
 }
 
 .placeholder-text {
-  color: #555;
+  color: #333;
   font-size: 1rem;
+  z-index: 1;
 }
 
+/* ── Card Info ──────────────────────────────────────────────── */
 .card-info {
-  padding: 15px;
+  padding: 14px 15px;
   text-align: center;
 }
 
-.card-info h4 {
+.card-name {
   margin: 0 0 5px 0;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #fff;
+  letter-spacing: 1px;
+  transition: text-shadow 0.3s ease;
+}
+.team-card:hover .card-name {
+  text-shadow:
+    0 0 8px rgba(255, 31, 1, 0.8),
+    0 0 20px rgba(255, 31, 1, 0.4);
+  color: #ff6655;
 }
 
 .card-info p {
   margin: 0;
-  font-size: 0.9rem;
-  color: #ff0000;
+  font-size: 0.8rem;
+  color: #ff1f01;
   font-family: sans-serif;
+  letter-spacing: 1px;
 }
 
+/* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .team-heading {
-    font-size: 2rem;
-    margin-bottom: 30px;
-  }
-  .team-scroll-container {
-    gap: 30px;
-    padding: 0 16px 20px;
-  }
+  .team-heading        { font-size: 2rem; margin-bottom: 8px; }
+  .team-header         { margin-bottom: 30px; }
+  .team-scroll-container { gap: 30px; padding: 0 16px 20px; }
+  .layer-track         { gap: 14px; }
+  .card-name           { font-size: 0.9rem; }
 
-  .layer-track {
-    gap: 14px;
-  }
+  /* Keep images on mobile — just smaller */
+  .card-img-placeholder { height: 150px; }
+  .team-card            { width: 150px; }
 
-  .card-info h4 {
-    font-size: 1rem;
-  }
-  
-  /* Hide images on mobile for a cleaner, compact list look */
-  .card-img-placeholder {
-    display: none !important;
-  }
-  
-  .team-card {
-    width: 140px;
-  }
+  .team-ghost-text      { display: none; }
 }

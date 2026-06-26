@@ -38,11 +38,9 @@ const LearningLogos = () => {
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top top',
-            end: '+=150%',
-            pin: true,
+            start: 'top bottom',
+            end: 'bottom top',
             scrub: 1,
-            pinSpacing: true,
           }
         });
 
