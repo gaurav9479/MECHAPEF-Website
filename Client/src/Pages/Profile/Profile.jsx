@@ -11,6 +11,7 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     name: '',
     branch: '',
+    yearOfStudy: '',
     phoneNumber: '',
     githubURL: '',
     linkedinURL: '',
@@ -27,6 +28,7 @@ const Profile = () => {
       setFormData({
         name: user.name || '',
         branch: user.branch || '',
+        yearOfStudy: user.yearOfStudy || '',
         phoneNumber: user.phoneNumber || '',
         githubURL: user.githubURL || '',
         linkedinURL: user.linkedinURL || '',
@@ -102,6 +104,11 @@ const Profile = () => {
             <div className="form-group">
               <label>Branch</label>
               <input type="text" name="branch" value={formData.branch} onChange={handleChange} />
+            </div>
+
+            <div className="form-group">
+              <label>Year of Study</label>
+              <input type="number" name="yearOfStudy" min="1" max="5" value={formData.yearOfStudy} onChange={handleChange} />
             </div>
 
             <div className="form-group">

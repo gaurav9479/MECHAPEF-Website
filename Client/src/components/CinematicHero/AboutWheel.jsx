@@ -22,14 +22,14 @@ const AboutWheel = () => {
 
   const textOpacity = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], [0, 1, 1, 0]);
   
-  const card1X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["-50vw", "0vw", "0vw", "0vw"]);
-  const card1Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vh", "0vh", "0vh", "-50vh"]);
-
-  const card3Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["50vh", "0vh", "0vh", "0vh"]);
-  const card3X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vw", "0vw", "0vw", "-50vw"]);
+  const card1Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["-50vh", "0vh", "0vh", "0vh"]);
+  const card1X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vw", "0vw", "0vw", "-50vw"]);
 
   const card2X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["50vw", "0vw", "0vw", "0vw"]);
   const card2Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vh", "0vh", "0vh", "-50vh"]);
+
+  const card3X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["-50vw", "0vw", "0vw", "0vw"]);
+  const card3Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vh", "0vh", "0vh", "50vh"]);
 
   const card4Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["50vh", "0vh", "0vh", "0vh"]);
   const card4X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vw", "0vw", "0vw", "50vw"]);
