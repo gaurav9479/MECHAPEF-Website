@@ -51,13 +51,6 @@ const PastEventsStack = () => {
             y: () => (window.innerHeight / 2) - mobileCardsWrapper.offsetHeight,
             ease: "none"
           });
-          
-          mobileTl.to({}, { duration: 0.2 }); // brief pause
-          mobileTl.to(mobileCardsWrapper, {
-            y: "150vh", // shift down
-            ease: "power2.in"
-          });
-
           return;
         }
 
@@ -76,30 +69,39 @@ const PastEventsStack = () => {
         const cards = gsap.utils.toArray('.gsap-pe-card');
 
         gsap.set(cards, { 
-          y: (i) => i === 0 ? 0 : 400, 
-          opacity: (i) => i === 0 ? 1 : 0, 
-          scale: (i) => i === 0 ? 1 : 0.8,
+          y: window.innerHeight, 
+          opacity: 0, 
+          scale: 0.8,
           rotate: (i) => i % 2 === 0 ? -4 : 4
         });
+
+        // Add an initial blank scroll delay
+        tl.to({}, { duration: 0.5 });
+
+        // Animate the first card in with a delay
+        tl.fromTo(cards[0], 
+          { y: window.innerHeight, opacity: 0, scale: 0.8 },
+          { y: 0, opacity: 1, scale: 1, duration: 1, ease: 'power2.out' }, 
+          0.5
+        );
 
         cards.forEach((card, index) => {
           if (index === 0) return;
           
-          tl.to(card, { y: 0, opacity: 1, scale: 1, duration: 1, ease: 'power2.out' }, index);
+          const startTime = 0.5 + index;
+          tl.fromTo(card, 
+            { y: window.innerHeight, opacity: 0, scale: 0.8 },
+            { y: 0, opacity: 1, scale: 1, duration: 1, ease: 'power2.out' }, 
+            startTime
+          );
           
           for(let j = 0; j < index; j++) {
              const diff = index - j;
-             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: 0, duration: 1, ease: 'power2.out' }, index);
+             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -5 * diff, duration: 1, ease: 'power2.out' }, startTime);
           }
         });
         
-        // "jaise hi last dive half way pohoc jae neeche shift ho jaenge"
-        // Wait for a brief moment after stacking is complete
-        tl.to({}, { duration: 0.5 }); 
-        
-        // Shift all cards DOWN together to exit
-        tl.to(cards, { y: "150vh", duration: 1.5, ease: "power2.in" });
-
+        tl.to({}, { duration: 0.5 }); // Buffer
       }, sectionRef);
       
       ScrollTrigger.refresh();
@@ -107,15 +109,7 @@ const PastEventsStack = () => {
 
     return () => {
       clearTimeout(timer);
-      if (ctx) ctx.revert(); // This removes GSAP added styles and pin spacers
-      
-      // Force kill any remaining ScrollTriggers created by this component
-      // to prevent the "leak" onto the /admin route.
-      ScrollTrigger.getAll().forEach(t => {
-        if (t.vars.trigger === sectionRef.current) {
-          t.kill(true); // true = reset animation
-        }
-      });
+      if (ctx) ctx.revert();
     };
   }, [loading, pastEvents]);
 
@@ -151,7 +145,7 @@ const PastEventsStack = () => {
             <div 
               className="pe-stack-card gsap-pe-card"
               key={event._id}
-              style={{ zIndex: index + 1 }} // Ensure sequential stacking
+              style={{ zIndex: index + 1 }}
             >
               <div className="pe-left">
                 <img src={event.imageURL} alt={event.title} />

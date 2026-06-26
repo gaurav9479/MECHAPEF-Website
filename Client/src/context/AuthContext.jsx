@@ -44,8 +44,8 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
-  const microsoftLogin = async (code) => {
-    const res = await authService.microsoftLogin(code);
+  const microsoftLogin = async (code, code_verifier) => {
+    const res = await authService.microsoftLogin(code, code_verifier);
     const { accessToken, user: userData } = res.data.data;
     localStorage.setItem('accessToken', accessToken);
     setUser(userData);

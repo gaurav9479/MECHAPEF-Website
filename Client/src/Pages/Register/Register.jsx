@@ -36,10 +36,15 @@ const Register = () => {
   const handleMicrosoftLogin = async () => {
     try {
       setLoading(true);
+      setError('');
       const { authService } = await import('../../services/services');
       const res = await authService.getMicrosoftUrl();
+      if (res.data.data.code_verifier) {
+          sessionStorage.setItem('ms_pkce_verifier', res.data.data.code_verifier);
+      }
       window.location.href = res.data.data.url;
     } catch (err) {
+      console.error('Failed to get Microsoft login URL:', err);
       setError('Failed to initiate Microsoft registration');
       setLoading(false);
     }

@@ -22,29 +22,36 @@ const Login = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
-    if (code) {
+    if (code && !loading) {
       setLoading(true);
-      microsoftLogin(code)
+      const verifier = sessionStorage.getItem('ms_pkce_verifier');
+      microsoftLogin(code, verifier)
         .then(() => {
+          sessionStorage.removeItem('ms_pkce_verifier'); // Clean up
           // Clear URL and redirect
           window.history.replaceState({}, document.title, window.location.pathname);
           navigate(from, { replace: true });
         })
         .catch((err) => {
+          console.error('Microsoft login failed:', err);
           setError(err.response?.data?.message || 'Microsoft login failed');
           window.history.replaceState({}, document.title, window.location.pathname);
           setLoading(false);
         });
     }
-  }, [microsoftLogin, navigate, from]);
+  }, [microsoftLogin, navigate, from, loading]);
 
   const handleMicrosoftLogin = async () => {
     try {
       setLoading(true);
-      const { authService } = await import('../../services/services');
+      setError('');
       const res = await authService.getMicrosoftUrl();
+      if (res.data.data.code_verifier) {
+          sessionStorage.setItem('ms_pkce_verifier', res.data.data.code_verifier);
+      }
       window.location.href = res.data.data.url;
     } catch (err) {
+      console.error('Failed to get Microsoft login URL:', err);
       setError('Failed to initiate Microsoft login');
       setLoading(false);
     }

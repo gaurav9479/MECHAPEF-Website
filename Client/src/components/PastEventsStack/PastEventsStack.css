@@ -4,6 +4,7 @@
   background: #050505;
   width: 100%;
   overflow: hidden; /* Prevent horizontal scroll */
+  z-index: 1;
 }
 
 .pe-gsap-container {
@@ -17,8 +18,9 @@
 
 .pe-header {
   text-align: center;
+  padding-top: -5vh; /* Sit at 20% from the top */
+  margin-top: 0;
   z-index: 10;
-  margin-top: 5vh;
 }
 
 .section-title {
@@ -56,11 +58,11 @@
   width: 100%;
   height: 100%;
   display: flex;
-  background: #0a0a0a;
-  border: 4px double #ffffff; /* White double boundary */
+  background: #ffffff;
+  border: 2px solid #ffffff;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.4);
   transform-origin: top center;
   will-change: transform, opacity;
 }
@@ -95,13 +97,13 @@
 
 .pe-right h3 {
   font-size: 2.2rem;
-  color: #fff;
+  color: #000;
   margin-bottom: 15px;
   font-family: 'Michroma', sans-serif;
 }
 
 .pe-right p {
-  color: #ccc;
+  color: #333;
   line-height: 1.6;
   font-size: 1.1rem;
 }
@@ -110,6 +112,7 @@
   display: none;
 }
 
+/* ===== MOBILE (EXACT FROM COMMIT 65ed3ea) ===== */
 @media (max-width: 768px) {
   .pe-gsap-section {
     height: 100vh; /* Fixed height for pinning */
