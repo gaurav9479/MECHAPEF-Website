@@ -26,7 +26,7 @@ const MobileCTA = ({ navigate }) => {
         </motion.p>
 
         <motion.button className="mh-btn-primary mh-btn-full" variants={fadeUp}
-          whileTap={{ scale: 0.96 }} onClick={() => navigate('/register')}>
+          whileTap={{ scale: 0.96 }} onClick={() => navigate('/login')}>
           JOIN NOW <FaArrowRight />
         </motion.button>
 

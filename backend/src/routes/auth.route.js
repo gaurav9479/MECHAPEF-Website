@@ -4,14 +4,22 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password/:token', authController.resetPassword);
+const microsoftOnlyAuth = (req, res) => {
+    return res.status(403).json({
+        success: false,
+        message: 'Manual authentication is disabled. Please sign in with Microsoft.'
+    });
+};
+
+router.post('/register', microsoftOnlyAuth);
+router.post('/login', microsoftOnlyAuth);
+router.post('/forgot-password', microsoftOnlyAuth);
+router.post('/reset-password/:token', microsoftOnlyAuth);
 
 // Microsoft OAuth2
 router.get('/microsoft/url', authController.getMicrosoftAuthUrl);
 router.post('/microsoft/callback', authController.microsoftLoginCallback);
+router.post('/microsoft/token', authController.microsoftTokenLogin);
 
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getCurrentUser);

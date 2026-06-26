@@ -19,7 +19,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401 && !error.config.url.includes('/auth/login')) {
+    const authUrl = error.config?.url || '';
+    const isAuthExchange = authUrl.includes('/auth/login') || authUrl.includes('/auth/microsoft/callback');
+
+    if (error.response?.status === 401 && !isAuthExchange) {
       localStorage.removeItem('accessToken');
       window.location.href = '/login';
     } else if (

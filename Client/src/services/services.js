@@ -1,16 +1,56 @@
 import api from './api';
 
+const getMicrosoftRedirectUri = () => {
+  const { protocol, hostname, port } = window.location;
+  const isLocalDev = port === '5173' && (hostname === 'localhost' || hostname === '127.0.0.1');
+  const origin = isLocalDev ? `${protocol}//localhost:${port}` : window.location.origin;
+
+  return `${origin}/login`;
+};
+
 export const authService = {
-  login: (email, password) => api.post('/auth/login', { email, password }),
   logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
-  register: (data) => api.post('/auth/register', data),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
   
-  getMicrosoftUrl: () => api.get('/auth/microsoft/url'),
-  microsoftLogin: (code, code_verifier) => api.post('/auth/microsoft/callback', { code, code_verifier }),
+  getMicrosoftUrl: () => api.get('/auth/microsoft/url', {
+    params: { redirectUri: getMicrosoftRedirectUri() },
+  }),
+  microsoftLogin: async (code, code_verifier) => {
+    const clientId = sessionStorage.getItem('ms_client_id');
+    const tenantId = sessionStorage.getItem('ms_tenant_id') || 'common';
+    const scope = sessionStorage.getItem('ms_scope') || 'openid profile email User.Read';
+    const redirectUri = sessionStorage.getItem('ms_redirect_uri') || getMicrosoftRedirectUri();
+
+    if (!clientId || !code_verifier) {
+      throw new Error('Microsoft login session expired. Please try again.');
+    }
+
+    const tokenParams = new URLSearchParams({
+      client_id: clientId,
+      code,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+      code_verifier,
+      scope,
+    });
+
+    const tokenResponse = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenParams.toString(),
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenResponse.ok) {
+      throw new Error(tokenData.error_description || tokenData.error || 'Failed to exchange Microsoft authorization code.');
+    }
+
+    return api.post('/auth/microsoft/token', {
+      accessToken: tokenData.access_token,
+    });
+  },
 };
 
 export const eventService = {

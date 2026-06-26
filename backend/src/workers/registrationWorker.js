@@ -5,14 +5,20 @@ import Event from '../models/event.model.js';
 import User from '../models/user.model.js';
 
 let registrationWorker = null;
+const QUEUE_NAME = 'RegistrationQueue';
 
 export const startRegistrationWorker = () => {
   if (!redisConnection) {
-    console.log('⚠️ Redis not configured. Background workers will not start.');
+    console.log('[Worker] Redis not configured. Registration worker will not start.');
     return;
   }
 
-  registrationWorker = new Worker('RegistrationQueue', async (job) => {
+  if (registrationWorker) {
+    console.log('[Worker] Registration worker is already running.');
+    return;
+  }
+
+  registrationWorker = new Worker(QUEUE_NAME, async (job) => {
     const {
       eventId,
       registeredBy,
@@ -23,7 +29,7 @@ export const startRegistrationWorker = () => {
       customData
     } = job.data;
 
-    console.log(`[Worker] Processing registration for User ${registeredBy} -> Event ${eventId}`);
+    console.log(`[Worker] Processing registration for user ${registeredBy} -> event ${eventId}`);
 
     // Verify event
     const event = await Event.findById(eventId);
@@ -39,10 +45,28 @@ export const startRegistrationWorker = () => {
       throw new Error(`Registration deadline passed`);
     }
 
-    // Check if already registered
-    const existingRegistration = await Registration.findOne({ eventId, registeredBy });
+    // Check if already registered. This is repeated in the worker because queued jobs
+    // can run later and multiple requests can arrive close together.
+    const existingRegistration = await Registration.findOne({
+      eventId,
+      registeredBy,
+      deletedAt: null
+    });
     if (existingRegistration) {
       throw new Error(`User already registered for this event`);
+    }
+
+    if (registrationType === 'Team' && teamMembers?.length) {
+      const memberIds = teamMembers.map((member) => member.userId);
+      const alreadyRegisteredMember = await Registration.findOne({
+        eventId,
+        'teamMembers.userId': { $in: memberIds },
+        deletedAt: null
+      });
+
+      if (alreadyRegisteredMember) {
+        throw new Error('One or more team members are already registered for this event');
+      }
     }
 
     // Create the registration
@@ -56,7 +80,14 @@ export const startRegistrationWorker = () => {
       customData
     });
 
-    await newRegistration.save();
+    try {
+      await newRegistration.save();
+    } catch (error) {
+      if (error.code === 11000) {
+        throw new Error('User already registered for this event');
+      }
+      throw error;
+    }
 
     // Update event registration count
     event.totalRegistrations = await Registration.getEventRegistrationCount(eventId);
@@ -69,20 +100,28 @@ export const startRegistrationWorker = () => {
       await user.save();
     }
 
-    console.log(`[Worker] ✅ Registration saved successfully for User ${registeredBy}`);
+    console.log(`[Worker] Registration saved successfully for user ${registeredBy}`);
     return newRegistration._id;
   }, {
     connection: redisConnection,
-    concurrency: 10 // Process 10 registrations concurrently
+    concurrency: Number(process.env.REGISTRATION_WORKER_CONCURRENCY || 5),
+    limiter: {
+      max: Number(process.env.REGISTRATION_WORKER_RATE_LIMIT || 50),
+      duration: 1000,
+    },
   });
 
   registrationWorker.on('completed', (job) => {
-    // We could send a success email here
+    console.log(`[Worker] Job ${job.id} completed`);
   });
 
   registrationWorker.on('failed', (job, err) => {
-    console.error(`[Worker] ❌ Job ${job.id} failed:`, err.message);
+    console.error(`[Worker] Job ${job?.id || 'unknown'} failed:`, err.message);
   });
 
-  console.log('🚀 Registration Worker started and listening for jobs...');
+  registrationWorker.on('error', (err) => {
+    console.error('[Worker] Registration worker error:', err.message);
+  });
+
+  console.log('[Worker] Registration worker started and listening for jobs.');
 };

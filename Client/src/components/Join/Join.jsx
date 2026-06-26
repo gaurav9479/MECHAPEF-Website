@@ -29,7 +29,7 @@ const Join = () => {
           MechaPEF?
         </h1>
 
-        <button onClick={() => navigate('/register')}>
+        <button onClick={() => navigate('/login')}>
           Apply Now
         </button>
       </motion.div>
