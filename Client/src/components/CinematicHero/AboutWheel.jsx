@@ -13,23 +13,34 @@ const AboutWheel = () => {
     offset: ["start start", "end end"],
   });
 
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [0, 1, 1, 0]);
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [1, 1, 1, 1]);
   const bgX = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], ["-20vw", "0vw", "0vw", "-20vw"]); 
 
-  const droneOpacity = useTransform(scrollYProgress, [0.1, 0.2, 0.8, 0.9], [0, 1, 1, 0]);
-  const droneY = useTransform(scrollYProgress, [0.1, 0.2, 0.8, 0.9], ["-100vh", "0vh", "0vh", "100vh"]); 
-  const droneX = useTransform(scrollYProgress, [0.1, 0.2, 0.8, 0.9], ["50vw", "0vw", "0vw", "-50vw"]);
+  // Sexy Text Transitions
+  const titlePart1X = useTransform(scrollYProgress, [0.1, 0.25, 0.75, 0.9], ["-50vw", "0vw", "0vw", "-50vw"]);
+  const titlePart1Op = useTransform(scrollYProgress, [0.1, 0.25, 0.75, 0.9], [0, 1, 1, 0]);
+
+  const titlePart2Y = useTransform(scrollYProgress, [0.15, 0.3, 0.7, 0.85], ["-50vh", "0vh", "0vh", "50vh"]);
+  const titlePart2Scale = useTransform(scrollYProgress, [0.15, 0.3, 0.7, 0.85], [3, 1, 1, 0]);
+  const titlePart2Op = useTransform(scrollYProgress, [0.15, 0.3, 0.7, 0.85], [0, 1, 1, 0]);
+
+  const titlePart3X = useTransform(scrollYProgress, [0.2, 0.35, 0.65, 0.8], ["50vw", "0vw", "0vw", "50vw"]);
+  const titlePart3Rotate = useTransform(scrollYProgress, [0.2, 0.35, 0.65, 0.8], [180, 0, 0, -180]);
+  const titlePart3Op = useTransform(scrollYProgress, [0.2, 0.35, 0.65, 0.8], [0, 1, 1, 0]);
+
+  const pY = useTransform(scrollYProgress, [0.25, 0.4, 0.6, 0.75], ["50vh", "0vh", "0vh", "50vh"]);
+  const pOp = useTransform(scrollYProgress, [0.25, 0.4, 0.6, 0.75], [0, 1, 1, 0]);
 
   const textOpacity = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], [0, 1, 1, 0]);
   
-  const card1X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["-50vw", "0vw", "0vw", "0vw"]);
-  const card1Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vh", "0vh", "0vh", "-50vh"]);
-
-  const card3Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["50vh", "0vh", "0vh", "0vh"]);
-  const card3X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vw", "0vw", "0vw", "-50vw"]);
+  const card1Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["-50vh", "0vh", "0vh", "0vh"]);
+  const card1X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vw", "0vw", "0vw", "-50vw"]);
 
   const card2X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["50vw", "0vw", "0vw", "0vw"]);
   const card2Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vh", "0vh", "0vh", "-50vh"]);
+
+  const card3X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["-50vw", "0vw", "0vw", "0vw"]);
+  const card3Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vh", "0vh", "0vh", "50vh"]);
 
   const card4Y = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["50vh", "0vh", "0vh", "0vh"]);
   const card4X = useTransform(scrollYProgress, [0.2, 0.3, 0.7, 0.8], ["0vw", "0vw", "0vw", "50vw"]);
@@ -46,12 +57,16 @@ const AboutWheel = () => {
         </motion.div>
 
         <motion.div className="cinematic-scene" style={{ pointerEvents }}>
-          <motion.div className="cinematic-left about-us-container" style={{ x: droneX, y: droneY, opacity: droneOpacity }}>
-             <h2 className="about-us-title">What is <span className="highlight-text">MechaPEF</span> ?</h2>
-             <p className="about-us-mission">
+          <motion.div className="cinematic-left about-us-container">
+             <h2 className="about-us-title" style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+               <motion.span style={{ x: titlePart1X, opacity: titlePart1Op, display: "inline-block" }}>What is</motion.span>
+               <motion.span className="highlight-text" style={{ y: titlePart2Y, scale: titlePart2Scale, opacity: titlePart2Op, display: "inline-block" }}>MechaPEF</motion.span>
+               <motion.span style={{ x: titlePart3X, rotate: titlePart3Rotate, opacity: titlePart3Op, display: "inline-block" }}>?</motion.span>
+             </h2>
+             <motion.p className="about-us-mission" style={{ y: pY, opacity: pOp }}>
                We are the official Mechanical and Mechatronics club of MNNIT Allahabad. 
                We don't just study engineering theory—we actually build machines, innovate, and leave a legacy.
-             </p>
+             </motion.p>
           </motion.div>
 
           <motion.div className="cinematic-right" style={{ opacity: textOpacity }}>
