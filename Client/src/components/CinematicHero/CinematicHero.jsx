@@ -520,7 +520,7 @@ const CinematicHero = () => {
               </motion.p>
               
               <motion.div className="s5-buttons" style={{ x: s5Line4X, opacity: s5Line4Op }}>
-                <button className="btn-contact-us" onClick={() => navigate('/register')}>JOIN NOW &rarr;</button>
+                <button className="btn-contact-us" onClick={() => navigate('/login')}>JOIN NOW &rarr;</button>
                 <button className="btn-learn-more">LEARN MORE</button>
               </motion.div>
 

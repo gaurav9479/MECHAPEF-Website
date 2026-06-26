@@ -368,12 +368,59 @@ function base64URLEncode(buffer) {
         .replace(/=/g, '');
 }
 
+const getAllowedFrontendOrigins = () => {
+    const configuredOrigins = [
+        process.env.FRONTEND_URL,
+        ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) : []),
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://mechapef-website.vercel.app'
+    ].filter(Boolean);
+
+    return [
+        ...new Set(
+            configuredOrigins
+                .map(origin => origin.replace(/\/$/, ''))
+                .filter(origin => !origin.startsWith('http://127.0.0.1'))
+        )
+    ];
+};
+
+const getMicrosoftRedirectUri = (req) => {
+    const requestedRedirectUri = req.query.redirectUri || req.body.redirectUri;
+    if (requestedRedirectUri) {
+        try {
+            const parsedRedirectUri = new URL(requestedRedirectUri);
+            const requestedOrigin = parsedRedirectUri.origin;
+            const isAllowedOrigin = getAllowedFrontendOrigins().includes(requestedOrigin);
+            const isLoginPath = parsedRedirectUri.pathname === '/login';
+
+            if (isAllowedOrigin && isLoginPath) {
+                return requestedRedirectUri;
+            }
+        } catch {
+            throw new ApiError(400, 'Invalid Microsoft redirect URI');
+        }
+    }
+
+    if (process.env.MICROSOFT_REDIRECT_URI) {
+        return process.env.MICROSOFT_REDIRECT_URI;
+    }
+
+    const requestOrigin = req.get('origin')?.replace(/\/$/, '');
+    if (requestOrigin && getAllowedFrontendOrigins().includes(requestOrigin)) {
+        return `${requestOrigin}/login`;
+    }
+
+    return process.env.NODE_ENV === 'production'
+        ? 'https://mechapef-website.vercel.app/login'
+        : 'http://localhost:5173/login';
+};
+
 export const getMicrosoftAuthUrl = asyncHandler(async (req, res) => {
     const clientId = process.env.MICROSOFT_CLIENT_ID;
     const tenantId = process.env.MICROSOFT_TENANT_ID || 'common';
-    const redirectUri = process.env.MICROSOFT_REDIRECT_URI || (process.env.NODE_ENV === 'production' 
-        ? 'https://mechapef-website.vercel.app/login' 
-        : 'http://localhost:5173/login');
+    const redirectUri = getMicrosoftRedirectUri(req);
 
     const scope = 'openid profile email User.Read';
     
@@ -383,60 +430,18 @@ export const getMicrosoftAuthUrl = asyncHandler(async (req, res) => {
     const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}&code_challenge=${challenge}&code_challenge_method=S256`;
 
     return res.status(200).json(
-        new APIResponse(200, { url: authUrl, code_verifier: verifier }, 'Microsoft OAuth URL generated')
+        new APIResponse(200, {
+            url: authUrl,
+            code_verifier: verifier,
+            clientId,
+            tenantId,
+            redirectUri,
+            scope
+        }, 'Microsoft OAuth URL generated')
     );
 });
 
-export const microsoftLoginCallback = asyncHandler(async (req, res) => {
-    const { code, code_verifier } = req.body;
-    
-    if (!code) {
-        throw new ApiError(400, 'Authorization code is required');
-    }
-
-    const clientId = process.env.MICROSOFT_CLIENT_ID;
-    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
-    const tenantId = process.env.MICROSOFT_TENANT_ID || 'common';
-    const redirectUri = process.env.MICROSOFT_REDIRECT_URI || (process.env.NODE_ENV === 'production' 
-        ? 'https://mechapef-website.vercel.app/login' 
-        : 'http://localhost:5173/login');
-
-    const tokenParams = new URLSearchParams({
-        client_id: clientId,
-        code,
-        redirect_uri: redirectUri,
-        grant_type: 'authorization_code'
-    });
-    
-    if (clientSecret) {
-        tokenParams.append('client_secret', clientSecret);
-    }
-    if (code_verifier) {
-        tokenParams.append('code_verifier', code_verifier);
-    }
-
-    const tokenResponse = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: tokenParams.toString()
-    });
-
-    const tokenData = await tokenResponse.json();
-
-    if (!tokenResponse.ok) {
-        throw new ApiError(401, 'Failed to exchange authorization code for tokens');
-    }
-
-    const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
-        headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
-    });
-
-    const profileData = await profileResponse.json();
-
-    if (!profileResponse.ok) {
-        throw new ApiError(401, 'Failed to fetch user profile from Microsoft');
-    }
-
+const issueLoginForMicrosoftProfile = async (profileData, res) => {
     const email = profileData.userPrincipalName || profileData.mail;
     const name = profileData.displayName;
 
@@ -460,6 +465,10 @@ export const microsoftLoginCallback = asyncHandler(async (req, res) => {
         await user.save();
     }
 
+    user.lastLogin = new Date();
+    user.sessionVersion = (user.sessionVersion || 1) + 1;
+    await user.save({ validateBeforeSave: false });
+
     const tokens = generateTokenPair({
         userId: user._id,
         email: user.email,
@@ -474,10 +483,113 @@ export const microsoftLoginCallback = asyncHandler(async (req, res) => {
         maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
+    return {
+        user: user.getPublicProfile(),
+        accessToken: tokens.accessToken
+    };
+};
+
+export const microsoftLoginCallback = asyncHandler(async (req, res) => {
+    const { code, code_verifier } = req.body;
+    
+    if (!code) {
+        throw new ApiError(400, 'Authorization code is required');
+    }
+
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+    const tenantId = process.env.MICROSOFT_TENANT_ID || 'common';
+    const redirectUri = getMicrosoftRedirectUri(req);
+
+    const tokenParams = new URLSearchParams({
+        client_id: clientId,
+        code,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+    });
+    
+    if (clientSecret && !code_verifier) {
+        tokenParams.append('client_secret', clientSecret);
+    }
+    if (code_verifier) {
+        tokenParams.append('code_verifier', code_verifier);
+    }
+
+    const tokenResponse = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            ...(code_verifier ? { Origin: new URL(redirectUri).origin } : {})
+        },
+        body: tokenParams.toString()
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenResponse.ok) {
+        console.error('[Microsoft OAuth] Token exchange failed:', {
+            status: tokenResponse.status,
+            error: tokenData.error,
+            description: tokenData.error_description,
+            redirectUri
+        });
+        throw new ApiError(
+            401,
+            tokenData.error_description || tokenData.error || 'Failed to exchange authorization code for tokens'
+        );
+    }
+
+    const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+        headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+    });
+
+    const profileData = await profileResponse.json();
+
+    if (!profileResponse.ok) {
+        console.error('[Microsoft OAuth] Profile fetch failed:', {
+            status: profileResponse.status,
+            error: profileData.error
+        });
+        throw new ApiError(
+            401,
+            profileData.error?.message || 'Failed to fetch user profile from Microsoft'
+        );
+    }
+
+    const loginData = await issueLoginForMicrosoftProfile(profileData, res);
+
     return res.status(200).json(
-        new APIResponse(200, {
-            user: user.getPublicProfile(),
-            accessToken: tokens.accessToken
-        }, 'Logged in successfully via Microsoft')
+        new APIResponse(200, loginData, 'Logged in successfully via Microsoft')
+    );
+});
+
+export const microsoftTokenLogin = asyncHandler(async (req, res) => {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+        throw new ApiError(400, 'Microsoft access token is required');
+    }
+
+    const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+
+    const profileData = await profileResponse.json();
+
+    if (!profileResponse.ok) {
+        console.error('[Microsoft OAuth] Profile fetch from browser token failed:', {
+            status: profileResponse.status,
+            error: profileData.error
+        });
+        throw new ApiError(
+            401,
+            profileData.error?.message || 'Failed to fetch user profile from Microsoft'
+        );
+    }
+
+    const loginData = await issueLoginForMicrosoftProfile(profileData, res);
+
+    return res.status(200).json(
+        new APIResponse(200, loginData, 'Logged in successfully via Microsoft')
     );
 });

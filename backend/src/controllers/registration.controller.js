@@ -5,7 +5,7 @@ import APIResponse from '../utils/APIResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, REGISTRATION_TYPES } from '../constants/index.js';
-import { enqueueRegistration } from '../queues/registrationQueue.js';
+import { enqueueRegistration, isRegistrationQueueEnabled } from '../queues/registrationQueue.js';
 
 export const registerForEvent = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
@@ -81,8 +81,17 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         customData: customData || {}
     };
 
-    if (process.env.REDIS_URL) {
-        await enqueueRegistration(payload);
+    if (isRegistrationQueueEnabled()) {
+        try {
+            await enqueueRegistration(payload);
+        } catch (error) {
+            console.error('[RegistrationQueue] Failed to enqueue registration:', error.message);
+            throw new ApiError(
+                HTTP_STATUS.SERVICE_UNAVAILABLE,
+                'Registration queue is temporarily unavailable. Please try again in a few seconds.'
+            );
+        }
+
         return res
             .status(HTTP_STATUS.ACCEPTED)
             .json(
@@ -323,4 +332,3 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=event-${eventId}-registrations.csv`);
     res.status(HTTP_STATUS.OK).send(csvString);
 });
-

@@ -1,33 +1,52 @@
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
 
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/services';
-import { FaCog, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaCog } from 'react-icons/fa';
 import './Login.css';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const handledMicrosoftCallback = useRef(false);
 
-  const { login, microsoftLogin } = useAuth();
+  const { microsoftLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
+  useEffect(() => {
+    if (window.location.hostname === '127.0.0.1' && window.location.port === '5173') {
+      window.location.replace(`http://localhost:5173${window.location.pathname}${window.location.search}`);
+    }
+  }, []);
+
   // Handle Microsoft OAuth Callback
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const code = params.get('code');
-    if (code && !loading) {
+    const oauthError = params.get('error_description') || params.get('error');
+
+    if (oauthError && !handledMicrosoftCallback.current) {
+      handledMicrosoftCallback.current = true;
+      setError(oauthError);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (code && !handledMicrosoftCallback.current) {
+      handledMicrosoftCallback.current = true;
       setLoading(true);
       const verifier = sessionStorage.getItem('ms_pkce_verifier');
       microsoftLogin(code, verifier)
         .then(() => {
           sessionStorage.removeItem('ms_pkce_verifier'); // Clean up
+          sessionStorage.removeItem('ms_client_id');
+          sessionStorage.removeItem('ms_tenant_id');
+          sessionStorage.removeItem('ms_redirect_uri');
+          sessionStorage.removeItem('ms_scope');
+          sessionStorage.setItem('ms_auth_redirect', 'true');
           // Clear URL and redirect
           window.history.replaceState({}, document.title, window.location.pathname);
           navigate(from, { replace: true });
@@ -39,7 +58,7 @@ const Login = () => {
           setLoading(false);
         });
     }
-  }, [microsoftLogin, navigate, from, loading]);
+  }, [location.search, microsoftLogin, navigate, from]);
 
   const handleMicrosoftLogin = async () => {
     try {
@@ -49,25 +68,27 @@ const Login = () => {
       if (res.data.data.code_verifier) {
           sessionStorage.setItem('ms_pkce_verifier', res.data.data.code_verifier);
       }
+      if (res.data.data.clientId) {
+          sessionStorage.setItem('ms_client_id', res.data.data.clientId);
+      }
+      if (res.data.data.tenantId) {
+          sessionStorage.setItem('ms_tenant_id', res.data.data.tenantId);
+      }
+      if (res.data.data.redirectUri) {
+          sessionStorage.setItem('ms_redirect_uri', res.data.data.redirectUri);
+      }
+      if (res.data.data.scope) {
+          sessionStorage.setItem('ms_scope', res.data.data.scope);
+      }
       window.location.href = res.data.data.url;
     } catch (err) {
       console.error('Failed to get Microsoft login URL:', err);
-      setError('Failed to initiate Microsoft login');
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await login(email, password);
-
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password');
-    } finally {
+      setError(
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        'Failed to initiate Microsoft login'
+      );
       setLoading(false);
     }
   };
@@ -89,54 +110,15 @@ const Login = () => {
         </div>
 
         <h1 className="login-title">Welcome Back</h1>
-        <p className="login-subtitle">Sign in to manage MechaPEF</p>
+        <p className="login-subtitle">Sign in with your MNNIT Microsoft account</p>
 
         {error && <div className="login-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="login-field">
-            <label>Email</label>
-            <input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required={!window.location.search.includes('code')}
-            />
-          </div>
-
-          <div className="login-field">
-            <label>Password</label>
-            <div className="password-wrapper">
-              <input
-                type={showPass ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required={!window.location.search.includes('code')}
-              />
-              <button type="button" className="show-pass-btn" onClick={() => setShowPass(!showPass)}>
-                {showPass ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
-
-          <div className="login-form-meta">
-            <Link to="/forgot-password" className="forgot-password-link">Forgot Password?</Link>
-          </div>
-
-          <button type="submit" className="login-submit" disabled={loading}>
-            {loading && !window.location.search.includes('code') ? 'Signing In...' : 'Sign In →'}
-          </button>
-          
-          <div className="login-divider">
-            <span>OR</span>
-          </div>
-
+        <div className="login-form">
           <button type="button" className="ms-login-submit" onClick={handleMicrosoftLogin} disabled={loading}>
-            {loading && window.location.search.includes('code') ? 'Authenticating...' : 'Sign in with Microsoft'}
+            {loading ? 'Authenticating...' : 'Sign in with Microsoft'}
           </button>
-        </form>
+        </div>
 
         <button className="back-home-btn" onClick={() => navigate('/')}>
           ← Back to Home
