@@ -10,14 +10,9 @@ import crypto from 'crypto';
 const PASSWORD_RESET_SUCCESS_MESSAGE = 'If an account with that email exists, a password reset link has been sent.';
 const PASSWORD_RESET_EXPIRY_MS = 15 * 60 * 1000;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// REGISTER — Only for GeneralUsers self-registering with college reg no
-// SuperAdmin / EventHead / PRTeam / Alumni are pre-seeded — cannot self-register
-// ─────────────────────────────────────────────────────────────────────────────
 export const register = asyncHandler(async (req, res) => {
     const { name, email, password, collegeRegNo, yearOfStudy, branch, phoneNumber } = req.body;
 
-    // Required fields validation
     if (!name || !email || !password) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Name, email, and password are required');
     }
@@ -26,31 +21,28 @@ export const register = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'College registration number is required for registration');
     }
 
-    // Enforce MNNIT email format: firstname.regno@mnnit.ac.in
     const mnnitEmailRegex = /^[a-z]+\.[0-9]+@mnnit\.ac\.in$/;
     if (!mnnitEmailRegex.test(email.toLowerCase())) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Only MNNIT emails are allowed. Format: firstname.regno@mnnit.ac.in');
     }
 
-    // Extract regno from email and verify it matches the collegeRegNo field
     const regnoFromEmail = email.toLowerCase().split('.')[1].split('@')[0];
     if (regnoFromEmail !== collegeRegNo.toLowerCase()) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Wrong credential');
     }
 
-    // Block privileged roles from self-registering
     if (req.body.role && req.body.role !== 'GeneralUser') {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Privileged roles cannot be self-registered. Contact the SuperAdmin.');
     }
 
-    // Check duplicate email
-    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    const [existingEmail, existingRegNo] = await Promise.all([
+        User.findOne({ email: email.toLowerCase() }),
+        User.findOne({ collegeRegNo: collegeRegNo.toUpperCase() })
+    ]);
+
     if (existingEmail) {
         throw new ApiError(HTTP_STATUS.CONFLICT, ERROR_MESSAGES.EMAIL_EXISTS);
     }
-
-    // Check duplicate collegeRegNo
-    const existingRegNo = await User.findOne({ collegeRegNo: collegeRegNo.toUpperCase() });
     if (existingRegNo) {
         throw new ApiError(HTTP_STATUS.CONFLICT, 'This college registration number is already registered');
     }
@@ -60,10 +52,10 @@ export const register = asyncHandler(async (req, res) => {
         email: email.toLowerCase(),
         password,
         collegeRegNo: collegeRegNo.toUpperCase(),
-        role: 'GeneralUser',   // Always GeneralUser for self-registration
+        role: 'GeneralUser',
         requestedRole: req.body.requestedRole || null,
-        isVerified: false,     // Admin must verify before full access
-        unverifiedRequestExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Request deleted after 7 days if unverified
+        isVerified: false,
+        unverifiedRequestExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         yearOfStudy: yearOfStudy || undefined,
         branch: branch || undefined,
         phoneNumber: phoneNumber || undefined,
@@ -89,16 +81,12 @@ export const register = asyncHandler(async (req, res) => {
         new APIResponse(HTTP_STATUS.CREATED, {
             user: newUser.getPublicProfile(),
             accessToken: tokens.accessToken,
-            // Note: account is pending verification by admin
             message: 'Registration successful! Your account is pending verification by the admin.'
         }, SUCCESS_MESSAGES.USER_CREATED)
     );
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LOGIN — All roles including pre-seeded admins
-// ─────────────────────────────────────────────────────────────────────────────
 export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
@@ -147,9 +135,6 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LOGOUT
-// ─────────────────────────────────────────────────────────────────────────────
 export const forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.body;
 
@@ -166,10 +151,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto
-        .createHash('sha256')
-        .update(resetToken)
-        .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
     user.resetPasswordToken = hashedToken;
     user.resetPasswordExpire = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MS);
@@ -218,10 +200,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Token and password are required');
     }
 
-    const hashedToken = crypto
-        .createHash('sha256')
-        .update(token)
-        .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
         resetPasswordToken: hashedToken,
@@ -246,20 +225,13 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
 export const logout = asyncHandler(async (req, res) => {
     if (req.user && req.user.userId) {
-        const user = await User.findById(req.user.userId);
-        if (user) {
-            user.sessionVersion = (user.sessionVersion || 1) + 1;
-            await user.save({ validateBeforeSave: false });
-        }
+        await User.findByIdAndUpdate(req.user.userId, { $inc: { sessionVersion: 1 } });
     }
     res.clearCookie('refreshToken');
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, {}, SUCCESS_MESSAGES.LOGOUT_SUCCESS));
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET CURRENT USER
-// ─────────────────────────────────────────────────────────────────────────────
 export const getCurrentUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user.userId);
     if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
@@ -269,9 +241,6 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// UPDATE PROFILE
-// ─────────────────────────────────────────────────────────────────────────────
 export const updateProfile = asyncHandler(async (req, res) => {
     const allowed = ['name', 'phoneNumber', 'branch', 'yearOfStudy', 'profileImage', 'githubURL', 'linkedinURL', 'otherLinks'];
     const updates = {};
@@ -286,9 +255,6 @@ export const updateProfile = asyncHandler(async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VERIFY USER — SuperAdmin only: mark a user's registration as verified
-// ─────────────────────────────────────────────────────────────────────────────
 export const verifyUser = asyncHandler(async (req, res) => {
     const isVerified = req.body?.isVerified !== undefined ? req.body.isVerified : true;
 
@@ -314,12 +280,9 @@ export const verifyUser = asyncHandler(async (req, res) => {
     );
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// UPDATE USER ROLE — SuperAdmin only: change any user's role directly
-// ─────────────────────────────────────────────────────────────────────────────
 export const updateUserRole = asyncHandler(async (req, res) => {
     const { role } = req.body;
-    
+
     if (!role) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Role is required');
 
     const user = await User.findById(req.params.userId);
@@ -334,21 +297,20 @@ export const updateUserRole = asyncHandler(async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET ALL USERS — SuperAdmin only (for admin panel user management)
-// ─────────────────────────────────────────────────────────────────────────────
 export const getAllUsers = asyncHandler(async (req, res) => {
     const { role, isVerified, page = 1, limit = 20 } = req.query;
     const filter = { deletedAt: null };
     if (role) filter.role = role;
     if (isVerified !== undefined) filter.isVerified = isVerified === 'true';
 
-    const total = await User.countDocuments(filter);
-    const users = await User.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(Number(limit))
-        .select('-password -emailVerificationToken -emailVerificationExpiry');
+    const [total, users] = await Promise.all([
+        User.countDocuments(filter),
+        User.find(filter)
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(Number(limit))
+            .select('-password -emailVerificationToken -emailVerificationExpiry')
+    ]);
 
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, {
@@ -358,9 +320,11 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     );
 });
 
+
 // ─────────────────────────────────────────────────────────────────────────────
-// MICROSOFT OAUTH2 LOGIN
+// MICROSOFT OAUTH2
 // ─────────────────────────────────────────────────────────────────────────────
+
 function base64URLEncode(buffer) {
     return buffer.toString('base64')
         .replace(/\+/g, '-')
@@ -421,12 +385,11 @@ export const getMicrosoftAuthUrl = asyncHandler(async (req, res) => {
     const clientId = process.env.MICROSOFT_CLIENT_ID;
     const tenantId = process.env.MICROSOFT_TENANT_ID || 'common';
     const redirectUri = getMicrosoftRedirectUri(req);
-
     const scope = 'openid profile email User.Read';
-    
+
     const verifier = base64URLEncode(crypto.randomBytes(32));
     const challenge = base64URLEncode(crypto.createHash('sha256').update(verifier).digest());
-    
+
     const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}&code_challenge=${challenge}&code_challenge_method=S256`;
 
     return res.status(200).json(
@@ -441,33 +404,51 @@ export const getMicrosoftAuthUrl = asyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * Decode the id_token JWT payload without verifying signature.
+ * Safe here because we just received it directly from Microsoft's token endpoint
+ * over HTTPS — not from user input.
+ */
+const decodeIdToken = (idToken) => {
+    const payload = idToken.split('.')[1];
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
+};
+
+/**
+ * Shared login logic for all Microsoft OAuth flows.
+ * Uses findOneAndUpdate for a single atomic DB round-trip on existing users.
+ */
 const issueLoginForMicrosoftProfile = async (profileData, res) => {
-    const email = profileData.userPrincipalName || profileData.mail;
-    const name = profileData.displayName;
+    const email = (profileData.userPrincipalName || profileData.mail || profileData.preferred_username)?.toLowerCase();
+    const name = profileData.displayName || profileData.name;
 
     if (!email || !email.endsWith('@mnnit.ac.in')) {
         throw new ApiError(403, 'Only MNNIT email addresses (@mnnit.ac.in) are allowed');
     }
 
-    let user = await User.findOne({ email: email.toLowerCase() });
+    // Atomic update for existing users — single DB round-trip
+    let user = await User.findOneAndUpdate(
+        { email },
+        {
+            $set: { lastLogin: new Date() },
+            $inc: { sessionVersion: 1 }
+        },
+        { new: true }
+    );
 
+    // New user — create them
     if (!user) {
         const collegeRegNo = email.split('@')[0].split('.').pop() || email.split('@')[0];
-        
-        user = new User({
+
+        user = await User.create({
             name,
-            email: email.toLowerCase(),
+            email,
             collegeRegNo: collegeRegNo.toUpperCase(),
             role: 'GeneralUser',
             isVerified: true,
-            password: Math.random().toString(36).slice(-10) + 'A1!' 
+            password: Math.random().toString(36).slice(-10) + 'A1!'
         });
-        await user.save();
     }
-
-    user.lastLogin = new Date();
-    user.sessionVersion = (user.sessionVersion || 1) + 1;
-    await user.save({ validateBeforeSave: false });
 
     const tokens = generateTokenPair({
         userId: user._id,
@@ -491,7 +472,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
 
 export const microsoftLoginCallback = asyncHandler(async (req, res) => {
     const { code, code_verifier } = req.body;
-    
+
     if (!code) {
         throw new ApiError(400, 'Authorization code is required');
     }
@@ -507,7 +488,7 @@ export const microsoftLoginCallback = asyncHandler(async (req, res) => {
         redirect_uri: redirectUri,
         grant_type: 'authorization_code'
     });
-    
+
     if (clientSecret && !code_verifier) {
         tokenParams.append('client_secret', clientSecret);
     }
@@ -539,22 +520,8 @@ export const microsoftLoginCallback = asyncHandler(async (req, res) => {
         );
     }
 
-    const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
-        headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
-    });
-
-    const profileData = await profileResponse.json();
-
-    if (!profileResponse.ok) {
-        console.error('[Microsoft OAuth] Profile fetch failed:', {
-            status: profileResponse.status,
-            error: profileData.error
-        });
-        throw new ApiError(
-            401,
-            profileData.error?.message || 'Failed to fetch user profile from Microsoft'
-        );
-    }
+    // Decode id_token directly — eliminates the Graph API round-trip (~400-800ms saved)
+    const profileData = decodeIdToken(tokenData.id_token);
 
     const loginData = await issueLoginForMicrosoftProfile(profileData, res);
 

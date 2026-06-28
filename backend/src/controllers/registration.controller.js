@@ -44,11 +44,9 @@ export const registerForEvent = asyncHandler(async (req, res) => {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
         }
         if (teamMemberIds.length + 1 > event.maxTeamSize) {
-            throw new ApiError(
-                HTTP_STATUS.BAD_REQUEST,
-                `Maximum team size is ${event.maxTeamSize}`
-            );
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Maximum team size is ${event.maxTeamSize}`);
         }
+
         const members = await User.find({ _id: { $in: teamMemberIds } });
         if (members.length !== teamMemberIds.length) {
             throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
@@ -98,24 +96,23 @@ export const registerForEvent = asyncHandler(async (req, res) => {
                 new APIResponse(
                     HTTP_STATUS.ACCEPTED,
                     null,
-                    "Registration queued due to high traffic. Please check your Profile after 10-60 minutes for your Ticket."
+                    'Registration queued. Please check your Profile in 1-2 minutes for your Ticket.'
                 )
             );
     }
 
     const registration = new Registration(payload);
     await registration.save();
-    await registration.populate('eventId', 'title');
-    await registration.populate('registeredBy', 'name email');
 
-    event.totalRegistrations = await Registration.getEventRegistrationCount(eventId);
-    await event.save();
-
-    const user = await User.findById(req.user.userId);
-    if (user && !user.participatedEventNames.includes(event.title)) {
-        user.participatedEventNames.push(event.title);
-        await user.save();
-    }
+    await Promise.all([
+        registration.populate('eventId', 'title'),
+        registration.populate('registeredBy', 'name email'),
+        Event.findByIdAndUpdate(eventId, { $inc: { totalRegistrations: 1 } }),
+        User.findByIdAndUpdate(
+            req.user.userId,
+            { $addToSet: { participatedEventNames: event.title } }
+        )
+    ]);
 
     return res
         .status(HTTP_STATUS.CREATED)
@@ -129,19 +126,14 @@ export const getUserRegistrations = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const registrations = await Registration.find({
-        registeredBy: req.user.userId,
-        deletedAt: null
-    })
-        .sort({ registeredAt: -1 })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .populate('eventId', 'title startTime venue category');
-
-    const totalCount = await Registration.countDocuments({
-        registeredBy: req.user.userId,
-        deletedAt: null
-    });
+    const [registrations, totalCount] = await Promise.all([
+        Registration.find({ registeredBy: req.user.userId, deletedAt: null })
+            .sort({ registeredAt: -1 })
+            .limit(limit)
+            .skip((page - 1) * limit)
+            .populate('eventId', 'title startTime venue category'),
+        Registration.countDocuments({ registeredBy: req.user.userId, deletedAt: null })
+    ]);
 
     return res
         .status(HTTP_STATUS.OK)
@@ -184,31 +176,24 @@ export const markAttendance = asyncHandler(async (req, res) => {
         .json(new APIResponse(HTTP_STATUS.OK, { registration }, 'Attendance marked successfully'));
 });
 
-/**
- * Get event registrations (Admin only)
- * GET /api/events/:eventId/registrations
- */
 export const getEventRegistrations = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const { page = 1, limit = 20, attendanceMarked } = req.query;
 
-    const filter = {
-        eventId,
-        deletedAt: null
-    };
-
+    const filter = { eventId, deletedAt: null };
     if (attendanceMarked !== undefined) {
         filter.attendanceMarked = attendanceMarked === 'true';
     }
 
-    const registrations = await Registration.find(filter)
-        .sort({ registeredAt: -1 })
-        .limit(parseInt(limit))
-        .skip((parseInt(page) - 1) * parseInt(limit))
-        .populate('registeredBy', 'name email')
-        .populate('eventId', 'title');
-
-    const totalCount = await Registration.countDocuments(filter);
+    const [registrations, totalCount] = await Promise.all([
+        Registration.find(filter)
+            .sort({ registeredAt: -1 })
+            .limit(parseInt(limit))
+            .skip((parseInt(page) - 1) * parseInt(limit))
+            .populate('registeredBy', 'name email')
+            .populate('eventId', 'title'),
+        Registration.countDocuments(filter)
+    ]);
 
     return res
         .status(HTTP_STATUS.OK)
@@ -246,7 +231,7 @@ export const cancelRegistration = asyncHandler(async (req, res) => {
 
 export const verifyRegistration = asyncHandler(async (req, res) => {
     const { isVerified } = req.body;
-    
+
     if (isVerified === undefined) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'isVerified status is required');
     }
@@ -281,7 +266,6 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, 'No registrations found for this event');
     }
 
-    // Identify all custom fields
     const customFieldsSet = new Set();
     registrations.forEach(reg => {
         if (reg.customData) {
@@ -290,24 +274,20 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
     });
     const customFields = Array.from(customFieldsSet);
 
-    // Build CSV Header
-    let csvString = 'Name,Email,College Reg No,Phone Number,Branch,Year of Study,Registration Type,Team Name,Verified,';
-    csvString += customFields.join(',') + '\\n';
+    const escapeCSV = (val) => {
+        if (val === null || val === undefined) return '';
+        const str = String(val);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+    };
 
-    // Build CSV Rows
+    let csvString = 'Name,Email,College Reg No,Phone Number,Branch,Year of Study,Registration Type,Team Name,Verified,';
+    csvString += customFields.join(',') + '\n';
+
     registrations.forEach(reg => {
         const user = reg.registeredBy || {};
-        
-        // Helper to escape commas and quotes in CSV
-        const escapeCSV = (val) => {
-            if (val === null || val === undefined) return '';
-            const str = String(val);
-            if (str.includes(',') || str.includes('"') || str.includes('\\n')) {
-                return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
-        };
-
         const row = [
             escapeCSV(user.name),
             escapeCSV(user.email),
@@ -320,12 +300,11 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
             escapeCSV(reg.isVerified ? 'Yes' : 'No')
         ];
 
-        // Append custom data columns
         customFields.forEach(field => {
             row.push(escapeCSV(reg.customData ? reg.customData[field] : ''));
         });
 
-        csvString += row.join(',') + '\\n';
+        csvString += row.join(',') + '\n';
     });
 
     res.setHeader('Content-Type', 'text/csv');
