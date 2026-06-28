@@ -7,6 +7,24 @@ import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, REGISTRATION_TYPES } from '../constants/index.js';
 import { enqueueRegistration, isRegistrationQueueEnabled } from '../queues/registrationQueue.js';
 
+// Shared helper — used by both direct write and Redis fallback path
+const saveRegistrationDirectly = async (payload, eventTitle) => {
+    const registration = new Registration(payload);
+    await registration.save();
+
+    await Promise.all([
+        registration.populate('eventId', 'title'),
+        registration.populate('registeredBy', 'name email'),
+        Event.findByIdAndUpdate(payload.eventId, { $inc: { totalRegistrations: 1 } }),
+        User.findByIdAndUpdate(
+            payload.registeredBy,
+            { $addToSet: { participatedEventNames: eventTitle } }
+        )
+    ]);
+
+    return registration;
+};
+
 export const registerForEvent = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const { registrationType, teamName, teamMemberIds, customData } = req.body;
@@ -43,12 +61,11 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         if (!teamMemberIds || teamMemberIds.length === 0) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
         }
+
         if (teamMemberIds.length + 1 > event.maxTeamSize) {
-            throw new ApiError(
-                HTTP_STATUS.BAD_REQUEST,
-                `Maximum team size is ${event.maxTeamSize}`
-            );
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Maximum team size is ${event.maxTeamSize}`);
         }
+
         const members = await User.find({ _id: { $in: teamMemberIds } });
         if (members.length !== teamMemberIds.length) {
             throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
@@ -81,47 +98,41 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         customData: customData || {}
     };
 
+    // Try queue first — if Redis is up, enqueue and return early
     if (isRegistrationQueueEnabled()) {
         try {
             await enqueueRegistration(payload);
+            return res
+                .status(HTTP_STATUS.ACCEPTED)
+                .json(
+                    new APIResponse(
+                        HTTP_STATUS.ACCEPTED,
+                        null,
+                        'Registration queued. Please check your Profile in 1-2 minutes for your Ticket.'
+                    )
+                );
         } catch (error) {
-            console.error('[RegistrationQueue] Failed to enqueue registration:', error.message);
-            throw new ApiError(
-                HTTP_STATUS.SERVICE_UNAVAILABLE,
-                'Registration queue is temporarily unavailable. Please try again in a few seconds.'
-            );
+            // Redis is down or free tier expired — fall through to direct write
+            console.error('[RegistrationQueue] Redis unavailable, falling back to direct DB write:', error.message);
         }
+    }
 
+    // Direct write — runs when:
+    // 1. Redis is not configured (REDIS_URL not set)
+    // 2. Redis was configured but is now down (free tier expired, outage, etc.)
+    try {
+        const registration = await saveRegistrationDirectly(payload, event.title);
         return res
-            .status(HTTP_STATUS.ACCEPTED)
+            .status(HTTP_STATUS.CREATED)
             .json(
-                new APIResponse(
-                    HTTP_STATUS.ACCEPTED,
-                    null,
-                    "Registration queued due to high traffic. Please check your Profile after 10-60 minutes for your Ticket."
-                )
+                new APIResponse(HTTP_STATUS.CREATED, { registration }, SUCCESS_MESSAGES.REGISTRATION_SUCCESS)
             );
+    } catch (error) {
+        if (error.code === 11000) {
+            throw new ApiError(HTTP_STATUS.CONFLICT, ERROR_MESSAGES.ALREADY_REGISTERED);
+        }
+        throw error;
     }
-
-    const registration = new Registration(payload);
-    await registration.save();
-    await registration.populate('eventId', 'title');
-    await registration.populate('registeredBy', 'name email');
-
-    event.totalRegistrations = await Registration.getEventRegistrationCount(eventId);
-    await event.save();
-
-    const user = await User.findById(req.user.userId);
-    if (user && !user.participatedEventNames.includes(event.title)) {
-        user.participatedEventNames.push(event.title);
-        await user.save();
-    }
-
-    return res
-        .status(HTTP_STATUS.CREATED)
-        .json(
-            new APIResponse(HTTP_STATUS.CREATED, { registration }, SUCCESS_MESSAGES.REGISTRATION_SUCCESS)
-        );
 });
 
 
@@ -129,19 +140,14 @@ export const getUserRegistrations = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const registrations = await Registration.find({
-        registeredBy: req.user.userId,
-        deletedAt: null
-    })
-        .sort({ registeredAt: -1 })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .populate('eventId', 'title startTime venue category');
-
-    const totalCount = await Registration.countDocuments({
-        registeredBy: req.user.userId,
-        deletedAt: null
-    });
+    const [registrations, totalCount] = await Promise.all([
+        Registration.find({ registeredBy: req.user.userId, deletedAt: null })
+            .sort({ registeredAt: -1 })
+            .limit(limit)
+            .skip((page - 1) * limit)
+            .populate('eventId', 'title startTime venue category'),
+        Registration.countDocuments({ registeredBy: req.user.userId, deletedAt: null })
+    ]);
 
     return res
         .status(HTTP_STATUS.OK)
@@ -184,31 +190,24 @@ export const markAttendance = asyncHandler(async (req, res) => {
         .json(new APIResponse(HTTP_STATUS.OK, { registration }, 'Attendance marked successfully'));
 });
 
-/**
- * Get event registrations (Admin only)
- * GET /api/events/:eventId/registrations
- */
 export const getEventRegistrations = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const { page = 1, limit = 20, attendanceMarked } = req.query;
 
-    const filter = {
-        eventId,
-        deletedAt: null
-    };
-
+    const filter = { eventId, deletedAt: null };
     if (attendanceMarked !== undefined) {
         filter.attendanceMarked = attendanceMarked === 'true';
     }
 
-    const registrations = await Registration.find(filter)
-        .sort({ registeredAt: -1 })
-        .limit(parseInt(limit))
-        .skip((parseInt(page) - 1) * parseInt(limit))
-        .populate('registeredBy', 'name email')
-        .populate('eventId', 'title');
-
-    const totalCount = await Registration.countDocuments(filter);
+    const [registrations, totalCount] = await Promise.all([
+        Registration.find(filter)
+            .sort({ registeredAt: -1 })
+            .limit(parseInt(limit))
+            .skip((parseInt(page) - 1) * parseInt(limit))
+            .populate('registeredBy', 'name email')
+            .populate('eventId', 'title'),
+        Registration.countDocuments(filter)
+    ]);
 
     return res
         .status(HTTP_STATUS.OK)
@@ -225,13 +224,13 @@ export const getEventRegistrations = asyncHandler(async (req, res) => {
         );
 });
 
-
 export const cancelRegistration = asyncHandler(async (req, res) => {
     const registration = await Registration.findById(req.params.id);
 
     if (!registration) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
+
     if (registration.registeredBy.toString() !== req.user.userId.toString() && req.user.role !== 'SuperAdmin') {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, ERROR_MESSAGES.FORBIDDEN);
     }
@@ -246,7 +245,7 @@ export const cancelRegistration = asyncHandler(async (req, res) => {
 
 export const verifyRegistration = asyncHandler(async (req, res) => {
     const { isVerified } = req.body;
-    
+
     if (isVerified === undefined) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'isVerified status is required');
     }
@@ -281,7 +280,6 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, 'No registrations found for this event');
     }
 
-    // Identify all custom fields
     const customFieldsSet = new Set();
     registrations.forEach(reg => {
         if (reg.customData) {
@@ -290,24 +288,20 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
     });
     const customFields = Array.from(customFieldsSet);
 
-    // Build CSV Header
-    let csvString = 'Name,Email,College Reg No,Phone Number,Branch,Year of Study,Registration Type,Team Name,Verified,';
-    csvString += customFields.join(',') + '\\n';
+    const escapeCSV = (val) => {
+        if (val === null || val === undefined) return '';
+        const str = String(val);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+    };
 
-    // Build CSV Rows
+    let csvString = 'Name,Email,College Reg No,Phone Number,Branch,Year of Study,Registration Type,Team Name,Verified,';
+    csvString += customFields.join(',') + '\n';
+
     registrations.forEach(reg => {
         const user = reg.registeredBy || {};
-        
-        // Helper to escape commas and quotes in CSV
-        const escapeCSV = (val) => {
-            if (val === null || val === undefined) return '';
-            const str = String(val);
-            if (str.includes(',') || str.includes('"') || str.includes('\\n')) {
-                return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
-        };
-
         const row = [
             escapeCSV(user.name),
             escapeCSV(user.email),
@@ -320,12 +314,11 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
             escapeCSV(reg.isVerified ? 'Yes' : 'No')
         ];
 
-        // Append custom data columns
         customFields.forEach(field => {
             row.push(escapeCSV(reg.customData ? reg.customData[field] : ''));
         });
 
-        csvString += row.join(',') + '\\n';
+        csvString += row.join(',') + '\n';
     });
 
     res.setHeader('Content-Type', 'text/csv');
