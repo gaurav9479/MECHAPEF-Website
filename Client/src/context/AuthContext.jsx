@@ -3,7 +3,6 @@ import { authService } from '../services/services';
 
 const AuthContext = createContext(null);
 
-
 export const ROLES = {
   SUPER_ADMIN: 'SuperAdmin',
   EVENT_HEAD: 'EventHead',
@@ -44,31 +43,39 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
+  // --- THE FIX IS HERE ---
   const logout = async () => {
-    await authService.logout();
-    localStorage.removeItem('accessToken');
-    setUser(null);
+    setLoading(true); // 1. Put the app in a loading state so the UI doesn't flicker
+    
+    try {
+      await authService.logout(); 
+    } catch (error) {
+      console.warn("Backend logout failed, forcing local logout.", error);
+    } finally {
+      localStorage.removeItem('accessToken');
+      setUser(null);
+      setLoading(false); 
+    }
   };
-
 
   const hasRole = (requiredRole) => {
     if (!user) return false;
     return (ROLE_POWER[user.role] || 0) >= (ROLE_POWER[requiredRole] || 0);
   };
 
-
   const isRole = (...roles) => {
     if (!user) return false;
     return roles.includes(user.role);
   };
-
 
   const canEdit = isRole(ROLES.SUPER_ADMIN, ROLES.EVENT_HEAD, ROLES.PR_TEAM);
   const isAdmin = isRole(ROLES.SUPER_ADMIN, ROLES.EVENT_HEAD);
   const isSuperAdmin = isRole(ROLES.SUPER_ADMIN);
 
   return (
-    <AuthContext.Provider value={{ user, loading, microsoftLogin, logout, hasRole, isRole, canEdit, isAdmin, isSuperAdmin }}>
+    <AuthContext.Provider value={{ 
+      user, loading, microsoftLogin, logout, hasRole, isRole, canEdit, isAdmin, isSuperAdmin 
+    }}>
       {children}
     </AuthContext.Provider>
   );
