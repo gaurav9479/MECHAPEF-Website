@@ -77,6 +77,22 @@ const announcementSchema = new mongoose.Schema(
             default: 'Medium'
         },
 
+        emailNotificationStartedAt: {
+            type: Date,
+            default: null
+        },
+
+        emailNotificationSentAt: {
+            type: Date,
+            default: null
+        },
+
+        emailNotificationFailedEmails: [{
+            email: String,
+            reason: String,
+            failedAt: Date
+        }],
+
         createdAt: {
             type: Date,
             default: Date.now,
