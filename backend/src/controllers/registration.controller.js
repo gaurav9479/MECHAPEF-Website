@@ -231,7 +231,7 @@ export const cancelRegistration = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
 
-    if (registration.registeredBy.toString() !== req.user.userId.toString() && req.user.role !== 'SuperAdmin') {
+    if (registration.registeredBy.toString() !== req.user.userId.toString() && req.user.role !== 'super-admin') {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, ERROR_MESSAGES.FORBIDDEN);
     }
 
