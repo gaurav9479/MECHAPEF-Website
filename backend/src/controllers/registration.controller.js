@@ -7,6 +7,24 @@ import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, REGISTRATION_TYPES } from '../constants/index.js';
 import { enqueueRegistration, isRegistrationQueueEnabled } from '../queues/registrationQueue.js';
 
+// Shared helper — used by both direct write and Redis fallback path
+const saveRegistrationDirectly = async (payload, eventTitle) => {
+    const registration = new Registration(payload);
+    await registration.save();
+
+    await Promise.all([
+        registration.populate('eventId', 'title'),
+        registration.populate('registeredBy', 'name email'),
+        Event.findByIdAndUpdate(payload.eventId, { $inc: { totalRegistrations: 1 } }),
+        User.findByIdAndUpdate(
+            payload.registeredBy,
+            { $addToSet: { participatedEventNames: eventTitle } }
+        )
+    ]);
+
+    return registration;
+};
+
 export const registerForEvent = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const { registrationType, teamName, teamMemberIds, customData } = req.body;
@@ -43,6 +61,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         if (!teamMemberIds || teamMemberIds.length === 0) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
         }
+
         if (teamMemberIds.length + 1 > event.maxTeamSize) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Maximum team size is ${event.maxTeamSize}`);
         }
@@ -79,19 +98,32 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         customData: customData || {}
     };
 
+    // Try queue first — if Redis is up, enqueue and return early
     if (isRegistrationQueueEnabled()) {
         try {
             await enqueueRegistration(payload);
+            return res
+                .status(HTTP_STATUS.ACCEPTED)
+                .json(
+                    new APIResponse(
+                        HTTP_STATUS.ACCEPTED,
+                        null,
+                        'Registration queued. Please check your Profile in 1-2 minutes for your Ticket.'
+                    )
+                );
         } catch (error) {
-            console.error('[RegistrationQueue] Failed to enqueue registration:', error.message);
-            throw new ApiError(
-                HTTP_STATUS.SERVICE_UNAVAILABLE,
-                'Registration queue is temporarily unavailable. Please try again in a few seconds.'
-            );
+            // Redis is down or free tier expired — fall through to direct write
+            console.error('[RegistrationQueue] Redis unavailable, falling back to direct DB write:', error.message);
         }
+    }
 
+    // Direct write — runs when:
+    // 1. Redis is not configured (REDIS_URL not set)
+    // 2. Redis was configured but is now down (free tier expired, outage, etc.)
+    try {
+        const registration = await saveRegistrationDirectly(payload, event.title);
         return res
-            .status(HTTP_STATUS.ACCEPTED)
+            .status(HTTP_STATUS.CREATED)
             .json(
                 new APIResponse(
                     HTTP_STATUS.ACCEPTED,
@@ -99,6 +131,11 @@ export const registerForEvent = asyncHandler(async (req, res) => {
                     'Registration queued. Please check your Profile in 1-2 minutes for your Ticket.'
                 )
             );
+    } catch (error) {
+        if (error.code === 11000) {
+            throw new ApiError(HTTP_STATUS.CONFLICT, ERROR_MESSAGES.ALREADY_REGISTERED);
+        }
+        throw error;
     }
 
     const registration = new Registration(payload);
@@ -210,14 +247,14 @@ export const getEventRegistrations = asyncHandler(async (req, res) => {
         );
 });
 
-
 export const cancelRegistration = asyncHandler(async (req, res) => {
     const registration = await Registration.findById(req.params.id);
 
     if (!registration) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
-    if (registration.registeredBy.toString() !== req.user.userId.toString() && req.user.role !== 'SuperAdmin') {
+
+    if (registration.registeredBy.toString() !== req.user.userId.toString() && req.user.role !== 'super-admin') {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, ERROR_MESSAGES.FORBIDDEN);
     }
 

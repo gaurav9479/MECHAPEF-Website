@@ -4,8 +4,25 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-router.get('/my-registrations', authenticate, registrationController.getUserRegistrations);
-router.delete('/:id', authenticate, registrationController.cancelRegistration);
-router.patch('/:id/verify', authenticate, checkRole(['SuperAdmin', 'EventHead']), registrationController.verifyRegistration);
+// User routes
+router.get(
+    '/my-registrations',
+    authenticate,
+    registrationController.getUserRegistrations
+);
+
+router.delete(
+    '/:id',
+    authenticate,
+    registrationController.cancelRegistration
+);
+
+// Content Management Routes
+router.patch(
+    '/:id/verify',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    registrationController.verifyRegistration
+);
 
 export default router;
