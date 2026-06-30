@@ -21,13 +21,31 @@ router.get('/microsoft/url', authController.getMicrosoftAuthUrl);
 router.post('/microsoft/callback', authController.microsoftLoginCallback);
 router.post('/microsoft/token', authController.microsoftTokenLogin);
 
+// Authenticated user routes
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getCurrentUser);
 router.put('/profile', authenticate, authController.updateProfile);
 
-// SuperAdmin-only routes
-router.get('/users', authenticate, checkRole(['SuperAdmin']), authController.getAllUsers);
-router.patch('/users/:userId/verify', authenticate, checkRole(['SuperAdmin']), authController.verifyUser);
-router.patch('/users/:userId/role', authenticate, checkRole(['SuperAdmin']), authController.updateUserRole);
+// Super Admin only routes
+router.get(
+    '/users',
+    authenticate,
+    checkRole(['super-admin']),
+    authController.getAllUsers
+);
+
+router.patch(
+    '/users/:userId/verify',
+    authenticate,
+    checkRole(['super-admin']),
+    authController.verifyUser
+);
+
+router.patch(
+    '/users/:userId/role',
+    authenticate,
+    checkRole(['super-admin']),
+    authController.updateUserRole
+);
 
 export default router;

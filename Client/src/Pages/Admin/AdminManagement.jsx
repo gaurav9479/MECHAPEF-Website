@@ -280,11 +280,11 @@ const AdminManagement = () => {
               </div>
               <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="mgmt-select">
                 <option value="">All Roles</option>
-                <option value="SuperAdmin">SuperAdmin</option>
-                <option value="EventHead">EventHead</option>
-                <option value="PRTeam">PRTeam</option>
-                <option value="Alumni">Alumni</option>
-                <option value="GeneralUser">GeneralUser</option>
+                <option value="super-admin">Super Admin</option>
+                <option value="content-lead">Content Lead</option>
+                <option value="media-lead">Media Lead</option>
+                <option value="member">Member</option>
+                <option value="general-user">General User</option>
               </select>
               <select value={filterVerified} onChange={e => setFilterVerified(e.target.value)} className="mgmt-select">
                 <option value="">All Status</option>
@@ -329,14 +329,11 @@ const AdminManagement = () => {
                           onChange={(e) => updateRole(u._id, e.target.value)}
                           style={{ padding: '4px', fontSize: '0.8rem', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', cursor: 'pointer' }}
                         >
-                          <option value="SuperAdmin">SuperAdmin</option>
-                          <option value="EventLead">EventLead</option>
-                          <option value="EventHead">EventHead</option>
-                          <option value="DesignTeam">DesignTeam</option>
-                          <option value="WebTeam">WebTeam</option>
-                          <option value="PRTeam">PRTeam</option>
-                          <option value="Alumni">Alumni</option>
-                          <option value="GeneralUser">GeneralUser</option>
+                          <option value="super-admin">Super Admin</option>
+                          <option value="content-lead">Content Lead</option>
+                          <option value="media-lead">Media Lead</option>
+                          <option value="member">Member</option>
+                          <option value="general-user">General User</option>
                         </select>
                       </td>
                       <td>

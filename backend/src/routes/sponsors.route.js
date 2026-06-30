@@ -5,12 +5,37 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
+// Public routes
 router.get('/config', configController.getConfig);
-router.put('/config', authenticate, checkRole(['SuperAdmin', 'EventHead']), configController.updateConfig);
-
 router.get('/', sponsorController.getSponsors);
-router.post('/', authenticate, checkRole(['SuperAdmin', 'EventHead']), sponsorController.createSponsor);
-router.put('/:id', authenticate, checkRole(['SuperAdmin', 'EventHead']), sponsorController.updateSponsor);
-router.delete('/:id', authenticate, checkRole(['SuperAdmin']), sponsorController.deleteSponsor);
+
+// Content Management Routes
+router.put(
+    '/config',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    configController.updateConfig
+);
+
+router.post(
+    '/',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    sponsorController.createSponsor
+);
+
+router.put(
+    '/:id',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    sponsorController.updateSponsor
+);
+
+router.delete(
+    '/:id',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    sponsorController.deleteSponsor
+);
 
 export default router;

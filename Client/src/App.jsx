@@ -20,83 +20,181 @@ import Profile from './Pages/Profile/Profile';
 import Events from './Pages/Events/Events';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
-import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
-
+import  ProtectedRoute  from './components/ProtectedRoute/ProtectedRoute';
 
 const Unauthorized = () => (
-  <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#000', color: '#fff', fontFamily: 'Orbitron, sans-serif', gap: '20px' }}>
+  <div
+    style={{
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#000',
+      color: '#fff',
+      fontFamily: 'Orbitron, sans-serif',
+      gap: '20px'
+    }}
+  >
     <h1 style={{ color: '#ff0000', fontSize: '3rem' }}>403</h1>
     <p>Insufficient permissions to access this page.</p>
-    <a href="/" style={{ color: '#ff0000', textDecoration: 'none', border: '1px solid #ff0000', padding: '10px 24px', borderRadius: '8px' }}>← Back to Home</a>
+    <a
+      href="/"
+      style={{
+        color: '#ff0000',
+        textDecoration: 'none',
+        border: '1px solid #ff0000',
+        padding: '10px 24px',
+        borderRadius: '8px'
+      }}
+    >
+      ← Back to Home
+    </a>
   </div>
 );
 
 const AnimatedRoutes = () => {
   return (
-    <div className="app-transition-container" style={{ position: 'relative', minHeight: '100vh' }}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Navigate to="/login" replace />} />
-          <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
-          <Route path="/reset-password/:token" element={<Navigate to="/login" replace />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/gallery/:id" element={<AlbumView />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/:id" element={<EventDetails />} />
-          <Route path="/sponsors" element={<Sponsors />} />
-          <Route path="/profile" element={
-            <ProtectedRoute requiredRole="GeneralUser"><Profile /></ProtectedRoute>
-          } />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+    <div
+      className="app-transition-container"
+      style={{ position: 'relative', minHeight: '100vh' }}
+    >
+      <Routes>
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['PRTeam', 'EventHead', 'SuperAdmin']}>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
+        <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
+        <Route path="/reset-password/:token" element={<Navigate to="/login" replace />} />
+        <Route path="/gallery" element={<Gallery />} />
+        <Route path="/gallery/:id" element={<AlbumView />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/sponsors" element={<Sponsors />} />
+
+        {/* Profile */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                'general-user',
+                'member',
+                'content-lead',
+                'media-lead',
+                'super-admin'
+              ]}
+            >
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Dashboard */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'media-lead']}>
               <AdminDashboard />
             </ProtectedRoute>
-          } />
-          <Route path="/admin/events" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminEvents /></ProtectedRoute>
-          } />
-          <Route path="/admin/past-events" element={
-            <ProtectedRoute requiredRole="EventHead"><PastEventsManager /></ProtectedRoute>
-          } />
-          <Route path="/admin/events/:eventId/registrations" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminRegistrations /></ProtectedRoute>
-          } />
-          <Route path="/admin/team" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminTeam /></ProtectedRoute>
-          } />
-          <Route path="/admin/announcements" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminAnnouncements /></ProtectedRoute>
-          } />
-          <Route path="/admin/sponsors" element={
+          }
+        />
+
+        {/* Content Lead */}
+        <Route
+          path="/admin/events"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+              <AdminEvents />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/past-events"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+              <PastEventsManager />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/events/:eventId/registrations"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+              <AdminRegistrations />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/team"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+              <AdminTeam />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/announcements"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+              <AdminAnnouncements />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/management"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+              <AdminManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/scanner"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+              <AdminScanner />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Media Lead */}
+        <Route
+          path="/admin/sponsors"
+          element={
             <ProtectedRoute
-              allowedRoles={['PRTeam', 'EventHead', 'SuperAdmin']}
+              allowedRoles={['super-admin', 'media-lead']}
               fallbackPath="/admin"
-              toastMessage="Access Denied: Only PR/Marketing, Event Leads, and Admins can manage Sponsors."
+              toastMessage="Access Denied: Only Media Leads and Super Admins can manage Sponsors."
             >
               <AdminSponsors />
             </ProtectedRoute>
-          } />
-          <Route path="/admin/management" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminManagement /></ProtectedRoute>
-          } />
-          <Route path="/admin/gallery" element={
+          }
+        />
+
+        <Route
+          path="/admin/gallery"
+          element={
             <ProtectedRoute
-              allowedRoles={['PRTeam', 'SuperAdmin']}
+              allowedRoles={['super-admin', 'media-lead']}
               fallbackPath="/admin"
-              toastMessage="Access Denied: Only Media/PR Team and Admins can manage the Gallery."
+              toastMessage="Access Denied: Only Media Leads and Super Admins can manage the Gallery."
             >
               <AdminGallery />
             </ProtectedRoute>
-          } />
-          <Route path="/admin/scanner" element={
-            <ProtectedRoute requiredRole="EventHead"><AdminScanner /></ProtectedRoute>
-          } />
-        </Routes>
+          }
+        />
+
+      </Routes>
     </div>
   );
 };

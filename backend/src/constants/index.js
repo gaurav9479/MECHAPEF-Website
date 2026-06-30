@@ -1,10 +1,10 @@
 
 export const USER_ROLES = {
-    SUPER_ADMIN: 'SuperAdmin',
-    EVENT_HEAD: 'EventHead',
-    PR_TEAM: 'PRTeam',
-    ALUMNI: 'Alumni',
-    GENERAL_USER: 'GeneralUser'
+    SUPER_ADMIN: 'super-admin',
+    CONTENT_LEAD: 'content-lead',
+    MEDIA_LEAD: 'media-lead',
+    MEMBER: 'member',
+    GENERAL_USER: 'general-user'
 };
 
 export const ROLES_ARRAY = Object.values(USER_ROLES);

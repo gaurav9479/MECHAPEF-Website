@@ -74,7 +74,7 @@ const Profile = () => {
       <Navbar />
       <div className="profile-page-container">
         <div className="profile-banner">
-          <h2>Complete Your Profile! 🚀</h2>
+          <h2>Complete Your Profile! </h2>
           <p>Add your GitHub, LinkedIn, and other portfolio links to stand out.</p>
         </div>
 

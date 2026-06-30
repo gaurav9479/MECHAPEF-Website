@@ -87,7 +87,7 @@ const Navbar = () => {
       return;
     }
 
-    if (hasRole("EventHead")) {
+    if (hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) {
       navigate("/admin");
     }
   };
@@ -386,7 +386,7 @@ const Navbar = () => {
                       My Profile
                     </button>
 
-                    {hasRole("EventHead") && (
+                    {hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin") && (
                       <button onClick={goAdmin}>
                         <FaUserShield />
                         Admin Portal
@@ -456,7 +456,7 @@ const Navbar = () => {
                     My Profile
                   </button>
 
-                  {hasRole("EventHead") && (
+                  {(hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) && (
                     <button onClick={goAdmin}>
                       <FaUserShield />
                       Admin Portal

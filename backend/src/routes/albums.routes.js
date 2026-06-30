@@ -1,22 +1,27 @@
 import { Router } from 'express';
-import { 
-    getAllAlbums, 
-    getAlbumById, 
-    createAlbum, 
-    updateAlbum, 
+import {
+    getAllAlbums,
+    getAlbumById,
+    createAlbum,
+    updateAlbum,
     deleteAlbum,
     addImagesToAlbum,
-    removeImageFromAlbum 
+    removeImageFromAlbum
 } from '../controllers/album.controller.js';
 import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
+// Public routes
 router.get('/', getAllAlbums);
 router.get('/:id', getAlbumById);
 
-// Admin routes
-router.use(authenticate, checkRole(['SuperAdmin', 'EventHead']));
+// Media Management Routes
+router.use(
+    authenticate,
+    checkRole(['super-admin', 'media-lead'])
+);
+
 router.post('/', createAlbum);
 router.put('/:id', updateAlbum);
 router.delete('/:id', deleteAlbum);

@@ -13,8 +13,11 @@ const router = express.Router();
 // Public route
 router.get('/', getPastEvents);
 
-// Protected Admin routes
-const adminAuth = [authenticate, checkRole(['SuperAdmin', 'EventHead', 'PRTeam'])];
+// Protected Content Management routes
+const adminAuth = [
+    authenticate,
+    checkRole(['super-admin', 'content-lead'])
+];
 
 router.post('/', ...adminAuth, createPastEvent);
 router.put('/order', ...adminAuth, updatePastEventsOrder);
