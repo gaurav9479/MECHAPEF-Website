@@ -36,10 +36,8 @@ const AdminTeam = () => {
           <h1>Team Members Overview</h1>
         </div>
         
-        <div style={{ marginBottom: '20px', padding: '15px', background: '#111', border: '1px solid #333', borderRadius: '8px', color: '#aaa', lineHeight: '1.5' }}>
-          <strong>Note:</strong> This page automatically displays all verified platform users who hold an active team role (e.g., EventHead, PRTeam). 
+        <strong>Note:</strong> This page automatically displays all verified platform users who hold an active leadership role (e.g., Content Lead, Media Lead, Super Admin).
           To add or remove team members, simply change their role in the <a href="/admin/management" style={{ color: '#00c864', textDecoration: 'none' }}>Management Portal</a>.
-        </div>
 
         <div className="admin-table-wrap">
           <table className="admin-table">

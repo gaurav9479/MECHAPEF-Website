@@ -1,8 +1,13 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const ProtectedRoute = ({ children, requiredRole, allowedRoles, toastMessage, fallbackPath }) => {
-  const { user, loading, hasRole, isRole } = useAuth();
+const ProtectedRoute = ({ 
+  children, 
+  allowedRoles, 
+  toastMessage, 
+  fallbackPath = "/unauthorized" 
+}) => {
+  const { user, loading, isRole } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -17,24 +22,25 @@ const ProtectedRoute = ({ children, requiredRole, allowedRoles, toastMessage, fa
     );
   }
 
+  // 1. Check if the user is authenticated
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !isRole(...allowedRoles)) {
-    if (toastMessage) {
-      return <Navigate to={fallbackPath || "/unauthorized"} state={{ error: toastMessage }} replace />;
+  // 2. Check if the user has the required permission (if allowedRoles are specified)
+  if (allowedRoles && allowedRoles.length > 0) {
+    if (!isRole(...allowedRoles)) {
+      return (
+        <Navigate 
+          to={fallbackPath} 
+          state={toastMessage ? { error: toastMessage } : null} 
+          replace 
+        />
+      );
     }
-    return <Navigate to="/unauthorized" replace />;
   }
 
-  if (requiredRole && !hasRole(requiredRole)) {
-    if (toastMessage) {
-      return <Navigate to={fallbackPath || "/unauthorized"} state={{ error: toastMessage }} replace />;
-    }
-    return <Navigate to="/unauthorized" replace />;
-  }
-
+  // 3. If authenticated and authorized, render the route
   return children;
 };
 

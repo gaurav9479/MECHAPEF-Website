@@ -4,9 +4,29 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
+// Public route
 router.get('/', announcementController.getAnnouncements);
-router.post('/', authenticate, checkRole(['SuperAdmin', 'EventHead']), announcementController.createAnnouncement);
-router.put('/:id', authenticate, checkRole(['SuperAdmin', 'EventHead']), announcementController.updateAnnouncement);
-router.delete('/:id', authenticate, checkRole(['SuperAdmin']), announcementController.deleteAnnouncement);
+
+// Content Management Routes
+router.post(
+    '/',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    announcementController.createAnnouncement
+);
+
+router.put(
+    '/:id',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    announcementController.updateAnnouncement
+);
+
+router.delete(
+    '/:id',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    announcementController.deleteAnnouncement
+);
 
 export default router;
