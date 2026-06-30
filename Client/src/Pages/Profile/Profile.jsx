@@ -22,6 +22,10 @@ const Profile = () => {
   
   const [registrations, setRegistrations] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const displayRole = (user?.role || '')
+    .replace(/-/g, ' ')
+    .replace(/generaluser/i, 'general user')
+    .toUpperCase();
 
   useEffect(() => {
     if (user) {
@@ -74,7 +78,7 @@ const Profile = () => {
       <Navbar />
       <div className="profile-page-container">
         <div className="profile-banner">
-          <h2>Complete Your Profile! </h2>
+          <h2>Complete Your Profile!</h2>
           <p>Add your GitHub, LinkedIn, and other portfolio links to stand out.</p>
         </div>
 
@@ -90,7 +94,7 @@ const Profile = () => {
             )}
             <div className="profile-header-info">
               <h1>{user?.name}</h1>
-              <p className="profile-role">{user?.role}</p>
+              <p className="profile-role">{displayRole}</p>
               <p className="profile-email">{user?.email}</p>
             </div>
           </div>
