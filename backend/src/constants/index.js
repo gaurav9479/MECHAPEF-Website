@@ -15,7 +15,7 @@ export const SUB_TEAMS = {
     PR: 'PR',
     LOGISTICS: 'Logistics',
     GRAPHICS: 'Graphics',
-    GENERAL_USER: 'GeneralUser'
+    GENERAL_USER: 'general-user'
 };
 
 export const SUB_TEAMS_ARRAY = Object.values(SUB_TEAMS);
