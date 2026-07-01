@@ -386,7 +386,7 @@ const Navbar = () => {
                       My Profile
                     </button>
 
-                    {hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin") && (
+                    {(hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) && (
                       <button onClick={goAdmin}>
                         <FaUserShield />
                         Admin Portal
