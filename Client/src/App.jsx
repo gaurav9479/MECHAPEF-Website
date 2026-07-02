@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { MagazineTransitionProvider } from './context/MagazineTransitionContext';
 import './App.css';
 
 import Home from './Pages/Home';
@@ -21,8 +22,8 @@ import Profile from './Pages/Profile/Profile';
 import Events from './Pages/Events/Events';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
-import Magazine from './Pages/Magazine/Magazine';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+import MagazineContainer from './Pages/Magazine/MagazineContainer';
 
 const Unauthorized = () => (
   <div
@@ -58,6 +59,7 @@ const Unauthorized = () => (
 const AnimatedRoutes = () => {
   return (
     <div
+      id="background-routes"
       className="app-transition-container"
       style={{ position: 'relative', minHeight: '100vh' }}
     >
@@ -74,7 +76,7 @@ const AnimatedRoutes = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/sponsors" element={<Sponsors />} />
-        <Route path="/magazine" element={<Magazine />} />
+        <Route path="/magazine" element={<div style={{ minHeight: '100vh', width: '100%', backgroundColor: '#f5f4ef' }} />} />
 
         {/* Profile */}
         <Route
@@ -214,9 +216,12 @@ const AnimatedRoutes = () => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AnimatedRoutes />
-      </BrowserRouter>
+      <MagazineTransitionProvider>
+        <BrowserRouter>
+          <MagazineContainer />
+          <AnimatedRoutes />
+        </BrowserRouter>
+      </MagazineTransitionProvider>
     </AuthProvider>
   );
 }

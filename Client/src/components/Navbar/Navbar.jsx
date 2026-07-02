@@ -23,6 +23,7 @@ const Navbar = ({ variant }) => {
   const location = useLocation();
 
   const { user, logout, hasRole } = useAuth();
+  const { transitionState, setTransitionState, triggerExit } = useMagazineTransition();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
@@ -32,6 +33,29 @@ const Navbar = ({ variant }) => {
 
   const desktopRef = useRef(null);
   const mobileRef = useRef(null);
+
+  const handleNavClick = (targetRoute, callback) => {
+    if (location.pathname === '/magazine' && transitionState === 'idle') {
+      const intercepted = triggerExit(targetRoute);
+      if (intercepted) {
+        setMenuOpen(false);
+        // Navigate instantly so the background route changes
+        if (callback) callback();
+        else navigate(targetRoute);
+
+        // Wait for roll-up animation to finish before resetting state
+        setTimeout(() => {
+           setTransitionState('idle');
+        }, 1200);
+        return; // Handled by animation
+      }
+    }
+    
+    // Default behavior if not intercepted
+    setMenuOpen(false);
+    if (callback) callback();
+    else navigate(targetRoute);
+  };
 
   // -----------------------------
   // Close dropdown when clicked outside
@@ -88,12 +112,12 @@ const Navbar = ({ variant }) => {
   // -----------------------------
   const handleAuth = () => {
     if (!user) {
-      navigate("/login");
+      handleNavClick("/login");
       return;
     }
 
     if (hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) {
-      navigate("/admin");
+      handleNavClick("/admin");
     }
   };
 
@@ -141,12 +165,11 @@ const Navbar = ({ variant }) => {
   // Scroll Sections
   // -----------------------------
   const scrollToSection = (vhMultiplier, id) => {
-    setMenuOpen(false);
-
-    const mobile = window.innerWidth <= 768;
-
-    if (location.pathname !== "/") {
-      navigate("/");
+    handleNavClick("/", () => {
+      const mobile = window.innerWidth <= 768;
+      if (location.pathname !== "/") {
+        navigate("/");
+      }
 
       let attempts = 0;
       const checkAndScroll = setInterval(() => {
@@ -169,16 +192,7 @@ const Navbar = ({ variant }) => {
       }, 100);
 
       return;
-    }
-
-    if (mobile && id) {
-      scrollToId(id, 80);
-    } else {
-      window.scrollTo({
-        top: vhMultiplier * window.innerHeight,
-        behavior: "smooth",
-      });
-    }
+    });
   };
 
   const scrollToElement = (id) => {
@@ -231,7 +245,7 @@ const Navbar = ({ variant }) => {
 
         <div
           className="logo"
-          onClick={() => navigate("/")}
+          onClick={() => handleNavClick("/")}
           style={{ cursor: "pointer" }}
         >
           <FaCog className="logo-icon" />
@@ -289,10 +303,7 @@ const Navbar = ({ variant }) => {
 
           <li
             className={(location.pathname.startsWith("/events") || (location.pathname === "/" && activeIndex === 2)) ? "active" : ""}
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/events");
-            }}
+            onClick={() => handleNavClick("/events")}
           >
             {(location.pathname.startsWith("/events") || (location.pathname === "/" && activeIndex === 2)) && (
               <motion.div
@@ -306,10 +317,7 @@ const Navbar = ({ variant }) => {
 
           <li
             className={(location.pathname.startsWith("/gallery") || (location.pathname === "/" && activeIndex === 3)) ? "active" : ""}
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/gallery");
-            }}
+            onClick={() => handleNavClick("/gallery")}
           >
             {(location.pathname.startsWith("/gallery") || (location.pathname === "/" && activeIndex === 3)) && (
               <motion.div
@@ -322,13 +330,10 @@ const Navbar = ({ variant }) => {
           </li>
 
           <li
-            className={location.pathname === "/sponsors" ? "active" : ""}
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/sponsors");
-            }}
+            className={(location.pathname.startsWith("/sponsors") || (location.pathname === "/" && activeIndex === 4)) ? "active" : ""}
+            onClick={() => handleNavClick("/sponsors")}
           >
-            {location.pathname === "/sponsors" && (
+            {(location.pathname.startsWith("/sponsors") || (location.pathname === "/" && activeIndex === 4)) && (
               <motion.div
                 className="nav-sliding-pill"
                 layoutId="navPill"

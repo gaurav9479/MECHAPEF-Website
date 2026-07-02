@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useMagazineTransition } from '../../context/MagazineTransitionContext';
 import { apiGetCached } from '../../utils/apiCache';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
@@ -9,6 +11,7 @@ const Magazine = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const { transitionState } = useMagazineTransition();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
