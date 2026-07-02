@@ -48,7 +48,7 @@ const AboutWheel = () => {
   const pointerEvents = useTransform(scrollYProgress, (val) => (val >= 0.2 && val <= 0.8) ? "auto" : "none");
 
   return (
-    <div ref={containerRef} className="cinematic-wrapper" style={{ height: "550vh" }}>
+    <div id="about-us" ref={containerRef} className="cinematic-wrapper" style={{ height: "550vh" }}>
       <div className="cinematic-camera">
         
         <motion.div className="cinematic-bg-layer" style={{ opacity: bgOpacity, x: bgX }}>

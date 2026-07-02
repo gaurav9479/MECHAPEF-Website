@@ -179,25 +179,21 @@ const Navbar = ({ variant }) => {
 
   const scrollToElement = (id) => {
     setMenuOpen(false);
+    
+    // For "about-us", we need to scroll deeper into the section because the text fades in later
+    let offset = window.innerWidth <= 768 ? 80 : 0;
+    if (id === "about-us" && window.innerWidth > 768) {
+      offset = -window.innerHeight * 1.5; // Scroll 1.5 viewport heights deeper so text is visible
+    }
 
     if (location.pathname !== "/") {
       navigate("/");
-
-      let attempts = 0;
-      const checkAndScroll = setInterval(() => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
-          clearInterval(checkAndScroll);
-        }
-        attempts++;
-        if (attempts > 10) clearInterval(checkAndScroll); // 1s max
-      }, 100);
-
+      setTimeout(() => {
+        scrollToId(id, offset);
+      }, 500);
       return;
     }
-
-    scrollToId(id, 80);
+    scrollToId(id, offset);
   };
 
   return (
@@ -259,7 +255,7 @@ const Navbar = ({ variant }) => {
 
           <li
             className={(location.pathname === "/" && activeIndex === 1) ? "active" : ""}
-            onClick={() => scrollToSection(3.15, "mobile-about")}
+            onClick={() => scrollToElement(window.innerWidth <= 768 ? "mobile-about" : "about-us")}
           >
             {(location.pathname === "/" && activeIndex === 1) && (
               <motion.div

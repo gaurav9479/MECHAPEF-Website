@@ -15,9 +15,9 @@ api.interceptors.request.use((config) => {
 
   const method = config.method?.toLowerCase();
   if (['post', 'put', 'patch', 'delete'].includes(method)) {
-    Object.keys(localStorage).forEach(key => {
+    Object.keys(sessionStorage).forEach(key => {
       if (key.startsWith('api_cache_')) {
-        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
       }
     });
   }
@@ -61,5 +61,44 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// -------------------------------------------------------------
+// Global GET Cache Wrapper
+// -------------------------------------------------------------
+const originalGet = api.get;
+api.get = async (url, config = {}) => {
+  // Bypass cache for admin portal or if explicitly requested
+  if (config.bypassCache || window.location.pathname.startsWith('/admin')) {
+    return originalGet.call(api, url, config);
+  }
+
+  const cacheKey = `api_cache_${url}_${JSON.stringify(config.params || {})}`;
+  const cachedData = sessionStorage.getItem(cacheKey);
+
+  // Return cached response if available
+  if (cachedData) {
+    try {
+      const parsedData = JSON.parse(cachedData);
+      return Promise.resolve({
+        data: parsedData,
+        status: 200,
+        statusText: 'OK (Cached)',
+        headers: {},
+        config,
+        request: {}
+      });
+    } catch (e) {
+      console.error('Cache parse error:', e);
+    }
+  }
+
+  // Make network request and cache the result
+  const response = await originalGet.call(api, url, config);
+  if (response.status === 200) {
+    sessionStorage.setItem(cacheKey, JSON.stringify(response.data));
+  }
+  
+  return response;
+};
 
 export default api;

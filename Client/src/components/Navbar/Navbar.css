@@ -397,6 +397,7 @@
 
 .navbar-vertical .nav-links {
   width: 100%;
+  padding-left: 15px;
 }
 
 .navbar-vertical .nav-links li {

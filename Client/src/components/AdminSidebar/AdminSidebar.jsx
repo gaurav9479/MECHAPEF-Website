@@ -21,7 +21,7 @@ const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, hasRole } = useAuth();
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -66,35 +66,45 @@ const AdminSidebar = () => {
         </div>
         <nav className="sidebar-nav">
           <Link to="/admin" className={`sidebar-link ${location.pathname === '/admin' ? 'active' : ''}`}>
-            <FaCalendarAlt /> Dashboard
+            <FaCog /> Dashboard
           </Link>
-          <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`}>
-            <FaCalendarAlt /> Live Events
-          </Link>
-          <Link to="/admin/past-events" className={`sidebar-link ${location.pathname === '/admin/past-events' ? 'active' : ''}`}>
-            <FaCalendarAlt /> Past Events
-          </Link>
-          <Link to="/admin/team" className={`sidebar-link ${location.pathname === '/admin/team' ? 'active' : ''}`}>
-            <FaUsers /> Team
-          </Link>
-          <Link to="/admin/announcements" className={`sidebar-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>
-            <FaBullhorn /> Announcements
-          </Link>
-          <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`}>
-            <FaHandshake /> Sponsors
-          </Link>
-          <Link to="/admin/magazine" className={`sidebar-link ${location.pathname === '/admin/magazine' ? 'active' : ''}`}>
-            <FaBook /> Magazine
-          </Link>
-          <Link to="/admin/gallery" className={`sidebar-link ${location.pathname === '/admin/gallery' ? 'active' : ''}`}>
-            <FaImages /> Gallery
-          </Link>
-          <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`}>
-            <FaCog /> Management
-          </Link>
-          <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`}>
-            <FaQrcode /> Scan Tickets
-          </Link>
+          
+          {(hasRole('super-admin') || hasRole('content-lead')) && (
+            <>
+              <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`}>
+                <FaCalendarAlt /> Live Events
+              </Link>
+              <Link to="/admin/past-events" className={`sidebar-link ${location.pathname === '/admin/past-events' ? 'active' : ''}`}>
+                <FaCalendarAlt /> Past Events
+              </Link>
+              <Link to="/admin/team" className={`sidebar-link ${location.pathname === '/admin/team' ? 'active' : ''}`}>
+                <FaUsers /> Team
+              </Link>
+              <Link to="/admin/announcements" className={`sidebar-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>
+                <FaBullhorn /> Announcements
+              </Link>
+              <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`}>
+                <FaCog /> Management
+              </Link>
+              <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`}>
+                <FaQrcode /> Scan Tickets
+              </Link>
+            </>
+          )}
+
+          {(hasRole('super-admin') || hasRole('media-lead')) && (
+            <>
+              <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`}>
+                <FaHandshake /> Sponsors
+              </Link>
+              <Link to="/admin/magazine" className={`sidebar-link ${location.pathname === '/admin/magazine' ? 'active' : ''}`}>
+                <FaBook /> Magazine
+              </Link>
+              <Link to="/admin/gallery" className={`sidebar-link ${location.pathname === '/admin/gallery' ? 'active' : ''}`}>
+                <FaImages /> Gallery
+              </Link>
+            </>
+          )}
         </nav>
         <div className="sidebar-bottom">
           <Link to="/" className="sidebar-link"><FaHome /> View Site</Link>
