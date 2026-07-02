@@ -49,6 +49,8 @@ const MagazineContainer = () => {
     }
   };
 
+  const isDown = transitionState === 'pullingDown' || (isOpen && transitionState !== 'rollingUp');
+
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: 0, zIndex: 10000 }}>
       <style>{`
@@ -61,18 +63,25 @@ const MagazineContainer = () => {
         }
       `}</style>
       
-      {/* The Fixed Hook */}
-      <div 
+      {/* The Hook (Handle) */}
+      <motion.div 
         onClick={handleHookClick}
+        initial={false}
+        animate={{ 
+          y: isDown ? 'calc(100vh - 110px)' : 0,
+          rotate: isDown ? -90 : 0
+        }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         style={{ 
           position: 'absolute', 
           top: 0, 
-          right: '15%', 
+          right: '5%', 
           zIndex: 50, 
           cursor: 'pointer', 
           display: 'flex', 
           justifyContent: 'center', 
-          width: '80px' 
+          width: '80px',
+          transformOrigin: 'center center'
         }}
       >
         <motion.img 
@@ -84,11 +93,15 @@ const MagazineContainer = () => {
             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))',
             transformOrigin: 'top center'
           }}
-          animate={{ rotate: [-3, 2, -3] }}
+          animate={
+            !isDown 
+              ? { rotate: [-3, 2, -3] } 
+              : { rotate: 0 }
+          }
           transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
           onError={(e) => { e.target.src = '/mechapefscroll.png'; }}
         />
-      </div>
+      </motion.div>
 
       {/* The Rolling Shutter (Magazine) */}
       <AnimatePresence>
