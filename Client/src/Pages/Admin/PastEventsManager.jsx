@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes, FaGripVertical, FaImage } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes, FaGripVertical, FaImage, FaCrop } from 'react-icons/fa';
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 import api from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
-import './AdminManagement.css'; // Reuse existing admin styles if possible
+import './AdminManagement.css'; 
+import '../../components/CropperInput/CropperInput.css'; // Import cute modal styles
 
 const PastEventsManager = () => {
   const [events, setEvents] = useState([]);
@@ -196,15 +197,22 @@ const PastEventsManager = () => {
 
       {/* Cropper Modal */}
       {showCropper && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '12px', width: '90%', maxWidth: '800px' }}>
-            <h3 style={{ marginBottom: '15px', color: '#fff' }}>Crop Image (4:3 Aspect Ratio)</h3>
-            <div style={{ maxHeight: '60vh', overflow: 'hidden', background: '#000' }}>
-              <Cropper src={imageSrc} style={{ height: '100%', width: '100%' }} aspectRatio={4 / 3} guides={true} ref={cropperRef} viewMode={1} autoCropArea={1} background={false} responsive={true} />
+        <div className="cropper-modal-overlay">
+          <div className="cropper-modal">
+            <div className="cropper-modal-header">
+              <h3><FaCrop style={{marginRight: '8px'}}/> Crop Image (4:3)</h3>
+              <button className="close-modal-btn" onClick={() => { setShowCropper(false); setImageSrc(null); }}>
+                <FaTimes />
+              </button>
             </div>
-            <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'flex-end' }}>
-              <button onClick={() => { setShowCropper(false); setImageSrc(null); }} style={{ padding: '10px 20px', background: '#444', color: '#fff', border: 'none', borderRadius: '5px' }}>Cancel</button>
-              <button onClick={handleCrop} disabled={uploading} style={{ padding: '10px 20px', background: '#ff1f01', color: '#fff', border: 'none', borderRadius: '5px' }}>{uploading ? 'Uploading...' : 'Crop & Upload'}</button>
+            <div className="cropper-modal-body">
+              <Cropper src={imageSrc} style={{ height: '350px', width: '100%' }} aspectRatio={4 / 3} guides={true} ref={cropperRef} viewMode={1} autoCropArea={1} background={false} responsive={true} zoomable={false} />
+            </div>
+            <div className="cropper-modal-footer">
+              <button className="btn-secondary" onClick={() => { setShowCropper(false); setImageSrc(null); }}>Cancel</button>
+              <button className="btn-primary" onClick={handleCrop} disabled={uploading}>
+                {uploading ? 'Uploading...' : 'Crop & Upload'}
+              </button>
             </div>
           </div>
         </div>
