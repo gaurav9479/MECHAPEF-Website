@@ -19,13 +19,21 @@ export const scrollToId = (id, offset = 80, delay = 0) => {
     return;
   }
 
-  // Attempt immediately. If it fails (e.g., element is not in DOM yet), retry with interval
-  if (!performScroll()) {
+  // Attempt immediately. 
+  if (performScroll()) {
+    // If successful, do a second adjustment after 800ms to correct for lazy-loading/GSAP layout shifts
+    setTimeout(performScroll, 800);
+  } else {
+    // If it fails (e.g., element is not in DOM yet), retry with interval
     let attempts = 0;
     const interval = setInterval(() => {
       const success = performScroll();
       attempts++;
-      if (success || attempts >= 30) {
+      if (success) {
+        clearInterval(interval);
+        // Correct position again after initial smooth scroll finishes
+        setTimeout(performScroll, 800);
+      } else if (attempts >= 30) {
         clearInterval(interval);
       }
     }, 100);
