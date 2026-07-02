@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMagazineTransition } from '../../context/MagazineTransitionContext';
-import Magazine from './Magazine';
 import hookImg from '../../assets/mehapefscroll.png';
+import Magazine from './Magazine';
 
 const MagazineContainer = () => {
   const location = useLocation();
@@ -40,8 +40,6 @@ const MagazineContainer = () => {
       setTimeout(() => {
         navigate('/magazine');
         
-        // Wait briefly for React Router to update the location context
-        // This prevents isOpen from flickering to false and unmounting the Magazine
         setTimeout(() => {
           setTransitionState('idle');
         }, 50);
@@ -63,15 +61,9 @@ const MagazineContainer = () => {
         }
       `}</style>
       
-      {/* The Hook (Handle) */}
+      {/* The Fixed Hook */}
       <motion.div 
         onClick={handleHookClick}
-        initial={false}
-        animate={{ 
-          y: isDown ? 'calc(100vh - 110px)' : 0,
-          rotate: isDown ? -90 : 0
-        }}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         style={{ 
           position: 'absolute', 
           top: 0, 
@@ -81,7 +73,7 @@ const MagazineContainer = () => {
           display: 'flex', 
           justifyContent: 'center', 
           width: '80px',
-          transformOrigin: 'center center'
+          transformOrigin: 'top center'
         }}
       >
         <motion.img 
@@ -93,11 +85,7 @@ const MagazineContainer = () => {
             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))',
             transformOrigin: 'top center'
           }}
-          animate={
-            !isDown 
-              ? { rotate: [-3, 2, -3] } 
-              : { rotate: 0 }
-          }
+          animate={{ rotate: [-3, 2, -3] }}
           transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
           onError={(e) => { e.target.src = '/mechapefscroll.png'; }}
         />
@@ -112,7 +100,7 @@ const MagazineContainer = () => {
             animate={{ y: isRollingUp ? '-100vh' : 0 }}
             exit={{ y: '-100vh' }}
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }} // mechanical easeOut
-            style={{ 
+            style={{  
               position: 'absolute',
               top: 0,
               left: 0,

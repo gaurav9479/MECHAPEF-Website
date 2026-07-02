@@ -43,7 +43,7 @@ const Navbar = ({ variant }) => {
         // Wait for roll-up animation to finish before resetting state
         setTimeout(() => {
            setTransitionState('idle');
-        }, 1000);
+        }, 1200);
         return; // Handled by animation
       }
     }

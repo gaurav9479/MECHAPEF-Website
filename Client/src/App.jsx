@@ -59,6 +59,7 @@ const Unauthorized = () => (
 const AnimatedRoutes = () => {
   return (
     <div
+      id="background-routes"
       className="app-transition-container"
       style={{ position: 'relative', minHeight: '100vh' }}
     >
