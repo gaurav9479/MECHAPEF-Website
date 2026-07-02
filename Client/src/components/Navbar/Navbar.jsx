@@ -11,6 +11,7 @@ import {
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
+import HangingMagazine from "../../Pages/Magazine/HangingMagazine";
 import { scrollToId } from "../../utils/scroll";
 import gsap from "gsap";
 import ScrollToPlugin from "gsap/ScrollToPlugin";
@@ -433,6 +434,10 @@ const Navbar = ({ variant }) => {
           </li>
 
         </ul>
+
+        {location.pathname === "/" && (
+           <HangingMagazine />
+        )}
 
         {/* ================= DESKTOP PROFILE ================= */}
 

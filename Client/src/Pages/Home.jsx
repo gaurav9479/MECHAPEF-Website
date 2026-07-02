@@ -11,7 +11,7 @@ import JoinUsBot from "../components/CinematicHero/JoinUsBot";
 import Footer from "../components/Footer/Footer";
 import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
-import HangingMagazine from "./Magazine/HangingMagazine";
+
 
 const Home = () => {
   return (
@@ -32,7 +32,6 @@ const Home = () => {
         <PastSponsors />
         <JoinUsBot />
         <Footer />
-        <HangingMagazine />
       </div>
 
       {/* ── Mobile layout (hidden on desktop via CSS) ── */}
