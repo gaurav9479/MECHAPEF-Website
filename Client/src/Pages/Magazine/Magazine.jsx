@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useMagazineTransition } from '../../context/MagazineTransitionContext';
 import { apiGetCached } from '../../utils/apiCache';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
@@ -9,6 +11,7 @@ const Magazine = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const { transitionState } = useMagazineTransition();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -73,7 +76,12 @@ const Magazine = () => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f4ef' }}>
+    <motion.div 
+      initial={{ y: "-100vh" }}
+      animate={{ y: transitionState === 'rollingUp' ? "-100vh" : 0 }}
+      transition={{ duration: 1.5, ease: "easeInOut" }}
+      style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f4ef' }}
+    >
       <Navbar variant="vertical" />
       <div className="magazine-page" style={{ flex: 1, paddingLeft: 0, paddingRight: 0 }}>
         <header className="np-masthead">
@@ -289,7 +297,7 @@ const Magazine = () => {
 
         <Footer />
       </div>
-    </div>
+    </motion.div>
   );
 };
 

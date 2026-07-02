@@ -11,6 +11,8 @@ import {
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
+import { useMagazineTransition } from "../../context/MagazineTransitionContext";
+import HangingMagazine from "../../Pages/Magazine/HangingMagazine";
 import { scrollToId } from "../../utils/scroll";
 import "./Navbar.css";
 
@@ -19,6 +21,7 @@ const Navbar = ({ variant }) => {
   const location = useLocation();
 
   const { user, logout, hasRole } = useAuth();
+  const { transitionState, setTransitionState, triggerExit } = useMagazineTransition();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
@@ -28,6 +31,27 @@ const Navbar = ({ variant }) => {
 
   const desktopRef = useRef(null);
   const mobileRef = useRef(null);
+
+  const handleNavClick = (targetRoute, callback) => {
+    if (location.pathname === '/magazine' && transitionState === 'idle') {
+      const intercepted = triggerExit(targetRoute);
+      if (intercepted) {
+        setMenuOpen(false);
+        // Wait for roll-up animation to finish, then navigate
+        setTimeout(() => {
+           setTransitionState('idle');
+           if (callback) callback();
+           else navigate(targetRoute);
+        }, 1500);
+        return; // Navigation will happen after animation
+      }
+    }
+    
+    // Default behavior if not intercepted
+    setMenuOpen(false);
+    if (callback) callback();
+    else navigate(targetRoute);
+  };
 
   // -----------------------------
   // Close dropdown when clicked outside
@@ -84,12 +108,12 @@ const Navbar = ({ variant }) => {
   // -----------------------------
   const handleAuth = () => {
     if (!user) {
-      navigate("/login");
+      handleNavClick("/login");
       return;
     }
 
     if (hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) {
-      navigate("/admin");
+      handleNavClick("/admin");
     }
   };
 
@@ -137,12 +161,11 @@ const Navbar = ({ variant }) => {
   // Scroll Sections
   // -----------------------------
   const scrollToSection = (vhMultiplier, id) => {
-    setMenuOpen(false);
-
-    const mobile = window.innerWidth <= 768;
-
-    if (location.pathname !== "/") {
-      navigate("/");
+    handleNavClick("/", () => {
+      const mobile = window.innerWidth <= 768;
+      if (location.pathname !== "/") {
+        navigate("/");
+      }
 
       let attempts = 0;
       const checkAndScroll = setInterval(() => {
@@ -165,35 +188,26 @@ const Navbar = ({ variant }) => {
       }, 100);
 
       return;
-    }
-
-    if (mobile && id) {
-      scrollToId(id, 80);
-    } else {
-      window.scrollTo({
-        top: vhMultiplier * window.innerHeight,
-        behavior: "smooth",
-      });
-    }
+    });
   };
 
   const scrollToElement = (id) => {
-    setMenuOpen(false);
-    
-    // For "about-us", we need to scroll deeper into the section because the text fades in later
-    let offset = window.innerWidth <= 768 ? 80 : 0;
-    if (id === "about-us" && window.innerWidth > 768) {
-      offset = -window.innerHeight * 1.5; // Scroll 1.5 viewport heights deeper so text is visible
-    }
+    handleNavClick("/", () => {
+      // For "about-us", we need to scroll deeper into the section because the text fades in later
+      let offset = window.innerWidth <= 768 ? 80 : 0;
+      if (id === "about-us" && window.innerWidth > 768) {
+        offset = -window.innerHeight * 1.5; // Scroll 1.5 viewport heights deeper so text is visible
+      }
 
-    if (location.pathname !== "/") {
-      navigate("/");
-      setTimeout(() => {
-        scrollToId(id, offset);
-      }, 500);
-      return;
-    }
-    scrollToId(id, offset);
+      if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => {
+          scrollToId(id, offset);
+        }, 500);
+        return;
+      }
+      scrollToId(id, offset);
+    });
   };
 
   return (
@@ -211,7 +225,7 @@ const Navbar = ({ variant }) => {
 
         <div
           className="logo"
-          onClick={() => navigate("/")}
+          onClick={() => handleNavClick("/")}
           style={{ cursor: "pointer" }}
         >
           <FaCog className="logo-icon" />
@@ -269,10 +283,7 @@ const Navbar = ({ variant }) => {
 
           <li
             className={(location.pathname.startsWith("/events") || (location.pathname === "/" && activeIndex === 2)) ? "active" : ""}
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/events");
-            }}
+            onClick={() => handleNavClick("/events")}
           >
             {(location.pathname.startsWith("/events") || (location.pathname === "/" && activeIndex === 2)) && (
               <motion.div
@@ -286,10 +297,7 @@ const Navbar = ({ variant }) => {
 
           <li
             className={(location.pathname.startsWith("/gallery") || (location.pathname === "/" && activeIndex === 3)) ? "active" : ""}
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/gallery");
-            }}
+            onClick={() => handleNavClick("/gallery")}
           >
             {(location.pathname.startsWith("/gallery") || (location.pathname === "/" && activeIndex === 3)) && (
               <motion.div
@@ -302,13 +310,10 @@ const Navbar = ({ variant }) => {
           </li>
 
           <li
-            className={location.pathname === "/sponsors" ? "active" : ""}
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/sponsors");
-            }}
+            className={(location.pathname.startsWith("/sponsors") || (location.pathname === "/" && activeIndex === 4)) ? "active" : ""}
+            onClick={() => handleNavClick("/sponsors")}
           >
-            {location.pathname === "/sponsors" && (
+            {(location.pathname.startsWith("/sponsors") || (location.pathname === "/" && activeIndex === 4)) && (
               <motion.div
                 className="nav-sliding-pill"
                 layoutId="navPill"
@@ -414,6 +419,8 @@ const Navbar = ({ variant }) => {
           </li>
 
         </ul>
+
+        <HangingMagazine />
 
         {/* ================= DESKTOP PROFILE ================= */}
 

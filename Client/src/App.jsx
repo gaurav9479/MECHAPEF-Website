@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { MagazineTransitionProvider } from './context/MagazineTransitionContext';
 import './App.css';
 
 import Home from './Pages/Home';
@@ -214,9 +215,11 @@ const AnimatedRoutes = () => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AnimatedRoutes />
-      </BrowserRouter>
+      <MagazineTransitionProvider>
+        <BrowserRouter>
+          <AnimatedRoutes />
+        </BrowserRouter>
+      </MagazineTransitionProvider>
     </AuthProvider>
   );
 }

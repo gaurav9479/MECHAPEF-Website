@@ -12,7 +12,7 @@ export const scrollToId = (id, offset = 80, delay = 0) => {
       const offsetPosition = elementPosition - offset;
 
       gsap.to(window, {
-        duration: 1.2,
+        duration: 0.1,
         scrollTo: { y: offsetPosition, autoKill: false },
         ease: "power3.inOut"
       });
