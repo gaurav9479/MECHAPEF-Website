@@ -250,11 +250,32 @@ const AdminGallery = () => {
 
       {/* MANAGE IMAGES MODAL */}
       {manageImagesAlbum && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal" style={{ maxWidth: '800px', width: '90%' }}>
-            <div className="admin-modal-header">
-              <h2>Manage Images: {manageImagesAlbum.title}</h2>
-              <button className="close-btn" onClick={() => setManageImagesAlbum(null)}>&times;</button>
+        <div className="admin-modal-overlay" onClick={() => setManageImagesAlbum(null)}>
+          <div className="admin-modal" style={{ maxWidth: '800px', width: '90%' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid #222' }}>
+              <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#fff' }}>Manage Images: {manageImagesAlbum.title}</h2>
+              <button
+                onClick={() => setManageImagesAlbum(null)}
+                style={{
+                  background: '#2a2a2a',
+                  border: '1px solid #444',
+                  color: '#aaa',
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  flexShrink: 0,
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#ff1f01'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#ff1f01'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.color = '#aaa'; e.currentTarget.style.borderColor = '#444'; }}
+              >
+                ✕
+              </button>
             </div>
             <div className="admin-modal-body" style={{ padding: '20px' }}>
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
