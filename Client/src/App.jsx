@@ -22,8 +22,8 @@ import Profile from './Pages/Profile/Profile';
 import Events from './Pages/Events/Events';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
-import Magazine from './Pages/Magazine/Magazine';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+import MagazineContainer from './Pages/Magazine/MagazineContainer';
 
 const Unauthorized = () => (
   <div
@@ -74,8 +74,7 @@ const AnimatedRoutes = () => {
         <Route path="/gallery/:id" element={<AlbumView />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
-        <Route path="/sponsors" element={<Sponsors />} />
-        <Route path="/magazine" element={<Magazine />} />
+        <Route path="/magazine" element={<div className="min-h-screen w-full" style={{ backgroundColor: '#f5f4ef' }} />} />
 
         {/* Profile */}
         <Route
@@ -217,6 +216,7 @@ function App() {
     <AuthProvider>
       <MagazineTransitionProvider>
         <BrowserRouter>
+          <MagazineContainer />
           <AnimatedRoutes />
         </BrowserRouter>
       </MagazineTransitionProvider>

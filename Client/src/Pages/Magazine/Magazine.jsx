@@ -76,12 +76,7 @@ const Magazine = () => {
   };
 
   return (
-    <motion.div 
-      initial={{ y: "-100vh" }}
-      animate={{ y: transitionState === 'rollingUp' ? "-100vh" : 0 }}
-      transition={{ duration: 1.5, ease: "easeInOut" }}
-      style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f4ef' }}
-    >
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f4ef' }}>
       <Navbar variant="vertical" />
       <div className="magazine-page" style={{ flex: 1, paddingLeft: 0, paddingRight: 0 }}>
         <header className="np-masthead">
@@ -297,7 +292,7 @@ const Magazine = () => {
 
         <Footer />
       </div>
-    </motion.div>
+    </div>
   );
 };
 

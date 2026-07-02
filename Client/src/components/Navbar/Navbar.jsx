@@ -12,7 +12,6 @@ import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
 import { useMagazineTransition } from "../../context/MagazineTransitionContext";
-import HangingMagazine from "../../Pages/Magazine/HangingMagazine";
 import { scrollToId } from "../../utils/scroll";
 import "./Navbar.css";
 
@@ -37,13 +36,15 @@ const Navbar = ({ variant }) => {
       const intercepted = triggerExit(targetRoute);
       if (intercepted) {
         setMenuOpen(false);
-        // Wait for roll-up animation to finish, then navigate
+        // Navigate instantly so the background route changes
+        if (callback) callback();
+        else navigate(targetRoute);
+
+        // Wait for roll-up animation to finish before resetting state
         setTimeout(() => {
            setTransitionState('idle');
-           if (callback) callback();
-           else navigate(targetRoute);
-        }, 1500);
-        return; // Navigation will happen after animation
+        }, 1000);
+        return; // Handled by animation
       }
     }
     
@@ -419,8 +420,6 @@ const Navbar = ({ variant }) => {
           </li>
 
         </ul>
-
-        <HangingMagazine />
 
         {/* ================= DESKTOP PROFILE ================= */}
 

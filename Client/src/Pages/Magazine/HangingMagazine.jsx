@@ -22,43 +22,24 @@ const HangingMagazine = () => {
     navigate('/magazine');
   };
 
-  // We only animate the Y axis based on transition state.
-  // When idle on Home: y = -35 (just the hanging scroll)
-  // When pulling down: y = 800 (pulls down the whole magazine)
-  // When on Magazine: y = 0 or stays down (Magazine page will handle its own display, so we just hide this component or keep it there?)
-  // Wait, if Magazine page is rendering the bookmark, then this global component can just render the bookmark!
-
   return (
-    <div className="relative pointer-events-none flex justify-center z-[10000] hidden lg:flex" style={{ width: '80px', height: '0' }}>
+    <div className="fixed top-0 pointer-events-none flex justify-center z-[10000] hidden lg:flex" style={{ width: '80px', height: '0', right: '15%' }}>
       
       <AnimatePresence>
           <motion.div
             key="hanging-scroll"
             className="absolute z-20 cursor-pointer pointer-events-auto"
             initial={false}
-            animate={
-              transitionState === 'pullingDown' || transitionState === 'rollingUp'
-              ? {
-                  rotate: 0,
-                  y: transitionState === 'pullingDown' ? 800 : -35,
-                  x: "-50%",
-                  scale: 1.1
-              }
-              : {
-                  rotate: [-1.5, 1.5],
-                  y: location.pathname === '/magazine' ? 800 : -35,
-                  x: "-50%",
-                  scale: 1
-              }
-            }
-            transition={
-              transitionState === 'pullingDown' || transitionState === 'rollingUp'
-              ? { duration: 0.8, ease: "easeInOut" }
-              : {
-                  rotate: { repeat: Infinity, repeatType: "reverse", duration: 2, ease: "easeInOut" },
-                  duration: 0.5
-              }
-            }
+            animate={{
+              rotate: [-1.5, 1.5],
+              y: transitionState === 'rollingUp' ? -150 : -35,
+              x: "-50%",
+              scale: 1
+            }}
+            transition={{
+              rotate: { repeat: Infinity, repeatType: "reverse", duration: 2, ease: "easeInOut" },
+              y: { duration: 1, ease: "easeOut" }
+            }}
             whileHover={location.pathname === '/' && transitionState === 'idle' ? { scale: 1.1 } : {}}
             onClick={handleClick}
             style={{ transformOrigin: "top center", left: '50%' }}
@@ -70,7 +51,6 @@ const HangingMagazine = () => {
                 style={{ width: '80px' }}
                 onError={(e) => { e.target.src = '/mechapefscroll.png'; }} // fallback
              />
-             
           </motion.div>
       </AnimatePresence>
     </div>
