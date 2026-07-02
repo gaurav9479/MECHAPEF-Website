@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { apiGetCached } from '../../utils/apiCache';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
+import MobileMagazine from './MobileMagazine';
 import './Magazine.css';
 
 const Magazine = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -44,6 +52,10 @@ const Magazine = () => {
 
   if (loading || !data) return <div style={{height: '100vh', background: '#f5f4ef'}}></div>;
 
+  if (isMobile) {
+    return <MobileMagazine data={data} />;
+  }
+
   const hero = data.heroStory || {};
   const featured = data.featuredStories || [];
   const news = data.newsCards || [];
@@ -52,17 +64,25 @@ const Magazine = () => {
 
   const publishDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+  const renderMastheadTitle = (title) => {
+    const t = title || 'THE MECHAPEF TIMES';
+    const parts = t.split(/(MECHAPEF)/i);
+    return parts.map((part, i) => 
+      part.toUpperCase() === 'MECHAPEF' ? <span key={i} style={{color: 'var(--np-red)'}}>{part}</span> : part
+    );
+  };
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f4ef' }}>
       <Navbar variant="vertical" />
       <div className="magazine-page" style={{ flex: 1, paddingLeft: 0, paddingRight: 0 }}>
         <header className="np-masthead">
-        <div className="np-masthead-top">
-          <span>{publishDateStr}</span>
-          <span>{data.volumeNumber} | {data.issueNumber}</span>
-        </div>
-        <h1 className="np-masthead-title">{data.title || 'THE MECHAPEF TIMES'}</h1>
-        <div className="np-masthead-links">
+          <div className="np-masthead-top">
+            <span>{publishDateStr}</span>
+            <span>{data.volumeNumber} | {data.issueNumber}</span>
+          </div>
+          <h1 className="np-masthead-title">{renderMastheadTitle(data.title)}</h1>
+          <div className="np-masthead-links">
           {data.categories && data.categories.map((cat, idx) => (
             <span key={idx}>{cat}</span>
           ))}
