@@ -107,7 +107,7 @@ const CropperInput = ({ initialImage, aspect, onSave, label = "Upload Image" }) 
             <div className="cropper-modal-body">
               <Cropper
                 ref={cropperRef}
-                style={{ height: '400px', width: '100%' }}
+                style={{ height: '360px', width: '100%' }}
                 initialAspectRatio={aspect}
                 aspectRatio={aspect}
                 src={src}
