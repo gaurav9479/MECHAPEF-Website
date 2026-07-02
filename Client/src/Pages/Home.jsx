@@ -12,6 +12,7 @@ import Footer from "../components/Footer/Footer";
 import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
 
+
 const Home = () => {
   return (
     <>

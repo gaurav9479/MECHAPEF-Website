@@ -1,46 +1,83 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useMagazineTransition } from '../../context/MagazineTransitionContext';
-// Assuming mechapefscroll.png is in assets, we'll use the one the user uploaded earlier, or the default path if they put it there.
+import { useNavigate } from 'react-router-dom';
 import magazineScrollImg from '../../assets/mehapefscroll.png';
 
 const HangingMagazine = () => {
-  const { transitionState, setTransitionState, targetRoute, isDesktop } = useMagazineTransition();
-  const location = useLocation();
+  const [status, setStatus] = useState('hanging'); // 'hanging', 'detached', 'falling', 'fullscreen'
   const navigate = useNavigate();
 
-  // Only render on desktop, and only on home or magazine route
-  const isVisibleRoute = location.pathname === '/' || location.pathname === '/magazine';
-  if (!isDesktop || !isVisibleRoute) return null;
-
   const handleClick = () => {
-    // Only allow pulling down if we are on the Home page and idle
-    if (location.pathname !== '/' || transitionState !== 'idle') return;
+    if (status !== 'hanging') return;
     
-    // Navigate instantly and let the Magazine page handle the drop-down animation
-    navigate('/magazine');
+    // Step 1: Stop swinging & settle (detached state)
+    setStatus('detached');
+    
+    // Step 2 & 3: Fall and expand after a tiny delay
+    setTimeout(() => {
+      setStatus('falling');
+      
+      // Step 4 & 5: Fullscreen & route change
+      setTimeout(() => {
+        setStatus('fullscreen');
+        setTimeout(() => {
+            navigate('/magazine');
+            // reset state after navigation in case they go back
+            setTimeout(() => setStatus('hanging'), 500);
+        }, 400); // Wait for fullscreen whiteout
+      }, 1200); // Fall duration
+    }, 400); // Settle duration
   };
 
   return (
-    <div className="fixed top-0 pointer-events-none flex justify-center z-[10000] hidden lg:flex" style={{ width: '80px', height: '0', right: '15%' }}>
-      
+    <div className="relative pointer-events-none flex justify-center hidden lg:flex" style={{ width: '80px', height: '0', zIndex: 999 }}>
+
+      {/* Magazine Container */}
       <AnimatePresence>
+        {status !== 'fullscreen' && (
           <motion.div
-            key="hanging-scroll"
+            key="magazine"
             className="absolute z-20 cursor-pointer pointer-events-auto"
             initial={false}
-            animate={{
-              rotate: [-1.5, 1.5],
-              y: transitionState === 'rollingUp' ? -150 : -35,
-              x: "-50%",
-              scale: 1
-            }}
-            transition={{
-              rotate: { repeat: Infinity, repeatType: "reverse", duration: 2, ease: "easeInOut" },
-              y: { duration: 1, ease: "easeOut" }
-            }}
-            whileHover={location.pathname === '/' && transitionState === 'idle' ? { scale: 1.1 } : {}}
+            animate={
+              status === 'hanging' ? {
+                rotate: [-1.5, 1.5],
+                y: -35, // Moved up to touch the ceiling
+                x: "-50%",
+                scale: 1
+              } : status === 'detached' ? {
+                rotate: 0,
+                y: -35,
+                x: "-50%",
+                scale: 1.1
+              } : {
+                // Falling state
+                y: [-35, 1200], // Fall straight down
+                x: "-50%",
+                scale: [1.1, 4], 
+                rotate: [0, 0], // No rotation, fall straight
+                opacity: [1, 1, 0]
+              }
+            }
+            transition={
+              status === 'hanging' ? {
+                rotate: {
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  duration: 2,
+                  ease: "easeInOut"
+                },
+                duration: 0.5
+              } : status === 'detached' ? {
+                duration: 0.4,
+                ease: "easeOut"
+              } : {
+                // Falling transition
+                duration: 1.2,
+                ease: "circIn" // Gravity-like easing
+              }
+            }
+            whileHover={status === 'hanging' ? { scale: 1.1 } : {}}
             onClick={handleClick}
             style={{ transformOrigin: "top center", left: '50%' }}
           >
@@ -49,9 +86,23 @@ const HangingMagazine = () => {
                 alt="MechaPEF Magazine" 
                 className="object-contain pointer-events-none drop-shadow-lg"
                 style={{ width: '80px' }}
-                onError={(e) => { e.target.src = '/mechapefscroll.png'; }} // fallback
              />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Fullscreen Transition Overlay */}
+      <AnimatePresence>
+        {status === 'fullscreen' && (
+           <motion.div 
+             key="overlay"
+             initial={{ y: "-100%" }}
+             animate={{ y: 0 }}
+             exit={{ opacity: 0 }}
+             transition={{ duration: 0.6, ease: "easeOut" }}
+             className="fixed inset-0 bg-[#f5f4ef] pointer-events-auto z-[9999]"
+           />
+        )}
       </AnimatePresence>
     </div>
   );

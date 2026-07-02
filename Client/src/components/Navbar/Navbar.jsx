@@ -11,8 +11,11 @@ import {
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
-import { useMagazineTransition } from "../../context/MagazineTransitionContext";
+import HangingMagazine from "../../Pages/Magazine/HangingMagazine";
 import { scrollToId } from "../../utils/scroll";
+import gsap from "gsap";
+import ScrollToPlugin from "gsap/ScrollToPlugin";
+gsap.registerPlugin(ScrollToPlugin);
 import "./Navbar.css";
 
 const Navbar = ({ variant }) => {
@@ -193,22 +196,38 @@ const Navbar = ({ variant }) => {
   };
 
   const scrollToElement = (id) => {
-    handleNavClick("/", () => {
-      // For "about-us", we need to scroll deeper into the section because the text fades in later
-      let offset = window.innerWidth <= 768 ? 80 : 0;
-      if (id === "about-us" && window.innerWidth > 768) {
-        offset = -window.innerHeight * 1.5; // Scroll 1.5 viewport heights deeper so text is visible
-      }
+    setMenuOpen(false);
 
-      if (location.pathname !== "/") {
-        navigate("/");
-        setTimeout(() => {
-          scrollToId(id, offset);
-        }, 500);
+    const offset = window.innerWidth <= 768 ? 80 : 0;
+    const isTeam = id === "our-team" || id === "mh-team";
+    const duration = isTeam ? 0 : 0.7;
+
+    if (location.pathname !== "/") {
+      navigate("/");
+      // Wait for navigation + paint, then scroll
+      setTimeout(() => {
+        scrollToId(id, offset, 0, duration);
+      }, 100);
+      return;
+    }
+
+    if (id === "about-us" && window.innerWidth > 768) {
+      // About section is 550vh tall. Text becomes visible at ~25% scroll progress.
+      // So scroll to: element top + 25% of 550vh
+      const el = document.getElementById("about-us");
+      if (el) {
+        const elTop = el.getBoundingClientRect().top + window.scrollY;
+        const targetY = elTop + window.innerHeight * 5.5 * 0.28; // 28% into the 550vh section
+        gsap.to(window, {
+          duration: 0.9,
+          scrollTo: { y: targetY, autoKill: false },
+          ease: "power2.out"
+        });
         return;
       }
-      scrollToId(id, offset);
-    });
+    }
+
+    scrollToId(id, offset, 0, duration);
   };
 
   return (
@@ -420,6 +439,10 @@ const Navbar = ({ variant }) => {
           </li>
 
         </ul>
+
+        {location.pathname === "/" && (
+           <HangingMagazine />
+        )}
 
         {/* ================= DESKTOP PROFILE ================= */}
 
