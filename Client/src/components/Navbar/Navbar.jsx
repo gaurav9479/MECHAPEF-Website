@@ -184,13 +184,15 @@ const Navbar = ({ variant }) => {
     setMenuOpen(false);
 
     const offset = window.innerWidth <= 768 ? 80 : 0;
+    const isTeam = id === "our-team" || id === "mh-team";
+    const duration = isTeam ? 0 : 0.7;
 
     if (location.pathname !== "/") {
       navigate("/");
       // Wait for navigation + paint, then scroll
       setTimeout(() => {
-        scrollToId(id, offset);
-      }, 300);
+        scrollToId(id, offset, 0, duration);
+      }, 100);
       return;
     }
 
@@ -210,7 +212,7 @@ const Navbar = ({ variant }) => {
       }
     }
 
-    scrollToId(id, offset);
+    scrollToId(id, offset, 0, duration);
   };
 
   return (

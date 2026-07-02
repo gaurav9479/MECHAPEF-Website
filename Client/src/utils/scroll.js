@@ -3,7 +3,7 @@ import ScrollToPlugin from 'gsap/ScrollToPlugin';
 
 gsap.registerPlugin(ScrollToPlugin);
 
-export const scrollToId = (id, offset = 80, delay = 0) => {
+export const scrollToId = (id, offset = 80, delay = 0, duration = 0.7) => {
   const performScroll = () => {
     const element = document.getElementById(id);
     if (element) {
@@ -11,7 +11,7 @@ export const scrollToId = (id, offset = 80, delay = 0) => {
       const offsetPosition = elementPosition - offset;
 
       gsap.to(window, {
-        duration: 0.7,
+        duration: duration,
         scrollTo: { y: offsetPosition, autoKill: false },
         ease: "power2.out"
       });
