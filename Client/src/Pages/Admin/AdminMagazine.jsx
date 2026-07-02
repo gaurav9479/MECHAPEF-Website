@@ -3,6 +3,7 @@ import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import api from '../../services/api';
 import './AdminDashboard.css';
 import { FaPlus, FaTrash } from 'react-icons/fa';
+import CropperInput from '../../components/CropperInput/CropperInput';
 
 const AdminMagazine = () => {
   const [toast, setToast] = useState(null);
@@ -189,8 +190,12 @@ const AdminMagazine = () => {
           <div className="admin-form-grid">
             <div className="form-group full">
               <label>Hero Image</label>
-              <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'heroStory.imageURL')} />
-              {form.heroStory.imageURL && <img src={form.heroStory.imageURL} alt="" style={{ height: '100px', marginTop: '10px' }} />}
+              <CropperInput
+                initialImage={form.heroStory.imageURL}
+                aspect={16/9}
+                onSave={(url) => setForm({ ...form, heroStory: { ...form.heroStory, imageURL: url } })}
+                label="Upload Hero Image (16:9)"
+              />
             </div>
             <div className="form-group full">
               <label>Heading (Max 80 chars)</label>
@@ -234,8 +239,12 @@ const AdminMagazine = () => {
                 </div>
                 <div className="form-group full">
                   <label>Image</label>
-                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'featuredStories', i)} />
-                  {item.imageURL && <img src={item.imageURL} alt="" style={{ height: '60px', marginTop: '10px' }} />}
+                  <CropperInput
+                    initialImage={item.imageURL}
+                    aspect={4/3}
+                    onSave={(url) => updateArrayItem('featuredStories', i, 'imageURL', url)}
+                    label="Upload Image (4:3)"
+                  />
                 </div>
                 <div className="form-group full">
                   <label>Heading (Max 70 chars)</label>
@@ -271,8 +280,12 @@ const AdminMagazine = () => {
                 </div>
                 <div className="form-group full">
                   <label>Image</label>
-                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'newsCards', i)} />
-                  {item.imageURL && <img src={item.imageURL} alt="" style={{ height: '60px', marginTop: '10px' }} />}
+                  <CropperInput
+                    initialImage={item.imageURL}
+                    aspect={1}
+                    onSave={(url) => updateArrayItem('newsCards', i, 'imageURL', url)}
+                    label="Upload Image (1:1)"
+                  />
                 </div>
               </div>
             ))}
@@ -308,9 +321,13 @@ const AdminMagazine = () => {
           <h3>In-Depth Analysis (Full Width Layout)</h3>
           <div className="admin-form-grid">
             <div className="form-group full">
-              <label>Image</label>
-              <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'inDepthAnalysis.imageURL')} />
-              {form.inDepthAnalysis.imageURL && <img src={form.inDepthAnalysis.imageURL} alt="" style={{ height: '100px', marginTop: '10px' }} />}
+              <label>Analysis Image</label>
+              <CropperInput
+                initialImage={form.inDepthAnalysis.imageURL}
+                aspect={16/9}
+                onSave={(url) => setForm({ ...form, inDepthAnalysis: { ...form.inDepthAnalysis, imageURL: url } })}
+                label="Upload Image (16:9)"
+              />
             </div>
             <div className="form-group full">
               <label>Heading (Max 100 chars)</label>
@@ -381,8 +398,12 @@ const AdminMagazine = () => {
                 </div>
                 <div className="form-group full">
                   <label>Image</label>
-                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'mixedArticles', i)} />
-                  {item.imageURL && <img src={item.imageURL} alt="" style={{ height: '60px', marginTop: '10px' }} />}
+                  <CropperInput
+                    initialImage={item.imageURL}
+                    aspect={4/3}
+                    onSave={(url) => updateArrayItem('mixedArticles', i, 'imageURL', url)}
+                    label="Upload Image (4:3)"
+                  />
                 </div>
                 <div className="form-group full">
                   <label>Heading (Max 100 chars)</label>
@@ -413,8 +434,12 @@ const AdminMagazine = () => {
             </div>
             <div className="form-group full">
               <label>Banner Image</label>
-              <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'advertisement.bannerImageURL')} />
-              {form.advertisement.bannerImageURL && <img src={form.advertisement.bannerImageURL} alt="" style={{ height: '80px', marginTop: '10px' }} />}
+              <CropperInput
+                initialImage={form.advertisement.bannerImageURL}
+                aspect={4/1}
+                onSave={(url) => setForm({ ...form, advertisement: { ...form.advertisement, bannerImageURL: url } })}
+                label="Upload Banner (4:1)"
+              />
             </div>
             <div className="form-group full">
               <label>Redirect Link</label>

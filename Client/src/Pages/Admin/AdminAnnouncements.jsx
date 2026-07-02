@@ -5,6 +5,7 @@ import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages } from 'react-icons/fa';
 import api from '../../services/api';
 import './AdminDashboard.css';
+import CropperInput from '../../components/CropperInput/CropperInput';
 const PRIORITIES = ['Low', 'Medium', 'High'];
 const TARGET_TYPES = ['None', 'Event', 'External', 'Internal'];
 const emptyForm = {
@@ -215,11 +216,14 @@ const AdminAnnouncements = () => {
                 )}
                 <div className="form-group full">
                   <label>Banner Image (For Live Events Slider)</label>
-                  <input type="file" accept="image/*" onChange={handleFileUpload} />
-                  {uploading && <small style={{ color: '#ffaa00' }}>Uploading...</small>}
-                  {form.bannerURL && !uploading && (
+                  <CropperInput
+                    initialImage={form.bannerURL}
+                    aspect={16/9}
+                    onSave={(url) => setForm(p => ({ ...p, bannerURL: url }))}
+                    label="Upload Banner (16:9)"
+                  />
+                  {form.bannerURL && (
                     <div style={{ marginTop: '10px' }}>
-                      <img src={form.bannerURL} alt="Banner Preview" style={{ maxWidth: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
                       <button type="button" className="btn-danger" style={{ marginTop: '5px', padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => f('bannerURL', '')}>Remove Banner</button>
                     </div>
                   )}

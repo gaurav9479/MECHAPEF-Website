@@ -1,0 +1,180 @@
+.cropper-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.cropper-preview-container {
+  width: 100%;
+  max-width: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cropper-preview-img {
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: contain;
+  display: block;
+}
+
+.cropper-upload-btn {
+  background: #27272a;
+  color: #f4f4f5;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 18px;
+  border-radius: 24px; /* Pill shape */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.cropper-upload-btn:hover {
+  background: #3f3f46;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* Modal Overlay: Glassmorphism */
+.cropper-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Modal Container: Cute & Compact */
+.cropper-modal {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+  overflow: hidden;
+  animation: modalPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.cropper-modal-header {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.cropper-modal-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f4f4f5;
+}
+
+.close-modal-btn {
+  background: rgba(255,255,255,0.05);
+  border: none;
+  color: #a1a1aa;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+}
+
+.close-modal-btn:hover {
+  color: #fff;
+  background: rgba(255, 50, 50, 0.9);
+}
+
+.cropper-modal-body {
+  padding: 0; /* Edge to edge for a sleeker look */
+  background: #000;
+  position: relative;
+}
+
+.cropper-modal-footer {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #18181b;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Scoped cute pill buttons for modal */
+.cropper-modal .btn-secondary {
+  padding: 10px 20px;
+  background: #27272a;
+  color: #f4f4f5;
+  border: none;
+  border-radius: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cropper-modal .btn-secondary:hover {
+  background: #3f3f46;
+}
+
+.cropper-modal .btn-primary {
+  padding: 10px 24px;
+  background: #ff1f01;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.cropper-modal .btn-primary:hover {
+  background: #ff3c22;
+}
+
+.cropper-modal .btn-primary:active {
+  transform: scale(0.96);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

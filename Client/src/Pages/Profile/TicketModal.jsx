@@ -16,14 +16,35 @@ const TicketModal = ({ registration, onClose }) => {
   });
 
   return (
-    <div className="ticket-modal-overlay">
-      <div className="ticket-modal-content">
-        <button className="close-btn" onClick={onClose}><FaTimes /></button>
-        
+    <div className="ticket-modal-overlay" onClick={onClose}>
+      <div className="ticket-modal-content" onClick={e => e.stopPropagation()}>
         <div className="ticket-card">
           <div className="ticket-header">
             <h3><FaTicketAlt /> Entry Ticket</h3>
-            <span className="status-badge active">Verified</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span className="status-badge active">Verified</span>
+              <button
+                onClick={onClose}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: '#fff',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1rem',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.3)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              >
+                <FaTimes />
+              </button>
+            </div>
           </div>
           
           <div className="ticket-body">

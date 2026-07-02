@@ -6,6 +6,7 @@ import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import api from '../../services/api';
 import { sponsorConfigService } from '../../services/services';
 import './AdminDashboard.css';
+import CropperInput from '../../components/CropperInput/CropperInput';
 
 const TIER_COLOR = { Title: '#ff0000', Gold: '#FFD700', Silver: '#C0C0C0', Bronze: '#CD7F32' };
 const currentYear = () => {
@@ -204,11 +205,14 @@ const AdminSponsors = () => {
                 )}
                 <div className="form-group full">
                   <label>Sponsor Logo *</label>
-                  <input type="file" accept="image/*" onChange={handleFileUpload} />
-                  {uploading && <small style={{ color: '#ffaa00' }}>Uploading...</small>}
-                  {form.logoURL && !uploading && (
+                  <CropperInput
+                    initialImage={form.logoURL}
+                    aspect={NaN}
+                    onSave={(url) => f('logoURL', url)}
+                    label="Upload Logo (Free Crop)"
+                  />
+                  {form.logoURL && (
                     <div style={{ marginTop: '10px' }}>
-                      <img src={form.logoURL} alt="Logo Preview" style={{ maxWidth: '100%', height: '80px', objectFit: 'contain', backgroundColor: '#fff', padding: '5px', borderRadius: '4px' }} />
                       <button type="button" className="btn-danger" style={{ display: 'block', marginTop: '5px', padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => f('logoURL', '')}>Remove Image</button>
                     </div>
                   )}

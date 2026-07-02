@@ -581,7 +581,7 @@ const AdminManagement = () => {
                   <Cropper
                     ref={cropperRef}
                     src={cropSrc}
-                    style={{ maxHeight: '50vh', width: '100%' }}
+                    style={{ height: '400px', width: '100%' }}
                     aspectRatio={SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio ?? NaN}
                     guides={true}
                     viewMode={1}
@@ -589,7 +589,8 @@ const AdminManagement = () => {
                     background={false}
                     responsive={true}
                     checkOrientation={false}
-                    cropBoxResizable={false}
+                    cropBoxResizable={true}
+                    zoomable={false}
                     dragMode="move"
                   />
                   <div className="cropper-actions">
