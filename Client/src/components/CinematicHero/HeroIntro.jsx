@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { assets } from "../../assets/assets";
 import { FaArrowRight, FaUsers } from "react-icons/fa";
+import { scrollToId } from "../../utils/scroll";
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
 import '../CinematicHero/CinematicHero.css';
 import '../Hero/Hero.css';
@@ -74,10 +75,10 @@ const HeroIntro = () => {
               </motion.p>
 
               <motion.div className="hero-buttons" style={{ y: btnY, opacity: btnOpacity }}>
-                <button className="primary-btn" onClick={() => navigate('/events')}>
-                  EXPLORE MORE <FaArrowRight />
+                <button className="primary-btn" onClick={() => navigate('/magazine')}>
+                  MAGAZINE <FaArrowRight />
                 </button>
-                <button className="secondary-btn" onClick={() => document.getElementById('our-team')?.scrollIntoView({ behavior: 'smooth' })}>
+                <button className="secondary-btn" onClick={() => scrollToId('our-team')}>
                   MEET THE TEAM <FaUsers />
                 </button>
               </motion.div>

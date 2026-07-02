@@ -8,6 +8,7 @@ import sponsorRoutes from './sponsors.route.js';
 import uploadRoutes from './upload.route.js';
 import albumRoutes from './albums.routes.js';
 import pastEventsRoutes from './pastEvents.route.js';
+import magazineRoutes from './magazine.route.js';
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.use('/sponsors', sponsorRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/gallery', albumRoutes);
 router.use('/past-events', pastEventsRoutes);
+router.use('/magazine', magazineRoutes);
 
 router.get('/health', (req, res) => {
     res.status(200).json({
