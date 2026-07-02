@@ -11,7 +11,8 @@ import {
   FaSignOutAlt,
   FaBars,
   FaTimes,
-  FaQrcode
+  FaQrcode,
+  FaBook
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import './AdminSidebar.css';
@@ -81,6 +82,9 @@ const AdminSidebar = () => {
           </Link>
           <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`}>
             <FaHandshake /> Sponsors
+          </Link>
+          <Link to="/admin/magazine" className={`sidebar-link ${location.pathname === '/admin/magazine' ? 'active' : ''}`}>
+            <FaBook /> Magazine
           </Link>
           <Link to="/admin/gallery" className={`sidebar-link ${location.pathname === '/admin/gallery' ? 'active' : ''}`}>
             <FaImages /> Gallery

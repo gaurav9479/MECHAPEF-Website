@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import HeroTicker from '../HeroTicker/HeroTicker';
 import PastEventsStack from '../PastEventsStack/PastEventsStack';
 import './MobileHome.css';
@@ -24,22 +25,42 @@ const MobileHome = () => {
   const [loading, setLoading]           = useState(true);
 
   useEffect(() => {
-    api.get('/announcements').then(res => {
-      const items   = res.data.data?.announcements || res.data.data || [];
+    let announcementsLoaded = false;
+    let sponsorsLoaded = false;
+    let teamLoaded = false;
+
+    const checkLoading = () => {
+      if (announcementsLoaded && sponsorsLoaded && teamLoaded) {
+        setLoading(false);
+      }
+    };
+
+    apiGetCached('/announcements', (data) => {
+      const items   = data.data?.announcements || data.data || [];
       const banners = items.filter(n => n.isActive && (n.bannerURL || n.targetType === 'Event'));
       banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setSlides(banners);
-    }).catch(() => {});
+      announcementsLoaded = true;
+      checkLoading();
+    }).catch(() => {
+      announcementsLoaded = true;
+      checkLoading();
+    });
 
-    api.get('/sponsors').then(res => {
-      const all = res.data.data?.sponsors || res.data.data || [];
+    apiGetCached('/sponsors', (data) => {
+      const all = data.data?.sponsors || data.data || [];
       setSponsors(all.filter(s => !s.isPastSponsor && s.isActive));
       setPastSponsors(all.filter(s => s.isPastSponsor));
-    }).catch(() => {});
+      sponsorsLoaded = true;
+      checkLoading();
+    }).catch(() => {
+      sponsorsLoaded = true;
+      checkLoading();
+    });
 
-    api.get('/upload/sections').then(res => {
+    apiGetCached('/upload/sections', (data) => {
       const map = {};
-      (res.data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
+      (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
       const mk = (prefix, label) =>
         Array.from({ length: 10 }, (_, i) =>
           map[`${prefix}_${i + 1}`] || { name: `Member ${i + 1}`, regNo: label });
@@ -49,8 +70,12 @@ const MobileHome = () => {
         sy: mk('hero_sy', 'Pre-Final'),
         ty: mk('hero_ty', '2nd Year'),
       });
-      setLoading(false);
-    }).catch(() => setLoading(false));
+      teamLoaded = true;
+      checkLoading();
+    }).catch(() => {
+      teamLoaded = true;
+      checkLoading();
+    });
   }, []);
 
   if (loading) return null;

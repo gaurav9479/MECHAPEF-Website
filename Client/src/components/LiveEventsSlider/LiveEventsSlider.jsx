@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight, FaArrowRight } from 'react-icons/fa';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import PremiumSponsorPanel from './PremiumSponsorPanel';
 import HeroTicker from '../HeroTicker/HeroTicker';
 // import ICEngine3D from './ICEngine3D'; // User requested to remove from slider but keep the file
@@ -14,17 +15,18 @@ const LiveEventsSlider = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/announcements')
-      .then(res => {
-        const items = res.data.data?.announcements || res.data.data || [];
-        // Filter for active announcements that have a banner URL OR are marked as an Event
-        const banners = items.filter(n => n.isActive && (n.bannerURL || n.targetType === 'Event'));
-        // Sort by display order
-        banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-        setSlides(banners);
-      })
-      .catch(err => console.error("Failed to load banners", err))
-      .finally(() => setLoading(false));
+    apiGetCached('/announcements', (data) => {
+      const items = data.data?.announcements || data.data || [];
+      // Filter for active announcements that have a banner URL OR are marked as an Event
+      const banners = items.filter(n => n.isActive && (n.bannerURL || n.targetType === 'Event'));
+      // Sort by display order
+      banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      setSlides(banners);
+      setLoading(false);
+    }).catch(err => {
+      console.error("Failed to load banners", err);
+      setLoading(false);
+    });
   }, []);
 
   useEffect(() => {

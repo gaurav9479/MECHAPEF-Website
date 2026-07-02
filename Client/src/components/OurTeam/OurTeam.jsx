@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { FaCog } from 'react-icons/fa';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import './OurTeam.css';
 
 /* ─── Single card with glitch hover ─────────────────────────── */
@@ -112,13 +113,12 @@ const OurTeam = () => {
     el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
   };
 
-  /* API fetch - unchanged logic */
-  const fetchSectionImages = async () => {
-    try {
-      const res = await api.get('/upload/sections');
+  /* API fetch - cached logic */
+  const fetchSectionImages = () => {
+    apiGetCached('/upload/sections', (data) => {
       const imgMap = {};
-      if (res.data.data?.images) {
-        res.data.data.images.forEach(img => {
+      if (data.data?.images) {
+        data.data.images.forEach(img => {
           imgMap[img.sectionKey] = {
             url: img.imageURL,
             name: img.name,
@@ -127,9 +127,9 @@ const OurTeam = () => {
         });
       }
       setImagesMap(imgMap);
-    } catch (error) {
+    }).catch(error => {
       console.error('Failed to load section images:', error);
-    }
+    });
   };
 
   useEffect(() => {

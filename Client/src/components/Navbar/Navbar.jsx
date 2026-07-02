@@ -14,7 +14,7 @@ import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
 import { scrollToId } from "../../utils/scroll";
 import "./Navbar.css";
 
-const Navbar = () => {
+const Navbar = ({ variant }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -144,15 +144,24 @@ const Navbar = () => {
     if (location.pathname !== "/") {
       navigate("/");
 
-      setTimeout(() => {
+      let attempts = 0;
+      const checkAndScroll = setInterval(() => {
         if (mobile && id) {
-          scrollToId(id, 80);
+          const el = document.getElementById(id);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth" });
+            clearInterval(checkAndScroll);
+          }
         } else {
+          // If not mobile or no id, just scroll to vh (document body should be ready immediately)
           window.scrollTo({
             top: vhMultiplier * window.innerHeight,
             behavior: "smooth",
           });
+          clearInterval(checkAndScroll);
         }
+        attempts++;
+        if (attempts > 10) clearInterval(checkAndScroll);
       }, 100);
 
       return;
@@ -173,7 +182,18 @@ const Navbar = () => {
 
     if (location.pathname !== "/") {
       navigate("/");
-      scrollToId(id, 80, 100);
+
+      let attempts = 0;
+      const checkAndScroll = setInterval(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+          clearInterval(checkAndScroll);
+        }
+        attempts++;
+        if (attempts > 10) clearInterval(checkAndScroll); // 1s max
+      }, 100);
+
       return;
     }
 
@@ -185,9 +205,11 @@ const Navbar = () => {
       <div className="navbar-hover-zone"></div>
 
       <nav
-        className={`navbar ${
-          isScrolled ? "navbar-hidden" : "navbar-visible"
-        }`}
+        className={
+          variant === "vertical" 
+            ? "navbar-vertical" 
+            : `navbar ${isScrolled ? "navbar-hidden" : "navbar-visible"}`
+        }
       >
         {/* ---------------- Logo ---------------- */}
 
@@ -220,12 +242,12 @@ const Navbar = () => {
 
         {/* ---------------- Navigation ---------------- */}
 
-        <ul className={menuOpen ? "nav-links open" : "nav-links"}>
+        <ul className={menuOpen ? "nav-links open" : "nav-links"} style={variant === 'vertical' ? { flexDirection: 'column', alignItems: 'flex-start' } : {}}>
                     <li
-            className={activeIndex === 0 ? "active" : ""}
+            className={(location.pathname === "/" && activeIndex === 0) ? "active" : ""}
             onClick={() => scrollToSection(0)}
           >
-            {activeIndex === 0 && (
+            {(location.pathname === "/" && activeIndex === 0) && (
               <motion.div
                 className="nav-sliding-pill"
                 layoutId="navPill"
@@ -236,10 +258,10 @@ const Navbar = () => {
           </li>
 
           <li
-            className={activeIndex === 1 ? "active" : ""}
+            className={(location.pathname === "/" && activeIndex === 1) ? "active" : ""}
             onClick={() => scrollToSection(3.15, "mobile-about")}
           >
-            {activeIndex === 1 && (
+            {(location.pathname === "/" && activeIndex === 1) && (
               <motion.div
                 className="nav-sliding-pill"
                 layoutId="navPill"
@@ -250,23 +272,39 @@ const Navbar = () => {
           </li>
 
           <li
-             className={location.pathname === "/events" ? "active" : ""}
-             onClick={() => {
-               setMenuOpen(false);
-               navigate("/events", {
-                 state: { section: "events" }
-               });
-             }}
-            >
-             {location.pathname === "/events" && (
-               <motion.div
-                 className="nav-sliding-pill"
-                 layoutId="navPill"
-                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-               />
-             )}
-             <span>Events</span>
-            </li>
+            className={(location.pathname.startsWith("/events") || (location.pathname === "/" && activeIndex === 2)) ? "active" : ""}
+            onClick={() => {
+              setMenuOpen(false);
+              navigate("/events");
+            }}
+          >
+            {(location.pathname.startsWith("/events") || (location.pathname === "/" && activeIndex === 2)) && (
+              <motion.div
+                className="nav-sliding-pill"
+                layoutId="navPill"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+            <span>Events</span>
+          </li>
+
+          <li
+            className={(location.pathname.startsWith("/gallery") || (location.pathname === "/" && activeIndex === 3)) ? "active" : ""}
+            onClick={() => {
+              setMenuOpen(false);
+              navigate("/gallery");
+            }}
+          >
+            {(location.pathname.startsWith("/gallery") || (location.pathname === "/" && activeIndex === 3)) && (
+              <motion.div
+                className="nav-sliding-pill"
+                layoutId="navPill"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+            <span>Gallery</span>
+          </li>
+
           <li
             className={location.pathname === "/sponsors" ? "active" : ""}
             onClick={() => {
@@ -285,14 +323,14 @@ const Navbar = () => {
           </li>
 
           <li
-            className={activeIndex === 4 ? "active" : ""}
+            className={(location.pathname === "/" && activeIndex === 4) ? "active" : ""}
             onClick={() =>
               scrollToElement(
                 window.innerWidth <= 768 ? "mh-team" : "our-team"
               )
             }
           >
-            {activeIndex === 4 && (
+            {(location.pathname === "/" && activeIndex === 4) && (
               <motion.div
                 className="nav-sliding-pill"
                 layoutId="navPill"

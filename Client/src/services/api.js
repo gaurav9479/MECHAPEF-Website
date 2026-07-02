@@ -12,6 +12,16 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  const method = config.method?.toLowerCase();
+  if (['post', 'put', 'patch', 'delete'].includes(method)) {
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('api_cache_')) {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+
   return config;
 });
 
@@ -24,7 +34,9 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !isAuthExchange) {
       localStorage.removeItem('accessToken');
-      window.location.href = '/login';
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/login';
+      }
     } else if (
       !error.response || 
       error.response?.status === 502 || 

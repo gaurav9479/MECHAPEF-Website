@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import './PastSponsors.css';
 
 const PastSponsors = () => {
@@ -9,15 +10,16 @@ const PastSponsors = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/sponsors')
-      .then(res => {
-        const data = res.data.data?.sponsors || res.data.data || [];
-        const past = data.filter(s => s.isPastSponsor);
-        past.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-        setSponsors(past);
-      })
-      .catch(err => console.error("Failed to load past sponsors", err))
-      .finally(() => setLoading(false));
+    apiGetCached('/sponsors', (data) => {
+      const all = data.data?.sponsors || data.data || [];
+      const past = all.filter(s => s.isPastSponsor);
+      past.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      setSponsors(past);
+      setLoading(false);
+    }).catch(err => {
+      console.error("Failed to load past sponsors", err);
+      setLoading(false);
+    });
   }, []);
 
   if (loading) return null;

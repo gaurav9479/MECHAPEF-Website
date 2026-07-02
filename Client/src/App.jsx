@@ -11,6 +11,7 @@ import AdminRegistrations from './Pages/Admin/AdminRegistrations';
 import AdminTeam from './Pages/Admin/AdminTeam';
 import AdminAnnouncements from './Pages/Admin/AdminAnnouncements';
 import AdminSponsors from './Pages/Admin/AdminSponsors';
+import AdminMagazine from './Pages/Admin/AdminMagazine';
 import AdminManagement from './Pages/Admin/AdminManagement';
 import AdminGallery from './Pages/Admin/AdminGallery';
 import AdminScanner from './Pages/Admin/AdminScanner';
@@ -20,7 +21,8 @@ import Profile from './Pages/Profile/Profile';
 import Events from './Pages/Events/Events';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
-import  ProtectedRoute  from './components/ProtectedRoute/ProtectedRoute';
+import Magazine from './Pages/Magazine/Magazine';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
 const Unauthorized = () => (
   <div
@@ -72,6 +74,7 @@ const AnimatedRoutes = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/sponsors" element={<Sponsors />} />
+        <Route path="/magazine" element={<Magazine />} />
 
         {/* Profile */}
         <Route
@@ -136,6 +139,15 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
               <AdminTeam />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/magazine"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'media-lead']}>
+              <AdminMagazine />
             </ProtectedRoute>
           }
         />

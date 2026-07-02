@@ -6,6 +6,7 @@ import { FaArrowRight, FaUsers, FaCalendarAlt, FaTrophy, FaEnvelope, FaInstagram
 import wheelImg from "../../assets/wheel.png";
 
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
+import { scrollToId } from "../../utils/scroll";
 import './CinematicHero.css';
 
 // Import the styles so the inner components render beautifully
@@ -269,10 +270,10 @@ const CinematicHero = () => {
               </p>
 
               <div className="hero-buttons">
-                <button className="primary-btn" onClick={() => navigate('/events')}>
-                  EXPLORE MORE <FaArrowRight />
+                <button className="primary-btn" onClick={() => navigate('/magazine')}>
+                  MAGAZINE <FaArrowRight />
                 </button>
-                <button className="secondary-btn" onClick={() => document.getElementById('our-team')?.scrollIntoView({ behavior: 'smooth' })}>
+                <button className="secondary-btn" onClick={() => scrollToId('our-team')}>
                   MEET THE TEAM <FaUsers />
                 </button>
               </div>

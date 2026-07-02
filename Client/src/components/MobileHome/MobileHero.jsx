@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaUsers } from 'react-icons/fa';
 import { GearSVG } from './MobileShared';
+import { scrollToId } from '../../utils/scroll';
 import { fadeUp } from './MobileAnimVariants';
 
 const MobileHero = ({ navigate }) => {
@@ -48,12 +49,12 @@ const MobileHero = ({ navigate }) => {
           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.15, delayChildren: 0.55 } } }}>
           <motion.button className="mh-btn-primary" variants={fadeUp}
             whileTap={{ scale: 0.96 }}
-            onClick={() => navigate('/events')}>
-            EXPLORE EVENTS <FaArrowRight />
+            onClick={() => navigate('/magazine')}>
+            MAGAZINE <FaArrowRight />
           </motion.button>
           <motion.button className="mh-btn-secondary" variants={fadeUp}
             whileTap={{ scale: 0.96 }}
-            onClick={() => document.getElementById('mh-team')?.scrollIntoView({ behavior: 'smooth' })}>
+            onClick={() => scrollToId('mh-team')}>
             MEET THE TEAM <FaUsers />
           </motion.button>
         </motion.div>
