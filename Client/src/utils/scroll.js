@@ -7,14 +7,13 @@ export const scrollToId = (id, offset = 80, delay = 0) => {
   const performScroll = () => {
     const element = document.getElementById(id);
     if (element) {
-      // Calculate true offset based on element position
       const elementPosition = element.getBoundingClientRect().top + (window.scrollY || window.pageYOffset);
       const offsetPosition = elementPosition - offset;
 
       gsap.to(window, {
-        duration: 1.2,
+        duration: 0.7,
         scrollTo: { y: offsetPosition, autoKill: false },
-        ease: "power3.inOut"
+        ease: "power2.out"
       });
       return true;
     }
@@ -26,18 +25,11 @@ export const scrollToId = (id, offset = 80, delay = 0) => {
     return;
   }
 
-  if (performScroll()) {
-    // Fire a correction after 800ms just in case GSAP stopped short
-    setTimeout(performScroll, 800);
-  } else {
+  if (!performScroll()) {
+    // Element not in DOM yet — retry every 100ms (max 30 times)
     let attempts = 0;
     const interval = setInterval(() => {
-      const success = performScroll();
-      attempts++;
-      if (success) {
-        clearInterval(interval);
-        setTimeout(performScroll, 800);
-      } else if (attempts >= 30) {
+      if (performScroll() || ++attempts >= 30) {
         clearInterval(interval);
       }
     }, 100);
