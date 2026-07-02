@@ -10,29 +10,57 @@ const MagazineContainer = () => {
   const navigate = useNavigate();
   const { transitionState, setTransitionState, isDesktop } = useMagazineTransition();
 
-  const isMagazineRoute = location.pathname === '/magazine';
+  const isMagazineRoute = location.pathname.startsWith('/magazine');
   const isOpen = isMagazineRoute || transitionState === 'pullingDown';
   const isRollingUp = transitionState === 'rollingUp';
 
   if (!isDesktop) {
       // Mobile behavior: Magazine is just rendered normally without the shutter
+      if (isMagazineRoute) return <Magazine />;
       return null;
   }
 
   const handleHookClick = () => {
-    if (isMagazineRoute || transitionState !== 'idle') return;
+    if (transitionState !== 'idle') return;
     
-    // Drop the shutter
-    setTransitionState('pullingDown');
-    
-    setTimeout(() => {
-      navigate('/magazine');
-      setTransitionState('idle');
-    }, 1000);
+    if (isMagazineRoute) {
+      // Roll the shutter UP and return to Home page
+      setTransitionState('rollingUp');
+      
+      // Navigate instantly so the background route changes to Home
+      navigate('/');
+
+      setTimeout(() => {
+        setTransitionState('idle');
+      }, 1000);
+    } else {
+      // Drop the shutter DOWN
+      setTransitionState('pullingDown');
+      
+      setTimeout(() => {
+        navigate('/magazine');
+        
+        // Wait briefly for React Router to update the location context
+        // This prevents isOpen from flickering to false and unmounting the Magazine
+        setTimeout(() => {
+          setTransitionState('idle');
+        }, 50);
+      }, 1000);
+    }
   };
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: 0, zIndex: 10000 }}>
+      <style>{`
+        .magazine-shutter::-webkit-scrollbar {
+          display: none;
+        }
+        .magazine-shutter {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+      
       {/* The Fixed Hook */}
       <div 
         onClick={handleHookClick}
@@ -47,10 +75,17 @@ const MagazineContainer = () => {
           width: '80px' 
         }}
       >
-        <img 
+        <motion.img 
           src={hookImg} 
           alt="Magazine Hook" 
-          style={{ width: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }}
+          style={{ 
+            width: '100%', 
+            objectFit: 'contain', 
+            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))',
+            transformOrigin: 'top center'
+          }}
+          animate={{ rotate: [-3, 2, -3] }}
+          transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
           onError={(e) => { e.target.src = '/mechapefscroll.png'; }}
         />
       </div>
@@ -59,6 +94,7 @@ const MagazineContainer = () => {
       <AnimatePresence>
         {(isOpen || isRollingUp) && (
           <motion.div
+            className="magazine-shutter"
             initial={{ y: '-100vh' }}
             animate={{ y: isRollingUp ? '-100vh' : 0 }}
             exit={{ y: '-100vh' }}
@@ -70,7 +106,8 @@ const MagazineContainer = () => {
               width: '100%',
               height: '100vh',
               overflowY: 'auto',
-              backgroundColor: '#f5f4ef'
+              backgroundColor: '#f5f4ef',
+              zIndex: 40
             }}
           >
             <Magazine />

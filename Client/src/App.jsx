@@ -74,7 +74,8 @@ const AnimatedRoutes = () => {
         <Route path="/gallery/:id" element={<AlbumView />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
-        <Route path="/magazine" element={<div className="min-h-screen w-full" style={{ backgroundColor: '#f5f4ef' }} />} />
+        <Route path="/sponsors" element={<Sponsors />} />
+        <Route path="/magazine" element={<div style={{ minHeight: '100vh', width: '100%', backgroundColor: '#f5f4ef' }} />} />
 
         {/* Profile */}
         <Route
