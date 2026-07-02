@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes, FaGripVertical, FaImage, FaCrop } from 'react-icons/fa';
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
@@ -195,27 +196,87 @@ const PastEventsManager = () => {
         </div>
       </main>
 
-      {/* Cropper Modal */}
-      {showCropper && (
-        <div className="cropper-modal-overlay">
-          <div className="cropper-modal">
-            <div className="cropper-modal-header">
-              <h3><FaCrop style={{marginRight: '8px'}}/> Crop Image (4:3)</h3>
-              <button className="close-modal-btn" onClick={() => { setShowCropper(false); setImageSrc(null); }}>
+      {/* Cropper Modal — rendered via portal at body level */}
+      {showCropper && createPortal(
+        <div
+          onClick={() => { setShowCropper(false); setImageSrc(null); }}
+          style={{
+            position: 'fixed',
+            top: 0, left: 0,
+            width: '100vw', height: '100vh',
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            boxSizing: 'border-box',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: '20px',
+              width: '100%',
+              maxWidth: '660px',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.25)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Header */}
+            <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '1rem', color: '#111' }}>
+                <FaCrop style={{ color: '#ff1f01' }} /> Crop Image (4:3)
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowCropper(false); setImageSrc(null); }}
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280', fontSize: '0.85rem', transition: 'all 0.2s', flexShrink: 0 }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#ff1f01'; e.currentTarget.style.color = '#fff'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#6b7280'; }}
+              >
                 <FaTimes />
               </button>
             </div>
-            <div className="cropper-modal-body">
-              <Cropper src={imageSrc} style={{ height: '350px', width: '100%' }} aspectRatio={4 / 3} guides={true} ref={cropperRef} viewMode={1} autoCropArea={1} background={false} responsive={true} zoomable={false} />
+            {/* Cropper */}
+            <div style={{ background: '#f8f8f8', lineHeight: 0 }}>
+              <Cropper
+                src={imageSrc}
+                style={{ height: '360px', width: '100%' }}
+                aspectRatio={4 / 3}
+                guides={true}
+                ref={cropperRef}
+                viewMode={1}
+                autoCropArea={1}
+                background={false}
+                responsive={true}
+                zoomable={false}
+              />
             </div>
-            <div className="cropper-modal-footer">
-              <button className="btn-secondary" onClick={() => { setShowCropper(false); setImageSrc(null); }}>Cancel</button>
-              <button className="btn-primary" onClick={handleCrop} disabled={uploading}>
+            {/* Footer */}
+            <div style={{ padding: '14px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px', background: '#fff', borderTop: '1px solid #f0f0f0' }}>
+              <button
+                type="button"
+                onClick={() => { setShowCropper(false); setImageSrc(null); }}
+                style={{ padding: '9px 22px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '50px', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}
+              >Cancel</button>
+              <button
+                type="button"
+                onClick={handleCrop}
+                disabled={uploading}
+                style={{ padding: '9px 26px', background: uploading ? '#aaa' : '#ff1f01', color: '#fff', border: 'none', borderRadius: '50px', fontWeight: 700, fontSize: '0.88rem', cursor: uploading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(255,31,1,0.35)' }}
+              >
                 {uploading ? 'Uploading...' : 'Crop & Upload'}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {toast && <div className={`admin-toast ${toast.type}`} style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.type==='error'?'#dc3545':'#28a745', color: '#fff', padding: '15px 25px', borderRadius: '5px', zIndex: 10000 }}>{toast.msg}</div>}
