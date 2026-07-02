@@ -11,6 +11,7 @@ import {
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
+import { scrollToId } from "../../utils/scroll";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -145,9 +146,7 @@ const Navbar = () => {
 
       setTimeout(() => {
         if (mobile && id) {
-          document
-            .getElementById(id)
-            ?.scrollIntoView({ behavior: "smooth" });
+          scrollToId(id, 80);
         } else {
           window.scrollTo({
             top: vhMultiplier * window.innerHeight,
@@ -160,9 +159,7 @@ const Navbar = () => {
     }
 
     if (mobile && id) {
-      document
-        .getElementById(id)
-        ?.scrollIntoView({ behavior: "smooth" });
+      scrollToId(id, 80);
     } else {
       window.scrollTo({
         top: vhMultiplier * window.innerHeight,
@@ -176,19 +173,11 @@ const Navbar = () => {
 
     if (location.pathname !== "/") {
       navigate("/");
-
-      setTimeout(() => {
-        document
-          .getElementById(id)
-          ?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-
+      scrollToId(id, 80, 100);
       return;
     }
 
-    document
-      .getElementById(id)
-      ?.scrollIntoView({ behavior: "smooth" });
+    scrollToId(id, 80);
   };
 
   return (
@@ -261,39 +250,23 @@ const Navbar = () => {
           </li>
 
           <li
-            className={activeIndex === 2 ? "active" : ""}
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/events");
-            }}
-          >
-            {activeIndex === 2 && (
-              <motion.div
-                className="nav-sliding-pill"
-                layoutId="navPill"
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
-            )}
-            <span>Events</span>
-          </li>
-
-          <li
-            className={activeIndex === 3 ? "active" : ""}
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/gallery");
-            }}
-          >
-            {activeIndex === 3 && (
-              <motion.div
-                className="nav-sliding-pill"
-                layoutId="navPill"
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
-            )}
-            <span>Gallery</span>
-          </li>
-
+             className={location.pathname === "/events" ? "active" : ""}
+             onClick={() => {
+               setMenuOpen(false);
+               navigate("/events", {
+                 state: { section: "events" }
+               });
+             }}
+            >
+             {location.pathname === "/events" && (
+               <motion.div
+                 className="nav-sliding-pill"
+                 layoutId="navPill"
+                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
+               />
+             )}
+             <span>Events</span>
+            </li>
           <li
             className={location.pathname === "/sponsors" ? "active" : ""}
             onClick={() => {
