@@ -31,7 +31,7 @@ export const register = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Wrong credential');
     }
 
-    if (req.body.role && req.body.role !== 'GeneralUser') {
+    if (req.body.role && req.body.role !== 'general-user') {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Privileged roles cannot be self-registered. Contact the SuperAdmin.');
     }
 
@@ -52,7 +52,7 @@ export const register = asyncHandler(async (req, res) => {
         email: email.toLowerCase(),
         password,
         collegeRegNo: collegeRegNo.toUpperCase(),
-        role: 'GeneralUser',
+        role: 'genera',
         requestedRole: req.body.requestedRole || null,
         isVerified: false,
         unverifiedRequestExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -444,7 +444,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
             name,
             email,
             collegeRegNo: collegeRegNo.toUpperCase(),
-            role: 'GeneralUser',
+            role: 'general-user',
             isVerified: true,
             password: Math.random().toString(36).slice(-10) + 'A1!'
         });

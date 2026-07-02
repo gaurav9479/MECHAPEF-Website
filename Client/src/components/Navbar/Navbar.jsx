@@ -11,6 +11,7 @@ import {
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
+import { scrollToId } from "../../utils/scroll";
 import "./Navbar.css";
 
 const Navbar = ({ variant }) => {
@@ -167,9 +168,7 @@ const Navbar = ({ variant }) => {
     }
 
     if (mobile && id) {
-      document
-        .getElementById(id)
-        ?.scrollIntoView({ behavior: "smooth" });
+      scrollToId(id, 80);
     } else {
       window.scrollTo({
         top: vhMultiplier * window.innerHeight,
@@ -198,9 +197,7 @@ const Navbar = ({ variant }) => {
       return;
     }
 
-    document
-      .getElementById(id)
-      ?.scrollIntoView({ behavior: "smooth" });
+    scrollToId(id, 80);
   };
 
   return (
@@ -400,7 +397,7 @@ const Navbar = ({ variant }) => {
                       My Profile
                     </button>
 
-                    {hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin") && (
+                    {(hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) && (
                       <button onClick={goAdmin}>
                         <FaUserShield />
                         Admin Portal

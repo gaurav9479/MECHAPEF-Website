@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema(
                 values: ROLES_ARRAY,
                 message: `Role must be one of: ${ROLES_ARRAY.join(', ')}`
             },
-            default: 'GeneralUser'
+            default: 'general-user'
         },
 
         requestedRole: {

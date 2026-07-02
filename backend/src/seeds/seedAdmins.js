@@ -44,7 +44,7 @@ const SEED_USERS = [
         email: 'dhairya.20246052@mnnit.ac.in',
         password: 'dhairya',
         collegeRegNo: '20246052',
-        role: 'GeneralUser',
+        role: 'general-user',
         isVerified: true,
         isActive: true,
         branch: 'Mechanical Engineering',
