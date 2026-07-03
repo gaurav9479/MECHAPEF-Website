@@ -5,6 +5,7 @@ import User from '../models/user.model.js';
 import Announcement from '../models/announcement.model.js';
 import Event from '../models/event.model.js';
 import sendEmail from '../utils/sendEmail.js';
+import logFootprint from '../utils/logFootprint.js';
 import { HTTP_STATUS, USER_ROLES } from '../constants/index.js';
 import validator from 'validator';
 
@@ -144,6 +145,8 @@ export const sendMail = asyncHandler(async (req, res) => {
             }
         }
         console.log(`[Mail Portal] Finished sending. Sent: ${sent}, Failed: ${failed}`);
+        // Log the footprint asynchronously after sending
+        logFootprint(req, 'MAIL_SENT', 'Mail Portal', `Sent email "${title}" to ${validUsers.length} users (${targetRole})`);
     };
 
     sendEmailsInBackground();

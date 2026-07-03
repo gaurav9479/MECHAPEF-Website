@@ -216,6 +216,9 @@
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(180, 20, 20, 0.85); /* Deep red tint */
 }
+.np-poster.has-image::before {
+  display: none;
+}
 .np-poster-content {
   position: relative;
   z-index: 2;

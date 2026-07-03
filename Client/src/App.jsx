@@ -14,6 +14,7 @@ import AdminAnnouncements from './Pages/Admin/AdminAnnouncements';
 import AdminSponsors from './Pages/Admin/AdminSponsors';
 import AdminMagazine from './Pages/Admin/AdminMagazine';
 import AdminMail from './Pages/Admin/AdminMail';
+import AdminFootprints from './Pages/Admin/AdminFootprints';
 import AdminManagement from './Pages/Admin/AdminManagement';
 import AdminGallery from './Pages/Admin/AdminGallery';
 import AdminScanner from './Pages/Admin/AdminScanner';
@@ -151,6 +152,15 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={['super-admin']}>
               <AdminMail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/footprints"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin']}>
+              <AdminFootprints />
             </ProtectedRoute>
           }
         />
