@@ -162,22 +162,13 @@ const AdminAnnouncements = () => {
                     {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Target Type</label>
-                  <select value={form.targetType} onChange={e => f('targetType', e.target.value)}>
-                    {TARGET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                <div className="form-group full">
+                  <label>Target Link / Event ID (Optional)</label>
+                  <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="/events/EVENT_ID or https://..." />
                 </div>
-                {form.targetType !== 'None' && (
-                  <div className="form-group full">
-                    <label>Target Link / Event ID</label>
-                    <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="/events/EVENT_ID or https://..." />
-                  </div>
-                )}
-                {form.targetType === 'Event' && (
-                  <>
-                    <div className="form-group full">
-                      <label>Select Event Sponsors (Multiple Allowed)</label>
+                
+                <div className="form-group full">
+                  <label>Select Event Sponsors (Multiple Allowed)</label>
                       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', border: '1px solid #333', padding: '10px', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto', marginBottom: '15px' }}>
                         {allSponsors.map(s => {
                           const isSelected = form.eventSponsors?.some(sp => sp.name === s.companyName);
@@ -212,8 +203,6 @@ const AdminAnnouncements = () => {
                         {allSponsors.length === 0 && <span style={{ color: '#888' }}>No sponsors available. Add them in Sponsors panel first.</span>}
                       </div>
                     </div>
-                  </>
-                )}
                 <div className="form-group full">
                   <label>Banner Image (For Live Events Slider)</label>
                   <CropperInput

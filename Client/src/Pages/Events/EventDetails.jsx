@@ -157,6 +157,15 @@ const EventDetails = () => {
                 </ul>
               </div>
             )}
+
+            {event.prizes && (
+              <div className="event-prizes" style={{ marginTop: '30px' }}>
+                <h3 style={{ color: '#ff1f01', marginBottom: '15px' }}>🏆 Prizes & Rewards</h3>
+                <p style={{ fontSize: '1.1rem', color: '#e5e7eb', background: '#111', padding: '15px', borderLeft: '4px solid #ff1f01', borderRadius: '4px', whiteSpace: 'pre-line' }}>
+                  {event.prizes}
+                </p>
+              </div>
+            )}
           </div>
           
           <div className="event-sidebar">

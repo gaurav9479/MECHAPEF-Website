@@ -4,6 +4,7 @@ import User from '../models/user.model.js';
 import APIResponse from '../utils/APIResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import logFootprint from '../utils/logFootprint.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, PAGINATION } from '../constants/index.js';
 import ImageKit from 'imagekit';
 
@@ -49,6 +50,8 @@ export const createEvent = asyncHandler(async (req, res) => {
 
     await newEvent.save();
     await newEvent.populate('createdBy', 'name email');
+
+    logFootprint(req, 'CREATE', 'Event', `Created event: ${newEvent.title}`);
 
     return res
         .status(HTTP_STATUS.CREATED)
@@ -154,6 +157,8 @@ export const updateEvent = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
 
+    logFootprint(req, 'UPDATE', 'Event', `Updated event: ${event.title}`);
+
     return res
         .status(HTTP_STATUS.OK)
         .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event updated successfully'));
@@ -176,6 +181,8 @@ export const deleteEvent = asyncHandler(async (req, res) => {
         { eventId: event._id },
         { deletedAt: new Date() }
     );
+
+    logFootprint(req, 'DELETE', 'Event', `Deleted event: ${event.title}`);
 
     return res
         .status(HTTP_STATUS.OK)

@@ -4,6 +4,7 @@ import APIResponse from '../utils/APIResponse.js';
 import Team from '../models/team.model.js';
 import User from '../models/user.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
+import logFootprint from '../utils/logFootprint.js';
 
 export const getAllTeam = asyncHandler(async (req, res) => {
     // Fetch all verified users who have a role other than general-user
@@ -51,6 +52,8 @@ export const createTeamMember = asyncHandler(async (req, res) => {
         bio,
         displayOrder: displayOrder || 0
     });
+
+    logFootprint(req, 'CREATE', 'Team Member', `Added ${member.name} to ${member.role}`);
 
     return res
         .status(HTTP_STATUS.CREATED)

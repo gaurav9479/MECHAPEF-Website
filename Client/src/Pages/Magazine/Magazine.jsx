@@ -154,7 +154,7 @@ const Magazine = () => {
           {/* Advertisement / Poster */}
           {ad.isEnabled && (
             <div 
-              className="np-poster" 
+              className={`np-poster ${ad.bannerImageURL ? 'has-image' : ''}`} 
               style={{ 
                 backgroundImage: ad.bannerImageURL ? `url(${ad.bannerImageURL})` : 'none',
                 backgroundColor: ad.bannerImageURL ? 'transparent' : '#b31b1b',

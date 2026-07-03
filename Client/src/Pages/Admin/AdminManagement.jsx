@@ -392,20 +392,10 @@ const AdminManagement = () => {
                     required placeholder="Notice content..."
                   />
                 </div>
-                <div className="form-group full">
-                  <label>Target Type</label>
-                  <select value={noticeForm.targetType} onChange={e => setNoticeForm(p => ({ ...p, targetType: e.target.value }))}>
-                    <option value="None">None</option>
-                    <option value="Event">Event</option>
-                    <option value="External">External</option>
-                    <option value="Internal">Internal</option>
-                  </select>
-                </div>
-                {noticeForm.targetType === 'Event' && (
-                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '10px' }}>
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <label>Select Event Sponsors (Multiple Allowed)</label>
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', border: '1px solid #333', padding: '10px', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Select Sponsors (Multiple Allowed)</label>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', border: '1px solid #333', padding: '10px', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto', marginBottom: '15px' }}>
                         {allSponsors.map(s => {
                           const isSelected = noticeForm.eventSponsors?.some(sp => sp.name === s.companyName);
                           return (
@@ -440,7 +430,6 @@ const AdminManagement = () => {
                       </div>
                     </div>
                   </div>
-                )}
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginTop: '16px' }}>
                   <div className="form-group">
                     <label>Priority</label>

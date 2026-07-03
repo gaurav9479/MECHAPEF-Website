@@ -17,8 +17,8 @@ const LiveEventsSlider = () => {
   useEffect(() => {
     apiGetCached('/announcements', (data) => {
       const items = data.data?.announcements || data.data || [];
-      // Filter for active announcements that have a banner URL OR are marked as an Event
-      const banners = items.filter(n => n.isActive && (n.bannerURL || n.targetType === 'Event'));
+      // Filter for all active announcements
+      const banners = items.filter(n => n.isActive);
       // Sort by display order
       banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setSlides(banners);
