@@ -75,9 +75,9 @@ const HeroIntro = () => {
               </motion.p>
 
               <motion.div className="hero-buttons" style={{ y: btnY, opacity: btnOpacity }}>
-                <button className="primary-btn" onClick={() => navigate('/magazine')}>
+                {/* <button className="primary-btn" onClick={() => navigate('/magazine')}>
                   MAGAZINE <FaArrowRight />
-                </button>
+                </button> */}
                 <button className="secondary-btn" onClick={() => scrollToId('our-team')}>
                   MEET THE TEAM <FaUsers />
                 </button>
