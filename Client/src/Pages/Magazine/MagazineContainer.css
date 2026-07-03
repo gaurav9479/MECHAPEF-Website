@@ -1,0 +1,54 @@
+/* Container ko flex banaya taaki screen center mein latke */
+.screen-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 10000;
+  display: flex;
+  justify-content: center; /* Screen ko beech mein rakhega */
+  pointer-events: none; /* Let clicks pass through when empty */
+}
+
+/* The Main Fabric */
+.projector-screen {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  max-width: none;
+  background-color: #f5f4ef;
+  pointer-events: auto; /* Re-enable clicks for the screen */
+  
+  /* THE MAGIC: Edges ko curl dikhane ke liye inner shadows */
+  box-shadow: 
+    inset 25px 0px 20px -15px rgba(255, 255, 255, 0.4), /* Left side ka halka reflection/curl */
+    inset -25px 0px 20px -15px rgba(0, 0, 0, 0.2),       /* Right side ka dark shadow/curl */
+    0px 20px 25px rgba(0, 0, 0, 0.5);                    /* Parde ke peeche ki main shadow */
+    
+  border-radius: 0 0 4px 4px;
+  z-index: 10;
+  transition: box-shadow 0.6s ease-in-out, border-radius 0.6s ease-in-out;
+}
+
+/* Hide scrollbar for the magazine */
+.projector-screen::-webkit-scrollbar {
+  display: none;
+}
+.projector-screen {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+/* Rod animation is now handled in JSX with motion.div for dynamic thickness */
+
+/* Full screen magazine mode */
+.magazine-fullscreen {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  max-width: none;
+  background-color: #f5f4ef;
+  pointer-events: auto;
+  border-radius: 0;
+  box-shadow: none;
+  transition: box-shadow 0.6s ease-in-out, border-radius 0.6s ease-in-out;
+}

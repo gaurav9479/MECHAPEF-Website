@@ -67,12 +67,12 @@ const MagazineContainer = () => {
         style={{ 
           position: 'absolute', 
           top: 0, 
-          right: '2%', 
+          right: 'clamp(8px, 2vw, 20px)', 
           zIndex: 50, 
           cursor: 'pointer', 
           display: 'flex', 
           justifyContent: 'center', 
-          width: '80px',
+          width: 'clamp(65px, 6vw, 90px)',
           transformOrigin: 'top center'
         }}
       >
