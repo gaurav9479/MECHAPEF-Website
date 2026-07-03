@@ -9,6 +9,7 @@ import uploadRoutes from './upload.route.js';
 import albumRoutes from './albums.routes.js';
 import pastEventsRoutes from './pastEvents.route.js';
 import magazineRoutes from './magazine.route.js';
+import mailRoutes from './mail.route.js';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/upload', uploadRoutes);
 router.use('/gallery', albumRoutes);
 router.use('/past-events', pastEventsRoutes);
 router.use('/magazine', magazineRoutes);
+router.use('/mail', mailRoutes);
 
 router.get('/health', (req, res) => {
     res.status(200).json({

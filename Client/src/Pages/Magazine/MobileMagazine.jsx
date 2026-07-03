@@ -14,10 +14,10 @@ const MobileMagazine = ({ data }) => {
   const publishDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   const renderMastheadTitle = (title) => {
-    const t = title || 'THE MECHAPEF TIMES';
+    const t = title || 'The MechaPEF Times';
     const parts = t.split(/(MECHAPEF)/i);
     return parts.map((part, i) => 
-      part.toUpperCase() === 'MECHAPEF' ? <span key={i} style={{color: 'var(--np-red)'}}>{part}</span> : part
+      part.toUpperCase() === 'MECHAPEF' ? <span key={i} style={{color: 'var(--np-red)'}}>MechaPEF</span> : part
     );
   };
 

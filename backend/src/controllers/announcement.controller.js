@@ -3,7 +3,7 @@ import ApiError from '../utils/ApiError.js';
 import APIResponse from '../utils/APIResponse.js';
 import Announcement from '../models/announcement.model.js';
 import User from '../models/user.model.js';
-import sendAnnouncementEmail from '../utils/sendAnnouncementEmail.js';
+
 import { HTTP_STATUS } from '../constants/index.js';
 
 export const getAnnouncements = asyncHandler(async (req, res) => {
@@ -18,17 +18,7 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
     const createdBy = req.user?.userId || '000000000000000000000000';
     const item = await Announcement.create({ ...req.body, createdBy });
 
-    User.find({
-        deletedAt: null,
-        isActive: true,
-        email: { $exists: true, $type: 'string', $ne: '' }
-    })
-        .select('email name')
-        .lean()
-        .then(users => sendAnnouncementEmail(users, item))
-        .catch(error => {
-            console.error(`[Announcement Email] Notification failed for announcement ${item._id}:`, error.message);
-        });
+    // Auto-email has been moved to a dedicated Mail portal for Super Admins
 
     return res.status(HTTP_STATUS.CREATED).json(new APIResponse(HTTP_STATUS.CREATED, { item }, 'Announcement created'));
 });
