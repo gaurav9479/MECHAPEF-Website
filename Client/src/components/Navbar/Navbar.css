@@ -26,8 +26,10 @@
 
 .navbar-hidden {
   top: -120px; /* Hidden by default */
-  background: rgba(5, 5, 5, 0.9); /* Slight background so it's readable when it drops down over content */
-  backdrop-filter: blur(10px);
+  background: rgba(5, 5, 5, 0.75);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 /* Show the hidden navbar when hovering the zone, OR when hovering the navbar itself */
@@ -95,19 +97,28 @@
   cursor: pointer;
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.7);
-  transition: color 0.2s;
+  transition: all 0.3s ease;
   font-weight: 500;
-  padding: 10px 12px;
+  padding: 8px 18px;
+  border-radius: 30px;
   z-index: 1;
   white-space: nowrap;
 }
 
-.navbar ul li.active {
-  color: #ff0000;
+.navbar ul li span {
+  position: relative;
+  z-index: 2;
 }
 
-.navbar ul li:hover {
+.navbar ul li.active {
   color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+.navbar ul li:hover:not(.active) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .contact-btn {
@@ -133,6 +144,10 @@
   color: #fff;
   cursor: pointer;
   z-index: 1010;
+}
+
+.desktop-only-btn {
+  margin-right: 45px; /* Shift profile button to left to avoid overlapping Notice Board string */
 }
 
 @media (max-width: 768px) {
@@ -343,9 +358,11 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 0, 0, 0.15);
-  border: 1px solid rgba(255, 0, 0, 0.4);
-  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(255, 31, 1, 0.25), rgba(201, 24, 43, 0.05));
+  border: 1px solid rgba(255, 31, 1, 0.4);
+  box-shadow: 0 4px 15px rgba(255, 31, 1, 0.25), inset 0 0 12px rgba(255, 31, 1, 0.15);
+  backdrop-filter: blur(8px);
+  border-radius: 30px;
   z-index: 0;
   pointer-events: none;
 }
@@ -399,16 +416,34 @@
 
 .navbar-vertical .nav-links {
   width: 100%;
-  padding-left: 15px;
+  padding: 0;
+  list-style: none;
+  border-top: 2px solid var(--np-border, #333);
+  border-bottom: 2px solid var(--np-border, #333);
+  padding: 20px 0;
 }
 
 .navbar-vertical .nav-links li {
   width: 100%;
   text-align: left;
-  padding: 12px 10px;
+  padding: 12px 15px;
   color: var(--np-text, #111);
-  font-weight: 600;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navbar-vertical .nav-links li:last-child {
+  border-bottom: none;
+}
+
+.navbar-vertical .nav-links li:hover {
+  background: rgba(0,0,0,0.03);
+  padding-left: 20px;
 }
 
 .navbar-vertical .nav-sliding-pill {

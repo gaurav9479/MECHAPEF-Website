@@ -67,7 +67,7 @@ const MagazineContainer = () => {
         style={{ 
           position: 'absolute', 
           top: 0, 
-          right: '15%', 
+          right: '2%', 
           zIndex: 50, 
           cursor: 'pointer', 
           display: 'flex', 
