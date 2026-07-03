@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMagazineTransition } from '../../context/MagazineTransitionContext';
@@ -67,7 +67,7 @@ const MagazineContainer = () => {
         style={{ 
           position: 'absolute', 
           top: 0, 
-          right: '5%', 
+          right: '2%', 
           zIndex: 50, 
           cursor: 'pointer', 
           display: 'flex', 

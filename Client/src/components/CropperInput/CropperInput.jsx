@@ -51,7 +51,7 @@ const CropperInput = ({ initialImage, aspect, onSave, label = "Upload Image" }) 
         formData.append('file', blob, `cropped_${Date.now()}.jpg`);
         formData.append('folder', 'magazine');
         
-        const res = await api.post('/upload', formData, {
+        const res = await api.post('/upload/file', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         

@@ -88,7 +88,7 @@ const AdminMagazine = () => {
 
     setUploading(true);
     try {
-      const res = await api.post('/upload', formData, {
+      const res = await api.post('/upload/file', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       const url = res.data.data.url;

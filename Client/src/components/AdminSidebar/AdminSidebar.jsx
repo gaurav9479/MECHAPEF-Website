@@ -12,7 +12,8 @@ import {
   FaBars,
   FaTimes,
   FaQrcode,
-  FaBook
+  FaBook,
+  FaEnvelope
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import './AdminSidebar.css';
@@ -104,6 +105,12 @@ const AdminSidebar = () => {
                 <FaImages /> Gallery
               </Link>
             </>
+          )}
+
+          {hasRole('super-admin') && (
+            <Link to="/admin/mail" className={`sidebar-link ${location.pathname === '/admin/mail' ? 'active' : ''}`}>
+              <FaEnvelope /> Mail
+            </Link>
           )}
         </nav>
         <div className="sidebar-bottom">

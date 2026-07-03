@@ -13,6 +13,7 @@ import AdminTeam from './Pages/Admin/AdminTeam';
 import AdminAnnouncements from './Pages/Admin/AdminAnnouncements';
 import AdminSponsors from './Pages/Admin/AdminSponsors';
 import AdminMagazine from './Pages/Admin/AdminMagazine';
+import AdminMail from './Pages/Admin/AdminMail';
 import AdminManagement from './Pages/Admin/AdminManagement';
 import AdminGallery from './Pages/Admin/AdminGallery';
 import AdminScanner from './Pages/Admin/AdminScanner';
@@ -141,6 +142,15 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
               <AdminTeam />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/mail"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin']}>
+              <AdminMail />
             </ProtectedRoute>
           }
         />
