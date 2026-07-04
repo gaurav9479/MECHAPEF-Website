@@ -18,6 +18,7 @@ const startServer = async () => {
             // Start background jobs
             startCronJobs();
             startRegistrationWorker();
+            import('./workers/email.worker.js').catch(err => console.error('Failed to load email worker:', err));
         });
     } catch (error) {
         console.error('Failed to start server:', error.message);

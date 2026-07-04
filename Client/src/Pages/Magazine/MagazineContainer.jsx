@@ -11,12 +11,14 @@ const MagazineContainer = () => {
   const { transitionState, setTransitionState, isDesktop } = useMagazineTransition();
 
   const isMagazineRoute = location.pathname.startsWith('/magazine');
+  const isAdminRoute = location.pathname.startsWith('/admin');
   const isOpen = isMagazineRoute || transitionState === 'pullingDown';
   const isRollingUp = transitionState === 'rollingUp';
 
-  if (!isDesktop) {
-      // Mobile behavior: Magazine is just rendered normally without the shutter
-      if (isMagazineRoute) return <Magazine />;
+  if (!isDesktop || isAdminRoute) {
+      // Mobile behavior: Magazine is just rendered normally without the shutter.
+      // Admin behavior: Hide the overlay entirely from the admin portal.
+      if (isMagazineRoute && !isAdminRoute) return <Magazine />;
       return null;
   }
 

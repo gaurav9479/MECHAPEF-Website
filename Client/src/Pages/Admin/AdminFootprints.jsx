@@ -39,9 +39,20 @@ const AdminFootprints = () => {
     <div className="admin-layout">
       <AdminSidebar />
       <main className="admin-main">
-        <div className="admin-header">
-          <h1><FaShoePrints /> Digital Footprints</h1>
-          <p>Audit log of admin actions (Logs vanish after 1 week)</p>
+        <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1><FaShoePrints /> Digital Footprints</h1>
+            <p>Audit log of admin actions (Logs vanish after 1 week)</p>
+          </div>
+          <button 
+            onClick={fetchFootprints} 
+            disabled={loading}
+            className="action-btn"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <FaHistory className={loading ? 'spin' : ''} />
+            {loading ? 'Refreshing...' : 'Refresh Logs'}
+          </button>
         </div>
 
         {error && <div className="admin-alert error">{error}</div>}

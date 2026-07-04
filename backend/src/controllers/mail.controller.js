@@ -65,6 +65,11 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType) =
     };
 };
 
+import { Queue } from 'bullmq';
+import { connection } from '../config/redis.js';
+
+const emailQueue = new Queue('emailQueue', { connection });
+
 export const sendMail = asyncHandler(async (req, res) => {
     const { targetRole, endorsementType, endorsementId, customSubject, customBody } = req.body;
 
@@ -101,7 +106,7 @@ export const sendMail = asyncHandler(async (req, res) => {
     
     if (targetRole === 'super-admin') query.role = USER_ROLES.SUPER_ADMIN;
     else if (targetRole === 'content-lead') query.role = USER_ROLES.CONTENT_LEAD;
-    else if (targetRole === 'event-lead') query.role = USER_ROLES.MEDIA_LEAD; // Using media-lead for event-lead currently
+    else if (targetRole === 'media-lead' || targetRole === 'event-lead') query.role = USER_ROLES.MEDIA_LEAD; 
     else if (targetRole === 'member') query.role = USER_ROLES.MEMBER;
     // if 'all', don't add role filter
 
@@ -123,33 +128,30 @@ export const sendMail = asyncHandler(async (req, res) => {
 
     const emailContent = buildEmailContent(title, description, isEndorsement, endorsementType);
     
-    // Process sending in background to not block the request
-    const sendEmailsInBackground = async () => {
-        let sent = 0;
-        let failed = 0;
-        for (const [index, user] of validUsers.entries()) {
-            try {
-                await sendEmail({
-                    to: user.email,
-                    subject: emailContent.subject,
-                    text: emailContent.text,
-                    html: emailContent.html
-                });
-                sent++;
-            } catch (error) {
-                failed++;
-                console.error(`[Mail Portal] Failed for ${user.email}:`, error.message);
-            }
-            if (index < validUsers.length - 1 && EMAIL_DELAY_MS > 0) {
-                await sleep(EMAIL_DELAY_MS);
+    // Process sending in background using BullMQ
+    const jobs = validUsers.map(user => ({
+        name: 'sendEmail',
+        data: {
+            to: user.email,
+            subject: emailContent.subject,
+            text: emailContent.text,
+            html: emailContent.html
+        },
+        opts: {
+            attempts: 3,
+            backoff: {
+                type: 'exponential',
+                delay: 5000
             }
         }
-        console.log(`[Mail Portal] Finished sending. Sent: ${sent}, Failed: ${failed}`);
-        // Log the footprint asynchronously after sending
-        logFootprint(req, 'MAIL_SENT', 'Mail Portal', `Sent email "${title}" to ${validUsers.length} users (${targetRole})`);
-    };
+    }));
 
-    sendEmailsInBackground();
+    await emailQueue.addBulk(jobs);
+    
+    console.log(`[Mail Portal] Enqueued ${jobs.length} emails to BullMQ`);
+    
+    // Log the footprint for initiating the batch mail
+    logFootprint(req, 'MAIL_SENT', 'Mail Portal', `Queued email "${title}" to ${validUsers.length} users (${targetRole})`);
 
-    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { targeted: validUsers.length }, 'Email dispatch started in background'));
+    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { targeted: validUsers.length }, 'Email dispatch queued successfully in BullMQ'));
 });
