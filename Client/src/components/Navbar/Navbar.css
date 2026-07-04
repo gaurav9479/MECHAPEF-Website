@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px clamp(18px, 5vw, 8%);
+  padding: 20px clamp(12px, 3vw, 8%);
   z-index: 1001;
   transition: top 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease; /* Instant but smooth drop */
 }
@@ -89,17 +89,17 @@
 .navbar ul {
   display: flex;
   list-style: none;
-  gap: clamp(8px, 2vw, 28px);
+  gap: clamp(4px, 1.2vw, 20px);
 }
 
 .navbar ul li {
   position: relative;
   cursor: pointer;
-  font-size: clamp(0.8rem, 1.2vw, 0.95rem);
+  font-size: clamp(0.75rem, 1vw, 0.95rem);
   color: rgba(255, 255, 255, 0.7);
   transition: all 0.3s ease;
   font-weight: 500;
-  padding: clamp(6px, 0.8vw, 8px) clamp(10px, 1.5vw, 18px);
+  padding: clamp(4px, 0.6vw, 8px) clamp(8px, 1.2vw, 18px);
   border-radius: 30px;
   z-index: 1;
   white-space: nowrap;
