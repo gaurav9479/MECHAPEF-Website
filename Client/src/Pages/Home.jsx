@@ -5,14 +5,14 @@ import AboutWheel from "../components/CinematicHero/AboutWheel";
 import LearningLogos from "../components/LearningLogos/LearningLogos";
 import PastEventsStack from "../components/PastEventsStack/PastEventsStack";
 import LiveEventsSlider from "../components/LiveEventsSlider/LiveEventsSlider";
-import SpiritOfMech from "../components/CinematicHero/SpiritOfMech";
+import OurDepartment from "../components/OurDepartment/OurDepartment";
 import OurTeam from "../components/OurTeam/OurTeam";
 import PastSponsors from "../components/PastSponsors/PastSponsors";
 import JoinUsBot from "../components/CinematicHero/JoinUsBot";
 import Footer from "../components/Footer/Footer";
 import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
-
+import SectionIndicator from "../components/SectionIndicator/SectionIndicator";
 
 const Home = () => {
   useEffect(() => {
@@ -44,15 +44,18 @@ const Home = () => {
 
       {/* ── Desktop layout (hidden on mobile via CSS) ── */}
       <div className="desktop-only">
-        <HeroIntro />
-        <AboutWheel />
-        <LearningLogos />
-        <PastEventsStack />
-        <LiveEventsSlider />
-        <SpiritOfMech />
-        <OurTeam />
-        <PastSponsors />
-        <JoinUsBot />
+        <SectionIndicator />
+        
+        <div id="home"><HeroIntro /></div>
+        <div id="about-us"><AboutWheel /></div>
+        <div id="learning"><LearningLogos /></div>
+        <div id="past-events"><PastEventsStack /></div>
+        <div id="live-events"><LiveEventsSlider /></div>
+        <div id="our-department"><OurDepartment /></div>
+        <div id="our-team"><OurTeam /></div>
+        <div id="sponsors"><PastSponsors /></div>
+        <div id="join"><JoinUsBot /></div>
+        
         <Footer />
       </div>
 

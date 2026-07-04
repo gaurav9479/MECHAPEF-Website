@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Cropper from 'react-cropper';
@@ -12,15 +13,17 @@ import api from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import '../Admin/AdminDashboard.css';
 import './AdminManagement.css';
+import '../../components/CropperInput/CropperInput.css';
 
 const SECTION_KEYS = [
-  { key: 'dept_1', label: 'Dept Image 1 (Big Left)', aspectRatio: 690/520 },
-  { key: 'dept_2', label: 'Dept Image 2 (Stacked Top)', aspectRatio: 216/250 },
-  { key: 'dept_3', label: 'Dept Image 3 (Stacked Bottom)', aspectRatio: 216/250 },
-  { key: 'dept_4', label: 'Dept Image 4 (Bottom Row 1)', aspectRatio: 335/220 },
-  { key: 'dept_5', label: 'Dept Image 5 (Bottom Row 2)', aspectRatio: 335/220 },
-  { key: 'dept_6', label: 'Dept Image 6 (Bottom Row 3)', aspectRatio: 335/220 },
-  { key: 'dept_7', label: 'Dept Image 7 (Bottom Row 4)', aspectRatio: 335/220 },
+  { key: 'dept_1', label: 'Dept Image 1', aspectRatio: 1/1.25 },
+  { key: 'dept_2', label: 'Dept Image 2', aspectRatio: 1/1.25 },
+  { key: 'dept_3', label: 'Dept Image 3', aspectRatio: 1/1.25 },
+  { key: 'dept_4', label: 'Dept Image 4', aspectRatio: 1/1.25 },
+  { key: 'dept_5', label: 'Dept Image 5', aspectRatio: 1/1.25 },
+  { key: 'dept_6', label: 'Dept Image 6', aspectRatio: 1/1.25 },
+  { key: 'dept_7', label: 'Dept Image 7', aspectRatio: 1/1.25 },
+  { key: 'dept_8', label: 'Dept Image 8', aspectRatio: 1/1.25 },
   { key: 'domain_1', label: 'Domain 1 (Automobile/SAE)', aspectRatio: NaN },
   { key: 'domain_2', label: 'Domain 2 (Robotics)', aspectRatio: NaN },
   { key: 'domain_3', label: 'Domain 3 (Design & CAD)', aspectRatio: NaN },
@@ -562,39 +565,48 @@ const AdminManagement = () => {
                 </div>
               )}
               {/* Cropper */}
-              {cropping && cropSrc && (
-                <div className="cropper-area">
-                  <div className="cropper-label">
-                    <FaCrop /> Crop the image — then click Upload
+              {cropping && cropSrc && createPortal(
+                <div
+                  className="cropper-modal-overlay"
+                  onClick={() => { setCropping(false); setCropSrc(null); }}
+                >
+                  <div className="cropper-modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="cropper-modal-header">
+                      <h3><FaCrop /> Crop Image</h3>
+                      <button className="cropper-close-btn" onClick={() => { setCropping(false); setCropSrc(null); }}>
+                        <FaTimesCircle />
+                      </button>
+                    </div>
+
+                    <div className="cropper-modal-body">
+                      <Cropper
+                        ref={cropperRef}
+                        src={cropSrc}
+                        style={{ height: '400px', width: '100%' }}
+                        aspectRatio={SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio ?? NaN}
+                        guides={true}
+                        viewMode={1}
+                        autoCropArea={1}
+                        background={false}
+                        responsive={true}
+                        checkOrientation={false}
+                        cropBoxResizable={true}
+                        zoomable={false}
+                        dragMode="move"
+                      />
+                    </div>
+
+                    <div className="cropper-modal-footer">
+                      <button className="cropper-btn-cancel" onClick={() => { setCropping(false); setCropSrc(null); }}>
+                        Cancel
+                      </button>
+                      <button className="cropper-btn-save" onClick={uploadCropped} disabled={uploading}>
+                        {uploading ? 'Uploading...' : <><FaUpload /> Upload Cropped Image</>}
+                      </button>
+                    </div>
                   </div>
-                  <Cropper
-                    ref={cropperRef}
-                    src={cropSrc}
-                    style={{ height: '400px', width: '100%' }}
-                    aspectRatio={SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio ?? NaN}
-                    guides={true}
-                    viewMode={1}
-                    autoCropArea={1}
-                    background={false}
-                    responsive={true}
-                    checkOrientation={false}
-                    cropBoxResizable={true}
-                    zoomable={false}
-                    dragMode="move"
-                  />
-                  <div className="cropper-actions">
-                    <button
-                      className="btn-primary"
-                      disabled={uploading}
-                      onClick={uploadCropped}
-                    >
-                      {uploading ? 'Uploading...' : <><FaUpload /> Upload Cropped Image</>}
-                    </button>
-                    <button className="btn-secondary" onClick={() => { setCropping(false); setCropSrc(null); }}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+                </div>,
+                document.body
               )}
               
               {/* Extra Inputs for Team Details */}

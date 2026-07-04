@@ -54,19 +54,19 @@ const PastEventsStack = () => {
           return;
         }
 
+        const cards = gsap.utils.toArray('.gsap-pe-card');
+
         // -- DESKTOP STACKING --
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
             start: 'top top',
-            end: '+=200%',
+            end: () => "+=" + (cards.length * 150) + "%", // Increased length per card
             pin: true,
             scrub: 1,
             pinSpacing: true
           }
         });
-
-        const cards = gsap.utils.toArray('.gsap-pe-card');
 
         gsap.set(cards, { 
           y: window.innerHeight, 
