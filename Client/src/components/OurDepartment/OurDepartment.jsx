@@ -49,22 +49,22 @@ const OurDepartment = () => {
     mass: 1.2
   });
 
-  // Parallax for the 3 columns (Start off-screen, wait for 10% scroll, then start rising)
-  const y1 = useTransform(smoothProgress, [0.1, 0.9], ["100vh", "-100%"]);
-  const y2 = useTransform(smoothProgress, [0.1, 0.9], ["120vh", "-120%"]);
-  const y3 = useTransform(smoothProgress, [0.1, 0.9], ["110vh", "-110%"]);
+  // Parallax for the 3 columns (Start rising quickly after sticking, at 0.05)
+  const y1 = useTransform(smoothProgress, [0.05, 0.80], ["100vh", "-100%"]);
+  const y2 = useTransform(smoothProgress, [0.05, 0.80], ["120vh", "-120%"]);
+  const y3 = useTransform(smoothProgress, [0.05, 0.80], ["110vh", "-110%"]);
 
   // Mobile Parallax (Single column)
-  const mobileY = useTransform(smoothProgress, [0.1, 0.9], ["100vh", "-100%"]);
+  const mobileY = useTransform(smoothProgress, [0.05, 0.80], ["100vh", "-100%"]);
 
-  // Footer comes up from below after images scroll past (0.90 to 0.98), then stays sticky till 1.0
-  const footerY = useTransform(smoothProgress, [0.90, 0.98], ["100vh", "0vh"]);
-  const footerOpacity = useTransform(smoothProgress, [0.90, 0.95], [0, 1]);
+  // Footer arrives on the 7th scroll (0.75 to 0.875)
+  const footerY = useTransform(smoothProgress, [0.75, 0.875], ["100vh", "0vh"]);
+  const footerOpacity = useTransform(smoothProgress, [0.75, 0.80], [0, 1]);
 
   const imagesKeys = ['dept_1', 'dept_2', 'dept_3', 'dept_4', 'dept_5', 'dept_6', 'dept_7', 'dept_8'];
 
   return (
-    <section ref={sectionRef} className="our-dept-gsap-wrapper our-dept-section" style={{ height: '500vh', position: 'relative' }}>
+    <section ref={sectionRef} className="our-dept-gsap-wrapper our-dept-section" style={{ height: '800vh', position: 'relative' }}>
       
       {/* Sticky Container for Parallax & Footer */}
       <div className="our-dept-sticky-container">

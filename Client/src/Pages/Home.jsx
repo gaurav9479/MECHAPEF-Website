@@ -15,8 +15,14 @@ import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
 
 const Home = () => {
   useEffect(() => {
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    
     const hash = window.location.hash;
-    if (hash) {
+    if (!hash) {
+      window.scrollTo(0, 0);
+    } else {
       setTimeout(() => {
         const id = hash.replace('#', '');
         const el = document.getElementById(id);

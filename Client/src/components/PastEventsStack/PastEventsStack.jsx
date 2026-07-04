@@ -6,15 +6,38 @@ import './PastEventsStack.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const skeletonEvents = [
+  { _id: 'sk1', title: 'Loading Event...', description: 'Please wait while we fetch event details...', date: 'Fetching...', imageURL: 'https://via.placeholder.com/600x400/111/333?text=Loading...' },
+  { _id: 'sk2', title: 'Loading Event...', description: 'Please wait while we fetch event details...', date: 'Fetching...', imageURL: 'https://via.placeholder.com/600x400/111/333?text=Loading...' },
+  { _id: 'sk3', title: 'Loading Event...', description: 'Please wait while we fetch event details...', date: 'Fetching...', imageURL: 'https://via.placeholder.com/600x400/111/333?text=Loading...' }
+];
+
 const PastEventsStack = () => {
   const sectionRef = useRef(null);
-  const [pastEvents, setPastEvents] = useState([]);
+  
+  // Try to load from cache first, otherwise use skeletons
+  const getInitialEvents = () => {
+    const cached = localStorage.getItem('mechapef_pastEventsCache');
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        return skeletonEvents;
+      }
+    }
+    return skeletonEvents;
+  };
+
+  const [pastEvents, setPastEvents] = useState(getInitialEvents);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get('/past-events')
       .then(res => {
-        setPastEvents(res.data.data || []);
+        if (res.data.data && res.data.data.length > 0) {
+          setPastEvents(res.data.data);
+          localStorage.setItem('mechapef_pastEventsCache', JSON.stringify(res.data.data));
+        }
       })
       .catch(err => {
         console.error("Failed to fetch past events:", err);
@@ -25,7 +48,7 @@ const PastEventsStack = () => {
   }, []);
 
   useEffect(() => {
-    if (loading || pastEvents.length === 0) return;
+    if (pastEvents.length === 0) return;
 
     let ctx;
     const timer = setTimeout(() => {
@@ -113,7 +136,6 @@ const PastEventsStack = () => {
     };
   }, [loading, pastEvents]);
 
-  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
   if (pastEvents.length === 0) return null;
 
   return (
