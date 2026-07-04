@@ -125,7 +125,7 @@ const LiveEventsSlider = () => {
         )}
       </div>
 
-      <HeroTicker />
+      <HeroTicker hasSponsors={slides[currentIdx]?.eventSponsors?.length > 0} />
 
       {/* Render the Active Event's Sponsors below the Ticker */}
       {slides[currentIdx]?.targetType === 'Event' && slides[currentIdx]?.eventSponsors?.length > 0 && (

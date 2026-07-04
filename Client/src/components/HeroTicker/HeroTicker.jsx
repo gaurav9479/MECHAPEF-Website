@@ -2,7 +2,7 @@ import React from 'react';
 // Removed FaGlobe to use native text symbols
 import './HeroTicker.css';
 
-const HeroTicker = () => {
+const HeroTicker = ({ hasSponsors = true }) => {
   return (
     <div className="hero-ticker-container">
       {/* Black Marquee - Slightly rotated */}
@@ -22,7 +22,7 @@ const HeroTicker = () => {
         <div className="ticker-track reverse">
           {[...Array(30)].map((_, i) => (
             <React.Fragment key={`red-${i}`}>
-              <span className="ticker-text">SPONSORS</span>
+              <span className="ticker-text">{hasSponsors ? 'SPONSORS' : 'MECHAPEF'}</span>
               <span className="ticker-icon">✦</span>
             </React.Fragment>
           ))}

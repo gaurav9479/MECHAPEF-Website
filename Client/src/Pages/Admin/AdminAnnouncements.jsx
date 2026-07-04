@@ -26,21 +26,23 @@ const AdminAnnouncements = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [allSponsors, setAllSponsors] = useState([]);
-  
+  const [allEvents, setAllEvents] = useState([]);
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
   const fetchItems = async () => {
     try {
-      const [annRes, sponRes] = await Promise.all([
+      const [annRes, sponRes, eventRes] = await Promise.all([
         api.get('/announcements'),
-        api.get('/sponsors')
+        api.get('/sponsors'),
+        api.get('/events')
       ]);
       setItems(annRes.data.data?.announcements || annRes.data.data || []);
       const sp = sponRes.data.data?.sponsors || sponRes.data.data || [];
       // we can show all active sponsors in dropdown
       setAllSponsors(sp.filter(s => s.isActive !== false));
+      setAllEvents(eventRes.data.data?.events || []);
     } catch { showToast('Failed to load data', 'error'); }
     finally { setLoading(false); }
   };
@@ -162,9 +164,27 @@ const AdminAnnouncements = () => {
                     {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
+                <div className="form-group">
+                  <label>Target Type</label>
+                  <select value={form.targetType} onChange={e => {
+                    f('targetType', e.target.value);
+                    f('targetLink', ''); // Reset link when type changes
+                  }}>
+                    {TARGET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
                 <div className="form-group full">
                   <label>Target Link / Event ID (Optional)</label>
-                  <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="/events/EVENT_ID or https://..." />
+                  {form.targetType === 'Event' ? (
+                    <select value={form.targetLink} onChange={e => f('targetLink', e.target.value)}>
+                      <option value="">-- Select an Event --</option>
+                      {allEvents.map(evt => (
+                        <option key={evt._id} value={evt._id}>{evt.title}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="/events/EVENT_ID or https://..." />
+                  )}
                 </div>
                 
                 <div className="form-group full">

@@ -9,8 +9,10 @@ const AdminFootprints = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Only fetch manually via Refresh button as requested
   useEffect(() => {
-    fetchFootprints();
+    // fetchFootprints();
+    setLoading(false); // Make sure it doesn't show loading indefinitely at start
   }, []);
 
   const fetchFootprints = async () => {
@@ -77,7 +79,7 @@ const AdminFootprints = () => {
                     <tr>
                       <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
                         <FaHistory style={{ fontSize: '2rem', color: '#555', marginBottom: '1rem' }} />
-                        <div>No recent admin actions found.</div>
+                        <div>Click "Refresh Logs" to load the latest admin actions.</div>
                       </td>
                     </tr>
                   ) : (
