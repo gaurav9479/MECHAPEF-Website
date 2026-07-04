@@ -147,7 +147,7 @@
 }
 
 .desktop-only-btn {
-  margin-right: 45px; /* Shift profile button to left to avoid overlapping Notice Board string */
+  margin-right: clamp(55px, 6vw, 90px); /* Shift profile button to left to avoid overlapping Notice Board string */
 }
 
 @media (max-width: 768px) {

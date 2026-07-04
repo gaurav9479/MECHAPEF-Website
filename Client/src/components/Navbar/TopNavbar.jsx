@@ -22,7 +22,7 @@ const TopNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { user, logout, hasRole } = useAuth();
+  const { user, logout, hasRole, loading } = useAuth();
   const { transitionState, setTransitionState, triggerExit } = useMagazineTransition();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -254,7 +254,9 @@ const TopNavbar = () => {
           </li>
 
           <li className="mobile-only-btn">
-            {!user ? (
+            {loading ? (
+              <div className="nav-avatar-skeleton" style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }}></div>
+            ) : !user ? (
               <button className="contact-btn" onClick={handleAuth}>Login</button>
             ) : (
               <div className="nav-avatar-container" ref={mobileRef}>
@@ -281,7 +283,9 @@ const TopNavbar = () => {
         </ul>
 
         <div className="desktop-only-btn">
-          {!user ? (
+          {loading ? (
+            <div className="nav-avatar-skeleton" style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }}></div>
+          ) : !user ? (
             <button className="contact-btn" onClick={handleAuth}>Login</button>
           ) : (
             <div className="nav-avatar-container" ref={desktopRef}>
