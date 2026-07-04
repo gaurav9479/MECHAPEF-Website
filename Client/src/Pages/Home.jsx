@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useLayoutEffect } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import HeroIntro from "../components/CinematicHero/HeroIntro";
 import AboutWheel from "../components/CinematicHero/AboutWheel";
@@ -14,7 +14,7 @@ import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
 
 const Home = () => {
-  useEffect(() => {
+  useLayoutEffect(() => {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
