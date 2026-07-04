@@ -12,7 +12,6 @@ import JoinUsBot from "../components/CinematicHero/JoinUsBot";
 import Footer from "../components/Footer/Footer";
 import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
-import SectionIndicator from "../components/SectionIndicator/SectionIndicator";
 
 const Home = () => {
   useEffect(() => {
@@ -44,7 +43,6 @@ const Home = () => {
 
       {/* ── Desktop layout (hidden on mobile via CSS) ── */}
       <div className="desktop-only">
-        <SectionIndicator />
         
         <div id="home"><HeroIntro /></div>
         <div id="about-us"><AboutWheel /></div>

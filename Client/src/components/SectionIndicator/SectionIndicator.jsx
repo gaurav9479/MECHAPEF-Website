@@ -15,10 +15,18 @@ const sections = [
 
 const SectionIndicator = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + window.innerHeight / 2;
+      
+      // Check if we are at the bottom of the page (footer area)
+      if (window.scrollY + window.innerHeight >= document.body.scrollHeight - 200) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
       
       let currentIdx = 0;
       for (let i = 0; i < sections.length; i++) {
@@ -57,7 +65,7 @@ const SectionIndicator = () => {
   const numString = (activeIndex + 1).toString().padStart(2, '0');
 
   return (
-    <div className="global-section-indicator">
+    <div className="global-section-indicator" style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.3s ease' }}>
       <div className="indicator-content">
         <span className="indicator-number">{numString}</span>
         <span className="indicator-slash"> / </span>
