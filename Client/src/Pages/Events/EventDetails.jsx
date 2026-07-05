@@ -17,6 +17,7 @@ const EventDetails = () => {
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [userRegistration, setUserRegistration] = useState(null); // null = not checked, false = not registered, object = registered
 
   // Form State
   const [regType, setRegType] = useState('Solo');
@@ -52,6 +53,21 @@ const EventDetails = () => {
     };
     fetchEvent();
   }, [id]);
+
+  // Check if user is already registered for this event
+  useEffect(() => {
+    if (!user) return;
+    const checkRegistration = async () => {
+      try {
+        const res = await api.get(`/events/${id}/my-registration`);
+        setUserRegistration(res.data.data || false);
+      } catch (err) {
+        // 404 = not registered, anything else = error
+        setUserRegistration(false);
+      }
+    };
+    checkRegistration();
+  }, [id, user]);
 
   const handleRegisterClick = () => {
     if (!user) {
@@ -178,9 +194,16 @@ const EventDetails = () => {
               <button 
                 className="primary-btn register-btn" 
                 onClick={handleRegisterClick}
-                disabled={new Date() > new Date(event.registrationDeadline)}
+                disabled={!!userRegistration || new Date() > new Date(event.registrationDeadline)}
               >
-                {new Date() > new Date(event.registrationDeadline) ? 'Registration Closed' : 'Register Now'}
+                {userRegistration
+                  ? userRegistration.attended
+                    ? '✅ Attended'
+                    : '✔ Already Registered'
+                  : new Date() > new Date(event.registrationDeadline)
+                  ? 'Registration Closed'
+                  : 'Register Now'
+                }
               </button>
             </div>
           </div>
@@ -190,97 +213,106 @@ const EventDetails = () => {
       {/* Registration Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box reg-modal" onClick={e => e.stopPropagation()}>
+          <div className={`modal-box reg-modal ${((event.customFormFields && event.customFormFields.length > 0) || event.maxTeamSize > 1) ? 'reg-modal-wide' : ''}`} onClick={e => e.stopPropagation()}>
             <h2>Register for {event.title}</h2>
             <form onSubmit={submitRegistration}>
               
-              <div className="reg-user-info">
-                <h4>Your Details</h4>
-                <p><strong>Name:</strong> {user?.name}</p>
-                <p><strong>Email:</strong> {user?.email}</p>
-                <p><strong>Reg No:</strong> {user?.collegeRegNo || 'N/A'}</p>
-                <p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>* These details will be automatically submitted with your registration.</p>
-              </div>
-
-              {event.maxTeamSize > 1 && (
-                <div className="form-group" style={{marginTop: '20px'}}>
-                  <label>Registration Type</label>
-                  <select value={regType} onChange={e => setRegType(e.target.value)}>
-                    <option value="Solo">Solo</option>
-                    <option value="Team">Team</option>
-                  </select>
+              <div className={`reg-form-layout ${((event.customFormFields && event.customFormFields.length > 0) || event.maxTeamSize > 1) ? 'reg-form-horizontal' : 'reg-form-vertical'}`}>
+                
+                <div className="reg-form-left">
+                  <div className="reg-user-info">
+                    <h4>Your Details</h4>
+                    <p><strong>Name:</strong> {user?.name}</p>
+                    <p><strong>Email:</strong> {user?.email}</p>
+                    <p><strong>Reg No:</strong> {user?.collegeRegNo || 'N/A'}</p>
+                    <p className="reg-auto-note">* These details will be automatically submitted with your registration.</p>
+                  </div>
                 </div>
-              )}
 
-              {regType === 'Team' && (
-                <div className="form-group">
-                  <label>Team Name *</label>
-                  <input 
-                    required 
-                    value={teamName} 
-                    onChange={e => setTeamName(e.target.value)} 
-                    placeholder="Enter team name"
-                  />
-                </div>
-              )}
+                {((event.customFormFields && event.customFormFields.length > 0) || event.maxTeamSize > 1) && (
+                  <div className="reg-form-right">
+                    {event.maxTeamSize > 1 && (
+                      <div className="form-group" style={{marginTop: '0px'}}>
+                        <label>Registration Type</label>
+                        <select value={regType} onChange={e => setRegType(e.target.value)}>
+                          <option value="Solo">Solo</option>
+                          <option value="Team">Team</option>
+                        </select>
+                      </div>
+                    )}
 
-              {event.customFormFields && event.customFormFields.length > 0 && (
-                <div className="custom-fields-section">
-                  <h4 style={{ color: '#ff1f01', marginBottom: '15px', marginTop: '20px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                    Additional Information Required
-                  </h4>
-                  {event.customFormFields.map((field, idx) => (
-                    <div className="form-group" key={idx}>
-                      <label>{field.fieldName} {field.isRequired && '*'}</label>
-                      
-                      {field.fieldType === 'text' && (
+                    {regType === 'Team' && (
+                      <div className="form-group">
+                        <label>Team Name *</label>
                         <input 
-                          type="text" 
-                          required={field.isRequired}
-                          value={customData[field.fieldName] || ''}
-                          onChange={e => handleCustomFieldChange(field.fieldName, e.target.value)}
+                          required 
+                          value={teamName} 
+                          onChange={e => setTeamName(e.target.value)} 
+                          placeholder="Enter team name"
                         />
-                      )}
+                      </div>
+                    )}
 
-                      {field.fieldType === 'textarea' && (
-                        <textarea 
-                          required={field.isRequired}
-                          value={customData[field.fieldName] || ''}
-                          onChange={e => handleCustomFieldChange(field.fieldName, e.target.value)}
-                        />
-                      )}
+                    {event.customFormFields && event.customFormFields.length > 0 && (
+                      <div className="custom-fields-section">
+                        <h4 style={{ color: '#ff1f01', marginBottom: '15px', marginTop: event.maxTeamSize > 1 ? '20px' : '0px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+                          Additional Information Required
+                        </h4>
+                        {event.customFormFields.map((field, idx) => (
+                          <div className="form-group" key={idx}>
+                            <label>{field.fieldName} {field.isRequired && '*'}</label>
+                            
+                            {field.fieldType === 'text' && (
+                              <input 
+                                type="text" 
+                                required={field.isRequired}
+                                value={customData[field.fieldName] || ''}
+                                onChange={e => handleCustomFieldChange(field.fieldName, e.target.value)}
+                              />
+                            )}
 
-                      {field.fieldType === 'checkbox' && (
-                        <label style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'normal'}}>
-                          <input 
-                            type="checkbox" 
-                            required={field.isRequired}
-                            checked={customData[field.fieldName] || false}
-                            onChange={e => handleCustomFieldChange(field.fieldName, e.target.checked)}
-                            style={{width: 'auto'}}
-                          />
-                          Yes / I agree
-                        </label>
-                      )}
+                            {field.fieldType === 'textarea' && (
+                              <textarea 
+                                required={field.isRequired}
+                                value={customData[field.fieldName] || ''}
+                                onChange={e => handleCustomFieldChange(field.fieldName, e.target.value)}
+                              />
+                            )}
 
-                      {field.fieldType === 'file' && (
-                        <div>
-                          <input 
-                            type="file" 
-                            required={field.isRequired && !customData[field.fieldName]}
-                            onChange={e => handleFileUpload(e, field.fieldName)}
-                            accept="image/*,.pdf"
-                          />
-                          {fileUploading[field.fieldName] && <span style={{color: '#ffaa00', fontSize: '0.8rem'}}>Uploading...</span>}
-                          {customData[field.fieldName]?.url && !fileUploading[field.fieldName] && (
-                            <span style={{color: '#00c864', fontSize: '0.8rem', marginLeft: '10px'}}>✓ File uploaded</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                            {field.fieldType === 'checkbox' && (
+                              <label style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'normal'}}>
+                                <input 
+                                  type="checkbox" 
+                                  required={field.isRequired}
+                                  checked={customData[field.fieldName] || false}
+                                  onChange={e => handleCustomFieldChange(field.fieldName, e.target.checked)}
+                                  style={{width: 'auto'}}
+                                />
+                                Yes / I agree
+                              </label>
+                            )}
+
+                            {field.fieldType === 'file' && (
+                              <div>
+                                <input 
+                                  type="file" 
+                                  required={field.isRequired && !customData[field.fieldName]}
+                                  onChange={e => handleFileUpload(e, field.fieldName)}
+                                  accept="image/*,.pdf"
+                                />
+                                {fileUploading[field.fieldName] && <span style={{color: '#ffaa00', fontSize: '0.8rem'}}>Uploading...</span>}
+                                {customData[field.fieldName]?.url && !fileUploading[field.fieldName] && (
+                                  <span style={{color: '#00c864', fontSize: '0.8rem', marginLeft: '10px'}}>✓ File uploaded</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div className="modal-actions" style={{marginTop: '30px'}}>
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

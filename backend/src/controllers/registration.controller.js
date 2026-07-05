@@ -25,6 +25,28 @@ const saveRegistrationDirectly = async (payload, eventTitle) => {
     return registration;
 };
 
+// Get the current user's registration for a specific event
+export const getMyRegistrationForEvent = asyncHandler(async (req, res) => {
+    const { id: eventId } = req.params;
+    const userId = req.user.userId;
+
+    const registration = await Registration.findOne({
+        eventId,
+        registeredBy: userId,
+        deletedAt: null
+    }).select('_id registrationType teamName attended paymentStatus createdAt');
+
+    if (!registration) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(
+            new APIResponse(HTTP_STATUS.NOT_FOUND, null, 'Not registered for this event')
+        );
+    }
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, registration, 'Registration found')
+    );
+});
+
 export const registerForEvent = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const { registrationType, teamName, teamMemberIds, customData } = req.body;

@@ -6,7 +6,7 @@
   position: fixed;
   top: 15px;
   right: 15px;
-  z-index: 1050;
+  z-index: 995;
   background: #c9182b;
   border: none;
   color: white;
@@ -30,7 +30,7 @@
   height: 100%;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
-  z-index: 1030;
+  z-index: 990;
   opacity: 0;
   transition: opacity 0.3s ease;
 }

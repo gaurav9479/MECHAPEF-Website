@@ -141,6 +141,52 @@
   overflow-y: auto;
 }
 
+/* Wide modal for when extra info is needed */
+.reg-modal.reg-modal-wide {
+  max-width: 800px;
+}
+
+/* Layout for horizontal split */
+.reg-form-layout {
+  display: flex;
+  gap: 0;
+}
+
+.reg-form-horizontal {
+  flex-direction: row;
+  gap: 0;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.reg-form-vertical {
+  flex-direction: column;
+}
+
+.reg-form-left {
+  flex: 0 0 auto;
+  width: 260px;
+  min-width: 220px;
+}
+
+.reg-form-horizontal .reg-form-left {
+  background: #0a0a0a;
+  border-right: 1px solid #2a2a2a;
+  padding: 20px;
+}
+
+.reg-form-horizontal .reg-form-right {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.reg-form-vertical .reg-form-left {
+  width: 100%;
+}
+
 .event-meta {
   line-height: 1.6;
 }
@@ -149,8 +195,23 @@
   background: #111;
   padding: 15px;
   border-radius: 8px;
-  margin-top: 20px;
   border: 1px solid #333;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.reg-form-horizontal .reg-user-info {
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.reg-auto-note {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 10px;
+  line-height: 1.4;
 }
 
 .reg-user-info h4 {
@@ -188,6 +249,30 @@
   .modal-box.reg-modal {
     width: min(100%, 500px);
     padding: 24px 18px;
+  }
+
+  /* Collapse horizontal to vertical on mobile */
+  .reg-form-horizontal {
+    flex-direction: column;
+  }
+
+  .reg-form-left {
+    width: 100% !important;
+  }
+
+  .reg-form-horizontal .reg-form-left {
+    border-right: none;
+    border-bottom: 1px solid #2a2a2a;
+    padding: 16px;
+  }
+
+  .reg-form-horizontal .reg-form-right {
+    padding: 16px;
+    max-height: none;
+  }
+
+  .reg-modal.reg-modal-wide {
+    max-width: 100%;
   }
 
   .modal-actions {

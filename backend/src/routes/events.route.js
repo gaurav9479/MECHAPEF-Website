@@ -55,6 +55,14 @@ router.get(
 );
 
 // Event Registration Routes
+
+// User: Check their own registration status for this event
+router.get(
+    '/:id/my-registration',
+    authenticate,
+    registrationController.getMyRegistrationForEvent
+);
+
 router.post(
     '/:eventId/register',
     authenticate,

@@ -14,17 +14,21 @@ const AdminScanner = () => {
   // Use refs to keep track of state inside the scanner callback
   const isProcessingRef = useRef(false);
   const lastScannedRef = useRef(null);
-  const scannerRef = useRef(null);
 
   useEffect(() => {
-    scannerRef.current = new Html5QrcodeScanner(
+    // Force clear any leftover DOM from Strict Mode double-mounts
+    const readerElement = document.getElementById("reader");
+    if (readerElement) {
+      readerElement.innerHTML = '';
+    }
+
+    const scanner = new Html5QrcodeScanner(
       "reader",
       { fps: 10, qrbox: { width: 250, height: 250 } },
       false
     );
 
     const onScanSuccess = async (decodedText, decodedResult) => {
-      // Prevent scanning if currently processing or if scanning the exact same code immediately
       if (isProcessingRef.current || decodedText === lastScannedRef.current) return;
       
       isProcessingRef.current = true;
@@ -41,21 +45,16 @@ const AdminScanner = () => {
         setScanResult(null);
         isProcessingRef.current = false;
         
-        // Reset lastScanned after 3 seconds so they can try again if they want
         setTimeout(() => { lastScannedRef.current = null; }, 3000);
       }
     };
 
-    const onScanFailure = (err) => {
-      // Ignore frequent scan failures
-    };
-
-    scannerRef.current.render(onScanSuccess, onScanFailure);
+    scanner.render(onScanSuccess, () => {});
 
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-      }
+      try {
+        scanner.clear().catch(() => {});
+      } catch (e) {}
     };
   }, []);
 
@@ -73,13 +72,12 @@ const AdminScanner = () => {
       setLoading(false);
       isProcessingRef.current = false;
       
-      // Automatically clear result and allow scanning same code again after 4 seconds
+      // Automatically clear result and allow scanning same code again after 2.5 seconds
       setTimeout(() => {
         setScanResult(null);
         setError(null);
         lastScannedRef.current = null;
-        setError(null);
-      }, 5000);
+      }, 2500);
     }
   };
 
@@ -95,28 +93,39 @@ const AdminScanner = () => {
 
       <div className="scanner-container">
         <div id="reader" className="qr-reader-box"></div>
-      </div>
-
-      <div className="scanner-results">
-        {loading && <div className="scanner-loading">Verifying ticket...</div>}
         
+        {loading && (
+          <div className="scanner-overlay loading-overlay">
+            <div className="overlay-content">
+              <div className="scanner-spinner"></div>
+              <h2>VERIFYING...</h2>
+            </div>
+          </div>
+        )}
+
         {scanResult && (
-          <div className="result-card success">
-            <FaCheckCircle className="result-icon" />
-            <h3>Attendance Marked!</h3>
-            <div className="result-details">
-              <p><strong>Registration ID:</strong> {scanResult._id.slice(-6).toUpperCase()}</p>
+          <div className="scanner-overlay success-overlay">
+            <div className="overlay-content">
+              <FaCheckCircle className="overlay-icon" />
+              <h2>VERIFIED</h2>
+              <p>ID: {scanResult._id.slice(-6).toUpperCase()}</p>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="result-card error">
-            <FaExclamationTriangle className="result-icon" />
-            <h3>Scan Error</h3>
-            <p>{error}</p>
+          <div className="scanner-overlay error-overlay">
+            <div className="overlay-content">
+              <FaExclamationTriangle className="overlay-icon" />
+              <h2>ERROR</h2>
+              <p>{error}</p>
+            </div>
           </div>
         )}
+      </div>
+
+      <div className="scanner-results">
+        <p style={{ color: '#888', textAlign: 'center' }}>Ready to scan next ticket...</p>
       </div>
     </div>
   );
