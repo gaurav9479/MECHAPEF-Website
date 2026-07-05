@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import HeroIntro from "../components/CinematicHero/HeroIntro";
 import AboutWheel from "../components/CinematicHero/AboutWheel";
@@ -14,20 +15,25 @@ import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
 
 const Home = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   useLayoutEffect(() => {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
     
+    // Check both hash (for backward compatibility) and router state
     const hash = window.location.hash;
-    if (!hash) {
+    const targetId = location.state?.scrollTo || (hash ? hash.replace('#', '') : null);
+
+    if (!targetId) {
       window.scrollTo(0, 0);
     } else {
       setTimeout(() => {
-        const id = hash.replace('#', '');
-        const el = document.getElementById(id);
+        const el = document.getElementById(targetId);
         if (el) {
-          if (id === 'about-us' && window.innerWidth > 768) {
+          if (targetId === 'about-us' && window.innerWidth > 768) {
             import('gsap').then(gsap => {
               const elTop = el.getBoundingClientRect().top + window.scrollY;
               const targetY = elTop + window.innerHeight * 5.5 * 0.28;
@@ -36,10 +42,17 @@ const Home = () => {
           } else {
             el.scrollIntoView({ behavior: 'smooth' });
           }
+          
+          // Clean up the URL/state so it doesn't trigger again on reload
+          if (hash) {
+            window.history.replaceState(null, '', window.location.pathname);
+          } else if (location.state?.scrollTo) {
+            navigate(location.pathname, { replace: true, state: {} });
+          }
         }
       }, 500); // Wait for components to render
     }
-  }, []);
+  }, [location]);
 
   return (
     <>

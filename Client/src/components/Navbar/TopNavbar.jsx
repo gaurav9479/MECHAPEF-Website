@@ -173,7 +173,7 @@ const TopNavbar = () => {
   const scrollToElement = (id) => {
     handleNavClick("/", () => {
       if (location.pathname !== "/") {
-        window.location.href = `/#${id}`;
+        navigate("/", { state: { scrollTo: id } });
       } else {
         const el = document.getElementById(id);
         if (el) {

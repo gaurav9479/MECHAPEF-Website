@@ -24,7 +24,8 @@ const ROLE_POWER = {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Only start in a loading state if we actually have a token to verify
+  const [loading, setLoading] = useState(!!localStorage.getItem('accessToken'));
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -47,8 +48,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    setLoading(true); // Put the app in a loading state so the UI doesn't flicker
-    
     try {
       await authService.logout(); 
     } catch (error) {
@@ -56,7 +55,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       localStorage.removeItem('accessToken');
       setUser(null);
-      setLoading(false); 
+      // No global loading state here, avoids avatar circle flashing
     }
   };
 
