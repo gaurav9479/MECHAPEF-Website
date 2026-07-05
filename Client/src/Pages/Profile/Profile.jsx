@@ -55,7 +55,7 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.patch('/auth/profile', formData);
+      await api.put('/auth/profile', formData);
       setToast({ msg: 'Profile updated successfully!', type: 'success' });
       setTimeout(() => setToast(null), 3000);
       // Wait a moment and maybe reload to fetch fresh user context if needed,

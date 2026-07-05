@@ -15,10 +15,8 @@
       
       // Early pre-fetching for Past Events
       (function() {
-        var apiUrl = "%VITE_API_URL%";
-        if (apiUrl === "%" + "VITE_API_URL" + "%") {
-           apiUrl = "http://localhost:5001/api";
-        }
+        var envUrl = "%VITE_API_URL%";
+        var apiUrl = (envUrl && envUrl !== "%" + "VITE_API_URL" + "%") ? envUrl : "http://localhost:5001/api";
         window.pastEventsPromise = fetch(apiUrl + "/past-events")
           .then(function(r) { return r.json(); })
           .catch(function(e) { return null; });
