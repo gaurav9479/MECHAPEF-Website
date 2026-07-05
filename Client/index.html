@@ -12,6 +12,17 @@
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
+      
+      // Early pre-fetching for Past Events
+      (function() {
+        var apiUrl = "%VITE_API_URL%";
+        if (apiUrl === "%" + "VITE_API_URL" + "%") {
+           apiUrl = "http://localhost:5001/api";
+        }
+        window.pastEventsPromise = fetch(apiUrl + "/past-events")
+          .then(function(r) { return r.json(); })
+          .catch(function(e) { return null; });
+      })();
     </script>
   </head>
   <body>

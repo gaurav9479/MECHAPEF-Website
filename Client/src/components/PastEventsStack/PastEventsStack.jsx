@@ -7,15 +7,14 @@ import './PastEventsStack.css';
 gsap.registerPlugin(ScrollTrigger);
 
 const skeletonEvents = [
-  { _id: 'sk1', title: 'Loading Event...', description: 'Please wait while we fetch event details...', date: 'Fetching...', imageURL: 'https://via.placeholder.com/600x400/111/333?text=Loading...' },
-  { _id: 'sk2', title: 'Loading Event...', description: 'Please wait while we fetch event details...', date: 'Fetching...', imageURL: 'https://via.placeholder.com/600x400/111/333?text=Loading...' },
-  { _id: 'sk3', title: 'Loading Event...', description: 'Please wait while we fetch event details...', date: 'Fetching...', imageURL: 'https://via.placeholder.com/600x400/111/333?text=Loading...' }
+  { _id: 'sk1', isSkeleton: true },
+  { _id: 'sk2', isSkeleton: true },
+  { _id: 'sk3', isSkeleton: true }
 ];
 
 const PastEventsStack = () => {
   const sectionRef = useRef(null);
   
-  // Try to load from cache first, otherwise use skeletons
   const getInitialEvents = () => {
     const cached = localStorage.getItem('mechapef_pastEventsCache');
     if (cached) {
@@ -32,19 +31,28 @@ const PastEventsStack = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/past-events')
-      .then(res => {
-        if (res.data.data && res.data.data.length > 0) {
-          setPastEvents(res.data.data);
-          localStorage.setItem('mechapef_pastEventsCache', JSON.stringify(res.data.data));
+    const fetchEvents = async () => {
+      try {
+        let resData = null;
+        if (window.pastEventsPromise) {
+          resData = await window.pastEventsPromise;
+          window.pastEventsPromise = null; 
+        } else {
+          const res = await api.get('/past-events');
+          resData = res.data;
         }
-      })
-      .catch(err => {
+
+        if (resData && resData.data && resData.data.length > 0) {
+          setPastEvents(resData.data);
+          localStorage.setItem('mechapef_pastEventsCache', JSON.stringify(resData.data));
+        }
+      } catch (err) {
         console.error("Failed to fetch past events:", err);
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchEvents();
   }, []);
 
   useEffect(() => {
@@ -165,18 +173,32 @@ const PastEventsStack = () => {
         <div className="pe-gsap-cards-wrapper">
           {pastEvents.map((event, index) => (
             <div 
-              className="pe-stack-card gsap-pe-card"
+              className={`pe-stack-card gsap-pe-card ${event.isSkeleton ? 'pe-shimmer-skeleton' : ''}`}
               key={event._id}
               style={{ zIndex: index + 1 }}
             >
-              <div className="pe-left">
-                <img src={event.imageURL} alt={event.title} />
-              </div>
-              <div className="pe-right">
-                <div className="pe-date">{event.date}</div>
-                <h3>{event.title}</h3>
-                <p>{event.description}</p>
-              </div>
+              {event.isSkeleton ? (
+                <div className="pe-skeleton-content">
+                   <div className="pe-skeleton-img shimmer"></div>
+                   <div className="pe-skeleton-body">
+                      <div className="pe-skeleton-date shimmer"></div>
+                      <div className="pe-skeleton-title shimmer"></div>
+                      <div className="pe-skeleton-desc shimmer"></div>
+                      <div className="pe-skeleton-desc shimmer short"></div>
+                   </div>
+                </div>
+              ) : (
+                <>
+                  <div className="pe-left">
+                    <img src={event.imageURL} alt={event.title} />
+                  </div>
+                  <div className="pe-right">
+                    <div className="pe-date">{event.date}</div>
+                    <h3>{event.title}</h3>
+                    <p>{event.description}</p>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
