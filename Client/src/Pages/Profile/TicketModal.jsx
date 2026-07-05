@@ -18,70 +18,62 @@ const TicketModal = ({ registration, onClose }) => {
   return (
     <div className="ticket-modal-overlay" onClick={onClose}>
       <div className="ticket-modal-content" onClick={e => e.stopPropagation()}>
-        <div className="ticket-card">
-          <div className="ticket-header">
-            <h3><FaTicketAlt /> Entry Ticket</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span className="status-badge active">Verified</span>
-              <button
-                onClick={onClose}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: 'none',
-                  color: '#fff',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1rem',
-                  transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.3)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-              >
-                <FaTimes />
-              </button>
-            </div>
-          </div>
+        <div className="cute-ticket">
+          {/* Holographic glow border */}
+          <div className="cute-ticket-glow"></div>
           
-          <div className="ticket-body">
-            <div className="event-info">
-              <span className="category-tag">{event.category}</span>
-              <h2>{event.title}</h2>
-              <div className="event-details">
-                <p><FaCalendarAlt /> {event.startTime ? new Date(event.startTime).toLocaleDateString() : 'TBA'}</p>
-                <p><FaMapMarkerAlt /> {event.venue}</p>
-              </div>
-            </div>
+          <div className="cute-ticket-inner">
+             {/* Left and right cutouts for authentic ticket feel */}
+             <div className="cutout left"></div>
+             <div className="cutout right"></div>
 
-            <div className="qr-section">
-              <div className="qr-wrapper">
-                <QRCodeSVG value={qrData} size={180} level="H" includeMargin={true} />
-              </div>
-              <p className="scan-instruction">Show this QR code at the entry desk</p>
-            </div>
-            
-            <div className="participant-info">
-              <div className="info-row">
-                <span>Name:</span>
-                <strong>{registration.registeredBy?.name || registration.teamName || 'Participant'}</strong>
-              </div>
-              <div className="info-row">
-                <span>Registration ID:</span>
-                <strong className="mono-text">{registration._id.slice(-6).toUpperCase()}</strong>
-              </div>
-              <div className="info-row">
-                <span>Type:</span>
-                <strong>{registration.registrationType}</strong>
-              </div>
-            </div>
-          </div>
-          
-          <div className="ticket-footer">
-            <p>MECHAPEF FESTIVAL</p>
+             <div className="cute-ticket-header">
+                <h3><FaTicketAlt /> VIP PASS</h3>
+                <button onClick={onClose} className="cute-close-btn"><FaTimes /></button>
+             </div>
+
+             <div className="cute-ticket-main">
+                <span className="cute-tag">{event.category}</span>
+                <h2>{event.title}</h2>
+                <div className="cute-details">
+                  <div className="cute-detail-item">
+                    <FaCalendarAlt />
+                    <span>{event.startTime ? new Date(event.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA'}</span>
+                  </div>
+                  <div className="cute-detail-item">
+                    <FaMapMarkerAlt />
+                    <span>{event.venue}</span>
+                  </div>
+                </div>
+             </div>
+
+             <div className="cute-divider"></div>
+
+             <div className="cute-ticket-bottom">
+                <div className="cute-qr">
+                  <div className="qr-frame">
+                    <QRCodeSVG value={qrData} size={110} level="H" includeMargin={false} fgColor="#000000" />
+                  </div>
+                  <span className="cute-scan-text">SCAN AT ENTRY</span>
+                </div>
+                
+                <div className="cute-info">
+                  <div className="cute-info-block">
+                    <span className="info-label">PARTICIPANT</span>
+                    <strong className="info-value" title={registration.registeredBy?.name || registration.teamName || 'Participant'}>
+                      {registration.registeredBy?.name || registration.teamName || 'Participant'}
+                    </strong>
+                  </div>
+                  <div className="cute-info-block">
+                    <span className="info-label">TICKET ID</span>
+                    <strong className="info-value mono">{registration._id.slice(-6).toUpperCase()}</strong>
+                  </div>
+                  <div className="cute-info-block">
+                    <span className="info-label">TYPE</span>
+                    <strong className="info-value">{registration.registrationType}</strong>
+                  </div>
+                </div>
+             </div>
           </div>
         </div>
       </div>

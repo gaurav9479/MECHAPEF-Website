@@ -164,27 +164,29 @@ const AdminAnnouncements = () => {
                     {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Target Type</label>
-                  <select value={form.targetType} onChange={e => {
-                    f('targetType', e.target.value);
-                    f('targetLink', ''); // Reset link when type changes
-                  }}>
-                    {TARGET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
                 <div className="form-group full">
                   <label>Endorsement (Optional)</label>
-                  {form.targetType === 'Event' ? (
-                    <select value={form.targetLink} onChange={e => f('targetLink', e.target.value)}>
-                      <option value="">-- Select an Event --</option>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <select 
+                      style={{ flex: 1 }}
+                      value={allEvents.some(e => e._id === form.targetLink) ? form.targetLink : (form.targetLink ? 'external' : '')} 
+                      onChange={e => f('targetLink', e.target.value === 'external' ? 'https://' : e.target.value)}
+                    >
+                      <option value="">-- No Endorsement --</option>
                       {allEvents.map(evt => (
                         <option key={evt._id} value={evt._id}>{evt.title}</option>
                       ))}
+                      <option value="external">Custom / External Link</option>
                     </select>
-                  ) : (
-                    <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="/events/EVENT_ID or https://..." />
-                  )}
+                    {(!allEvents.some(e => e._id === form.targetLink) && form.targetLink !== '') && (
+                      <input 
+                        style={{ flex: 1 }}
+                        value={form.targetLink} 
+                        onChange={e => f('targetLink', e.target.value)} 
+                        placeholder="https://..." 
+                      />
+                    )}
+                  </div>
                 </div>
                 
                 <div className="form-group full">
