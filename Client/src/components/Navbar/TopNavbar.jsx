@@ -118,10 +118,10 @@ const TopNavbar = () => {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setAvatarMenuOpen(false);
     setMenuOpen(false);
-    await logout();
+    logout();
     navigate("/");
   };
 

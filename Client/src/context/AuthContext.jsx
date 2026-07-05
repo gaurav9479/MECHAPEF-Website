@@ -47,16 +47,15 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
-  const logout = async () => {
-    try {
-      await authService.logout(); 
-    } catch (error) {
-      console.warn("Backend logout failed, forcing local logout.", error);
-    } finally {
-      localStorage.removeItem('accessToken');
-      setUser(null);
-      // No global loading state here, avoids avatar circle flashing
-    }
+  const logout = () => {
+    // Clear local state instantly to kick user to landing page immediately
+    localStorage.removeItem('accessToken');
+    setUser(null);
+    
+    // Perform backend logout silently in the background
+    authService.logout().catch(error => {
+      console.warn("Backend logout failed.", error);
+    });
   };
 
   // Evaluates hierarchy (e.g., "are they AT LEAST a content-lead?")
