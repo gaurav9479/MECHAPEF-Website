@@ -174,7 +174,7 @@ const AdminAnnouncements = () => {
                   </select>
                 </div>
                 <div className="form-group full">
-                  <label>Target Link / Event ID (Optional)</label>
+                  <label>Endorsement (Optional)</label>
                   {form.targetType === 'Event' ? (
                     <select value={form.targetLink} onChange={e => f('targetLink', e.target.value)}>
                       <option value="">-- Select an Event --</option>

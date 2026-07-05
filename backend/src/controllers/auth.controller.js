@@ -10,6 +10,34 @@ import crypto from 'crypto';
 const PASSWORD_RESET_SUCCESS_MESSAGE = 'If an account with that email exists, a password reset link has been sent.';
 const PASSWORD_RESET_EXPIRY_MS = 15 * 60 * 1000;
 
+function parseStudentInfoFromRegNo(regNo) {
+    if (!regNo || regNo.length < 8) return { branch: undefined, yearOfStudy: undefined };
+    
+    const enrollmentYear = parseInt(regNo.substring(0, 4), 10);
+    const branchCode = regNo.substring(4, 5);
+    
+    if (isNaN(enrollmentYear)) return { branch: undefined, yearOfStudy: undefined };
+
+    let yearOfStudy = 2027 - enrollmentYear;
+    if (yearOfStudy < 1) yearOfStudy = 1;
+    if (yearOfStudy > 5) yearOfStudy = 5;
+
+    const branchMap = {
+        '0': 'Biotechnology',
+        '1': 'Chemical Engineering',
+        '2': 'Civil Engineering',
+        '3': 'Computer Science and Engineering',
+        '4': 'Electronics and Communication Engineering',
+        '5': 'Electrical Engineering',
+        '6': 'Mechanical Engineering',
+        '8': 'Electronics and Computer Engineering',
+        '9': 'Materials Engineering'
+    };
+
+    const branch = branchMap[branchCode];
+    return { branch, yearOfStudy };
+}
+
 export const register = asyncHandler(async (req, res) => {
     const { name, email, password, collegeRegNo, yearOfStudy, branch, phoneNumber } = req.body;
 
@@ -47,17 +75,19 @@ export const register = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.CONFLICT, 'This college registration number is already registered');
     }
 
+    const { branch: parsedBranch, yearOfStudy: parsedYear } = parseStudentInfoFromRegNo(collegeRegNo);
+
     const newUser = new User({
         name: name.trim(),
         email: email.toLowerCase(),
         password,
         collegeRegNo: collegeRegNo.toUpperCase(),
-        role: 'genera',
+        role: 'general-user',
         requestedRole: req.body.requestedRole || null,
         isVerified: false,
         unverifiedRequestExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        yearOfStudy: yearOfStudy || undefined,
-        branch: branch || undefined,
+        yearOfStudy: yearOfStudy || parsedYear || undefined,
+        branch: branch || parsedBranch || undefined,
         phoneNumber: phoneNumber || undefined,
     });
 
@@ -426,6 +456,9 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         throw new ApiError(403, 'Only MNNIT email addresses (@mnnit.ac.in) are allowed');
     }
 
+    const collegeRegNo = email.split('@')[0].split('.').pop() || email.split('@')[0];
+    const { branch: parsedBranch, yearOfStudy: parsedYear } = parseStudentInfoFromRegNo(collegeRegNo);
+
     // Atomic update for existing users — single DB round-trip
     let user = await User.findOneAndUpdate(
         { email },
@@ -436,14 +469,20 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         { new: true }
     );
 
+    if (user && (!user.branch || !user.yearOfStudy)) {
+        if (!user.branch && parsedBranch) user.branch = parsedBranch;
+        if (!user.yearOfStudy && parsedYear) user.yearOfStudy = parsedYear;
+        await user.save();
+    }
+
     // New user — create them
     if (!user) {
-        const collegeRegNo = email.split('@')[0].split('.').pop() || email.split('@')[0];
-
         user = await User.create({
             name,
             email,
             collegeRegNo: collegeRegNo.toUpperCase(),
+            branch: parsedBranch,
+            yearOfStudy: parsedYear,
             role: 'general-user',
             isVerified: true,
             password: Math.random().toString(36).slice(-10) + 'A1!'
