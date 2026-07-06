@@ -35,17 +35,17 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !isAuthExchange) {
       localStorage.removeItem('accessToken');
       if (window.location.pathname.startsWith('/admin')) {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     } else if (
-      !error.response || 
-      error.response?.status === 502 || 
-      error.response?.status === 503 || 
+      !error.response ||
+      error.response?.status === 502 ||
+      error.response?.status === 503 ||
       error.response?.status === 504
     ) {
       // Handle Render cold start or severe server overload gracefully
       const queueMessage = 'Heavy traffic right now, you are in a queue. Please wait 30 seconds.';
-      
+
       // If error.response exists, modify its message payload
       if (error.response && error.response.data) {
         error.response.data.message = queueMessage;
@@ -97,7 +97,7 @@ api.get = async (url, config = {}) => {
   if (response.status === 200) {
     sessionStorage.setItem(cacheKey, JSON.stringify(response.data));
   }
-  
+
   return response;
 };
 
