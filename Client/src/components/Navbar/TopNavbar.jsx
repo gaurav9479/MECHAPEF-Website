@@ -43,12 +43,12 @@ const TopNavbar = () => {
         else navigate(targetRoute);
 
         setTimeout(() => {
-           setTransitionState('idle');
+          setTransitionState('idle');
         }, 1200);
-        return; 
+        return;
       }
     }
-    
+
     setMenuOpen(false);
     if (callback) callback();
     else navigate(targetRoute);
@@ -113,7 +113,7 @@ const TopNavbar = () => {
       handleNavClick("/login");
       return;
     }
-    if (hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) {
+    if (hasRole("content-lead") || hasRole("media-lead") || hasRole("super-admin")) {
       handleNavClick("/admin");
     }
   };
@@ -254,9 +254,7 @@ const TopNavbar = () => {
           </li>
 
           <li className="mobile-only-btn">
-            {loading ? (
-              <div className="nav-avatar-skeleton" style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }}></div>
-            ) : !user ? (
+            {!user ? (
               <button className="contact-btn" onClick={handleAuth}>Login</button>
             ) : (
               <div className="nav-avatar-container" ref={mobileRef}>
@@ -271,7 +269,7 @@ const TopNavbar = () => {
                     </div>
                     <div className="dropdown-divider"></div>
                     <button onClick={goProfile}><FaUserCircle />My Profile</button>
-                    {(hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) && (
+                    {(hasRole("content-lead") || hasRole("media-lead") || hasRole("super-admin")) && (
                       <button onClick={goAdmin}><FaUserShield />Admin Portal</button>
                     )}
                     <button className="logout-btn" onClick={handleLogout}><FaSignOutAlt />Logout</button>
@@ -283,9 +281,7 @@ const TopNavbar = () => {
         </ul>
 
         <div className="desktop-only-btn">
-          {loading ? (
-            <div className="nav-avatar-skeleton" style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }}></div>
-          ) : !user ? (
+          {!user ? (
             <button className="contact-btn" onClick={handleAuth}>Login</button>
           ) : (
             <div className="nav-avatar-container" ref={desktopRef}>
@@ -300,7 +296,7 @@ const TopNavbar = () => {
                   </div>
                   <div className="dropdown-divider"></div>
                   <button onClick={goProfile}><FaUserCircle />My Profile</button>
-                  {(hasRole("content-lead") ||hasRole("media-lead") ||hasRole("super-admin")) && (
+                  {(hasRole("content-lead") || hasRole("media-lead") || hasRole("super-admin")) && (
                     <button onClick={goAdmin}><FaUserShield />Admin Portal</button>
                   )}
                   <button className="logout-btn" onClick={handleLogout}><FaSignOutAlt />Logout</button>
