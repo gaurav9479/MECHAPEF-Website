@@ -12,7 +12,7 @@ const AdminRegistrations = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
-  
+
   const [showModal, setShowModal] = useState(false);
   const [selectedReg, setSelectedReg] = useState(null);
 
@@ -101,35 +101,40 @@ const AdminRegistrations = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" style={{textAlign:'center', color:'#555', padding:'30px'}}>Loading...</td></tr>
+                <tr><td colSpan="6" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
               ) : registrations.length === 0 ? (
-                <tr><td colSpan="6" style={{textAlign:'center', color:'#555', padding:'30px'}}>No registrations yet.</td></tr>
-              ) : registrations.map(reg => (
-                <tr key={reg._id}>
-                  <td style={{fontWeight:600, color:'#fff'}}>{reg.registeredBy?.name}</td>
-                  <td>{reg.registeredBy?.collegeRegNo || '-'}</td>
-                  <td>{reg.registeredBy?.email}</td>
-                  <td><span className="tag">{reg.registrationType}</span></td>
-                  <td>
-                    {reg.isVerified ? 
-                      <span style={{color:'#00c864', display:'flex', alignItems:'center', gap:'5px'}}><FaCheckCircle/> Yes</span> : 
-                      <span style={{color:'#ff4444', display:'flex', alignItems:'center', gap:'5px'}}><FaTimesCircle/> No</span>
-                    }
-                  </td>
-                  <td style={{display:'flex', gap:'8px'}}>
-                    <button className="btn-secondary" style={{padding:'6px 12px', fontSize:'0.8rem'}} onClick={() => openDetails(reg)}>
-                      <FaEye /> Details
-                    </button>
-                    <button 
-                      className={reg.isVerified ? 'btn-danger' : 'btn-primary'} 
-                      style={{padding:'6px 12px', fontSize:'0.8rem'}} 
-                      onClick={() => handleVerify(reg._id, reg.isVerified)}
-                    >
-                      {reg.isVerified ? 'Unverify' : 'Verify'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                <tr><td colSpan="6" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No registrations yet.</td></tr>
+              ) : registrations.map(reg => {
+                const name = reg.registeredBy?.name;
+                return (
+                  <tr key={reg._id}>
+                    <td style={{ fontWeight: 600, color: '#fff' }}>
+                      {name ? name : <span style={{ color: '#ff4444' }}>Not Registered</span>}
+                    </td>
+                    <td>{reg.registeredBy?.collegeRegNo || '-'}</td>
+                    <td>{reg.registeredBy?.email || '-'}</td>
+                    <td><span className="tag">{reg.registrationType}</span></td>
+                    <td>
+                      {reg.isVerified ?
+                        <span style={{ color: '#00c864', display: 'flex', alignItems: 'center', gap: '5px' }}><FaCheckCircle /> Yes</span> :
+                        <span style={{ color: '#ff4444', display: 'flex', alignItems: 'center', gap: '5px' }}><FaTimesCircle /> No</span>
+                      }
+                    </td>
+                    <td style={{ display: 'flex', gap: '8px' }}>
+                      <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => openDetails(reg)}>
+                        <FaEye /> Details
+                      </button>
+                      <button
+                        className={reg.isVerified ? 'btn-danger' : 'btn-primary'}
+                        style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                        onClick={() => handleVerify(reg._id, reg.isVerified)}
+                      >
+                        {reg.isVerified ? 'Unverify' : 'Verify'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -164,30 +169,30 @@ const AdminRegistrations = () => {
                 {selectedReg.customData && Object.keys(selectedReg.customData).length > 0 ? (
                   <div style={{ display: 'grid', gap: '10px' }}>
                     {Object.entries(selectedReg.customData).map(([key, value]) => {
-                  const url = typeof value === 'object' && value !== null ? value.url : value;
-                  const isImage = typeof url === 'string' && url.match(/\.(jpeg|jpg|gif|png|webp)$/i);
-                  const isPdf = typeof url === 'string' && url.match(/\.pdf$/i);
-                  
-                  return (
-                    <div key={key} style={{ marginBottom: '15px' }}>
-                      <strong style={{ color: '#aaa' }}>{key}:</strong>
-                      <div style={{ marginTop: '5px' }}>
-                        {url === '[File Deleted for Privacy]' ? (
-                          <span style={{ color: '#ffaa00', fontStyle: 'italic' }}>[File Deleted for Privacy]</span>
-                        ) : isImage ? (
-                          <a href={url} target="_blank" rel="noopener noreferrer">
-                            <img src={url} alt={key} style={{ maxWidth: '200px', borderRadius: '8px', border: '1px solid #333' }} />
-                          </a>
-                        ) : isPdf ? (
-                          <a href={url} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ display: 'inline-flex', padding: '5px 10px', textDecoration: 'none' }}>
-                            View PDF Document
-                          </a>
-                        ) : (
-                          <span style={{ marginLeft: '10px', color: '#fff', wordBreak: 'break-all' }}>{typeof value === 'object' ? JSON.stringify(value) : value?.toString() || 'N/A'}</span>
-                        )}
-                      </div>
-                    </div>
-                  );
+                      const url = typeof value === 'object' && value !== null ? value.url : value;
+                      const isImage = typeof url === 'string' && url.match(/\.(jpeg|jpg|gif|png|webp)$/i);
+                      const isPdf = typeof url === 'string' && url.match(/\.pdf$/i);
+
+                      return (
+                        <div key={key} style={{ marginBottom: '15px' }}>
+                          <strong style={{ color: '#aaa' }}>{key}:</strong>
+                          <div style={{ marginTop: '5px' }}>
+                            {url === '[File Deleted for Privacy]' ? (
+                              <span style={{ color: '#ffaa00', fontStyle: 'italic' }}>[File Deleted for Privacy]</span>
+                            ) : isImage ? (
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                <img src={url} alt={key} style={{ maxWidth: '200px', borderRadius: '8px', border: '1px solid #333' }} />
+                              </a>
+                            ) : isPdf ? (
+                              <a href={url} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ display: 'inline-flex', padding: '5px 10px', textDecoration: 'none' }}>
+                                View PDF Document
+                              </a>
+                            ) : (
+                              <span style={{ marginLeft: '10px', color: '#fff', wordBreak: 'break-all' }}>{typeof value === 'object' ? JSON.stringify(value) : value?.toString() || 'N/A'}</span>
+                            )}
+                          </div>
+                        </div>
+                      );
                     })}
                   </div>
                 ) : (

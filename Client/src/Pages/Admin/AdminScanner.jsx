@@ -10,53 +10,10 @@ const AdminScanner = () => {
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  
-  // Use refs to keep track of state inside the scanner callback
+
   const isProcessingRef = useRef(false);
   const lastScannedRef = useRef(null);
-
-  useEffect(() => {
-    // Force clear any leftover DOM from Strict Mode double-mounts
-    const readerElement = document.getElementById("reader");
-    if (readerElement) {
-      readerElement.innerHTML = '';
-    }
-
-    const scanner = new Html5QrcodeScanner(
-      "reader",
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      false
-    );
-
-    const onScanSuccess = async (decodedText, decodedResult) => {
-      if (isProcessingRef.current || decodedText === lastScannedRef.current) return;
-      
-      isProcessingRef.current = true;
-      lastScannedRef.current = decodedText;
-      
-      try {
-        const data = JSON.parse(decodedText);
-        if (!data.eventId || !data.registrationId) {
-          throw new Error("Invalid QR Code format.");
-        }
-        await verifyAndMarkAttendance(data.eventId, data.registrationId);
-      } catch (err) {
-        setError("Invalid QR Code. Not a valid Mechapef Ticket.");
-        setScanResult(null);
-        isProcessingRef.current = false;
-        
-        setTimeout(() => { lastScannedRef.current = null; }, 3000);
-      }
-    };
-
-    scanner.render(onScanSuccess, () => {});
-
-    return () => {
-      try {
-        scanner.clear().catch(() => {});
-      } catch (e) {}
-    };
-  }, []);
+  const scannerRef = useRef(null);
 
   const verifyAndMarkAttendance = async (eventId, regId) => {
     setLoading(true);
@@ -71,15 +28,68 @@ const AdminScanner = () => {
     } finally {
       setLoading(false);
       isProcessingRef.current = false;
-      
-      // Automatically clear result and allow scanning same code again after 2.5 seconds
+
       setTimeout(() => {
         setScanResult(null);
         setError(null);
         lastScannedRef.current = null;
-      }, 2500);
+      }, 1000);
     }
   };
+
+  useEffect(() => {
+    const readerElement = document.getElementById('reader');
+    if (readerElement) {
+      readerElement.innerHTML = '';
+    }
+
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(() => { });
+      scannerRef.current = null;
+    }
+
+    const scanner = new Html5QrcodeScanner(
+      'reader',
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    );
+    scannerRef.current = scanner;
+
+    const onScanSuccess = async (decodedText) => {
+      if (isProcessingRef.current || decodedText === lastScannedRef.current) return;
+
+      isProcessingRef.current = true;
+      lastScannedRef.current = decodedText;
+
+      try {
+        const data = JSON.parse(decodedText);
+        if (!data.eventId || !data.registrationId) {
+          throw new Error('Invalid QR Code format.');
+        }
+        await verifyAndMarkAttendance(data.eventId, data.registrationId);
+      } catch (err) {
+        setError('Invalid QR Code. Not a valid Mechapef Ticket.');
+        setScanResult(null);
+        isProcessingRef.current = false;
+
+        setTimeout(() => { lastScannedRef.current = null; }, 3000);
+      }
+    };
+
+    scanner.render(onScanSuccess, () => { });
+
+    return () => {
+      const reader = document.getElementById('reader');
+      if (reader) {
+        reader.innerHTML = '';
+      }
+
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(() => { });
+        scannerRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="admin-scanner-page">
@@ -92,40 +102,41 @@ const AdminScanner = () => {
       </div>
 
       <div className="scanner-container">
-        <div id="reader" className="qr-reader-box"></div>
-        
-        {loading && (
-          <div className="scanner-overlay loading-overlay">
-            <div className="overlay-content">
-              <div className="scanner-spinner"></div>
-              <h2>VERIFYING...</h2>
-            </div>
-          </div>
-        )}
+        <div className="scanner-grid">
+          <div id="reader" className="qr-reader-box"></div>
 
-        {scanResult && (
-          <div className="scanner-overlay success-overlay">
-            <div className="overlay-content">
-              <FaCheckCircle className="overlay-icon" />
-              <h2>VERIFIED</h2>
-              <p>ID: {scanResult._id.slice(-6).toUpperCase()}</p>
-            </div>
+          <div className="scanner-status-panel">
+            {loading ? (
+              <div className="scanner-status-card loading-card">
+                <div className="status-icon loading-icon"></div>
+                <h2>VERIFYING...</h2>
+                <p>Hold on while we validate the ticket.</p>
+              </div>
+            ) : scanResult ? (
+              <div className="scanner-status-card success-card">
+                <div className="status-icon verified-circle">
+                  <FaCheckCircle />
+                </div>
+                <h2>VERIFIED</h2>
+                <p>Ticket ID: {scanResult._id?.slice(-6).toUpperCase()}</p>
+                {scanResult.name && <p>{scanResult.name}</p>}
+              </div>
+            ) : error ? (
+              <div className="scanner-status-card error-card">
+                <div className="status-icon error-circle">
+                  <FaExclamationTriangle />
+                </div>
+                <h2>ERROR</h2>
+                <p>{error}</p>
+              </div>
+            ) : (
+              <div className="scanner-status-card idle-card">
+                <h2>Ready</h2>
+                <p>Scan next ticket on the left.</p>
+              </div>
+            )}
           </div>
-        )}
-
-        {error && (
-          <div className="scanner-overlay error-overlay">
-            <div className="overlay-content">
-              <FaExclamationTriangle className="overlay-icon" />
-              <h2>ERROR</h2>
-              <p>{error}</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="scanner-results">
-        <p style={{ color: '#888', textAlign: 'center' }}>Ready to scan next ticket...</p>
+        </div>
       </div>
     </div>
   );
