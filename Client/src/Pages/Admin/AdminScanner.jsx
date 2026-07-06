@@ -10,6 +10,7 @@ const AdminScanner = () => {
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [alreadyMarked, setAlreadyMarked] = useState(false);
 
   const isProcessingRef = useRef(false);
   const lastScannedRef = useRef(null);
@@ -22,7 +23,10 @@ const AdminScanner = () => {
 
     try {
       const res = await api.put(`/events/${eventId}/registrations/${regId}/attendance`, { attended: true });
-      setScanResult(res.data.data);
+      const payload = res.data.data || {};
+      // prefer registration object if returned
+      setScanResult(payload.registration || payload);
+      setAlreadyMarked(!!payload.alreadyMarked);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to verify ticket.');
     } finally {
@@ -113,11 +117,11 @@ const AdminScanner = () => {
                 <p>Hold on while we validate the ticket.</p>
               </div>
             ) : scanResult ? (
-              <div className="scanner-status-card success-card">
-                <div className="status-icon verified-circle">
-                  <FaCheckCircle />
+              <div className={alreadyMarked ? "scanner-status-card already-card" : "scanner-status-card success-card"}>
+                <div className={alreadyMarked ? "status-icon already-circle" : "status-icon verified-circle"}>
+                  {alreadyMarked ? <FaExclamationTriangle /> : <FaCheckCircle />}
                 </div>
-                <h2>VERIFIED</h2>
+                <h2>{alreadyMarked ? 'ALREADY SCANNED' : 'VERIFIED'}</h2>
                 <p>Ticket ID: {scanResult._id?.slice(-6).toUpperCase()}</p>
                 {scanResult.name && <p>{scanResult.name}</p>}
               </div>

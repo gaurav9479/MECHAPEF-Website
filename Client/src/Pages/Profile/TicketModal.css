@@ -1,6 +1,9 @@
 .ticket-modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(10px);
   display: flex;
@@ -18,16 +21,23 @@
 }
 
 @keyframes ticketPop {
-  0% { transform: scale(0.8) translateY(30px); opacity: 0; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+  0% {
+    transform: scale(0.8) translateY(30px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
 .boarding-pass {
   display: flex;
   background: linear-gradient(135deg, rgba(30, 30, 30, 0.95), rgba(15, 15, 15, 0.98));
   border-radius: 20px;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 40px rgba(255, 31, 1, 0.2);
-  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 31, 1, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
   position: relative;
   color: #fff;
@@ -59,7 +69,7 @@
 }
 
 .bp-close-btn {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   border: none;
   color: #fff;
   width: 28px;
@@ -96,7 +106,7 @@
   margin: 0;
   font-family: 'Orbitron', sans-serif;
   color: #fff;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 10px;
 }
 
@@ -105,6 +115,7 @@
   flex-direction: column;
   gap: 4px;
 }
+
 .bp-block.align-right {
   text-align: right;
 }
@@ -123,9 +134,11 @@
   align-items: center;
   gap: 6px;
 }
+
 .bp-value svg {
   color: #ff1f01;
 }
+
 .text-highlight {
   color: #ff1f01;
 }
@@ -142,30 +155,38 @@
 .bp-divider::before {
   content: '';
   position: absolute;
-  top: 0; bottom: 0;
+  top: 0;
+  bottom: 0;
   left: 50%;
-  border-left: 2px dashed rgba(255,255,255,0.2);
+  border-left: 2px dashed rgba(255, 255, 255, 0.2);
   transform: translateX(-50%);
 }
 
 .bp-cutout {
   width: 30px;
   height: 30px;
-  background: rgba(0,0,0,0.75); /* matches modal overlay bg */
+  background: rgba(0, 0, 0, 0.75);
+  /* matches modal overlay bg */
   border-radius: 50%;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  box-shadow: inset 0 4px 6px rgba(0,0,0,0.5);
+  box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.5);
 }
-.bp-cutout.top { top: -15px; }
-.bp-cutout.bottom { bottom: -15px; }
+
+.bp-cutout.top {
+  top: -15px;
+}
+
+.bp-cutout.bottom {
+  bottom: -15px;
+}
 
 /* Stub */
 .bp-stub {
   width: 180px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -179,6 +200,7 @@
   flex-direction: column;
   gap: 4px;
 }
+
 .bp-stub-top .bp-value.mono {
   color: #ff1f01;
   font-family: monospace;
@@ -189,10 +211,39 @@
 .bp-qr {
   margin: 16px 0;
 }
+
 .qr-frame {
   background: #fff;
   padding: 8px;
   border-radius: 8px;
+}
+
+.qr-clickable {
+  cursor: zoom-in;
+}
+
+/* Lightbox for enlarged QR */
+.qr-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.qr-lightbox-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-lightbox-content svg {
+  display: block;
 }
 
 .bp-scan-text {
@@ -207,30 +258,56 @@
   .boarding-pass {
     flex-direction: column;
   }
+
   .bp-divider {
     width: 100%;
     height: 20px;
     flex-direction: row;
   }
+
   .bp-divider::before {
-    top: 50%; left: 0; right: 0; bottom: auto;
+    top: 50%;
+    left: 0;
+    right: 0;
+    bottom: auto;
     border-left: none;
-    border-top: 2px dashed rgba(255,255,255,0.2);
+    border-top: 2px dashed rgba(255, 255, 255, 0.2);
     transform: translateY(-50%);
   }
+
   .bp-cutout {
-    top: 50%; transform: translateY(-50%);
+    top: 50%;
+    transform: translateY(-50%);
   }
-  .bp-cutout.top { left: -15px; top: 50%; }
-  .bp-cutout.bottom { right: -15px; left: auto; top: 50%; }
-  
+
+  .bp-cutout.top {
+    left: -15px;
+    top: 50%;
+  }
+
+  .bp-cutout.bottom {
+    right: -15px;
+    left: auto;
+    top: 50%;
+  }
+
   .bp-stub {
     width: 100%;
     flex-direction: row;
     justify-content: space-between;
     padding: 16px 24px;
   }
-  .bp-qr { margin: 0; }
-  .bp-row { flex-wrap: wrap; gap: 16px; }
-  .bp-block.align-right { text-align: left; }
+
+  .bp-qr {
+    margin: 0;
+  }
+
+  .bp-row {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .bp-block.align-right {
+    text-align: left;
+  }
 }

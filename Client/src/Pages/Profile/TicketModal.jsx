@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { FaTimes, FaCalendarAlt, FaMapMarkerAlt, FaTicketAlt } from 'react-icons/fa';
 import './TicketModal.css';
 
 const TicketModal = ({ registration, onClose }) => {
+  const [qrZoom, setQrZoom] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') setQrZoom(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   if (!registration) return null;
 
   const event = registration.eventId;
@@ -19,13 +29,13 @@ const TicketModal = ({ registration, onClose }) => {
     <div className="ticket-modal-overlay" onClick={onClose}>
       <div className="ticket-modal-content" onClick={e => e.stopPropagation()}>
         <div className="boarding-pass">
-          
+
           <div className="bp-main">
             <div className="bp-header">
               <span className="bp-airline"><FaTicketAlt /> MECHAPEF </span>
               <button onClick={onClose} className="bp-close-btn"><FaTimes /></button>
             </div>
-            
+
             <div className="bp-body">
               <div className="bp-row">
                 <div className="bp-block">
@@ -73,13 +83,21 @@ const TicketModal = ({ registration, onClose }) => {
               <span className="bp-label">BOARDING PASS</span>
               <strong className="bp-value mono">{registration._id.slice(-6).toUpperCase()}</strong>
             </div>
-            
+
             <div className="bp-qr">
-              <div className="qr-frame">
+              <div className="qr-frame qr-clickable" onClick={() => setQrZoom(true)}>
                 <QRCodeSVG value={qrData} size={100} level="H" includeMargin={false} fgColor="#000000" />
               </div>
             </div>
-            
+
+            {qrZoom && (
+              <div className="qr-lightbox" onClick={() => setQrZoom(false)}>
+                <div className="qr-lightbox-content" onClick={e => e.stopPropagation()}>
+                  <QRCodeSVG value={qrData} size={280} level="H" includeMargin={false} fgColor="#000000" />
+                </div>
+              </div>
+            )}
+
             <div className="bp-stub-bottom">
               <span className="bp-scan-text">SCAN AT GATE</span>
             </div>

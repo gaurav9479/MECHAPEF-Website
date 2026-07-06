@@ -197,6 +197,16 @@
   color: #fff;
 }
 
+.already-card {
+  background: rgba(255, 200, 0, 0.95);
+  color: #111;
+}
+
+.already-circle {
+  background: rgba(255, 200, 0, 0.95);
+  color: #111;
+}
+
 .scanner-overlay.error-overlay {
   background: rgba(255, 50, 50, 0.95);
   color: #fff;

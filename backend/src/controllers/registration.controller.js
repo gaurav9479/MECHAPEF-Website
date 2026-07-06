@@ -216,23 +216,29 @@ export const markAttendance = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Attended status is required');
     }
 
-    const registration = await Registration.findByIdAndUpdate(
-        req.params.id,
-        {
-            attendanceMarked: attended,
-            attendanceMarkedAt: attended ? new Date() : null,
-            attendanceMarkedBy: attended ? req.user.userId : null
-        },
-        { new: true }
-    ).populate('eventId', 'title');
+    // Load registration first to detect previous attendance state
+    const registration = await Registration.findById(req.params.id).populate('eventId', 'title');
 
     if (!registration) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
 
+    // If trying to mark attended=true but already marked, return a friendly flag
+    if (attended && registration.attendanceMarked) {
+        return res
+            .status(HTTP_STATUS.OK)
+            .json(new APIResponse(HTTP_STATUS.OK, { registration, alreadyMarked: true }, 'Attendance was already marked'));
+    }
+
+    // Otherwise update the attendance fields
+    registration.attendanceMarked = attended;
+    registration.attendanceMarkedAt = attended ? new Date() : null;
+    registration.attendanceMarkedBy = attended ? req.user.userId : null;
+    await registration.save();
+
     return res
         .status(HTTP_STATUS.OK)
-        .json(new APIResponse(HTTP_STATUS.OK, { registration }, 'Attendance marked successfully'));
+        .json(new APIResponse(HTTP_STATUS.OK, { registration, alreadyMarked: false }, 'Attendance marked successfully'));
 });
 
 export const getEventRegistrations = asyncHandler(async (req, res) => {
