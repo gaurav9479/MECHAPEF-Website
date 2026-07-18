@@ -183,11 +183,9 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ isActive: 1, deletedAt: 1 });
-userSchema.index({ collegeRegNo: 1 }, { sparse: true, unique: true }); // sparse so null values are allowed
 // TTL index: auto delete document when current time > unverifiedRequestExpiresAt
 userSchema.index({ unverifiedRequestExpiresAt: 1 }, { expireAfterSeconds: 0 });
 

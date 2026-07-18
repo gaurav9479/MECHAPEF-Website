@@ -5,8 +5,6 @@ const connectDB = async () => {
         const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mechapef';
 
         await mongoose.connect(mongoUri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
         });
