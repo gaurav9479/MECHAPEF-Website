@@ -102,13 +102,13 @@ const Profile = () => {
             </div>
 
             <div className="form-group">
-              <label>Branch</label>
-              <input type="text" name="branch" value={formData.branch} onChange={handleChange} />
+              <label>Branch (Automatic from Reg No)</label>
+              <input type="text" name="branch" value={formData.branch} disabled style={{ backgroundColor: '#151518', cursor: 'not-allowed', color: '#888' }} />
             </div>
 
             <div className="form-group">
-              <label>Year of Study</label>
-              <input type="number" name="yearOfStudy" min="1" max="5" value={formData.yearOfStudy} onChange={handleChange} />
+              <label>Year of Study (Automatic from Reg No)</label>
+              <input type="text" name="yearOfStudy" value={formData.yearOfStudy} disabled style={{ backgroundColor: '#151518', cursor: 'not-allowed', color: '#888' }} />
             </div>
 
             <div className="form-group">

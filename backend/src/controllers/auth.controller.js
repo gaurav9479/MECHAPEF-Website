@@ -272,7 +272,7 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 
 
 export const updateProfile = asyncHandler(async (req, res) => {
-    const allowed = ['name', 'phoneNumber', 'branch', 'yearOfStudy', 'profileImage', 'githubURL', 'linkedinURL', 'otherLinks'];
+    const allowed = ['name', 'phoneNumber', 'profileImage', 'githubURL', 'linkedinURL', 'otherLinks'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
 
