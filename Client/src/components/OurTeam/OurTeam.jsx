@@ -61,9 +61,9 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
   const inView = useInView(ref, { once: true, margin: '0px 0px -80px 0px' });
 
   const fallbackMap = {
-    team_fy: 'Senior Member',
+    team_fy: 'Junior Member',
     team_sy: 'Core Member',
-    team_ty: 'Junior Member',
+    team_ty: 'Senior Member',
   };
   const fallbackRole = fallbackMap[sectionPrefix] || 'Member';
 
@@ -168,9 +168,9 @@ const OurTeam = () => {
 
       {/* Scroll Container */}
       <div className="team-scroll-container">
-        <TeamLayer title="Final Year Seniors" sectionPrefix="team_fy" imagesMap={imagesMap} />
+        <TeamLayer title="Final Year Seniors" sectionPrefix="team_ty" imagesMap={imagesMap} />
         <TeamLayer title="Pre-final Year"     sectionPrefix="team_sy" imagesMap={imagesMap} />
-        <TeamLayer title="Second Year"        sectionPrefix="team_ty" imagesMap={imagesMap} />
+        <TeamLayer title="Second Year"        sectionPrefix="team_fy" imagesMap={imagesMap} />
       </div>
     </section>
   );

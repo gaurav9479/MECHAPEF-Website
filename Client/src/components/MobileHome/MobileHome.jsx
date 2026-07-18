@@ -72,9 +72,9 @@ const MobileHome = () => {
         });
       
       setTeam({
-        fy: mk('team_fy', 'Final Year'),
+        fy: mk('team_ty', 'Final Year'),
         sy: mk('team_sy', 'Pre-Final'),
-        ty: mk('team_ty', '2nd Year'),
+        ty: mk('team_fy', '2nd Year'),
       });
       teamLoaded = true;
       checkLoading();
