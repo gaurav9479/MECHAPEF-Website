@@ -62,13 +62,19 @@ const MobileHome = () => {
       const map = {};
       (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
       const mk = (prefix, label) =>
-        Array.from({ length: 10 }, (_, i) =>
-          map[`${prefix}_${i + 1}`] || { name: `Member ${i + 1}`, regNo: label });
+        Array.from({ length: 10 }, (_, i) => {
+          const img = map[`${prefix}_${i + 1}`];
+          return img ? {
+            name: img.name,
+            regNo: img.regNo,
+            imageURL: img.imageURL
+          } : { name: `Member ${i + 1}`, regNo: label };
+        });
       
       setTeam({
-        fy: mk('hero_fy', 'Final Year'),
-        sy: mk('hero_sy', 'Pre-Final'),
-        ty: mk('hero_ty', '2nd Year'),
+        fy: mk('team_fy', 'Final Year'),
+        sy: mk('team_sy', 'Pre-Final'),
+        ty: mk('team_ty', '2nd Year'),
       });
       teamLoaded = true;
       checkLoading();

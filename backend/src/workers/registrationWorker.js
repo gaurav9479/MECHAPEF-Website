@@ -113,7 +113,18 @@ export const startRegistrationWorker = () => {
         console.error(`[Worker] Job ${job?.id || 'unknown'} failed:`, err.message);
     });
 
-    registrationWorker.on('error', (err) => {
+    let workerErrorLogged = false;
+    registrationWorker.on('error', async (err) => {
+        if (err.message.includes('max requests limit exceeded')) {
+            if (!workerErrorLogged) {
+                console.error('\n⚠️ [Worker] Registration Worker: Upstash daily limit exceeded. Closing background worker to avoid spam. App will process registrations directly.');
+                workerErrorLogged = true;
+            }
+            try {
+                await registrationWorker.close();
+            } catch (e) {}
+            return;
+        }
         console.error('[Worker] Registration worker error:', err.message);
     });
 

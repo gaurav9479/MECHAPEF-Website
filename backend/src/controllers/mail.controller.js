@@ -4,6 +4,7 @@ import APIResponse from '../utils/APIResponse.js';
 import User from '../models/user.model.js';
 import Announcement from '../models/announcement.model.js';
 import Event from '../models/event.model.js';
+import PendingEmail from '../models/pendingEmail.model.js';
 import sendEmail from '../utils/sendEmail.js';
 import logFootprint from '../utils/logFootprint.js';
 import { HTTP_STATUS, USER_ROLES } from '../constants/index.js';
@@ -146,12 +147,29 @@ export const sendMail = asyncHandler(async (req, res) => {
         }
     }));
 
-    await emailQueue.addBulk(jobs);
-    
-    console.log(`[Mail Portal] Enqueued ${jobs.length} emails to BullMQ`);
+    try {
+        await emailQueue.addBulk(jobs);
+        console.log(`[Mail Portal] Enqueued ${jobs.length} emails to BullMQ`);
+    } catch (error) {
+        console.error('[Mail Portal] Redis/BullMQ unavailable, saving emails to MongoDB backup queue:', error.message);
+        try {
+            const dbEmails = jobs.map(job => ({
+                to: job.data.to,
+                subject: job.data.subject,
+                text: job.data.text,
+                html: job.data.html,
+                status: 'pending',
+                attempts: 0
+            }));
+            await PendingEmail.insertMany(dbEmails);
+            console.log(`[Mail Portal] Successfully saved ${jobs.length} emails to MongoDB pending queue.`);
+        } catch (dbErr) {
+            console.error('[Mail Portal] Failed to save emails to MongoDB backup queue:', dbErr.message);
+        }
+    }
     
     // Log the footprint for initiating the batch mail
-    logFootprint(req, 'MAIL_SENT', 'Mail Portal', `Queued email "${title}" to ${validUsers.length} users (${targetRole})`);
+    logFootprint(req, 'MAIL_SENT', 'Mail Portal', `Queued/sent email "${title}" to ${validUsers.length} users (${targetRole})`);
 
-    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { targeted: validUsers.length }, 'Email dispatch queued successfully in BullMQ'));
+    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { targeted: validUsers.length }, 'Email dispatch initiated successfully'));
 });

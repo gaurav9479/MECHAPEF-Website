@@ -17,13 +17,22 @@ export const redisConnection = isRedisEnabled ? new IORedis(redisUrl, {
     },
 }) : null;
 
+let queueErrorLogged = false;
 if (redisConnection) {
     redisConnection.on('error', (error) => {
+        if (error.message.includes('max requests limit exceeded')) {
+            if (!queueErrorLogged) {
+                console.error('\n⚠️ [Redis] Registration Queue Daily Request Limit Exceeded. Falling back to direct database writes.');
+                queueErrorLogged = true;
+            }
+            return;
+        }
         console.error('[Redis] Registration queue connection error:', error.message);
     });
 
     redisConnection.on('connect', () => {
         console.log('[Redis] Registration queue connected');
+        queueErrorLogged = false;
     });
 
     redisConnection.on('close', () => {

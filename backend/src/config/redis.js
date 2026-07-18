@@ -20,10 +20,19 @@ if (process.env.REDIS_URL) {
 
 export { connection };
 
+let redisErrorLogged = false;
 connection.on('error', (err) => {
+    if (err.message.includes('max requests limit exceeded')) {
+        if (!redisErrorLogged) {
+            console.error('\n⚠️ [Redis] Upstash Redis Daily Request Limit Exceeded (500k limit reached). All background queues will fall back to local/direct execution.');
+            redisErrorLogged = true;
+        }
+        return;
+    }
     console.error('[Redis] Connection Error:', err.message);
 });
 
 connection.on('connect', () => {
     console.log('[Redis] Connected successfully');
+    redisErrorLogged = false; // Reset if we successfully connect
 });

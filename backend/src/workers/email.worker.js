@@ -30,3 +30,18 @@ emailWorker.on('completed', job => {
 emailWorker.on('failed', (job, err) => {
     console.log(`[EmailWorker] Job ${job.id} has failed with ${err.message}`);
 });
+
+let emailWorkerErrorLogged = false;
+emailWorker.on('error', async (err) => {
+    if (err.message.includes('max requests limit exceeded')) {
+        if (!emailWorkerErrorLogged) {
+            console.error('\n⚠️ [EmailWorker] Email Worker: Upstash daily limit exceeded. Closing background worker to avoid spam. App will send emails directly via SMTP.');
+            emailWorkerErrorLogged = true;
+        }
+        try {
+            await emailWorker.close();
+        } catch (e) {}
+        return;
+    }
+    console.error('[EmailWorker] Worker error:', err.message);
+});

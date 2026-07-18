@@ -193,6 +193,7 @@ const AdminManagement = () => {
     setDeletingImage(true);
     try {
       await api.delete(`/upload/sections/${selectedSection}`);
+      localStorage.removeItem('api_cache_/upload/sections');
       setSectionImages(prev => {
         const copy = { ...prev };
         delete copy[selectedSection];
@@ -239,6 +240,7 @@ const AdminManagement = () => {
         imageURL: url,
         imagekitFileId: fileId,
       });
+      localStorage.removeItem('api_cache_/upload/sections');
       showToast('Image uploaded & saved!');
       setCropping(false);
       setCropSrc(null);
@@ -654,6 +656,7 @@ const AdminManagement = () => {
                           name: imgData?.name || '',
                           regNo: imgData?.regNo || ''
                         });
+                        localStorage.removeItem('api_cache_/upload/sections');
                         showToast('Details saved!');
                       } catch (error) {
                         showToast('Failed to save details', 'error');
