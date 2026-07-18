@@ -1,4 +1,22 @@
 import 'dotenv/config';
+
+process.on('unhandledRejection', (reason) => {
+    const msg = reason?.message || '';
+    if (msg.includes('Connection is closed') || msg.includes('limit exceeded') || msg.includes('max requests')) {
+        return; // Suppress Upstash/Redis connection closure crashes
+    }
+    console.error('Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    const msg = error?.message || '';
+    if (msg.includes('Connection is closed') || msg.includes('limit exceeded') || msg.includes('max requests')) {
+        return; // Suppress Upstash/Redis connection closure crashes
+    }
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+
 import app from './app.js';
 import connectDB from './config/database.js';
 import { startCronJobs } from './utils/cron.js';
