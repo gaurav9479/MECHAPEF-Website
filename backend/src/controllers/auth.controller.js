@@ -39,14 +39,10 @@ function parseStudentInfoFromRegNo(regNo) {
 }
 
 export const register = asyncHandler(async (req, res) => {
-    const { name, email, password, collegeRegNo, yearOfStudy, branch, phoneNumber } = req.body;
+    const { name, email, password, phoneNumber } = req.body;
 
     if (!name || !email || !password) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Name, email, and password are required');
-    }
-
-    if (!collegeRegNo) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'College registration number is required for registration');
     }
 
     const mnnitEmailRegex = /^[a-z]+\.[0-9]+@mnnit\.ac\.in$/;
@@ -55,8 +51,10 @@ export const register = asyncHandler(async (req, res) => {
     }
 
     const regnoFromEmail = email.toLowerCase().split('.')[1].split('@')[0];
-    if (regnoFromEmail !== collegeRegNo.toLowerCase()) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Wrong credential');
+    const { branch: parsedBranch, yearOfStudy: parsedYear } = parseStudentInfoFromRegNo(regnoFromEmail);
+
+    if (!parsedBranch || !parsedYear) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Unable to parse branch and year of study from email address');
     }
 
     if (req.body.role && req.body.role !== 'general-user') {
@@ -65,7 +63,7 @@ export const register = asyncHandler(async (req, res) => {
 
     const [existingEmail, existingRegNo] = await Promise.all([
         User.findOne({ email: email.toLowerCase() }),
-        User.findOne({ collegeRegNo: collegeRegNo.toUpperCase() })
+        User.findOne({ collegeRegNo: regnoFromEmail.toUpperCase() })
     ]);
 
     if (existingEmail) {
@@ -75,19 +73,17 @@ export const register = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.CONFLICT, 'This college registration number is already registered');
     }
 
-    const { branch: parsedBranch, yearOfStudy: parsedYear } = parseStudentInfoFromRegNo(collegeRegNo);
-
     const newUser = new User({
         name: name.trim(),
         email: email.toLowerCase(),
         password,
-        collegeRegNo: collegeRegNo.toUpperCase(),
+        collegeRegNo: regnoFromEmail.toUpperCase(),
         role: 'general-user',
         requestedRole: req.body.requestedRole || null,
         isVerified: false,
         unverifiedRequestExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        yearOfStudy: yearOfStudy || parsedYear || undefined,
-        branch: branch || parsedBranch || undefined,
+        yearOfStudy: parsedYear,
+        branch: parsedBranch,
         phoneNumber: phoneNumber || undefined,
     });
 

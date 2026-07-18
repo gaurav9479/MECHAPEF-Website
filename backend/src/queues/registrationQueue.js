@@ -59,6 +59,15 @@ export const registrationQueue = redisConnection ? new Queue(QUEUE_NAME, {
     },
 }) : null;
 
+if (registrationQueue) {
+    registrationQueue.on('error', (error) => {
+        if (error.message.includes('max requests limit exceeded')) {
+            return; // Suppress Upstash limit exceeded error
+        }
+        console.error('[Redis] Registration Queue error:', error.message);
+    });
+}
+
 export const enqueueRegistration = async (payload) => {
     if (!registrationQueue) {
         throw new Error('Redis queue is not configured.');

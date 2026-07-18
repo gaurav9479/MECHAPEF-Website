@@ -70,6 +70,12 @@ import { Queue } from 'bullmq';
 import { connection } from '../config/redis.js';
 
 const emailQueue = new Queue('emailQueue', { connection });
+emailQueue.on('error', (error) => {
+    if (error.message.includes('max requests limit exceeded')) {
+        return; // Suppress Upstash limit exceeded error
+    }
+    console.error('[Redis] Email Queue error:', error.message);
+});
 
 export const sendMail = asyncHandler(async (req, res) => {
     const { targetRole, endorsementType, endorsementId, customSubject, customBody } = req.body;
