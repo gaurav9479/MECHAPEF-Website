@@ -116,6 +116,17 @@ const eventSchema = new mongoose.Schema(
             isRequired: { type: Boolean, default: false }
         }],
 
+        eligibleBranches: {
+            type: [String],
+            required: [true, 'Eligible branches are required'],
+            validate: {
+                validator(value) {
+                    return value && value.length > 0;
+                },
+                message: 'At least one eligible branch must be selected'
+            }
+        },
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

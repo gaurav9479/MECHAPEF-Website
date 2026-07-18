@@ -36,6 +36,20 @@ export const startRegistrationWorker = () => {
             throw new Error(`Event ${eventId} not found`);
         }
 
+        // Check branch eligibility for registerer
+        if (event.eligibleBranches && event.eligibleBranches.length > 0) {
+            const userObj = await User.findById(registeredBy);
+            if (!userObj || !userObj.branch) {
+                throw new Error('Please update your branch in your profile before registering');
+            }
+            const isEligible = event.eligibleBranches.some(b => 
+                b.toLowerCase().trim() === userObj.branch.toLowerCase().trim()
+            );
+            if (!isEligible) {
+                throw new Error(`Your branch (${userObj.branch}) is not eligible for this event`);
+            }
+        }
+
         if (event.status === 'Ended' || event.status === 'Draft') {
             throw new Error(`Event is not active`);
         }
@@ -55,6 +69,19 @@ export const startRegistrationWorker = () => {
 
         if (registrationType === 'Team' && teamMembers?.length) {
             const memberIds = teamMembers.map((member) => member.userId);
+
+            // Check branch eligibility for team members
+            if (event.eligibleBranches && event.eligibleBranches.length > 0) {
+                const membersList = await User.find({ _id: { $in: memberIds } });
+                const ineligibleMember = membersList.find(m => {
+                    if (!m.branch) return true;
+                    return !event.eligibleBranches.some(b => b.toLowerCase().trim() === m.branch.toLowerCase().trim());
+                });
+                if (ineligibleMember) {
+                    throw new Error(`Team member ${ineligibleMember.name} (Branch: ${ineligibleMember.branch || 'Not Set'}) is not eligible for this event.`);
+                }
+            }
+
             const alreadyRegisteredMember = await Registration.findOne({
                 eventId,
                 'teamMembers.userId': { $in: memberIds },

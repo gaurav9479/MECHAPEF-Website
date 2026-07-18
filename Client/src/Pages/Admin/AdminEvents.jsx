@@ -7,11 +7,22 @@ import api from '../../services/api';
 import { eventService } from '../../services/services';
 import './AdminDashboard.css';
 const CATEGORIES = ['MechapefEvent', 'Departmental'];
+const BRANCHES = [
+  'Biotechnology',
+  'Chemical Engineering',
+  'Civil Engineering',
+  'Computer Science and Engineering',
+  'Electronics and Communication Engineering',
+  'Electrical Engineering',
+  'Mechanical Engineering',
+  'Electronics and Computational Mechanics',
+  'Materials Engineering'
+];
 const emptyForm = {
   title: '', description: '', category: 'MechapefEvent',
   startTime: '', endTime: '', venue: '', registrationDeadline: '',
   maxTeamSize: 1, registrationFee: 0, featured: false, rules: '', prizes: '',
-  customFormFields: []
+  customFormFields: [], eligibleBranches: []
 };
 const AdminEvents = () => {
   const { logout } = useAuth();
@@ -53,7 +64,8 @@ const AdminEvents = () => {
       featured: ev.featured,
       rules: Array.isArray(ev.rules) ? ev.rules.join('\n') : '',
       prizes: ev.prizes || '',
-      customFormFields: ev.customFormFields || []
+      customFormFields: ev.customFormFields || [],
+      eligibleBranches: ev.eligibleBranches || []
     });
     setShowModal(true);
   };
@@ -89,6 +101,11 @@ const AdminEvents = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.eligibleBranches || form.eligibleBranches.length === 0) {
+      showToast('At least one eligible branch must be selected', 'error');
+      setSubmitting(false);
+      return;
+    }
     setSubmitting(true);
     const payload = {
       ...form,
@@ -244,6 +261,54 @@ const AdminEvents = () => {
                 <div className="form-group full">
                   <label>Prizes</label>
                   <input value={form.prizes} onChange={e => f('prizes', e.target.value)} placeholder="1st: ₹5000, 2nd: ₹3000" />
+                </div>
+
+                {/* Eligible Branches Selection */}
+                <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <label style={{ fontSize: '0.9rem', color: '#ff1f01', fontWeight: 'bold' }}>Eligible Branches *</label>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      onClick={() => {
+                        if (form.eligibleBranches.length === BRANCHES.length) {
+                          f('eligibleBranches', []);
+                        } else {
+                          f('eligibleBranches', [...BRANCHES]);
+                        }
+                      }}
+                      style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                    >
+                      {form.eligibleBranches.length === BRANCHES.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px', backgroundColor: '#111', padding: '15px', borderRadius: '8px' }}>
+                    {BRANCHES.map(branch => {
+                      const isChecked = form.eligibleBranches.includes(branch);
+                      return (
+                        <label key={branch} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={isChecked} 
+                            onChange={() => {
+                              if (isChecked) {
+                                f('eligibleBranches', form.eligibleBranches.filter(b => b !== branch));
+                              } else {
+                                f('eligibleBranches', [...form.eligibleBranches, branch]);
+                              }
+                            }}
+                            style={{ width: 'auto' }}
+                          />
+                          {branch}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {form.eligibleBranches.length === 0 && (
+                    <span style={{ color: '#ff4444', fontSize: '0.75rem', marginTop: '5px', display: 'block' }}>
+                      * At least one branch must be selected
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>

@@ -60,6 +60,20 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
 
+    // Check branch eligibility for registerer
+    if (event.eligibleBranches && event.eligibleBranches.length > 0) {
+        const userObj = await User.findById(req.user.userId);
+        if (!userObj || !userObj.branch) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please update your branch in your profile before registering');
+        }
+        const isEligible = event.eligibleBranches.some(b => 
+            b.toLowerCase().trim() === userObj.branch.toLowerCase().trim()
+        );
+        if (!isEligible) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Your branch (${userObj.branch}) is not eligible for this event`);
+        }
+    }
+
     if (new Date() > event.registrationDeadline) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.REGISTRATION_CLOSED);
     }
@@ -91,6 +105,20 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         const members = await User.find({ _id: { $in: teamMemberIds } });
         if (members.length !== teamMemberIds.length) {
             throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
+        }
+
+        // Check branch eligibility for team members
+        if (event.eligibleBranches && event.eligibleBranches.length > 0) {
+            const ineligibleMember = members.find(m => {
+                if (!m.branch) return true; // branch not set
+                return !event.eligibleBranches.some(b => b.toLowerCase().trim() === m.branch.toLowerCase().trim());
+            });
+            if (ineligibleMember) {
+                throw new ApiError(
+                    HTTP_STATUS.BAD_REQUEST, 
+                    `Team member ${ineligibleMember.name} (Branch: ${ineligibleMember.branch || 'Not Set'}) is not eligible for this event.`
+                );
+            }
         }
 
         const registeredMembers = await Registration.find({

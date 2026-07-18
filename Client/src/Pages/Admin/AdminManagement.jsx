@@ -7,7 +7,7 @@ import 'cropperjs/dist/cropper.css';
 import {
   FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake,
   FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle, FaTimesCircle,
-  FaImage, FaUpload, FaEdit, FaCrop, FaSearch
+  FaImage, FaUpload, FaEdit, FaCrop, FaSearch, FaTrash
 } from 'react-icons/fa';
 import api from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
@@ -525,23 +525,34 @@ const AdminManagement = () => {
               </h3>
               {/* Current Image Preview */}
               {sectionImages[selectedSection]?.imageURL && (
-                <div className="current-img-preview" style={{ position: 'relative' }}>
+                <div 
+                  className="current-img-preview" 
+                  style={{ 
+                    position: 'relative',
+                    maxWidth: (SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '240px' : '450px',
+                    aspectRatio: SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
+                    marginBottom: '24px'
+                  }}
+                >
                   <div className="current-img-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>Current Image</span>
                     <button 
                       onClick={deleteImage} 
                       disabled={deletingImage}
-                      style={{ background: '#ff0000', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                      className="delete-img-btn"
                     >
-                      {deletingImage ? 'Deleting...' : 'Delete Image'}
+                      <FaTrash style={{ marginRight: '6px' }} />
+                      {deletingImage ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                   <img 
                     src={sectionImages[selectedSection].imageURL} 
                     alt="current" 
                     style={{ 
-                      aspectRatio: SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
-                      objectFit: 'cover'
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block'
                     }}
                   />
                 </div>
@@ -552,12 +563,13 @@ const AdminManagement = () => {
                   className="upload-zone" 
                   onClick={() => fileInputRef.current?.click()}
                   style={{
+                    maxWidth: (SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '240px' : '450px',
                     aspectRatio: SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
-                    maxHeight: '400px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    padding: (SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '24px 12px' : '56px 36px'
                   }}
                 >
                   <FaUpload className="upload-zone-icon" />
