@@ -108,7 +108,7 @@ const MagazineContainer = () => {
               left: 0,
               width: '100%',
               height: '100vh',
-              overflowY: 'auto',
+              overflow: 'hidden',
               backgroundColor: '#f5f4ef',
               zIndex: 40
             }}
