@@ -83,6 +83,22 @@ const AdminMagazine = () => {
     }
   };
 
+  const handleRemovePdf = async () => {
+    if (!window.confirm("Are you sure you want to remove the PDF? This will unpublish the magazine immediately.")) return;
+    
+    setUploading(true);
+    try {
+      const updatedForm = { ...form, pdfUrl: null };
+      await api.put('/magazine', updatedForm);
+      setForm(updatedForm);
+      showToast('PDF removed successfully!');
+    } catch (err) {
+      showToast('Failed to remove PDF', 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loading) return <div className="admin-layout"><AdminSidebar /><main className="admin-form-page"><h2>Loading...</h2></main></div>;
 
   return (
@@ -138,6 +154,14 @@ const AdminMagazine = () => {
                   <a href={form.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: '10px 15px', textDecoration: 'none' }}>
                     View PDF
                   </a>
+                  <button 
+                    type="button" 
+                    className="btn-secondary" 
+                    style={{ padding: '10px 15px', background: '#dc3545', color: '#fff', border: 'none' }} 
+                    onClick={handleRemovePdf}
+                  >
+                    Remove PDF
+                  </button>
                 </div>
               </div>
             )}
