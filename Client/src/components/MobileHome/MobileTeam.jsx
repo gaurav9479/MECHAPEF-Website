@@ -3,7 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HeadingGearIcon, Reveal, GearSVG } from './MobileShared';
 
 const MobileTeam = ({ team }) => {
-  const [activeTab, setActiveTab] = useState('fy');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (team.ty && team.ty.length > 0) return 'ty';
+    if (team.sy && team.sy.length > 0) return 'sy';
+    return 'fy';
+  });
 
   const tabDefs = [
     { key: 'fy', label: 'Final Year' },
@@ -41,22 +45,28 @@ const MobileTeam = ({ team }) => {
           animate={{ opacity: 1, x: 0   }}
           exit={{    opacity: 0, x: -30  }}
           transition={{ duration: 0.3 }}>
-          {(team[activeTab] || []).map((m, i) => (
-            <div key={i} className="mh-team-card">
-              <div className="mh-team-img">
-                {m.imageURL
-                  ? <img src={m.imageURL} alt={m.name} />
-                  : <div className="mh-team-ph">
-                      <GearSVG size={38} speed={12 + (i % 6)} reverse={i % 2 === 0} />
-                    </div>
-                }
+          {(team[activeTab] && team[activeTab].length > 0) ? (
+            team[activeTab].map((m, i) => (
+              <div key={i} className="mh-team-card">
+                <div className="mh-team-img">
+                  {m.imageURL
+                    ? <img src={m.imageURL} alt={m.name} />
+                    : <div className="mh-team-ph">
+                        <GearSVG size={38} speed={12 + (i % 6)} reverse={i % 2 === 0} />
+                      </div>
+                  }
+                </div>
+                <div className="mh-team-info">
+                  <h4>{m.name || `Member ${i + 1}`}</h4>
+                  <p>{m.regNo}</p>
+                </div>
               </div>
-              <div className="mh-team-info">
-                <h4>{m.name || `Member ${i + 1}`}</h4>
-                <p>{m.regNo}</p>
-              </div>
+            ))
+          ) : (
+            <div className="mh-no-members" style={{ width: '100%', textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.5)', border: '1px solid #1a0000', borderRadius: '12px', background: '#0d0000' }}>
+              No members added yet.
             </div>
-          ))}
+          )}
         </motion.div>
       </AnimatePresence>
     </section>
