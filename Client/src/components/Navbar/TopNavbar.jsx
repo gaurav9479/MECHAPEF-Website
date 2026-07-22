@@ -16,6 +16,7 @@ import { scrollToId } from "../../utils/scroll";
 import gsap from "gsap";
 import ScrollToPlugin from "gsap/ScrollToPlugin";
 gsap.registerPlugin(ScrollToPlugin);
+import MagneticButton from "../MagneticButton/MagneticButton";
 import "./Navbar.css";
 
 const TopNavbar = () => {
@@ -255,7 +256,7 @@ const TopNavbar = () => {
 
           <li className="mobile-only-btn">
             {!user ? (
-              <button className="contact-btn" onClick={handleAuth}>Login</button>
+              <MagneticButton className="contact-btn" onClick={handleAuth}>Login</MagneticButton>
             ) : (
               <div className="nav-avatar-container" ref={mobileRef}>
                 <div className={`nav-avatar ${user.isVerified ? "verified-avatar" : ""}`} onClick={toggleAvatar}>
@@ -282,7 +283,7 @@ const TopNavbar = () => {
 
         <div className="desktop-only-btn">
           {!user ? (
-            <button className="contact-btn" onClick={handleAuth}>Login</button>
+            <MagneticButton className="contact-btn" onClick={handleAuth}>Login</MagneticButton>
           ) : (
             <div className="nav-avatar-container" ref={desktopRef}>
               <div className={`nav-avatar ${user.isVerified ? "verified-avatar" : ""}`} onClick={toggleAvatar}>
