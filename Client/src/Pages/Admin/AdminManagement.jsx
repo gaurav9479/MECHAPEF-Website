@@ -15,7 +15,7 @@ import '../Admin/AdminDashboard.css';
 import './AdminManagement.css';
 import '../../components/CropperInput/CropperInput.css';
 
-const SECTION_KEYS = [
+const BASE_SECTION_KEYS = [
   { key: 'dept_1', label: 'Dept Image 1', aspectRatio: 1/1.25 },
   { key: 'dept_2', label: 'Dept Image 2', aspectRatio: 1/1.25 },
   { key: 'dept_3', label: 'Dept Image 3', aspectRatio: 1/1.25 },
@@ -29,38 +29,28 @@ const SECTION_KEYS = [
   { key: 'domain_3', label: 'Domain 3 (Design & CAD)', aspectRatio: NaN },
   { key: 'domain_4', label: 'Domain 4 (Manufacturing)', aspectRatio: NaN },
   { key: 'hero_bot', label: 'Hero Bot Image', aspectRatio: NaN },
-  { key: 'join_bot', label: 'Join Us Bot Image', aspectRatio: NaN },
-  { key: 'team_fy_1', label: 'Team Second Year 1', aspectRatio: 1 },
-  { key: 'team_fy_2', label: 'Team Second Year 2', aspectRatio: 1 },
-  { key: 'team_fy_3', label: 'Team Second Year 3', aspectRatio: 1 },
-  { key: 'team_fy_4', label: 'Team Second Year 4', aspectRatio: 1 },
-  { key: 'team_fy_5', label: 'Team Second Year 5', aspectRatio: 1 },
-  { key: 'team_fy_6', label: 'Team Second Year 6', aspectRatio: 1 },
-  { key: 'team_fy_7', label: 'Team Second Year 7', aspectRatio: 1 },
-  { key: 'team_fy_8', label: 'Team Second Year 8', aspectRatio: 1 },
-  { key: 'team_fy_9', label: 'Team Second Year 9', aspectRatio: 1 },
-  { key: 'team_fy_10', label: 'Team Second Year 10', aspectRatio: 1 },
-  { key: 'team_sy_1', label: 'Team Pre-final Year 1', aspectRatio: 1 },
-  { key: 'team_sy_2', label: 'Team Pre-final Year 2', aspectRatio: 1 },
-  { key: 'team_sy_3', label: 'Team Pre-final Year 3', aspectRatio: 1 },
-  { key: 'team_sy_4', label: 'Team Pre-final Year 4', aspectRatio: 1 },
-  { key: 'team_sy_5', label: 'Team Pre-final Year 5', aspectRatio: 1 },
-  { key: 'team_sy_6', label: 'Team Pre-final Year 6', aspectRatio: 1 },
-  { key: 'team_sy_7', label: 'Team Pre-final Year 7', aspectRatio: 1 },
-  { key: 'team_sy_8', label: 'Team Pre-final Year 8', aspectRatio: 1 },
-  { key: 'team_sy_9', label: 'Team Pre-final Year 9', aspectRatio: 1 },
-  { key: 'team_sy_10', label: 'Team Pre-final Year 10', aspectRatio: 1 },
-  { key: 'team_ty_1', label: 'Team Final Year 1', aspectRatio: 1 },
-  { key: 'team_ty_2', label: 'Team Final Year 2', aspectRatio: 1 },
-  { key: 'team_ty_3', label: 'Team Final Year 3', aspectRatio: 1 },
-  { key: 'team_ty_4', label: 'Team Final Year 4', aspectRatio: 1 },
-  { key: 'team_ty_5', label: 'Team Final Year 5', aspectRatio: 1 },
-  { key: 'team_ty_6', label: 'Team Final Year 6', aspectRatio: 1 },
-  { key: 'team_ty_7', label: 'Team Final Year 7', aspectRatio: 1 },
-  { key: 'team_ty_8', label: 'Team Final Year 8', aspectRatio: 1 },
-  { key: 'team_ty_9', label: 'Team Final Year 9', aspectRatio: 1 },
-  { key: 'team_ty_10', label: 'Team Final Year 10', aspectRatio: 1 },
+  { key: 'join_bot', label: 'Join Us Bot Image', aspectRatio: NaN }
 ];
+
+const getDynamicSectionKeys = (sectionImages, extraFy, extraSy, extraTy) => {
+  let maxFy = 10, maxSy = 10, maxTy = 10;
+  Object.keys(sectionImages).forEach(k => {
+    if (k.startsWith('team_fy_')) maxFy = Math.max(maxFy, parseInt(k.replace('team_fy_', '')));
+    if (k.startsWith('team_sy_')) maxSy = Math.max(maxSy, parseInt(k.replace('team_sy_', '')));
+    if (k.startsWith('team_ty_')) maxTy = Math.max(maxTy, parseInt(k.replace('team_ty_', '')));
+  });
+
+  maxFy += extraFy;
+  maxSy += extraSy;
+  maxTy += extraTy;
+
+  const dynamicKeys = [...BASE_SECTION_KEYS];
+  for (let i = 1; i <= maxFy; i++) dynamicKeys.push({ key: `team_fy_${i}`, label: `Team Second Year ${i}`, aspectRatio: 1 });
+  for (let i = 1; i <= maxSy; i++) dynamicKeys.push({ key: `team_sy_${i}`, label: `Team Pre-final Year ${i}`, aspectRatio: 1 });
+  for (let i = 1; i <= maxTy; i++) dynamicKeys.push({ key: `team_ty_${i}`, label: `Team Final Year ${i}`, aspectRatio: 1 });
+  
+  return { dynamicKeys, counts: { fy: maxFy, sy: maxSy, ty: maxTy } };
+};
 const AdminManagement = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -83,7 +73,12 @@ const AdminManagement = () => {
   // ── Image Manager Tab State ──
   const [sectionImages, setSectionImages] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('Our Department');
-  const [selectedSection, setSelectedSection] = useState(SECTION_KEYS[0].key);
+  const [selectedSection, setSelectedSection] = useState('hero_bot');
+  const [extraFy, setExtraFy] = useState(0);
+  const [extraSy, setExtraSy] = useState(0);
+  const [extraTy, setExtraTy] = useState(0);
+
+  const { dynamicKeys: dynamicSectionKeys, counts: slotCounts } = getDynamicSectionKeys(sectionImages, extraFy, extraSy, extraTy);
   const [cropSrc, setCropSrc] = useState(null);
   const [cropping, setCropping] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -188,7 +183,7 @@ const AdminManagement = () => {
   useEffect(() => { if (activeTab === 'images') fetchSectionImages(); }, [activeTab]);
 
   const deleteImage = async () => {
-    const currentSectionLabel = SECTION_KEYS.find(s => s.key === selectedSection)?.label;
+    const currentSectionLabel = dynamicSectionKeys.find(s => s.key === selectedSection)?.label;
     if (!window.confirm(`Are you sure you want to delete the image for ${currentSectionLabel}?`)) return;
     setDeletingImage(true);
     try {
@@ -233,7 +228,7 @@ const AdminManagement = () => {
       });
       const { url, fileId } = uploadRes.data.data;
       // Save to SectionImage model
-      const section = SECTION_KEYS.find(s => s.key === selectedSection);
+      const section = dynamicSectionKeys.find(s => s.key === selectedSection);
       await api.post('/upload/sections', {
         sectionKey: selectedSection,
         label: section?.label,
@@ -249,7 +244,7 @@ const AdminManagement = () => {
       showToast(err.response?.data?.message || 'Upload failed', 'error');
     } finally { setUploading(false); }
   };
-  const currentSectionLabel = SECTION_KEYS.find(s => s.key === selectedSection)?.label;
+  const currentSectionLabel = dynamicSectionKeys.find(s => s.key === selectedSection)?.label;
 
   return (
     <div className="admin-layout">
@@ -495,13 +490,51 @@ const AdminManagement = () => {
                   onChange={(e) => {
                     const newCat = e.target.value;
                     setSelectedCategory(newCat);
-                    const filtered = SECTION_KEYS.filter(s => newCat === 'Our Team' ? s.key.startsWith('team_') : !s.key.startsWith('team_'));
-                    setSelectedSection(filtered[0]?.key);
+                    const filtered = dynamicSectionKeys.filter(s => {
+                      if (newCat === 'Our Team (Second Year)') return s.key.startsWith('team_fy_');
+                      if (newCat === 'Our Team (Pre-Final Year)') return s.key.startsWith('team_sy_');
+                      if (newCat === 'Our Team (Final Year)') return s.key.startsWith('team_ty_');
+                      return !s.key.startsWith('team_');
+                    });
+                    if (filtered.length > 0) setSelectedSection(filtered[0].key);
                   }}
                 >
                   <option value="Our Department">Our Department</option>
-                  <option value="Our Team">Our Team</option>
+                  <option value="Our Team (Second Year)">Our Team (Second Year)</option>
+                  <option value="Our Team (Pre-Final Year)">Our Team (Pre-Final Year)</option>
+                  <option value="Our Team (Final Year)">Our Team (Final Year)</option>
                 </select>
+                {selectedCategory.startsWith('Our Team') && (
+                  <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px', gap: '5px' }}>
+                    <div style={{ color: '#aaa', fontSize: '14px', marginBottom: '5px' }}>
+                      Currently showing {selectedCategory === 'Our Team (Second Year)' ? slotCounts.fy : selectedCategory === 'Our Team (Pre-Final Year)' ? slotCounts.sy : slotCounts.ty} slots.
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button 
+                        className="btn-secondary" 
+                        style={{ padding: '8px 12px', background: '#ff9800', color: '#000', border: 'none', flex: 1 }}
+                        onClick={() => {
+                          if (selectedCategory === 'Our Team (Second Year)') setExtraFy(p => p + 1);
+                          else if (selectedCategory === 'Our Team (Pre-Final Year)') setExtraSy(p => p + 1);
+                          else if (selectedCategory === 'Our Team (Final Year)') setExtraTy(p => p + 1);
+                        }}
+                      >
+                        + 1 Slot
+                      </button>
+                      <button 
+                        className="btn-secondary" 
+                        style={{ padding: '8px 12px', background: '#444', color: '#fff', border: 'none', flex: 1 }}
+                        onClick={() => {
+                          if (selectedCategory === 'Our Team (Second Year)') setExtraFy(p => Math.max(0, p - 1));
+                          else if (selectedCategory === 'Our Team (Pre-Final Year)') setExtraSy(p => Math.max(0, p - 1));
+                          else if (selectedCategory === 'Our Team (Final Year)') setExtraTy(p => Math.max(0, p - 1));
+                        }}
+                      >
+                        - 1 Slot
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div style={{ flex: 1 }}>
                 <h3>2. Select Image Space</h3>
@@ -510,7 +543,12 @@ const AdminManagement = () => {
                   value={selectedSection}
                   onChange={(e) => setSelectedSection(e.target.value)}
                 >
-                  {SECTION_KEYS.filter(s => selectedCategory === 'Our Team' ? s.key.startsWith('team_') : !s.key.startsWith('team_')).map(s => (
+                  {dynamicSectionKeys.filter(s => {
+                      if (selectedCategory === 'Our Team (Second Year)') return s.key.startsWith('team_fy_');
+                      if (selectedCategory === 'Our Team (Pre-Final Year)') return s.key.startsWith('team_sy_');
+                      if (selectedCategory === 'Our Team (Final Year)') return s.key.startsWith('team_ty_');
+                      return !s.key.startsWith('team_');
+                    }).map(s => (
                     <option key={s.key} value={s.key}>
                       {s.label} {sectionImages[s.key]?.imageURL ? ' (✓ Image set)' : ' (No image)'}
                     </option>
@@ -529,8 +567,8 @@ const AdminManagement = () => {
                   className="current-img-preview" 
                   style={{ 
                     position: 'relative',
-                    maxWidth: (SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '240px' : '450px',
-                    aspectRatio: SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
+                    maxWidth: (dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '240px' : '450px',
+                    aspectRatio: dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
                     marginBottom: '24px'
                   }}
                 >
@@ -563,13 +601,13 @@ const AdminManagement = () => {
                   className="upload-zone" 
                   onClick={() => fileInputRef.current?.click()}
                   style={{
-                    maxWidth: (SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '240px' : '450px',
-                    aspectRatio: SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
+                    maxWidth: (dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '240px' : '450px',
+                    aspectRatio: dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: (SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '24px 12px' : '56px 36px'
+                    padding: (dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '24px 12px' : '56px 36px'
                   }}
                 >
                   <FaUpload className="upload-zone-icon" />
@@ -597,7 +635,7 @@ const AdminManagement = () => {
                         ref={cropperRef}
                         src={cropSrc}
                         style={{ height: '400px', width: '100%' }}
-                        aspectRatio={SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio ?? NaN}
+                        aspectRatio={dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio ?? NaN}
                         guides={true}
                         viewMode={1}
                         autoCropArea={1}

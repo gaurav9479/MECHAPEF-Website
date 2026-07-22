@@ -61,15 +61,24 @@ const MobileHome = () => {
     apiGetCached('/upload/sections', (data) => {
       const map = {};
       (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
-      const mk = (prefix, label) =>
-        Array.from({ length: 10 }, (_, i) => {
-          const img = map[`${prefix}_${i + 1}`];
-          return img ? {
-            name: img.name,
-            regNo: img.regNo,
-            imageURL: img.imageURL
-          } : { name: `Member ${i + 1}`, regNo: label };
-        });
+
+      const mk = (prefix, label) => {
+        return Object.keys(map)
+          .filter(k => k.startsWith(prefix + '_') && map[k].imageURL)
+          .sort((a, b) => {
+            const numA = parseInt(a.replace(prefix + '_', ''));
+            const numB = parseInt(b.replace(prefix + '_', ''));
+            return numA - numB;
+          })
+          .map(k => {
+            const img = map[k];
+            return {
+              name: img.name || `Member`,
+              regNo: img.regNo || label,
+              imageURL: img.imageURL
+            };
+          });
+      };
       
       setTeam({
         fy: mk('team_ty', 'Final Year'),

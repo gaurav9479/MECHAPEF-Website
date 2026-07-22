@@ -56,7 +56,11 @@ const TeamCard = ({ data, num, index, fallbackRole }) => {
 
 /* ─── Layer row with framer-motion reveal ───────────────────── */
 const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
-  const cards = Array.from({ length: 10 }, (_, i) => i + 1);
+  const cards = Object.keys(imagesMap)
+    .filter(k => k.startsWith(sectionPrefix + '_') && imagesMap[k].url)
+    .map(k => parseInt(k.replace(sectionPrefix + '_', '')))
+    .sort((a, b) => a - b);
+    
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -80px 0px' });
 
