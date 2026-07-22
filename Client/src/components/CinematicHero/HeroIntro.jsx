@@ -5,6 +5,7 @@ import { assets } from "../../assets/assets";
 import { FaArrowRight, FaUsers } from "react-icons/fa";
 import { scrollToId } from "../../utils/scroll";
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
+import MagneticButton from "../MagneticButton/MagneticButton";
 import '../CinematicHero/CinematicHero.css';
 import '../Hero/Hero.css';
 
@@ -75,12 +76,12 @@ const HeroIntro = () => {
               </motion.p>
 
               <motion.div className="hero-buttons" style={{ y: btnY, opacity: btnOpacity }}>
-                {/* <button className="primary-btn" onClick={() => navigate('/magazine')}>
-                  MAGAZINE <FaArrowRight />
-                </button> */}
-                <button className="secondary-btn" onClick={() => scrollToId('our-team')}>
-                  MEET THE TEAM <FaUsers />
-                </button>
+                <MagneticButton className="primary-btn" onClick={() => navigate('/magazine')}>
+                  Explore Magazine
+                </MagneticButton>
+                <MagneticButton className="secondary-btn" onClick={() => scrollToId('our-team')}>
+                  Meet the Team
+                </MagneticButton>
               </motion.div>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { assets } from "../../assets/assets";
 import { FaArrowRight, FaUsers } from "react-icons/fa";
 import RedStrips from "../RedInclinedStrips/RedInclinedStrips"; 
+import MagneticButton from "../MagneticButton/MagneticButton";
 import "./Hero.css";
 
 const Hero = () => {
@@ -55,12 +56,12 @@ const Hero = () => {
           </div>
 
           <div className="hero-buttons">
-            <button className="primary-btn">
+            <MagneticButton className="primary-btn">
               EXPLORE EVENTS <FaArrowRight />
-            </button>
-            <button className="secondary-btn">
+            </MagneticButton>
+            <MagneticButton className="secondary-btn">
               MEET THE TEAM <FaUsers />
-            </button>
+            </MagneticButton>
           </div>
         </motion.div>
 

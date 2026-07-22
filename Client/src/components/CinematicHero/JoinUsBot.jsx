@@ -2,7 +2,9 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { assets } from "../../assets/assets";
-import { FaEnvelope, FaInstagram, FaLinkedinIn, FaFacebookF, FaTwitter } from "react-icons/fa";
+import { FaEnvelope, FaInstagram, FaLinkedinIn, FaFacebookF, FaTwitter, FaYoutube } from "react-icons/fa";
+import { scrollToId } from "../../utils/scroll";
+import MagneticButton from "../MagneticButton/MagneticButton";
 import '../CinematicHero/CinematicHero.css';
 
 const JoinUsBot = () => {
@@ -69,8 +71,10 @@ const JoinUsBot = () => {
               </motion.p>
               
               <motion.div className="s5-buttons" style={{ y: s5Line4Y, opacity: s5Line4Op }}>
-                <button className="btn-contact-us" onClick={() => navigate('/login')}>JOIN NOW &rarr;</button>
-                <button className="btn-learn-more">LEARN MORE</button>
+                <div className="ch-join-actions">
+                  <MagneticButton className="btn-contact-us" onClick={() => navigate('/login')}>JOIN NOW &rarr;</MagneticButton>
+                  <MagneticButton className="btn-learn-more" onClick={() => scrollToId('about-us')}>LEARN MORE</MagneticButton>
+                </div>
               </motion.div>
 
               <motion.div className="s5-social-grid" style={{ y: s5Line4Y, opacity: s5Line4Op }}>

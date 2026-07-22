@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../../assets/assets";
+import { FaArrowRight } from "react-icons/fa";
+import MagneticButton from "../MagneticButton/MagneticButton";
 import "./Join.css";
 
 const Join = () => {
@@ -29,9 +31,9 @@ const Join = () => {
           MechaPEF?
         </h1>
 
-        <button onClick={() => navigate('/login')}>
-          Apply Now
-        </button>
+        <MagneticButton onClick={() => navigate('/login')}>
+          JOIN MECHAPEF <FaArrowRight />
+        </MagneticButton>
       </motion.div>
 
     </section>

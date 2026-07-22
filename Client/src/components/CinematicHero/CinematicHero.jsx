@@ -7,6 +7,7 @@ import wheelImg from "../../assets/wheel.png";
 
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
 import { scrollToId } from "../../utils/scroll";
+import MagneticButton from "../MagneticButton/MagneticButton";
 import './CinematicHero.css';
 
 // Import the styles so the inner components render beautifully
@@ -270,12 +271,12 @@ const CinematicHero = () => {
               </p>
 
               <div className="hero-buttons">
-                <button className="primary-btn" onClick={() => navigate('/magazine')}>
-                  MAGAZINE <FaArrowRight />
-                </button>
-                <button className="secondary-btn" onClick={() => scrollToId('our-team')}>
-                  MEET THE TEAM <FaUsers />
-                </button>
+                <MagneticButton className="primary-btn" onClick={() => navigate('/magazine')}>
+                  Explore Magazine
+                </MagneticButton>
+                <MagneticButton className="secondary-btn" onClick={() => scrollToId('our-team')}>
+                  Meet the Team
+                </MagneticButton>
               </div>
             </div>
           </motion.div>
@@ -521,8 +522,8 @@ const CinematicHero = () => {
               </motion.p>
               
               <motion.div className="s5-buttons" style={{ x: s5Line4X, opacity: s5Line4Op }}>
-                <button className="btn-contact-us" onClick={() => navigate('/login')}>JOIN NOW &rarr;</button>
-                <button className="btn-learn-more">LEARN MORE</button>
+                <MagneticButton className="btn-contact-us" onClick={() => navigate('/login')}>JOIN NOW &rarr;</MagneticButton>
+                <MagneticButton className="btn-learn-more" onClick={() => scrollToId('about-us')}>LEARN MORE</MagneticButton>
               </motion.div>
 
               <motion.div className="s5-social-grid" style={{ x: s5Line4X, opacity: s5Line4Op }}>
