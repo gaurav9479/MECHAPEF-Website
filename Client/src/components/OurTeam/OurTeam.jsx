@@ -85,19 +85,21 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
         {title}
       </motion.h3>
 
-      <div className="layer-track">
-        {cards.map((num, idx) => {
-          const data = imagesMap[`${sectionPrefix}_${num}`];
-          return (
-            <TeamCard
-              key={`${sectionPrefix}-${num}`}
-              data={data}
-              num={num}
-              index={idx}
-              fallbackRole={fallbackRole}
-            />
-          );
-        })}
+      <div className="layer-scroll-wrapper">
+        <div className="layer-track">
+          {cards.map((num, idx) => {
+            const data = imagesMap[`${sectionPrefix}_${num}`];
+            return (
+              <TeamCard
+                key={`${sectionPrefix}-${num}`}
+                data={data}
+                num={num}
+                index={idx}
+                fallbackRole={fallbackRole}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

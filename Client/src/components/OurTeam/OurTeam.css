@@ -97,19 +97,23 @@
 
 /* ── Scroll Container ───────────────────────────────────────── */
 .team-scroll-container {
-  overflow-x: auto;
-  overflow-y: hidden;
   display: flex;
   flex-direction: column;
   gap: 50px;
   padding: 0 5vw 40px 5vw;
+}
+
+.layer-scroll-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #ff1f01 #111;
+  padding-bottom: 15px; /* space for scrollbar */
 }
-.team-scroll-container::-webkit-scrollbar        { height: 6px; }
-.team-scroll-container::-webkit-scrollbar-track  { background: #111; border-radius: 3px; }
-.team-scroll-container::-webkit-scrollbar-thumb  { background: #ff1f01; border-radius: 3px; }
+.layer-scroll-wrapper::-webkit-scrollbar        { height: 6px; }
+.layer-scroll-wrapper::-webkit-scrollbar-track  { background: #111; border-radius: 3px; }
+.layer-scroll-wrapper::-webkit-scrollbar-thumb  { background: #ff1f01; border-radius: 3px; }
 
 /* ── Layer ──────────────────────────────────────────────────── */
 .team-layer {
@@ -125,8 +129,6 @@
   font-size: 1.1rem;
   color: #c0c0c0;
   margin: 0;
-  position: sticky;
-  left: 0;
   width: max-content;
   border-left: 3px solid #ff1f01;
   padding-left: 12px;
