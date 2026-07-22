@@ -4,8 +4,9 @@ import { HeadingGearIcon, Reveal, GearSVG } from './MobileShared';
 
 const MobileTeam = ({ team }) => {
   const [activeTab, setActiveTab] = useState(() => {
-    if (team.ty && team.ty.length > 0) return 'ty';
+    if (team.fy && team.fy.length > 0) return 'fy';
     if (team.sy && team.sy.length > 0) return 'sy';
+    if (team.ty && team.ty.length > 0) return 'ty';
     return 'fy';
   });
 
