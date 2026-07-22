@@ -1,0 +1,50 @@
+.magnetic-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  background: rgba(20, 20, 20, 0.8);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.3s ease, background 0.3s ease;
+  z-index: 1;
+}
+
+.magnetic-btn-content {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.magnetic-btn-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle at center, rgba(255, 40, 0, 0.4) 0%, transparent 60%);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.magnetic-btn:hover {
+  border-color: rgba(255, 40, 0, 0.8);
+  background: rgba(40, 10, 10, 0.9);
+}
+
+.magnetic-btn:hover .magnetic-btn-glow {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
