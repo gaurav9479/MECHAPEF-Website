@@ -66,9 +66,13 @@ const MobileHome = () => {
         return Object.keys(map)
           .filter(k => k.startsWith(prefix + '_') && map[k].imageURL)
           .sort((a, b) => {
-            const numA = parseInt(a.replace(prefix + '_', ''));
-            const numB = parseInt(b.replace(prefix + '_', ''));
-            return numA - numB;
+            const defaultOrderA = parseInt(a.replace(prefix + '_', ''));
+            const defaultOrderB = parseInt(b.replace(prefix + '_', ''));
+            const orderA = map[a].order || defaultOrderA;
+            const orderB = map[b].order || defaultOrderB;
+            if (orderA !== orderB) return orderA - orderB;
+            
+            return defaultOrderA - defaultOrderB;
           })
           .map(k => {
             const img = map[k];
