@@ -60,12 +60,29 @@ export const updateSectionImage = asyncHandler(async (req, res) => {
     const { sectionKey, label, imageURL, imagekitFileId, name, regNo, order } = req.body;
     if (!sectionKey) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey is required');
 
+    const existingImage = await SectionImage.findOne({ sectionKey });
+    const oldOrder = existingImage ? existingImage.order : 0;
+    const newOrder = order !== undefined ? Number(order) : oldOrder;
+
+    if (existingImage && newOrder !== oldOrder && sectionKey.startsWith('team_')) {
+        const prefix = sectionKey.split('_').slice(0, 2).join('_');
+        const conflict = await SectionImage.findOne({ 
+            sectionKey: { $regex: `^${prefix}_` },
+            order: newOrder
+        });
+
+        if (conflict) {
+            conflict.order = oldOrder;
+            await conflict.save();
+        }
+    }
+
     const updateData = { sectionKey, label: label || sectionKey, updatedBy: req.user?.userId || null };
     if (imageURL !== undefined) updateData.imageURL = imageURL;
     if (imagekitFileId !== undefined) updateData.imagekitFileId = imagekitFileId;
     if (name !== undefined) updateData.name = name;
     if (regNo !== undefined) updateData.regNo = regNo;
-    if (order !== undefined) updateData.order = Number(order);
+    if (order !== undefined) updateData.order = newOrder;
 
     const image = await SectionImage.findOneAndUpdate(
         { sectionKey },

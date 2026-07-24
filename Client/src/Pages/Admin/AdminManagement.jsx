@@ -565,11 +565,21 @@ const AdminManagement = () => {
                       if (selectedCategory === 'Our Team (Pre-Final Year)') return s.key.startsWith('team_sy_');
                       if (selectedCategory === 'Our Team (Final Year)') return s.key.startsWith('team_ty_');
                       return !s.key.startsWith('team_');
-                    }).map(s => (
-                    <option key={s.key} value={s.key}>
-                      {s.label} {sectionImages[s.key]?.imageURL ? ' (✓ Image set)' : ' (No image)'}
-                    </option>
-                  ))}
+                    })
+                    .sort((a, b) => {
+                      const getOrder = (key) => sectionImages[key]?.order || (key.startsWith('team_') ? parseInt(key.split('_').pop()) : 0);
+                      return getOrder(a.key) - getOrder(b.key);
+                    })
+                    .map(s => {
+                      const imgData = sectionImages[s.key];
+                      const currentOrder = imgData?.order || (s.key.startsWith('team_') ? parseInt(s.key.split('_').pop()) : '');
+                      const displayName = imgData?.name ? imgData.name : s.label;
+                      return (
+                        <option key={s.key} value={s.key}>
+                          {s.key.startsWith('team_') ? `[#${currentOrder}] ` : ''}{displayName} {imgData?.imageURL ? ' (✓ Image)' : ' (No image)'}
+                        </option>
+                      )
+                    })}
                 </select>
               </div>
             </div>
@@ -741,7 +751,8 @@ const AdminManagement = () => {
                           order: imgData?.order || defaultOrder
                         });
                         localStorage.removeItem('api_cache_/upload/sections');
-                        showToast('Details saved!');
+                        fetchSectionImages();
+                        showToast('Details saved and sequences swapped!');
                       } catch (error) {
                         showToast('Failed to save details', 'error');
                       }
