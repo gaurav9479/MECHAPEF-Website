@@ -13,10 +13,25 @@ import JoinUsBot from "../components/CinematicHero/JoinUsBot";
 import Footer from "../components/Footer/Footer";
 import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
+import { apiGetCached } from "../utils/apiCache";
 
 const Home = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Prefetch team images immediately when the site loads so they are instantly visible on scroll
+    apiGetCached('/upload/sections', (data) => {
+      if (data?.data?.images) {
+        data.data.images.forEach(img => {
+          if (img.imageURL) {
+            const prefetchImg = new Image();
+            prefetchImg.src = img.imageURL;
+          }
+        });
+      }
+    });
+  }, []);
 
   useLayoutEffect(() => {
     if ('scrollRestoration' in history) {
