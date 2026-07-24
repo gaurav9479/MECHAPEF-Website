@@ -6,14 +6,14 @@ import { apiGetCached } from '../../utils/apiCache';
 import './OurTeam.css';
 
 /* ─── Single card with glitch hover ─────────────────────────── */
-const TeamCard = ({ data, num, index, fallbackRole }) => {
+const TeamCard = ({ data, num, index, fallbackRole, isFinalYear }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -60px 0px' });
 
   return (
     <motion.div
       ref={ref}
-      className="team-card"
+      className={`team-card ${isFinalYear ? 'final-year-card' : ''}`}
       initial={{ opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay: index * 0.05 }}
@@ -22,8 +22,7 @@ const TeamCard = ({ data, num, index, fallbackRole }) => {
       <span className="corner-accent corner-tr" />
       <span className="corner-accent corner-bl" />
 
-      {/* SCANNED badge */}
-      <span className="scanned-badge">SCANNED</span>
+
 
       <div className="card-img-placeholder">
         {data?.url ? (
@@ -96,6 +95,7 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
                 num={num}
                 index={idx}
                 fallbackRole={fallbackRole}
+                isFinalYear={sectionPrefix === 'team_ty'}
               />
             );
           })}

@@ -47,7 +47,7 @@ const getDynamicSectionKeys = (sectionImages, extraFy, extraSy, extraTy) => {
   const dynamicKeys = [...BASE_SECTION_KEYS];
   for (let i = 1; i <= maxFy; i++) dynamicKeys.push({ key: `team_fy_${i}`, label: `Team Second Year ${i}`, aspectRatio: 1 });
   for (let i = 1; i <= maxSy; i++) dynamicKeys.push({ key: `team_sy_${i}`, label: `Team Pre-final Year ${i}`, aspectRatio: 1 });
-  for (let i = 1; i <= maxTy; i++) dynamicKeys.push({ key: `team_ty_${i}`, label: `Team Final Year ${i}`, aspectRatio: 1 });
+  for (let i = 1; i <= maxTy; i++) dynamicKeys.push({ key: `team_ty_${i}`, label: `Team Final Year ${i}`, aspectRatio: 3/4 });
   
   return { dynamicKeys, counts: { fy: maxFy, sy: maxSy, ty: maxTy } };
 };
