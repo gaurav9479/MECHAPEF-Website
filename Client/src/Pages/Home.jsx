@@ -25,6 +25,14 @@ const Home = () => {
       if (data?.data?.images) {
         data.data.images.forEach(img => {
           if (img.imageURL) {
+            // 1. High priority network fetch
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = img.imageURL;
+            document.head.appendChild(link);
+            
+            // 2. Cache in memory
             const prefetchImg = new Image();
             prefetchImg.src = img.imageURL;
           }

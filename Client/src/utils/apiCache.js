@@ -1,6 +1,9 @@
 import api from '../services/api';
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const CACHE_DURATION_MS = 12 * 60 * 60 * 1000;
+
+// Global map to store ongoing requests and prevent duplicate concurrent API calls
+const pendingRequests = {};
 
 export const apiGetCached = async (url, callback, options = {}) => {
   const cacheKey = `api_cache_${url}`;
@@ -17,8 +20,8 @@ export const apiGetCached = async (url, callback, options = {}) => {
       callback(parsed.data, true);
       hasServedCache = true;
       
-      // If cache is less than 1 day old, skip the background fetch entirely
-      if (Date.now() - parsed.timestamp < ONE_DAY_MS) {
+      // If cache is less than 12 hours old, skip the background fetch entirely
+      if (Date.now() - parsed.timestamp < CACHE_DURATION_MS) {
         return;
       }
     } catch (e) {
@@ -26,9 +29,20 @@ export const apiGetCached = async (url, callback, options = {}) => {
     }
   }
 
+  // Prevent multiple identical API requests at the same time
+  if (pendingRequests[url]) {
+    try {
+      const res = await pendingRequests[url];
+      callback(res.data, false);
+      return res;
+    } catch (error) {
+      if (!hasServedCache) throw error;
+      return;
+    }
+  }
+
   // 2. Fetch fresh data from API in background (if no cache or expired)
-  try {
-    const res = await api.get(url, options);
+  const fetchPromise = api.get(url, options).then(res => {
     const freshData = res.data;
     
     // Save to localStorage
@@ -39,12 +53,18 @@ export const apiGetCached = async (url, callback, options = {}) => {
 
     // Trigger callback with fresh data
     callback(freshData, false);
+    
+    // Cleanup pending request
+    delete pendingRequests[url];
     return res;
-  } catch (error) {
+  }).catch(error => {
+    delete pendingRequests[url];
     console.error(`Background API fetch failed for ${url}:`, error);
-    // If background API call fails but we successfully served cache, we don't crash
     if (!hasServedCache) {
       throw error;
     }
-  }
+  });
+
+  pendingRequests[url] = fetchPromise;
+  return fetchPromise;
 };
