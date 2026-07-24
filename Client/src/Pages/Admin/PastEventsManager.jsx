@@ -166,14 +166,24 @@ const PastEventsManager = () => {
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '30px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                {formData.imageURL && <img src={formData.imageURL} alt="Preview" style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '8px' }} />}
+                {formData.imageURL && (
+                  <div style={{ position: 'relative' }}>
+                    <img src={formData.imageURL} alt="Preview" style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '8px' }} />
+                    <button type="button" onClick={() => setFormData({ ...formData, imageURL: '', imagekitFileId: '' })} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ff1f01', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '10px' }}><FaTimes /></button>
+                  </div>
+                )}
                 <label style={{ cursor: 'pointer', background: '#ff1f01', padding: '10px 15px', borderRadius: '5px', color: '#fff' }}>
                   <FaImage style={{ marginRight: '8px' }} /> Upload Desktop (360:350)
                   <input type="file" accept="image/*,.heic,.heif" hidden onChange={(e) => handleFileChange(e, 'desktop')} />
                 </label>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                {formData.mobileImageURL && <img src={formData.mobileImageURL} alt="Mobile Preview" style={{ width: '90px', height: '90px', objectFit: 'cover', borderRadius: '8px' }} />}
+                {formData.mobileImageURL && (
+                  <div style={{ position: 'relative' }}>
+                    <img src={formData.mobileImageURL} alt="Mobile Preview" style={{ width: '90px', height: '90px', objectFit: 'cover', borderRadius: '8px' }} />
+                    <button type="button" onClick={() => setFormData({ ...formData, mobileImageURL: '', mobileImagekitFileId: '' })} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ff1f01', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '10px' }}><FaTimes /></button>
+                  </div>
+                )}
                 <label style={{ cursor: 'pointer', background: '#007bff', padding: '10px 15px', borderRadius: '5px', color: '#fff' }}>
                   <FaImage style={{ marginRight: '8px' }} /> Upload Mobile (1:1)
                   <input type="file" accept="image/*,.heic,.heif" hidden onChange={(e) => handleFileChange(e, 'mobile')} />
@@ -203,7 +213,22 @@ const PastEventsManager = () => {
                       <button onClick={() => moveDown(i)} disabled={i===events.length-1} style={{ padding: '2px', cursor: i===events.length-1?'not-allowed':'pointer' }}>▼</button>
                     </div>
                   </td>
-                  <td><img src={ev.imageURL} alt={ev.title} style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} /></td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      {ev.imageURL && (
+                        <div style={{ textAlign: 'center' }}>
+                          <img src={ev.imageURL} alt={ev.title} style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                          <div style={{ fontSize: '10px', color: '#aaa', marginTop: '4px' }}>Desktop</div>
+                        </div>
+                      )}
+                      {ev.mobileImageURL && (
+                        <div style={{ textAlign: 'center' }}>
+                          <img src={ev.mobileImageURL} alt={`${ev.title} Mobile`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                          <div style={{ fontSize: '10px', color: '#aaa', marginTop: '4px' }}>Mobile</div>
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td><strong>{ev.title}</strong><br/><small style={{ color: '#aaa' }}>{ev.date}</small></td>
                   <td>
                     <button onClick={() => { setEditingId(ev._id); setFormData(ev); }} style={{ marginRight: '10px', color: '#007bff', background: 'none', border: 'none', cursor: 'pointer' }}>Edit</button>

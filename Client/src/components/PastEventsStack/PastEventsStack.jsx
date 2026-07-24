@@ -103,7 +103,7 @@ const PastEventsStack = () => {
           y: window.innerHeight, 
           opacity: 0, 
           scale: 0.8,
-          rotate: (i) => i % 2 === 0 ? -4 : 4
+          rotation: (i) => i % 2 === 0 ? -4 : 4
         });
 
         // Add an initial blank scroll delay
@@ -112,7 +112,7 @@ const PastEventsStack = () => {
         // Animate the first card in with a delay
         tl.fromTo(cards[0], 
           { y: window.innerHeight, opacity: 0, scale: 0.8 },
-          { y: 0, opacity: 1, scale: 1, rotate: 0, duration: 1, ease: 'power2.out' }, 
+          { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1, ease: 'power2.out' }, 
           0.5
         );
 
@@ -122,13 +122,13 @@ const PastEventsStack = () => {
           const startTime = 0.5 + index;
           tl.fromTo(card, 
             { y: window.innerHeight, opacity: 0, scale: 0.8 },
-            { y: 0, opacity: 1, scale: 1, rotate: 0, duration: 1, ease: 'power2.out' }, 
+            { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1, ease: 'power2.out' }, 
             startTime
           );
           
           for(let j = 0; j < index; j++) {
              const diff = index - j;
-             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -25 * diff, rotate: j % 2 === 0 ? -4 : 4, duration: 1, ease: 'power2.out' }, startTime);
+             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -25 * diff, rotation: j % 2 === 0 ? -4 : 4, duration: 1, ease: 'power2.out' }, startTime);
           }
         });
         
@@ -195,7 +195,9 @@ const PastEventsStack = () => {
                   <div className="pe-right">
                     <div className="pe-date">{event.date}</div>
                     <h3>{event.title}</h3>
-                    <p>{event.description}</p>
+                    <div style={{ display: 'block', overflow: 'hidden' }}>
+                      <p className="pe-desc-truncate">{event.description}</p>
+                    </div>
                   </div>
                 </>
               )}
