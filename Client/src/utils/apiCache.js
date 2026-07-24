@@ -1,6 +1,6 @@
 import api from '../services/api';
 
-const CACHE_DURATION_MS = 12 * 60 * 60 * 1000;
+const CACHE_DURATION_MS = 2 * 60 * 1000; // 2 minutes throttle for Stale-While-Revalidate
 
 // Global map to store ongoing requests and prevent duplicate concurrent API calls
 const pendingRequests = {};
@@ -16,11 +16,11 @@ export const apiGetCached = async (url, callback, options = {}) => {
     try {
       const parsed = JSON.parse(cached);
       
-      // Serve cached data instantly
+      // Serve cached data instantly (Stale-While-Revalidate)
       callback(parsed.data, true);
       hasServedCache = true;
       
-      // If cache is less than 12 hours old, skip the background fetch entirely
+      // If cache is less than 2 minutes old, skip the background fetch to avoid spamming the server on rapid reloads
       if (Date.now() - parsed.timestamp < CACHE_DURATION_MS) {
         return;
       }
