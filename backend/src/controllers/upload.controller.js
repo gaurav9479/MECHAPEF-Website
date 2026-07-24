@@ -57,7 +57,7 @@ export const getSectionImages = asyncHandler(async (req, res) => {
 
 // ── Update a section image ───────────────────────────────────────────────────
 export const updateSectionImage = asyncHandler(async (req, res) => {
-    const { sectionKey, label, imageURL, imagekitFileId, name, regNo } = req.body;
+    const { sectionKey, label, imageURL, imagekitFileId, name, regNo, order } = req.body;
     if (!sectionKey) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey is required');
 
     const updateData = { sectionKey, label: label || sectionKey, updatedBy: req.user?.userId || null };
@@ -65,6 +65,7 @@ export const updateSectionImage = asyncHandler(async (req, res) => {
     if (imagekitFileId !== undefined) updateData.imagekitFileId = imagekitFileId;
     if (name !== undefined) updateData.name = name;
     if (regNo !== undefined) updateData.regNo = regNo;
+    if (order !== undefined) updateData.order = Number(order);
 
     const image = await SectionImage.findOneAndUpdate(
         { sectionKey },

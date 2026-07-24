@@ -713,6 +713,21 @@ const AdminManagement = () => {
                         placeholder="Enter Reg No or Role"
                       />
                     </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Sequence (Order)</label>
+                      <input 
+                        type="number" 
+                        value={sectionImages[selectedSection]?.order ?? 0} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], order: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
+                        placeholder="e.g. 1"
+                      />
+                    </div>
                   </div>
                   <button 
                     onClick={async () => {
@@ -721,7 +736,8 @@ const AdminManagement = () => {
                         await api.post('/upload/sections', {
                           sectionKey: selectedSection,
                           name: imgData?.name || '',
-                          regNo: imgData?.regNo || ''
+                          regNo: imgData?.regNo || '',
+                          order: imgData?.order || 0
                         });
                         localStorage.removeItem('api_cache_/upload/sections');
                         showToast('Details saved!');

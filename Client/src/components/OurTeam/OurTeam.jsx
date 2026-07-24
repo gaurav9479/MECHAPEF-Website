@@ -57,8 +57,15 @@ const TeamCard = ({ data, num, index, fallbackRole, isFinalYear }) => {
 const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
   const cards = Object.keys(imagesMap)
     .filter(k => k.startsWith(sectionPrefix + '_') && imagesMap[k].url)
-    .map(k => parseInt(k.replace(sectionPrefix + '_', '')))
-    .sort((a, b) => a - b);
+    .sort((a, b) => {
+      const orderA = imagesMap[a].order ?? 0;
+      const orderB = imagesMap[b].order ?? 0;
+      if (orderA !== orderB) return orderA - orderB;
+      
+      const numA = parseInt(a.replace(sectionPrefix + '_', ''));
+      const numB = parseInt(b.replace(sectionPrefix + '_', ''));
+      return numA - numB;
+    });
     
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -80px 0px' });
@@ -86,11 +93,12 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
 
       <div className="layer-scroll-wrapper">
         <div className="layer-track">
-          {cards.map((num, idx) => {
-            const data = imagesMap[`${sectionPrefix}_${num}`];
+          {cards.map((k, idx) => {
+            const num = parseInt(k.replace(sectionPrefix + '_', ''));
+            const data = imagesMap[k];
             return (
               <TeamCard
-                key={`${sectionPrefix}-${num}`}
+                key={k}
                 data={data}
                 num={num}
                 index={idx}
@@ -129,6 +137,7 @@ const OurTeam = () => {
             url: img.imageURL,
             name: img.name,
             regNo: img.regNo,
+            order: img.order,
           };
         });
       }
