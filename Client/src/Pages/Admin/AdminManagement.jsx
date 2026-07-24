@@ -717,7 +717,7 @@ const AdminManagement = () => {
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Sequence (Order)</label>
                       <input 
                         type="number" 
-                        value={sectionImages[selectedSection]?.order ?? 0} 
+                        value={sectionImages[selectedSection]?.order ?? (selectedSection.startsWith('team_') ? parseInt(selectedSection.split('_').pop()) : 0)} 
                         onChange={(e) => {
                           setSectionImages(p => ({
                             ...p,
@@ -733,11 +733,12 @@ const AdminManagement = () => {
                     onClick={async () => {
                       try {
                         const imgData = sectionImages[selectedSection];
+                        const defaultOrder = selectedSection.startsWith('team_') ? parseInt(selectedSection.split('_').pop()) : 0;
                         await api.post('/upload/sections', {
                           sectionKey: selectedSection,
                           name: imgData?.name || '',
                           regNo: imgData?.regNo || '',
-                          order: imgData?.order || 0
+                          order: imgData?.order ?? defaultOrder
                         });
                         localStorage.removeItem('api_cache_/upload/sections');
                         showToast('Details saved!');

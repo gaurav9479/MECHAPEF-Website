@@ -58,13 +58,13 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
   const cards = Object.keys(imagesMap)
     .filter(k => k.startsWith(sectionPrefix + '_') && imagesMap[k].url)
     .sort((a, b) => {
-      const orderA = imagesMap[a].order ?? 0;
-      const orderB = imagesMap[b].order ?? 0;
+      const defaultOrderA = parseInt(a.replace(sectionPrefix + '_', ''));
+      const defaultOrderB = parseInt(b.replace(sectionPrefix + '_', ''));
+      const orderA = imagesMap[a].order ?? defaultOrderA;
+      const orderB = imagesMap[b].order ?? defaultOrderB;
       if (orderA !== orderB) return orderA - orderB;
       
-      const numA = parseInt(a.replace(sectionPrefix + '_', ''));
-      const numB = parseInt(b.replace(sectionPrefix + '_', ''));
-      return numA - numB;
+      return defaultOrderA - defaultOrderB;
     });
     
   const ref = useRef(null);
