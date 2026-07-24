@@ -1,6 +1,6 @@
 import api from '../services/api';
 
-const CACHE_DURATION_MS = 2 * 60 * 1000; // 2 minutes throttle for Stale-While-Revalidate
+const CACHE_DURATION_MS = 10 * 1000; // 10 seconds throttle to stop refresh-spam but allow quick sync
 
 // Global map to store ongoing requests and prevent duplicate concurrent API calls
 const pendingRequests = {};
