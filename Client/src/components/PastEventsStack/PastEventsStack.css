@@ -108,6 +108,10 @@
   color: #333;
   line-height: 1.6;
   font-size: 1.1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .pe-mobile-bg-wrapper {

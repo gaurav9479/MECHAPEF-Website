@@ -15,11 +15,12 @@ const PastEventsManager = () => {
   
   // Form State
   const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ title: '', date: '', description: '', imageURL: '', imagekitFileId: '' });
+  const [formData, setFormData] = useState({ title: '', date: '', description: '', imageURL: '', imagekitFileId: '', mobileImageURL: '', mobileImagekitFileId: '' });
   
   // Cropper State
   const [showCropper, setShowCropper] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
+  const [cropTarget, setCropTarget] = useState('desktop');
   const cropperRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
@@ -52,7 +53,7 @@ const PastEventsManager = () => {
         showToast('Event created successfully');
       }
       setEditingId(null);
-      setFormData({ title: '', date: '', description: '', imageURL: '', imagekitFileId: '' });
+      setFormData({ title: '', date: '', description: '', imageURL: '', imagekitFileId: '', mobileImageURL: '', mobileImagekitFileId: '' });
       fetchEvents();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to save event', 'error');
@@ -102,12 +103,16 @@ const PastEventsManager = () => {
   };
 
   // Image Upload Handlers
-  const handleFileChange = (e) => {
+  const handleFileChange = (e, target = 'desktop') => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       if (file.size > 5 * 1024 * 1024) return showToast('File too large (Max 5MB)', 'error');
       const reader = new FileReader();
-      reader.onload = () => { setImageSrc(reader.result); setShowCropper(true); };
+      reader.onload = () => { 
+        setCropTarget(target);
+        setImageSrc(reader.result); 
+        setShowCropper(true); 
+      };
       reader.readAsDataURL(file);
       e.target.value = ''; 
     }
@@ -122,11 +127,17 @@ const PastEventsManager = () => {
       const canvas = cropper.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1440 });
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
       const formDataUpload = new FormData();
-      formDataUpload.append('image', blob, 'pastevent.jpg');
+      formDataUpload.append('image', blob, `pastevent_${cropTarget}.jpg`);
       formDataUpload.append('folder', 'mechapif/past_events');
 
       const res = await api.post('/upload/image', formDataUpload, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setFormData({ ...formData, imageURL: res.data.data.url, imagekitFileId: res.data.data.fileId });
+      
+      if (cropTarget === 'mobile') {
+        setFormData({ ...formData, mobileImageURL: res.data.data.url, mobileImagekitFileId: res.data.data.fileId });
+      } else {
+        setFormData({ ...formData, imageURL: res.data.data.url, imagekitFileId: res.data.data.fileId });
+      }
+      
       setShowCropper(false);
       setImageSrc(null);
     } catch (err) {
@@ -153,17 +164,26 @@ const PastEventsManager = () => {
             <input type="text" placeholder="Date (e.g., Nov 15, 2023)" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} style={{ padding: '10px', background: '#222', border: '1px solid #333', color: '#fff' }} />
             <textarea placeholder="Description" required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ padding: '10px', background: '#222', border: '1px solid #333', color: '#fff', minHeight: '80px' }} />
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              {formData.imageURL && <img src={formData.imageURL} alt="Preview" style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '8px' }} />}
-              <label style={{ cursor: 'pointer', background: '#ff1f01', padding: '10px 15px', borderRadius: '5px', color: '#fff' }}>
-                <FaImage style={{ marginRight: '8px' }} /> Upload Photo
-                <input type="file" accept="image/*,.heic,.heif" hidden onChange={handleFileChange} />
-              </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '30px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                {formData.imageURL && <img src={formData.imageURL} alt="Preview" style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '8px' }} />}
+                <label style={{ cursor: 'pointer', background: '#ff1f01', padding: '10px 15px', borderRadius: '5px', color: '#fff' }}>
+                  <FaImage style={{ marginRight: '8px' }} /> Upload Desktop (360:350)
+                  <input type="file" accept="image/*,.heic,.heif" hidden onChange={(e) => handleFileChange(e, 'desktop')} />
+                </label>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                {formData.mobileImageURL && <img src={formData.mobileImageURL} alt="Mobile Preview" style={{ width: '90px', height: '90px', objectFit: 'cover', borderRadius: '8px' }} />}
+                <label style={{ cursor: 'pointer', background: '#007bff', padding: '10px 15px', borderRadius: '5px', color: '#fff' }}>
+                  <FaImage style={{ marginRight: '8px' }} /> Upload Mobile (1:1)
+                  <input type="file" accept="image/*,.heic,.heif" hidden onChange={(e) => handleFileChange(e, 'mobile')} />
+                </label>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button type="submit" style={{ padding: '10px 20px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Save Event</button>
-              {editingId && <button type="button" onClick={() => { setEditingId(null); setFormData({ title: '', date: '', description: '', imageURL: '', imagekitFileId: '' }); }} style={{ padding: '10px 20px', background: '#444', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Cancel</button>}
+              {editingId && <button type="button" onClick={() => { setEditingId(null); setFormData({ title: '', date: '', description: '', imageURL: '', imagekitFileId: '', mobileImageURL: '', mobileImagekitFileId: '' }); }} style={{ padding: '10px 20px', background: '#444', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Cancel</button>}
             </div>
           </form>
         </div>
@@ -231,7 +251,7 @@ const PastEventsManager = () => {
             {/* Header */}
             <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '1rem', color: '#111' }}>
-                <FaCrop style={{ color: '#ff1f01' }} /> Crop Image (4:3)
+                <FaCrop style={{ color: '#ff1f01' }} /> Crop Image ({cropTarget === 'mobile' ? '1:1' : '360:350'})
               </div>
               <button
                 type="button"
@@ -248,7 +268,7 @@ const PastEventsManager = () => {
               <Cropper
                 src={imageSrc}
                 style={{ height: '360px', width: '100%' }}
-                aspectRatio={4 / 3}
+                aspectRatio={cropTarget === 'mobile' ? 1 : (360 / 350)}
                 guides={true}
                 ref={cropperRef}
                 viewMode={1}
