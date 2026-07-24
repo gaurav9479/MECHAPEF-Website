@@ -5,13 +5,13 @@ import { sendError } from '../utils/response.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
 const ALLOWED_MIMETYPES = {
-    image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+    image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'],
     video: ['video/mp4', 'video/quicktime'],
     pdf: ['application/pdf']
 };
 
 const ALLOWED_EXTENSIONS = {
-    image: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+    image: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'],
     video: ['.mp4', '.mov'],
     pdf: ['.pdf']
 };

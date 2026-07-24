@@ -203,9 +203,26 @@ const AdminManagement = () => {
     }
   };
 
-  const onFileSelect = (e) => {
-    const file = e.target.files[0];
+  const onFileSelect = async (e) => {
+    let file = e.target.files[0];
     if (!file) return;
+
+    if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+      try {
+        const { default: heic2any } = await import('heic2any');
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+        });
+        const blobArray = Array.isArray(convertedBlob) ? convertedBlob : [convertedBlob];
+        file = new File(blobArray, file.name.replace(/\.hei[cf]/i, '.jpg'), { type: "image/jpeg" });
+      } catch (error) {
+        console.error("HEIC conversion error:", error);
+        showToast("Failed to convert HEIC/HEIF image", "error");
+        return;
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = () => { setCropSrc(reader.result); setCropping(true); };
     reader.readAsDataURL(file);
@@ -613,7 +630,7 @@ const AdminManagement = () => {
                   <FaUpload className="upload-zone-icon" />
                   <p>Click to select image for <strong>{currentSectionLabel}</strong></p>
                   <p className="upload-zone-sub">JPG, PNG, WebP — will be cropped before upload</p>
-                  <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFileSelect} />
+                  <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" style={{ display: 'none' }} onChange={onFileSelect} />
                 </div>
               )}
               {/* Cropper */}

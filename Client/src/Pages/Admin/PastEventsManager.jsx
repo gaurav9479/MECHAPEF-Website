@@ -157,7 +157,7 @@ const PastEventsManager = () => {
               {formData.imageURL && <img src={formData.imageURL} alt="Preview" style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '8px' }} />}
               <label style={{ cursor: 'pointer', background: '#ff1f01', padding: '10px 15px', borderRadius: '5px', color: '#fff' }}>
                 <FaImage style={{ marginRight: '8px' }} /> Upload Photo
-                <input type="file" accept="image/*" hidden onChange={handleFileChange} />
+                <input type="file" accept="image/*,.heic,.heif" hidden onChange={handleFileChange} />
               </label>
             </div>
 
