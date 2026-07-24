@@ -717,7 +717,7 @@ const AdminManagement = () => {
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Sequence (Order)</label>
                       <input 
                         type="number" 
-                        value={sectionImages[selectedSection]?.order ?? (selectedSection.startsWith('team_') ? parseInt(selectedSection.split('_').pop()) : 0)} 
+                        value={sectionImages[selectedSection]?.order || (selectedSection.startsWith('team_') ? parseInt(selectedSection.split('_').pop()) : '')} 
                         onChange={(e) => {
                           setSectionImages(p => ({
                             ...p,
@@ -738,7 +738,7 @@ const AdminManagement = () => {
                           sectionKey: selectedSection,
                           name: imgData?.name || '',
                           regNo: imgData?.regNo || '',
-                          order: imgData?.order ?? defaultOrder
+                          order: imgData?.order || defaultOrder
                         });
                         localStorage.removeItem('api_cache_/upload/sections');
                         showToast('Details saved!');

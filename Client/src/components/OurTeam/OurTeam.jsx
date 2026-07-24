@@ -60,8 +60,8 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
     .sort((a, b) => {
       const defaultOrderA = parseInt(a.replace(sectionPrefix + '_', ''));
       const defaultOrderB = parseInt(b.replace(sectionPrefix + '_', ''));
-      const orderA = imagesMap[a].order ?? defaultOrderA;
-      const orderB = imagesMap[b].order ?? defaultOrderB;
+      const orderA = imagesMap[a].order || defaultOrderA;
+      const orderB = imagesMap[b].order || defaultOrderB;
       if (orderA !== orderB) return orderA - orderB;
       
       return defaultOrderA - defaultOrderB;
