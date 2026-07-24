@@ -1,6 +1,6 @@
 import api from '../services/api';
 
-const CACHE_DURATION_MS = 10 * 1000; // 10 seconds throttle to stop refresh-spam but allow quick sync
+const CACHE_DURATION_MS = 12*10 * 1000; // 10 seconds throttle to stop refresh-spam but allow quick sync
 
 // Global map to store ongoing requests and prevent duplicate concurrent API calls
 const pendingRequests = {};
