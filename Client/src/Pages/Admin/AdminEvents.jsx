@@ -47,9 +47,26 @@ const AdminEvents = () => {
     finally { setLoading(false); }
   };
   useEffect(() => { fetchEvents(); }, []);
+
+  useEffect(() => {
+    // Only cache if we are creating an event (not editing) and the modal is open
+    if (!editingEvent && showModal) {
+      localStorage.setItem('mechapef_adminEventFormDraft', JSON.stringify(form));
+    }
+  }, [form, editingEvent, showModal]);
+
   const openCreate = () => {
     setEditingEvent(null);
-    setForm(emptyForm);
+    const draft = localStorage.getItem('mechapef_adminEventFormDraft');
+    if (draft) {
+      try {
+        setForm(JSON.parse(draft));
+      } catch (e) {
+        setForm(emptyForm);
+      }
+    } else {
+      setForm(emptyForm);
+    }
     setShowModal(true);
   };
   const openEdit = (ev) => {
@@ -120,6 +137,8 @@ const AdminEvents = () => {
       } else {
         await eventService.create(payload);
         showToast('Event created!');
+        localStorage.removeItem('mechapef_adminEventFormDraft');
+        setForm(emptyForm);
       }
       setShowModal(false);
       fetchEvents();
