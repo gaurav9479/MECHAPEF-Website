@@ -11,8 +11,8 @@ function parseStudentInfoFromRegNo(regNo) {
     if (yearOfStudy > 5) yearOfStudy = 5;
     const branchMap = {
         '0': 'Biotechnology',
-        '1': 'Chemical Engineering',
-        '2': 'Civil Engineering',
+        '2': 'Chemical Engineering',
+        '1': 'Civil Engineering',
         '3': 'Computer Science and Engineering',
         '4': 'Electronics and Communication Engineering',
         '5': 'Electrical Engineering',
