@@ -12,7 +12,6 @@ import MobileStats from './MobileStats';
 import MobileAbout from './MobileAbout';
 import MobileLiveEvents from './MobileLiveEvents';
 import MobileTeam from './MobileTeam';
-import MobileSponsors from './MobileSponsors';
 import MobileCTA from './MobileCTA';
 
 const MobileHome = () => {
@@ -37,7 +36,7 @@ const MobileHome = () => {
 
     apiGetCached('/announcements', (data) => {
       const items   = data.data?.announcements || data.data || [];
-      const banners = items.filter(n => n.isActive && (n.bannerURL || n.targetType === 'Event'));
+      const banners = items.filter(n => n.isActive);
       banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setSlides(banners);
       announcementsLoaded = true;
@@ -109,7 +108,6 @@ const MobileHome = () => {
       <MobileLiveEvents slides={slides} navigate={navigate} />
       <HeroTicker />
       <MobileTeam team={team} />
-      <MobileSponsors sponsors={sponsors} navigate={navigate} />
       <MobileCTA navigate={navigate} />
     </div>
   );
