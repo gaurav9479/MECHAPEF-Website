@@ -26,78 +26,86 @@ const MobileHome = () => {
   const [loading, setLoading]           = useState(true);
 
   useEffect(() => {
-    let announcementsLoaded = false;
-    let teamLoaded = false;
-
-    const checkLoading = () => {
-      if (announcementsLoaded && teamLoaded) {
-        setLoading(false);
+    const loadSequentially = async () => {
+      try {
+        // 1. Pre-fetch past-events first (Highest priority for bandwidth)
+        await apiGetCached('/past-events', () => {});
+      } catch (e) {
+        console.error('Past events prefetch failed', e);
       }
+
+      try {
+        // 2. Fetch Announcements next
+        await new Promise((resolve) => {
+          apiGetCached('/announcements', (data) => {
+            const items   = data.data?.announcements || data.data || [];
+            const banners = items.filter(n => n.isActive);
+            banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+            setSlides(banners);
+            resolve();
+          }).catch(resolve);
+        });
+      } catch (e) {
+        console.error('Announcements fetch failed', e);
+      }
+
+      try {
+        // 3. Fetch Upload Sections (Department & Team) last
+        await new Promise((resolve) => {
+          apiGetCached('/upload/sections?device=mobile', (data) => {
+            const map = {};
+            (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
+
+            const mk = (prefix, label) => {
+              return Object.keys(map)
+                .filter(k => k.startsWith(prefix + '_') && map[k].imageURL)
+                .sort((a, b) => {
+                  const defaultOrderA = parseInt(a.replace(prefix + '_', ''));
+                  const defaultOrderB = parseInt(b.replace(prefix + '_', ''));
+                  const orderA = map[a].order || defaultOrderA;
+                  const orderB = map[b].order || defaultOrderB;
+                  if (orderA !== orderB) return orderA - orderB;
+                  
+                  return defaultOrderA - defaultOrderB;
+                })
+                .map(k => {
+                  const img = map[k];
+                  return {
+                    name: img.name || `Member`,
+                    regNo: img.regNo || label,
+                    imageURL: img.imageURL
+                  };
+                });
+            };
+            
+            setTeam({
+              fy: mk('team_ty', 'Final Year'),
+              sy: mk('team_sy', 'Pre-Final'),
+              ty: mk('team_fy', '2nd Year'),
+            });
+
+            const dImgs = Object.keys(map)
+              .filter(k => k.startsWith('dept_') && k.endsWith('_mob') && map[k].imageURL)
+              .sort((a, b) => {
+                const numA = parseInt(a.replace('dept_', '').replace('_mob', '')) || 0;
+                const numB = parseInt(b.replace('dept_', '').replace('_mob', '')) || 0;
+                return numA - numB;
+              })
+              .map(k => map[k].imageURL);
+              
+            setDeptImages(dImgs);
+            resolve();
+          }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(resolve);
+        });
+      } catch (e) {
+        console.error('Sections fetch failed', e);
+      }
+
+      // Remove loading screen when everything is ready
+      setLoading(false);
     };
 
-    apiGetCached('/announcements', (data) => {
-      const items   = data.data?.announcements || data.data || [];
-      const banners = items.filter(n => n.isActive);
-      banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-      setSlides(banners);
-      announcementsLoaded = true;
-      checkLoading();
-    }).catch(() => {
-      announcementsLoaded = true;
-      checkLoading();
-    });
-
-    // Removed Sponsors Fetch since we don't use MobileSponsors anymore in MobileHome
-
-    apiGetCached('/upload/sections', (data) => {
-      const map = {};
-      (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
-
-      const mk = (prefix, label) => {
-        return Object.keys(map)
-          .filter(k => k.startsWith(prefix + '_') && map[k].imageURL)
-          .sort((a, b) => {
-            const defaultOrderA = parseInt(a.replace(prefix + '_', ''));
-            const defaultOrderB = parseInt(b.replace(prefix + '_', ''));
-            const orderA = map[a].order || defaultOrderA;
-            const orderB = map[b].order || defaultOrderB;
-            if (orderA !== orderB) return orderA - orderB;
-            
-            return defaultOrderA - defaultOrderB;
-          })
-          .map(k => {
-            const img = map[k];
-            return {
-              name: img.name || `Member`,
-              regNo: img.regNo || label,
-              imageURL: img.imageURL
-            };
-          });
-      };
-      
-      setTeam({
-        fy: mk('team_ty', 'Final Year'),
-        sy: mk('team_sy', 'Pre-Final'),
-        ty: mk('team_fy', '2nd Year'),
-      });
-
-      const dImgs = Object.keys(map)
-        .filter(k => k.startsWith('dept_') && k.endsWith('_mob') && map[k].imageURL)
-        .sort((a, b) => {
-          const numA = parseInt(a.replace('dept_', '').replace('_mob', '')) || 0;
-          const numB = parseInt(b.replace('dept_', '').replace('_mob', '')) || 0;
-          return numA - numB;
-        })
-        .map(k => map[k].imageURL);
-        
-      setDeptImages(dImgs);
-      
-      teamLoaded = true;
-      checkLoading();
-    }).catch(() => {
-      teamLoaded = true;
-      checkLoading();
-    });
+    loadSequentially();
   }, []);
 
   if (loading) return null;

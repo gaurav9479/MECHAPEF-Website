@@ -49,7 +49,18 @@ export const uploadImage = asyncHandler(async (req, res) => {
 
 // ── Get all section images ───────────────────────────────────────────────────
 export const getSectionImages = asyncHandler(async (req, res) => {
-    const images = await SectionImage.find().sort({ sectionKey: 1 });
+    const { device } = req.query;
+    let filter = {};
+    
+    if (device === 'mobile') {
+        // Mobile needs team images and mobile gallery (_mob)
+        filter = { sectionKey: { $regex: /_mob$|^team_/ } };
+    } else if (device === 'desktop') {
+        // Desktop needs team images and desktop gallery (no _mob)
+        filter = { sectionKey: { $not: /_mob$/ } };
+    }
+
+    const images = await SectionImage.find(filter).sort({ sectionKey: 1 });
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, { images }, 'Section images fetched')
     );

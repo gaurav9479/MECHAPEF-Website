@@ -20,8 +20,9 @@ export const apiGetCached = async (url, callback, options = {}) => {
       callback(parsed.data, true);
       hasServedCache = true;
       
-      // If cache is less than 2 minutes old, skip the background fetch to avoid spamming the server on rapid reloads
-      if (Date.now() - parsed.timestamp < CACHE_DURATION_MS) {
+      // If cache is less than the duration old, skip the background fetch to avoid spamming the server on rapid reloads
+      const duration = options.cacheDuration || CACHE_DURATION_MS;
+      if (Date.now() - parsed.timestamp < duration) {
         return;
       }
     } catch (e) {

@@ -129,7 +129,7 @@ const OurTeam = () => {
 
   /* API fetch - cached logic */
   const fetchSectionImages = () => {
-    apiGetCached('/upload/sections', (data) => {
+    apiGetCached('/upload/sections?device=desktop', (data) => {
       const imgMap = {};
       if (data.data?.images) {
         data.data.images.forEach(img => {
@@ -142,7 +142,7 @@ const OurTeam = () => {
         });
       }
       setImagesMap(imgMap);
-    }).catch(error => {
+    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(error => {
       console.error('Failed to load section images:', error);
     });
   };

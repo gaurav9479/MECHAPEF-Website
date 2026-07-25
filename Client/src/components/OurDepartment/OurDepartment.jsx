@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import EditableImage from '../EditableImage/EditableImage';
 import './OurDepartment.css';
 
@@ -11,19 +12,19 @@ const OurDepartment = () => {
   const [imagesMap, setImagesMap] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  const fetchSectionImages = async () => {
-    try {
-      const res = await api.get('/upload/sections');
+  const fetchSectionImages = () => {
+    apiGetCached('/upload/sections?device=desktop', (res) => {
       const imgMap = {};
-      if (res.data.data?.images) {
-        res.data.data.images.forEach(img => {
+      if (res.data?.images || res.data?.data?.images) {
+        const images = res.data.images || res.data.data.images;
+        images.forEach(img => {
           imgMap[img.sectionKey] = img.imageURL;
         });
       }
       setImagesMap(imgMap);
-    } catch (error) {
+    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(error => {
       console.error("Failed to load section images:", error);
-    }
+    });
   };
 
   useEffect(() => {

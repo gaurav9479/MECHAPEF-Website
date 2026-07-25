@@ -30,7 +30,7 @@ const Home = () => {
       console.log('No active special sponsor or error fetching');
     });
     // Prefetch team images immediately when the site loads so they are instantly visible on scroll
-    apiGetCached('/upload/sections', (data) => {
+    apiGetCached('/upload/sections?device=desktop', (data) => {
       if (data?.data?.images) {
         data.data.images.forEach(img => {
           if (img.imageURL) {
@@ -47,7 +47,7 @@ const Home = () => {
           }
         });
       }
-    });
+    }, { cacheDuration: 2 * 60 * 60 * 1000 });
   }, []);
 
   useLayoutEffect(() => {
