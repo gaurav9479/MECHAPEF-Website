@@ -26,17 +26,15 @@ const MobileHome = () => {
   const [loading, setLoading]           = useState(true);
 
   useEffect(() => {
-    const loadSequentially = async () => {
+    const loadData = async () => {
       try {
-        // 1. Pre-fetch past-events first (Highest priority for bandwidth)
-        await apiGetCached('/past-events', () => {});
-      } catch (e) {
-        console.error('Past events prefetch failed', e);
-      }
+        const p1 = new Promise((resolve) => {
+          apiGetCached('/past-events', () => {
+            resolve();
+          }).catch(resolve);
+        });
 
-      try {
-        // 2. Fetch Announcements next
-        await new Promise((resolve) => {
+        const p2 = new Promise((resolve) => {
           apiGetCached('/announcements', (data) => {
             const items   = data.data?.announcements || data.data || [];
             const banners = items.filter(n => n.isActive);
@@ -45,13 +43,8 @@ const MobileHome = () => {
             resolve();
           }).catch(resolve);
         });
-      } catch (e) {
-        console.error('Announcements fetch failed', e);
-      }
 
-      try {
-        // 3. Fetch Upload Sections (Department & Team) last
-        await new Promise((resolve) => {
+        const p3 = new Promise((resolve) => {
           apiGetCached('/upload/sections?device=mobile', (data) => {
             const map = {};
             (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
@@ -65,7 +58,6 @@ const MobileHome = () => {
                   const orderA = map[a].order || defaultOrderA;
                   const orderB = map[b].order || defaultOrderB;
                   if (orderA !== orderB) return orderA - orderB;
-                  
                   return defaultOrderA - defaultOrderB;
                 })
                 .map(k => {
@@ -97,15 +89,16 @@ const MobileHome = () => {
             resolve();
           }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(resolve);
         });
-      } catch (e) {
-        console.error('Sections fetch failed', e);
-      }
 
-      // Remove loading screen when everything is ready
-      setLoading(false);
+        await Promise.all([p1, p2, p3]);
+      } catch (e) {
+        console.error('Data fetch failed', e);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    loadSequentially();
+    loadData();
   }, []);
 
   if (loading) return null;
