@@ -132,6 +132,17 @@ const eventSchema = new mongoose.Schema(
             }
         },
 
+        eligibleYears: {
+            type: [Number],
+            required: [true, 'Eligible years are required'],
+            validate: {
+                validator(value) {
+                    return value && value.length > 0;
+                },
+                message: 'At least one eligible year must be selected'
+            }
+        },
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

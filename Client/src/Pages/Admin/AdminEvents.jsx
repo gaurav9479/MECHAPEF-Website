@@ -22,7 +22,7 @@ const emptyForm = {
   title: '', description: '', category: 'MechapefEvent',
   startTime: '', endTime: '', venue: '', registrationDeadline: '',
   maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
-  customFormFields: [], eligibleBranches: []
+  customFormFields: [], eligibleBranches: [], eligibleYears: []
 };
 const AdminEvents = () => {
   const { logout } = useAuth();
@@ -82,7 +82,8 @@ const AdminEvents = () => {
       rules: Array.isArray(ev.rules) ? ev.rules.join('\n') : '',
       prizes: ev.prizes || '',
       customFormFields: ev.customFormFields || [],
-      eligibleBranches: ev.eligibleBranches || []
+      eligibleBranches: ev.eligibleBranches || [],
+      eligibleYears: ev.eligibleYears || []
     });
     setShowModal(true);
   };
@@ -120,6 +121,11 @@ const AdminEvents = () => {
     e.preventDefault();
     if (!form.eligibleBranches || form.eligibleBranches.length === 0) {
       showToast('At least one eligible branch must be selected', 'error');
+      setSubmitting(false);
+      return;
+    }
+    if (!form.eligibleYears || form.eligibleYears.length === 0) {
+      showToast('At least one eligible year must be selected', 'error');
       setSubmitting(false);
       return;
     }
@@ -330,6 +336,60 @@ const AdminEvents = () => {
                   {form.eligibleBranches.length === 0 && (
                     <span style={{ color: '#ff4444', fontSize: '0.75rem', marginTop: '5px', display: 'block' }}>
                       * At least one branch must be selected
+                    </span>
+                  )}
+                </div>
+
+                {/* Eligible Years Selection */}
+                <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <label style={{ fontSize: '0.9rem', color: '#ff1f01', fontWeight: 'bold' }}>Eligible Years *</label>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      onClick={() => {
+                        if (form.eligibleYears.length === 5) {
+                          f('eligibleYears', []);
+                        } else {
+                          f('eligibleYears', [1, 2, 3, 4, 5]);
+                        }
+                      }}
+                      style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                    >
+                      {form.eligibleYears.length === 5 ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px', backgroundColor: '#111', padding: '15px', borderRadius: '8px' }}>
+                    {[
+                      { val: 1, label: '1st Year' },
+                      { val: 2, label: '2nd Year' },
+                      { val: 3, label: '3rd Year' },
+                      { val: 4, label: '4th Year' },
+                      { val: 5, label: 'Alumni / 5th' }
+                    ].map(yearObj => {
+                      const isChecked = form.eligibleYears.includes(yearObj.val);
+                      return (
+                        <label key={yearObj.val} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={isChecked} 
+                            onChange={() => {
+                              if (isChecked) {
+                                f('eligibleYears', form.eligibleYears.filter(y => y !== yearObj.val));
+                              } else {
+                                f('eligibleYears', [...form.eligibleYears, yearObj.val]);
+                              }
+                            }}
+                            style={{ width: 'auto' }}
+                          />
+                          {yearObj.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {form.eligibleYears.length === 0 && (
+                    <span style={{ color: '#ff4444', fontSize: '0.75rem', marginTop: '5px', display: 'block' }}>
+                      * At least one year must be selected
                     </span>
                   )}
                 </div>

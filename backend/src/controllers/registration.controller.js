@@ -60,10 +60,14 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
 
-    // Check branch eligibility for registerer
+    // Check branch and year eligibility for registerer
+    const userObj = await User.findById(req.user.userId);
+    if (!userObj) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
+    }
+
     if (event.eligibleBranches && event.eligibleBranches.length > 0) {
-        const userObj = await User.findById(req.user.userId);
-        if (!userObj || !userObj.branch) {
+        if (!userObj.branch) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please update your branch in your profile before registering');
         }
         const isEligible = event.eligibleBranches.some(b => 
@@ -71,6 +75,15 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         );
         if (!isEligible) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Your branch (${userObj.branch}) is not eligible for this event`);
+        }
+    }
+
+    if (event.eligibleYears && event.eligibleYears.length > 0) {
+        if (!userObj.yearOfStudy) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please update your year of study in your profile before registering');
+        }
+        if (!event.eligibleYears.includes(userObj.yearOfStudy)) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Your year of study (${userObj.yearOfStudy}) is not eligible for this event`);
         }
     }
 
@@ -107,7 +120,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
             throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
         }
 
-        // Check branch eligibility for team members
+        // Check branch and year eligibility for team members
         if (event.eligibleBranches && event.eligibleBranches.length > 0) {
             const ineligibleMember = members.find(m => {
                 if (!m.branch) return true; // branch not set
@@ -117,6 +130,19 @@ export const registerForEvent = asyncHandler(async (req, res) => {
                 throw new ApiError(
                     HTTP_STATUS.BAD_REQUEST, 
                     `Team member ${ineligibleMember.name} (Branch: ${ineligibleMember.branch || 'Not Set'}) is not eligible for this event.`
+                );
+            }
+        }
+
+        if (event.eligibleYears && event.eligibleYears.length > 0) {
+            const ineligibleYearMember = members.find(m => {
+                if (!m.yearOfStudy) return true; // year not set
+                return !event.eligibleYears.includes(m.yearOfStudy);
+            });
+            if (ineligibleYearMember) {
+                throw new ApiError(
+                    HTTP_STATUS.BAD_REQUEST, 
+                    `Team member ${ineligibleYearMember.name} (Year: ${ineligibleYearMember.yearOfStudy || 'Not Set'}) is not eligible for this event.`
                 );
             }
         }

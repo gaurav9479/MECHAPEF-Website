@@ -163,6 +163,30 @@ const EventDetails = () => {
             <h3>About the Event</h3>
             <p className="event-description">{event.description}</p>
             
+            <div className="event-meta-item">
+              <FaGraduationCap className="meta-icon" />
+              <div>
+                <span className="meta-label">Eligible Branches</span>
+                <span className="meta-value">
+                  {event.eligibleBranches?.length > 0 
+                    ? event.eligibleBranches.join(', ') 
+                    : 'All Branches'}
+                </span>
+              </div>
+            </div>
+
+            <div className="event-meta-item">
+              <FaGraduationCap className="meta-icon" />
+              <div>
+                <span className="meta-label">Eligible Years</span>
+                <span className="meta-value">
+                  {event.eligibleYears?.length > 0 
+                    ? event.eligibleYears.map(y => y === 5 ? 'Alumni' : `${y}${['st','nd','rd','th'][Math.min(y-1, 3)]} Year`).join(', ')
+                    : 'All Years'}
+                </span>
+              </div>
+            </div>
+
             {event.rules && event.rules.length > 0 && (
               <div className="event-rules">
                 <h3>Rules & Guidelines</h3>
