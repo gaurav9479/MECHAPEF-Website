@@ -235,32 +235,45 @@ const EventDetails = () => {
           {!event.isTBD && (
             <div className="event-sidebar">
               <div className="event-card-info">
-                <h3>Registration</h3>
+                 {event.registrationStartDate && (
+                  <p><strong>Starts:</strong> {new Date(event.registrationStartDate).toLocaleString()}</p>
+                )}
                 <p><strong>Deadline:</strong> {new Date(event.registrationDeadline).toLocaleDateString()}</p>
                 <p><strong>Fee:</strong> {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}</p>
                 <p><strong>Team Size:</strong> Up to {event.maxTeamSize} members</p>
                 
-                <button 
-                  className="primary-btn register-btn" 
-                  onClick={handleRegisterClick}
-                  disabled={!!userRegistration || new Date() > new Date(event.registrationDeadline) || event.isTBD}
-                >
-                  {userRegistration
-                    ? userRegistration.attended
-                      ? '✅ Attended'
-                      : '✔ Already Registered'
-                    : new Date() > new Date(event.registrationDeadline)
-                    ? 'Registration Closed'
-                    : event.isTBD
-                    ? 'Coming Soon'
-                    : 'Register Now'
-                  }
-                </button>
-                {timeLeft && timeLeft !== 'Closed' && !userRegistration && (
-                  <div className="registration-countdown" style={{marginTop: '15px', textAlign: 'center', color: '#ff1f01', fontWeight: 'bold', background: 'rgba(255, 31, 1, 0.1)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255, 31, 1, 0.2)'}}>
-                    ⏳ Closes in: {timeLeft}
-                  </div>
-                )}
+                {(() => {
+                  const isNotStarted = event.registrationStartDate && new Date() < new Date(event.registrationStartDate);
+                  const isClosed = new Date() > new Date(event.registrationDeadline);
+                  const isDisabled = !!userRegistration || isClosed || event.isTBD || isNotStarted;
+                  return (
+                    <>
+                      <button 
+                        className="primary-btn register-btn" 
+                        onClick={handleRegisterClick}
+                        disabled={isDisabled}
+                      >
+                        {userRegistration
+                          ? userRegistration.attended
+                            ? '✅ Attended'
+                            : '✔ Already Registered'
+                          : isNotStarted
+                          ? 'Registration Opens Soon'
+                          : isClosed
+                          ? 'Registration Closed'
+                          : event.isTBD
+                          ? 'Coming Soon'
+                          : 'Register Now'
+                        }
+                      </button>
+                      {timeLeft && timeLeft !== 'Closed' && !userRegistration && !isNotStarted && (
+                        <div className="registration-countdown" style={{marginTop: '15px', textAlign: 'center', color: '#ff1f01', fontWeight: 'bold', background: 'rgba(255, 31, 1, 0.1)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255, 31, 1, 0.2)'}}>
+                          ⏳ Closes in: {timeLeft}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           )}

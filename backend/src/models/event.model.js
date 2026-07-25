@@ -75,6 +75,18 @@ const eventSchema = new mongoose.Schema(
             min: [1, 'Max team size must be at least 1']
         },
 
+        registrationStartDate: {
+            type: Date,
+            default: null,
+            validate: {
+                validator(value) {
+                    if (!value || !this.registrationDeadline) return true;
+                    return value <= this.registrationDeadline;
+                },
+                message: 'Registration start date must be before or equal to registration deadline'
+            }
+        },
+
         registrationDeadline: {
             type: Date,
             required: [true, 'Registration deadline is required'],
@@ -250,6 +262,7 @@ eventSchema.virtual('isLive').get(function () {
 eventSchema.virtual('isRegistrationOpen').get(function () {
     if (!this.registrationDeadline || this.isTBD) return false;
     const now = new Date();
+    if (this.registrationStartDate && now < new Date(this.registrationStartDate)) return false;
     return now < this.registrationDeadline && this.isActive && this.deletedAt === null;
 });
 

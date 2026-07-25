@@ -21,7 +21,7 @@ const BRANCHES = [
 ];
 const emptyForm = {
   title: '', description: '', category: 'Mechapef-Event',
-  startTime: '', endTime: '', venue: '', registrationDeadline: '',
+  startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
   maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
   customFormFields: [], eligibleBranches: [], eligibleYears: []
 };
@@ -80,6 +80,7 @@ const AdminEvents = () => {
       category: ev.category, venue: ev.venue,
       startTime: ev.startTime?.slice(0, 16),
       endTime: ev.endTime?.slice(0, 16),
+      registrationStartDate: ev.registrationStartDate?.slice(0, 16) || '',
       registrationDeadline: ev.registrationDeadline?.slice(0, 16),
       maxTeamSize: ev.maxTeamSize, registrationFee: ev.registrationFee,
       featured: ev.featured, isTBD: ev.isTBD || false,
@@ -139,6 +140,7 @@ const AdminEvents = () => {
       venue: form.isTBD && !form.venue ? 'TBD' : form.venue,
       startTime: form.isTBD && !form.startTime ? '2099-12-31T00:00' : form.startTime,
       endTime: form.isTBD && !form.endTime ? '2099-12-31T23:59' : form.endTime,
+      registrationStartDate: form.isTBD && !form.registrationStartDate ? '2099-12-01T00:00' : (form.registrationStartDate || undefined),
       registrationDeadline: form.isTBD && !form.registrationDeadline ? '2099-12-30T23:59' : form.registrationDeadline,
       rules: form.rules ? form.rules.split('\n').filter(Boolean) : [],
       maxTeamSize: Number(form.maxTeamSize),
@@ -268,6 +270,10 @@ const AdminEvents = () => {
                 <div className="form-group">
                   <label>End Time {!form.isTBD && '*'}</label>
                   <input type="datetime-local" value={form.endTime} onChange={e => f('endTime', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
+                </div>
+                <div className="form-group">
+                  <label>Registration Start Date</label>
+                  <input type="datetime-local" value={form.registrationStartDate} onChange={e => f('registrationStartDate', e.target.value)} disabled={form.isTBD} placeholder="Immediate if left empty" />
                 </div>
                 <div className="form-group">
                   <label>Registration Deadline {!form.isTBD && '*'}</label>

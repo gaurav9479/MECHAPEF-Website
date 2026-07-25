@@ -16,6 +16,11 @@ export const checkAndToggleRedis = async () => {
             isActive: true,
             deletedAt: null,
             isTBD: { $ne: true },
+            $or: [
+                { registrationStartDate: { $exists: false } },
+                { registrationStartDate: null },
+                { registrationStartDate: { $lte: now } }
+            ],
             registrationDeadline: { $gt: now }
         });
         const redisUrl = process.env.REDIS_URL;
