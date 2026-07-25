@@ -24,6 +24,11 @@ const eventSchema = new mongoose.Schema(
             default: null
         },
 
+        isTBD: {
+            type: Boolean,
+            default: false
+        },
+
         description: {
             type: String,
             required: [true, 'Event description is required'],

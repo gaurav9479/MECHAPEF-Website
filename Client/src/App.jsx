@@ -22,6 +22,7 @@ import Gallery from './Pages/Gallery/Gallery';
 import AlbumView from './Pages/Gallery/AlbumView';
 import Profile from './Pages/Profile/Profile';
 import Events from './Pages/Events/Events';
+import AdminSpecialSponsor from './Pages/Admin/AdminSpecialSponsor';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
@@ -210,6 +211,19 @@ const AnimatedRoutes = () => {
               toastMessage="Access Denied: Only Media Leads and Super Admins can manage Sponsors."
             >
               <AdminSponsors />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/special-sponsor"
+          element={
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'media-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Media Leads and Super Admins can manage the Special Sponsor."
+            >
+              <AdminSpecialSponsor />
             </ProtectedRoute>
           }
         />

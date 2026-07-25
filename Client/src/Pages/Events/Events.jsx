@@ -111,10 +111,10 @@ const Events = () => {
                           <h2>{ev.title}</h2>
                           
                           <div className="event-meta">
-                            <p><FaCalendarAlt /> {new Date(ev.startTime).toLocaleDateString('en-IN', {
+                            <p><FaCalendarAlt /> {ev.isTBD ? 'To Be Decided' : new Date(ev.startTime).toLocaleDateString('en-IN', {
                               weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
                             })}</p>
-                            <p><FaMapMarkerAlt /> {ev.venue}</p>
+                            <p><FaMapMarkerAlt /> {ev.isTBD && ev.venue.toLowerCase() === 'tbd' ? 'To Be Decided' : ev.venue}</p>
                           </div>
                           
                           <p className="event-desc">{ev.description?.substring(0, 110)}...</p>

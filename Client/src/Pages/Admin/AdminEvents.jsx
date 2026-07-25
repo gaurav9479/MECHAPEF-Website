@@ -21,7 +21,7 @@ const BRANCHES = [
 const emptyForm = {
   title: '', description: '', category: 'MechapefEvent',
   startTime: '', endTime: '', venue: '', registrationDeadline: '',
-  maxTeamSize: 1, registrationFee: 0, featured: false, rules: '', prizes: '',
+  maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
   customFormFields: [], eligibleBranches: []
 };
 const AdminEvents = () => {
@@ -78,7 +78,7 @@ const AdminEvents = () => {
       endTime: ev.endTime?.slice(0, 16),
       registrationDeadline: ev.registrationDeadline?.slice(0, 16),
       maxTeamSize: ev.maxTeamSize, registrationFee: ev.registrationFee,
-      featured: ev.featured,
+      featured: ev.featured, isTBD: ev.isTBD || false,
       rules: Array.isArray(ev.rules) ? ev.rules.join('\n') : '',
       prizes: ev.prizes || '',
       customFormFields: ev.customFormFields || [],
@@ -271,6 +271,10 @@ const AdminEvents = () => {
                   <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer'}}>
                     <input type="checkbox" checked={form.featured} onChange={e => f('featured', e.target.checked)} style={{width:'auto'}} />
                     Featured Event
+                  </label>
+                  <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer', marginLeft:'20px'}}>
+                    <input type="checkbox" checked={form.isTBD} onChange={e => f('isTBD', e.target.checked)} style={{width:'auto'}} />
+                    TBD (To Be Decided)
                   </label>
                 </div>
                 <div className="form-group full">

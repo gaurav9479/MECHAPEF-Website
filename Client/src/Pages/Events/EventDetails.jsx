@@ -154,7 +154,7 @@ const EventDetails = () => {
           <div className="event-category-tag">{event.category}</div>
           <h1>{event.title}</h1>
           <p className="event-meta">
-            📍 {event.venue} &nbsp; | &nbsp; 📅 {new Date(event.startTime).toLocaleDateString()}
+            📍 {event.isTBD && event.venue.toLowerCase() === 'tbd' ? 'To Be Decided' : event.venue} &nbsp; | &nbsp; 📅 {event.isTBD ? 'To Be Decided' : new Date(event.startTime).toLocaleDateString()}
           </p>
         </div>
 
@@ -187,7 +187,7 @@ const EventDetails = () => {
           <div className="event-sidebar">
             <div className="event-card-info">
               <h3>Registration</h3>
-              <p><strong>Deadline:</strong> {new Date(event.registrationDeadline).toLocaleDateString()}</p>
+              <p><strong>Deadline:</strong> {event.isTBD ? 'To Be Decided' : new Date(event.registrationDeadline).toLocaleDateString()}</p>
               <p><strong>Fee:</strong> {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}</p>
               <p><strong>Team Size:</strong> Up to {event.maxTeamSize} members</p>
               

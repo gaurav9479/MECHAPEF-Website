@@ -99,6 +99,9 @@ const AdminSidebar = () => {
               <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`}>
                 <FaHandshake /> Sponsors
               </Link>
+              <Link to="/admin/special-sponsor" className={`sidebar-link ${location.pathname === '/admin/special-sponsor' ? 'active' : ''}`}>
+                <FaHandshake /> Special Sponsor
+              </Link>
               <Link to="/admin/magazine" className={`sidebar-link ${location.pathname === '/admin/magazine' ? 'active' : ''}`}>
                 <FaBook /> Magazine
               </Link>

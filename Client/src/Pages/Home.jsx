@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import HeroIntro from "../components/CinematicHero/HeroIntro";
@@ -14,12 +14,21 @@ import Footer from "../components/Footer/Footer";
 import MobileHome from "../components/MobileHome/MobileHome";
 import BackgroundGears from "../components/BackgroundGears/BackgroundGears";
 import { apiGetCached } from "../utils/apiCache";
+import api from "../services/api";
+import FloatingSponsorBubbles from "../components/FloatingSponsorBubbles/FloatingSponsorBubbles";
 
 const Home = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [specialSponsorConfig, setSpecialSponsorConfig] = useState(null);
 
   useEffect(() => {
+    // Fetch special sponsor config
+    api.get('/special-sponsor/active').then(res => {
+      if (res.data?.data) setSpecialSponsorConfig(res.data.data);
+    }).catch(err => {
+      console.log('No active special sponsor or error fetching');
+    });
     // Prefetch team images immediately when the site loads so they are instantly visible on scroll
     apiGetCached('/upload/sections', (data) => {
       if (data?.data?.images) {
@@ -80,6 +89,8 @@ const Home = () => {
   return (
     <>
       <Navbar />
+
+      <FloatingSponsorBubbles config={specialSponsorConfig} />
 
       <BackgroundGears />
 
