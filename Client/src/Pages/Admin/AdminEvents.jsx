@@ -132,6 +132,10 @@ const AdminEvents = () => {
     setSubmitting(true);
     const payload = {
       ...form,
+      venue: form.isTBD && !form.venue ? 'TBD' : form.venue,
+      startTime: form.isTBD && !form.startTime ? '2099-12-31T00:00' : form.startTime,
+      endTime: form.isTBD && !form.endTime ? '2099-12-31T23:59' : form.endTime,
+      registrationDeadline: form.isTBD && !form.registrationDeadline ? '2099-12-30T23:59' : form.registrationDeadline,
       rules: form.rules ? form.rules.split('\n').filter(Boolean) : [],
       maxTeamSize: Number(form.maxTeamSize),
       registrationFee: Number(form.registrationFee),
@@ -200,8 +204,8 @@ const AdminEvents = () => {
                     <strong style={{color:'#fff'}}>{ev.title}</strong>
                     {ev.featured && <span className="tag" style={{marginLeft:'8px', backgroundColor:'#222'}}>Featured</span>}
                   </td>
-                  <td>{new Date(ev.startTime).toLocaleDateString()}</td>
-                  <td>{ev.venue}</td>
+                  <td>{ev.isTBD ? 'TBD' : new Date(ev.startTime).toLocaleDateString()}</td>
+                  <td>{ev.isTBD && ev.venue === 'TBD' ? 'TBD' : ev.venue}</td>
                   <td>
                     <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`}>
                       {ev.status || 'Upcoming'}
@@ -250,20 +254,20 @@ const AdminEvents = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Venue *</label>
-                  <input value={form.venue} onChange={e => f('venue', e.target.value)} required placeholder="Event venue" />
+                  <label>Venue {!form.isTBD && '*'}</label>
+                  <input value={form.venue} onChange={e => f('venue', e.target.value)} required={!form.isTBD} disabled={form.isTBD} placeholder={form.isTBD ? "TBD" : "Event venue"} />
                 </div>
                 <div className="form-group">
-                  <label>Start Time *</label>
-                  <input type="datetime-local" value={form.startTime} onChange={e => f('startTime', e.target.value)} required />
+                  <label>Start Time {!form.isTBD && '*'}</label>
+                  <input type="datetime-local" value={form.startTime} onChange={e => f('startTime', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
                 </div>
                 <div className="form-group">
-                  <label>End Time *</label>
-                  <input type="datetime-local" value={form.endTime} onChange={e => f('endTime', e.target.value)} required />
+                  <label>End Time {!form.isTBD && '*'}</label>
+                  <input type="datetime-local" value={form.endTime} onChange={e => f('endTime', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
                 </div>
                 <div className="form-group">
-                  <label>Registration Deadline *</label>
-                  <input type="datetime-local" value={form.registrationDeadline} onChange={e => f('registrationDeadline', e.target.value)} required />
+                  <label>Registration Deadline {!form.isTBD && '*'}</label>
+                  <input type="datetime-local" value={form.registrationDeadline} onChange={e => f('registrationDeadline', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
                 </div>
                 <div className="form-group">
                   <label>Max Team Size</label>
