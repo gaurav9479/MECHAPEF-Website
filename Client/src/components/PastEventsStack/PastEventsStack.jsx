@@ -15,21 +15,6 @@ const skeletonEvents = [
 const PastEventsStack = () => {
   const sectionRef = useRef(null);
   
-  /* 
-  // Caching Logic (Temporarily disabled for development/testing)
-  const getInitialEvents = () => {
-    const cached = localStorage.getItem('mechapef_pastEventsCache');
-    if (cached) {
-      try {
-        return JSON.parse(cached);
-      } catch (e) {
-        return skeletonEvents;
-      }
-    }
-    return skeletonEvents;
-  };
-  const [pastEvents, setPastEvents] = useState(getInitialEvents);
-  */
   const [pastEvents, setPastEvents] = useState(skeletonEvents);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +32,6 @@ const PastEventsStack = () => {
 
         if (resData && resData.data && resData.data.length > 0) {
           setPastEvents(resData.data);
-          // localStorage.setItem('mechapef_pastEventsCache', JSON.stringify(resData.data)); // Temporarily disabled
         }
       } catch (err) {
         console.error("Failed to fetch past events:", err);

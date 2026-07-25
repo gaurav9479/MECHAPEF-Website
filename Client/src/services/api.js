@@ -15,9 +15,9 @@ api.interceptors.request.use((config) => {
 
   const method = config.method?.toLowerCase();
   if (['post', 'put', 'patch', 'delete'].includes(method)) {
-    Object.keys(sessionStorage).forEach(key => {
+    Object.keys(localStorage).forEach(key => {
       if (key.startsWith('api_cache_')) {
-        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
       }
     });
   }
@@ -73,20 +73,24 @@ api.get = async (url, config = {}) => {
   }
 
   const cacheKey = `api_cache_${url}_${JSON.stringify(config.params || {})}`;
-  const cachedData = sessionStorage.getItem(cacheKey);
+  const CACHE_TIME = 2 * 60 * 1000; // 2 minutes
+  const cachedData = localStorage.getItem(cacheKey);
 
-  // Return cached response if available
+  // Return cached response if available and valid
   if (cachedData) {
     try {
       const parsedData = JSON.parse(cachedData);
-      return Promise.resolve({
-        data: parsedData,
-        status: 200,
-        statusText: 'OK (Cached)',
-        headers: {},
-        config,
-        request: {}
-      });
+      
+      if (parsedData.timestamp && (Date.now() - parsedData.timestamp < CACHE_TIME)) {
+        return Promise.resolve({
+          data: parsedData.data,
+          status: 200,
+          statusText: 'OK (Cached)',
+          headers: {},
+          config,
+          request: {}
+        });
+      }
     } catch (e) {
       console.error('Cache parse error:', e);
     }
@@ -95,7 +99,10 @@ api.get = async (url, config = {}) => {
   // Make network request and cache the result
   const response = await originalGet.call(api, url, config);
   if (response.status === 200) {
-    sessionStorage.setItem(cacheKey, JSON.stringify(response.data));
+    localStorage.setItem(cacheKey, JSON.stringify({
+      timestamp: Date.now(),
+      data: response.data
+    }));
   }
 
   return response;
