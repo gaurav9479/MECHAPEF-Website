@@ -1,0 +1,71 @@
+.mds-section {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #000000; /* Solid background to prevent overlap transparency */
+  z-index: 20;
+}
+
+.mds-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+
+.mds-cards-wrapper {
+  position: relative;
+  width: 90%;
+  max-width: 400px;
+  height: 60vh; /* Adjust height based on mobile aspect ratio */
+  margin: 0 auto;
+}
+
+.mds-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: center bottom;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  will-change: transform, opacity;
+}
+
+/* Cyber Frame Styles */
+.cyber-frame {
+  background: #ff1f01; /* Red border color */
+  padding: 4px; /* Border thickness */
+  /* Cyber shape: top-left and bottom-right are chopped */
+  clip-path: polygon(
+    40px 0, 100% 0, 
+    100% calc(100% - 40px), calc(100% - 40px) 100%, 
+    0 100%, 0 40px
+  );
+}
+
+.cyber-frame-inner {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  clip-path: polygon(
+    38px 0, 100% 0, 
+    100% calc(100% - 38px), calc(100% - 38px) 100%, 
+    0 100%, 0 38px
+  );
+  overflow: hidden;
+  position: relative;
+}
+
+.cyber-frame-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
