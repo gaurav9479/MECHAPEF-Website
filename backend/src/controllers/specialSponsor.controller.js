@@ -1,7 +1,7 @@
 import { SpecialSponsor } from '../models/specialSponsor.model.js';
 import ImageKit from 'imagekit';
 import ApiError from '../utils/ApiError.js';
-import APIResponse from '../utils/ApiResponse.js';
+import APIResponse from '../utils/APIResponse.js';
 
 const imagekit = new ImageKit({
   publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
