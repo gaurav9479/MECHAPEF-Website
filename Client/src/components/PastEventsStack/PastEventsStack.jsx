@@ -74,10 +74,11 @@ const PastEventsStack = () => {
             scrollTrigger: {
               trigger: sectionRef.current,
               start: "top top",
-              end: "+=200%",
+              end: () => "+=" + (pastEvents.length * 100) + "%",
               pin: true,
               scrub: 1,
-              pinSpacing: true
+              pinSpacing: true,
+              invalidateOnRefresh: true
             }
           });
 
@@ -98,7 +99,8 @@ const PastEventsStack = () => {
             end: () => "+=" + (cards.length * 150) + "%", // Increased length per card
             pin: true,
             scrub: 1,
-            pinSpacing: true
+            pinSpacing: true,
+            invalidateOnRefresh: true
           }
         });
 

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
+import { FaGraduationCap } from 'react-icons/fa';
 import { eventService } from '../../services/services';
 import api from '../../services/api';
 import './EventDetails.css';
@@ -208,29 +209,31 @@ const EventDetails = () => {
             )}
           </div>
           
-          <div className="event-sidebar">
-            <div className="event-card-info">
-              <h3>Registration</h3>
-              <p><strong>Deadline:</strong> {event.isTBD ? 'To Be Decided' : new Date(event.registrationDeadline).toLocaleDateString()}</p>
-              <p><strong>Fee:</strong> {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}</p>
-              <p><strong>Team Size:</strong> Up to {event.maxTeamSize} members</p>
-              
-              <button 
-                className="primary-btn register-btn" 
-                onClick={handleRegisterClick}
-                disabled={!!userRegistration || new Date() > new Date(event.registrationDeadline)}
-              >
-                {userRegistration
-                  ? userRegistration.attended
-                    ? '✅ Attended'
-                    : '✔ Already Registered'
-                  : new Date() > new Date(event.registrationDeadline)
-                  ? 'Registration Closed'
-                  : 'Register Now'
-                }
-              </button>
+          {!event.isTBD && (
+            <div className="event-sidebar">
+              <div className="event-card-info">
+                <h3>Registration</h3>
+                <p><strong>Deadline:</strong> {new Date(event.registrationDeadline).toLocaleDateString()}</p>
+                <p><strong>Fee:</strong> {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}</p>
+                <p><strong>Team Size:</strong> Up to {event.maxTeamSize} members</p>
+                
+                <button 
+                  className="primary-btn register-btn" 
+                  onClick={handleRegisterClick}
+                  disabled={!!userRegistration || new Date() > new Date(event.registrationDeadline)}
+                >
+                  {userRegistration
+                    ? userRegistration.attended
+                      ? '✅ Attended'
+                      : '✔ Already Registered'
+                    : new Date() > new Date(event.registrationDeadline)
+                    ? 'Registration Closed'
+                    : 'Register Now'
+                  }
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
