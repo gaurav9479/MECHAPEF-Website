@@ -22,7 +22,8 @@ export const createEvent = asyncHandler(async (req, res) => {
         rules,
         prizes,
         registrationFee,
-        customFormFields
+        customFormFields,
+        eligibleBranches
     } = req.body;
     if (!title || !description || !category || !startTime || !endTime || !venue || !registrationDeadline) {
         throw new ApiError(
@@ -45,6 +46,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         prizes: prizes || null,
         registrationFee: registrationFee || 0,
         customFormFields: customFormFields || [],
+        eligibleBranches: eligibleBranches || [],
         createdBy: req.user.userId
     });
 
@@ -137,7 +139,8 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'prizes',
         'registrationFee',
         'isActive',
-        'customFormFields'
+        'customFormFields',
+        'eligibleBranches'
     ];
 
     const updates = {};
