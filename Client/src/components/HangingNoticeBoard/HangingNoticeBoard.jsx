@@ -23,7 +23,7 @@ const useTypewriter = (text, speed = 28, start = false) => {
 };
 
 /* ── Single notice row with typewriter + decode ── */
-const NoticeRow = ({ notice, index, onNavigate }) => {
+const NoticeRow = ({ notice, index, onNavigate, isSeen }) => {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   const [decoding, setDecoding] = useState(true);
@@ -57,7 +57,7 @@ const NoticeRow = ({ notice, index, onNavigate }) => {
       initial={{ opacity: 0, x: -24 }}
       animate={visible ? { opacity: 1, x: 0 } : {}}
       transition={{ duration: 0.4, delay: index * 0.12 }}
-      onClick={() => notice.targetLink && onNavigate(notice.targetLink)}
+      onClick={() => onNavigate()}
     >
       {/* Left: index number */}
       <div className="hnb-row-idx">{String(index + 1).padStart(2, '0')}</div>
@@ -67,9 +67,16 @@ const NoticeRow = ({ notice, index, onNavigate }) => {
 
       {/* Main text - decode then typewriter */}
       <div className="hnb-row-content">
-        <div className="hnb-row-title">
+        <div className="hnb-row-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {decoding ? decoded : typed}
           <span className="hnb-cursor">█</span>
+          {!isSeen && (
+            <span style={{
+              width: '8px', height: '8px', borderRadius: '50%',
+              background: '#ffff00', display: 'inline-block',
+              boxShadow: '0 0 5px #ffff00'
+            }} title="New Notice" />
+          )}
         </div>
         <div className="hnb-row-meta">
           <span>{notice.targetType || 'GENERAL'}</span>
@@ -93,6 +100,7 @@ const HangingNoticeBoard = ({ onClose }) => {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bootLine, setBootLine] = useState(0);
+  const [seenNotices, setSeenNotices] = useState(() => JSON.parse(localStorage.getItem('seen_notices') || '[]'));
   const navigate = useNavigate();
 
   const BOOT_LINES = [
@@ -102,7 +110,13 @@ const HangingNoticeBoard = ({ onClose }) => {
     '> MECHANICAL SYSTEM READY.',
   ];
 
-  const handleNoticeClick = (link) => {
+  const handleNoticeClick = (notice) => {
+    const link = notice.targetLink;
+    if (!seenNotices.includes(notice._id)) {
+      const updated = [...seenNotices, notice._id];
+      setSeenNotices(updated);
+      localStorage.setItem('seen_notices', JSON.stringify(updated));
+    }
     if (!link) return;
     onClose();
     if (link.startsWith('http')) window.open(link, '_blank');
@@ -194,7 +208,13 @@ const HangingNoticeBoard = ({ onClose }) => {
               <div className="hnb-empty">NO ACTIVE NOTICES FOUND IN DATABASE.</div>
             ) : (
               notices.map((n, i) => (
-                <NoticeRow key={n._id} notice={n} index={i} onNavigate={handleNoticeClick} />
+                <NoticeRow 
+                  key={n._id} 
+                  notice={n} 
+                  index={i} 
+                  onNavigate={() => handleNoticeClick(n)} 
+                  isSeen={seenNotices.includes(n._id)} 
+                />
               ))
             )}
           </div>

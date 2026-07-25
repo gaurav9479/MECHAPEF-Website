@@ -44,7 +44,7 @@ const MobileLiveEvents = ({ slides, navigate }) => {
               <div
                 key={slide._id}
                 className={`mh-slide ${idx === slideIdx ? 'active' : ''}`}
-                style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : {}}
+                style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : { background: 'linear-gradient(135deg, #660a00 0%, #111111 100%)' }}
               >
                 <div className="mh-slide-overlay">
                   <span className="mh-slide-tag">{slide.targetType || 'Announcement'}</span>

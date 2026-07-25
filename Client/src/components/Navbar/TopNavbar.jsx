@@ -17,6 +17,7 @@ import gsap from "gsap";
 import ScrollToPlugin from "gsap/ScrollToPlugin";
 gsap.registerPlugin(ScrollToPlugin);
 import MagneticButton from "../MagneticButton/MagneticButton";
+import { apiGetCached } from "../../utils/apiCache";
 import "./Navbar.css";
 
 const TopNavbar = () => {
@@ -31,6 +32,17 @@ const TopNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showNotices, setShowNotices] = useState(false);
+  const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
+
+  useEffect(() => {
+    apiGetCached('/announcements', (data) => {
+      const items = data.data?.announcements || data.data || [];
+      const active = items.filter(n => n.isActive);
+      const seenNotices = JSON.parse(localStorage.getItem('seen_notices') || '[]');
+      const hasUnread = active.some(n => !seenNotices.includes(n._id));
+      setHasUnreadNotice(hasUnread);
+    }).catch(() => {});
+  }, [showNotices]);
 
   const desktopRef = useRef(null);
   const mobileRef = useRef(null);
@@ -251,7 +263,22 @@ const TopNavbar = () => {
           </li>
 
           <li onClick={() => { setMenuOpen(false); setShowNotices(true); }}>
-            <span>Notice Board</span>
+            <span style={{ position: 'relative', display: 'inline-block' }}>
+              Notice Board
+              {hasUnreadNotice && (
+                <span style={{
+                  position: 'absolute',
+                  top: '0px',
+                  right: '-14px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#ffff00',
+                  boxShadow: '0 0 5px #ffff00',
+                  display: 'inline-block'
+                }} title="New Notice" />
+              )}
+            </span>
           </li>
 
           <li className="mobile-only-btn">

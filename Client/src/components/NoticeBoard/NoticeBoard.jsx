@@ -9,6 +9,7 @@ const PRIORITY_COLOR = { High: '#ff3333', Medium: '#ffaa00', Low: '#00c864' };
 const NoticeBoard = () => {
   const [notices, setNotices] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [seenNotices, setSeenNotices] = useState(() => JSON.parse(localStorage.getItem('seen_notices') || '[]'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,7 +17,9 @@ const NoticeBoard = () => {
       .then(res => {
         const active = (res.data.data?.announcements || []).filter(n => n.isActive);
         setNotices(active);
-        if (active.length > 0) setSelected(active[0]);
+        if (active.length > 0) {
+          setSelected(active[0]);
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -62,7 +65,14 @@ const NoticeBoard = () => {
                 <motion.div
                   key={n._id}
                   className={`nb-list-item ${selected?._id === n._id ? 'active' : ''}`}
-                  onClick={() => setSelected(n)}
+                  onClick={() => {
+                    setSelected(n);
+                    if (!seenNotices.includes(n._id)) {
+                      const updated = [...seenNotices, n._id];
+                      setSeenNotices(updated);
+                      localStorage.setItem('seen_notices', JSON.stringify(updated));
+                    }
+                  }}
                   initial={{ opacity: 0, x: -30 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
@@ -73,7 +83,16 @@ const NoticeBoard = () => {
                     style={{ background: PRIORITY_COLOR[n.priority] }}
                   />
                   <div>
-                    <div className="nb-item-title">{n.title}</div>
+                    <div className="nb-item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {n.title}
+                      {!seenNotices.includes(n._id) && (
+                        <span style={{
+                          width: '8px', height: '8px', borderRadius: '50%',
+                          background: '#ffff00', display: 'inline-block',
+                          boxShadow: '0 0 5px #ffff00'
+                        }} title="New" />
+                      )}
+                    </div>
                     <div className="nb-item-date">
                       {new Date(n.createdAt || n.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </div>

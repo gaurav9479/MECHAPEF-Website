@@ -221,7 +221,7 @@ const EventDetails = () => {
                 <button 
                   className="primary-btn register-btn" 
                   onClick={handleRegisterClick}
-                  disabled={!!userRegistration || new Date() > new Date(event.registrationDeadline)}
+                  disabled={!!userRegistration || new Date() > new Date(event.registrationDeadline) || event.isTBD}
                 >
                   {userRegistration
                     ? userRegistration.attended
@@ -229,6 +229,8 @@ const EventDetails = () => {
                       : '✔ Already Registered'
                     : new Date() > new Date(event.registrationDeadline)
                     ? 'Registration Closed'
+                    : event.isTBD
+                    ? 'Coming Soon'
                     : 'Register Now'
                   }
                 </button>

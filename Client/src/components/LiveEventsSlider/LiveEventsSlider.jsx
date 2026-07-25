@@ -83,7 +83,7 @@ const LiveEventsSlider = () => {
           <div 
             key={slide._id} 
             className={`slide ${index === currentIdx ? 'active' : ''}`}
-            style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : {}}
+            style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : { background: 'linear-gradient(135deg, #660a00 0%, #111111 100%)' }}
           >
             
             <div className="slide-overlay">

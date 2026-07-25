@@ -126,7 +126,7 @@ const Events = () => {
                           <p className="event-desc">{ev.description?.substring(0, 110)}...</p>
                           
                           <Link to={`/events/${ev._id}`} className="event-cta-btn">
-                            {isPast ? 'VIEW ARCHIVE' : 'REGISTER NOW'}
+                            {isPast ? 'VIEW ARCHIVE' : ev.isTBD ? 'COMING SOON' : 'REGISTER NOW'}
                           </Link>
                         </div>
                       </div>
