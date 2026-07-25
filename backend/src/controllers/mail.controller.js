@@ -78,7 +78,7 @@ emailQueue.on('error', (error) => {
 });
 
 export const sendMail = asyncHandler(async (req, res) => {
-    const { targetRole, endorsementType, endorsementId, customSubject, customBody } = req.body;
+    const { targetRole, endorsementType, endorsementId, customSubject, customBody, customEmails, scheduleType } = req.body;
 
     if (!targetRole) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'targetRole is required');
@@ -108,22 +108,35 @@ export const sendMail = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Email must have a subject and body, or valid endorsement');
     }
 
-    // Fetch users based on target role
-    let query = { deletedAt: null, isActive: true, email: { $exists: true, $type: 'string', $ne: '' } };
-    
-    if (targetRole === 'super-admin') query.role = USER_ROLES.SUPER_ADMIN;
-    else if (targetRole === 'content-lead') query.role = USER_ROLES.CONTENT_LEAD;
-    else if (targetRole === 'media-lead' || targetRole === 'event-lead') query.role = USER_ROLES.MEDIA_LEAD; 
-    else if (targetRole === 'member') query.role = USER_ROLES.MEMBER;
-    // if 'all', don't add role filter
-
-    const users = await User.find(query).select('email').lean();
-    
     const uniqueUsersByEmail = new Map();
-    for (const user of users || []) {
-        const email = user?.email?.trim().toLowerCase();
-        if (email && validator.isEmail(email)) {
-            uniqueUsersByEmail.set(email, { email });
+
+    if (targetRole === 'custom_csv') {
+        if (!customEmails || !Array.isArray(customEmails) || customEmails.length === 0) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please upload a CSV file with valid emails.');
+        }
+        for (const email of customEmails) {
+            const cleanEmail = email?.trim().toLowerCase();
+            if (cleanEmail && validator.isEmail(cleanEmail)) {
+                uniqueUsersByEmail.set(cleanEmail, { email: cleanEmail });
+            }
+        }
+    } else {
+        // Fetch users based on target role
+        let query = { deletedAt: null, isActive: true, email: { $exists: true, $type: 'string', $ne: '' } };
+        
+        if (targetRole === 'super-admin') query.role = USER_ROLES.SUPER_ADMIN;
+        else if (targetRole === 'content-lead') query.role = USER_ROLES.CONTENT_LEAD;
+        else if (targetRole === 'media-lead' || targetRole === 'event-lead') query.role = USER_ROLES.MEDIA_LEAD; 
+        else if (targetRole === 'member') query.role = USER_ROLES.MEMBER;
+        // if 'all', don't add role filter
+
+        const users = await User.find(query).select('email').lean();
+        
+        for (const user of users || []) {
+            const email = user?.email?.trim().toLowerCase();
+            if (email && validator.isEmail(email)) {
+                uniqueUsersByEmail.set(email, { email });
+            }
         }
     }
     
@@ -136,22 +149,31 @@ export const sendMail = asyncHandler(async (req, res) => {
     const emailContent = buildEmailContent(title, description, isEndorsement, endorsementType);
     
     // Process sending in background using BullMQ
-    const jobs = validUsers.map(user => ({
-        name: 'sendEmail',
-        data: {
-            to: user.email,
-            subject: emailContent.subject,
-            text: emailContent.text,
-            html: emailContent.html
-        },
-        opts: {
-            attempts: 3,
-            backoff: {
-                type: 'exponential',
-                delay: 5000
-            }
+    const jobs = validUsers.map((user, index) => {
+        let jobDelay = 0;
+        if (scheduleType === 'smart_batch') {
+            // 100 emails per hour = 1 email every 36 seconds (36000 ms)
+            jobDelay = index * 36000;
         }
-    }));
+
+        return {
+            name: 'sendEmail',
+            data: {
+                to: user.email,
+                subject: emailContent.subject,
+                text: emailContent.text,
+                html: emailContent.html
+            },
+            opts: {
+                attempts: 3,
+                delay: Math.floor(jobDelay),
+                backoff: {
+                    type: 'exponential',
+                    delay: 5000
+                }
+            }
+        };
+    });
 
     try {
         await emailQueue.addBulk(jobs);
@@ -165,7 +187,8 @@ export const sendMail = asyncHandler(async (req, res) => {
                 text: job.data.text,
                 html: job.data.html,
                 status: 'pending',
-                attempts: 0
+                attempts: 0,
+                executeAt: job.opts.delay > 0 ? new Date(Date.now() + job.opts.delay) : new Date()
             }));
             await PendingEmail.insertMany(dbEmails);
             console.log(`[Mail Portal] Successfully saved ${jobs.length} emails to MongoDB pending queue.`);

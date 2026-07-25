@@ -25,6 +25,10 @@ const pendingEmailSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    executeAt: {
+        type: Date,
+        default: Date.now
+    },
     lastError: {
         type: String
     }
