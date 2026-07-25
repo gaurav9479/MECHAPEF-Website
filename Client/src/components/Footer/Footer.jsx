@@ -79,10 +79,8 @@ const Footer = () => {
           <div className="footer-socials">
             <h3>Follow Our Journey</h3>
             <div className="social-icons">
-              <a href="#" className="social-link"><FaInstagram /></a>
-              <a href="#" className="social-link"><FaLinkedinIn /></a>
-              <a href="#" className="social-link"><FaFacebookF /></a>
-              <a href="#" className="social-link"><FaTwitter /></a>
+              <a href="https://www.instagram.com/mechapef_mnnit/" className="social-link" target="_blank" rel="noreferrer"><FaInstagram /></a>
+              <a href="https://www.linkedin.com/company/mechapef-mnnit" className="social-link" target="_blank" rel="noreferrer"><FaLinkedinIn /></a>
             </div>
           </div>
         </motion.div>

@@ -79,10 +79,12 @@ const JoinUsBot = () => {
 
               <motion.div className="s5-social-grid" style={{ y: s5Line4Y, opacity: s5Line4Op }}>
                 <div className="social-icon"><FaEnvelope /></div>
+                <a href="https://www.instagram.com/mechapef_mnnit/" target="_blank" rel="noreferrer" style={{color: 'inherit'}}>
                 <div className="social-icon"><FaInstagram /></div>
+              </a>
+              <a href="https://www.linkedin.com/company/mechapef-mnnit" target="_blank" rel="noreferrer" style={{color: 'inherit'}}>
                 <div className="social-icon"><FaLinkedinIn /></div>
-                <div className="social-icon"><FaFacebookF /></div>
-                <div className="social-icon"><FaTwitter /></div>
+              </a>
               </motion.div>
             </div>
           </div>
