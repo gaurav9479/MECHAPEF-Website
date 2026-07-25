@@ -21,7 +21,7 @@ export const SUB_TEAMS = {
 export const SUB_TEAMS_ARRAY = Object.values(SUB_TEAMS);
 
 export const EVENT_CATEGORIES = {
-    MECHAPEF_EVENT: 'MechapefEvent',
+    MECHAPEF_EVENT: 'Mechapef-Event',
     DEPARTMENTAL: 'Departmental'
 };
 

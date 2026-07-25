@@ -332,7 +332,7 @@ const AdminManagement = () => {
                     <th>Email</th>
                     <th>Reg No</th>
                     <th>Role</th>
-                    <th>Requested</th>
+                    <th>Branch</th>
                     <th>Year</th>
                     <th>Verified</th>
                     <th>Toggle</th>
@@ -362,11 +362,9 @@ const AdminManagement = () => {
                         </select>
                       </td>
                       <td>
-                        {u.requestedRole ? (
-                          <span className="tag" style={{ border: '1px solid #ffaa00', color: '#ffaa00', background: 'transparent' }}>
-                            {u.requestedRole}
-                          </span>
-                        ) : '—'}
+                        <span style={{ fontSize: '0.85rem', color: '#ccc' }}>
+                          {u.branch || '—'}
+                        </span>
                       </td>
                       <td>{u.yearOfStudy ? `Year ${u.yearOfStudy}` : '—'}</td>
                       <td>

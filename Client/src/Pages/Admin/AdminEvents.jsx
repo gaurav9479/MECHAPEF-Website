@@ -6,7 +6,7 @@ import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshak
 import api from '../../services/api';
 import { eventService } from '../../services/services';
 import './AdminDashboard.css';
-const CATEGORIES = ['MechapefEvent', 'Departmental'];
+const CATEGORIES = ['Mechapef-Event', 'Departmental'];
 const BRANCHES = [
   'Biotechnology',
   'Chemical Engineering',
@@ -20,7 +20,7 @@ const BRANCHES = [
   'Production and Industrial Engineering'
 ];
 const emptyForm = {
-  title: '', description: '', category: 'MechapefEvent',
+  title: '', description: '', category: 'Mechapef-Event',
   startTime: '', endTime: '', venue: '', registrationDeadline: '',
   maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
   customFormFields: [], eligibleBranches: [], eligibleYears: []

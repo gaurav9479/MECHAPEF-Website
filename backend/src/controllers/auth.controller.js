@@ -30,6 +30,7 @@ function parseStudentInfoFromRegNo(regNo) {
         '4': 'Electronics and Communication Engineering',
         '5': 'Electrical Engineering',
         '6': 'Mechanical Engineering',
+        '7': 'Production and Industrial Engineering',
         '8': 'Electronics and Computational Mechanics',
         '9': 'Materials Engineering'
     };
