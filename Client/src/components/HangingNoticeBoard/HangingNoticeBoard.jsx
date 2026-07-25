@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaExternalLinkAlt, FaMicrochip, FaShieldAlt, FaWifi } from 'react-icons/fa';
+import { FaTimes, FaExternalLinkAlt, FaCog, FaWrench, FaClipboardList } from 'react-icons/fa';
 import api from '../../services/api';
 import './HangingNoticeBoard.css';
 
@@ -96,11 +96,10 @@ const HangingNoticeBoard = ({ onClose }) => {
   const navigate = useNavigate();
 
   const BOOT_LINES = [
-    '> MECHAPEF SECURITY SYSTEM v4.2.1',
-    '> Authenticating operator... [OK]',
-    '> Loading encrypted notice feed...',
-    '> Decryption keys verified [AES-256]',
-    '> SYSTEM READY.',
+    '> RELEASING HYDRAULIC LOCKS...',
+    '> ALIGNING GEARS...',
+    '> UNROLLING NOTICE FEED...',
+    '> MECHANICAL SYSTEM READY.',
   ];
 
   const handleNoticeClick = (link) => {
@@ -153,19 +152,19 @@ const HangingNoticeBoard = ({ onClose }) => {
           {/* ── Terminal Header Bar ── */}
           <div className="hnb-header-bar">
             <div className="hnb-header-left">
-              <FaShieldAlt className="hnb-header-icon" />
-              <span className="hnb-header-title">MECHAPEF <span>SECURE TERMINAL</span></span>
+              <FaClipboardList className="hnb-header-icon" />
+              <span className="hnb-header-title">MECHAPEF <span>NOTICE BOARD</span></span>
             </div>
             <div className="hnb-header-right">
-              <div className="hnb-wifi"><FaWifi /><span className="hnb-wifi-blink" /></div>
-              <div className="hnb-chip"><FaMicrochip /></div>
+              <div className="hnb-wifi"><FaCog className="spin-cog" /></div>
+              <div className="hnb-chip"><FaWrench /></div>
               <button className="hnb-close-btn" onClick={onClose}><FaTimes /></button>
             </div>
           </div>
 
-          {/* ── Scanline overlay ── */}
-          <div className="hnb-scanlines" aria-hidden="true" />
-          <div className="hnb-crt-glow" aria-hidden="true" />
+          {/* ── Mechanical overlay ── */}
+          <div className="hnb-metal-texture" aria-hidden="true" />
+          <div className="hnb-caution-stripe top" aria-hidden="true" />
 
           {/* ── Boot Sequence ── */}
           <div className="hnb-boot-seq">
@@ -202,9 +201,10 @@ const HangingNoticeBoard = ({ onClose }) => {
 
           {/* ── Footer Status Bar ── */}
           <div className="hnb-footer-bar">
-            <span className="hnb-status-tag active">● SECURE</span>
-            <span>ENC: AES-256</span>
-            <span>VER: 4.2.1</span>
+            <div className="hnb-caution-stripe bottom" aria-hidden="true" />
+            <span className="hnb-status-tag active">● ONLINE</span>
+            <span>SYSTEM: MANUAL</span>
+            <span>GEAR: 4</span>
             <span className="hnb-blink-text">LIVE</span>
           </div>
         </motion.div>
