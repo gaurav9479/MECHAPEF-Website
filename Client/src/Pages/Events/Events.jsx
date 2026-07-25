@@ -24,7 +24,13 @@ const Events = () => {
     const fetchEvents = async () => {
       try {
         const res = await eventService.getAll({ limit: 50 });
-        setEvents(res.data.data.events);
+        const fetchedEvents = res.data.data.events || [];
+        const sortedEvents = fetchedEvents.sort((a, b) => {
+          const timeA = new Date(a.endTime || a.startTime).getTime();
+          const timeB = new Date(b.endTime || b.startTime).getTime();
+          return timeB - timeA;
+        });
+        setEvents(sortedEvents);
       } catch (err) {
         console.error('Failed to fetch events');
       } finally {

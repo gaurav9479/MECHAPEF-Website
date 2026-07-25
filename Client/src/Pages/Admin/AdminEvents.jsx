@@ -16,7 +16,8 @@ const BRANCHES = [
   'Electrical Engineering',
   'Mechanical Engineering',
   'Electronics and Computational Mechanics',
-  'Materials Engineering'
+  'Materials Engineering',
+  'Production and Industrial Engineering'
 ];
 const emptyForm = {
   title: '', description: '', category: 'MechapefEvent',
