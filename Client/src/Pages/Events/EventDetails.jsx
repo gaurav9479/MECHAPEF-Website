@@ -19,6 +19,7 @@ const EventDetails = () => {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const [userRegistration, setUserRegistration] = useState(null); // null = not checked, false = not registered, object = registered
+  const [timeLeft, setTimeLeft] = useState('');
 
   // Form State
   const [regType, setRegType] = useState('Solo');
@@ -30,6 +31,27 @@ const EventDetails = () => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  useEffect(() => {
+    if (!event || event.isTBD) return;
+    
+    const calculateTimeLeft = () => {
+      const difference = new Date(event.registrationDeadline) - new Date();
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((difference / 1000 / 60) % 60);
+        const seconds = Math.floor((difference / 1000) % 60);
+        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+      } else {
+        setTimeLeft('Closed');
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [event]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -234,6 +256,11 @@ const EventDetails = () => {
                     : 'Register Now'
                   }
                 </button>
+                {timeLeft && timeLeft !== 'Closed' && !userRegistration && (
+                  <div className="registration-countdown" style={{marginTop: '15px', textAlign: 'center', color: '#ff1f01', fontWeight: 'bold', background: 'rgba(255, 31, 1, 0.1)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255, 31, 1, 0.2)'}}>
+                    ⏳ Closes in: {timeLeft}
+                  </div>
+                )}
               </div>
             </div>
           )}

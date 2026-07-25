@@ -1,5 +1,4 @@
 import { Worker } from 'bullmq';
-import { redisConnection } from '../queues/registrationQueue.js';
 import Registration from '../models/registration.model.js';
 import Event from '../models/event.model.js';
 import User from '../models/user.model.js';
@@ -7,7 +6,7 @@ import User from '../models/user.model.js';
 let registrationWorker = null;
 const QUEUE_NAME = 'RegistrationQueue';
 
-export const startRegistrationWorker = () => {
+export const startRegistrationWorker = (redisConnection) => {
     if (!redisConnection) {
         console.log('[Worker] Redis not configured. Registration worker will not start.');
         return;
@@ -130,6 +129,11 @@ export const startRegistrationWorker = () => {
             max: Number(process.env.REGISTRATION_WORKER_RATE_LIMIT || 100),
             duration: 1000,
         },
+        settings: {
+            stalledInterval: 300000, // Check for stalled jobs every 5 minutes instead of 30 seconds
+            drainDelay: 300000, // If queue is empty, wait 5 minutes before actively polling for delayed jobs
+            lockDuration: 60000,
+        }
     });
 
     registrationWorker.on('completed', (job) => {
@@ -148,7 +152,7 @@ export const startRegistrationWorker = () => {
                 workerErrorLogged = true;
             }
             try {
-                await registrationWorker.close();
+                await stopRegistrationWorker();
             } catch (e) {}
             return;
         }
@@ -156,4 +160,16 @@ export const startRegistrationWorker = () => {
     });
 
     console.log('[Worker] Registration worker started and listening for jobs.');
+};
+
+export const stopRegistrationWorker = async () => {
+    if (registrationWorker) {
+        try {
+            await registrationWorker.close();
+            registrationWorker = null;
+            console.log('[Worker] Registration worker stopped.');
+        } catch (e) {
+            console.error('[Worker] Error stopping worker:', e);
+        }
+    }
 };

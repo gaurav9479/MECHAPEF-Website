@@ -65,18 +65,6 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType) =
         `
     };
 };
-
-import { Queue } from 'bullmq';
-import { connection } from '../config/redis.js';
-
-const emailQueue = new Queue('emailQueue', { connection });
-emailQueue.on('error', (error) => {
-    if (error.message.includes('max requests limit exceeded')) {
-        return; // Suppress Upstash limit exceeded error
-    }
-    console.error('[Redis] Email Queue error:', error.message);
-});
-
 export const sendMail = asyncHandler(async (req, res) => {
     const { targetRole, endorsementType, endorsementId, customSubject, customBody, customEmails, scheduleType } = req.body;
 
@@ -176,25 +164,19 @@ export const sendMail = asyncHandler(async (req, res) => {
     });
 
     try {
-        await emailQueue.addBulk(jobs);
-        console.log(`[Mail Portal] Enqueued ${jobs.length} emails to BullMQ`);
-    } catch (error) {
-        console.error('[Mail Portal] Redis/BullMQ unavailable, saving emails to MongoDB backup queue:', error.message);
-        try {
-            const dbEmails = jobs.map(job => ({
-                to: job.data.to,
-                subject: job.data.subject,
-                text: job.data.text,
-                html: job.data.html,
-                status: 'pending',
-                attempts: 0,
-                executeAt: job.opts.delay > 0 ? new Date(Date.now() + job.opts.delay) : new Date()
-            }));
-            await PendingEmail.insertMany(dbEmails);
-            console.log(`[Mail Portal] Successfully saved ${jobs.length} emails to MongoDB pending queue.`);
-        } catch (dbErr) {
-            console.error('[Mail Portal] Failed to save emails to MongoDB backup queue:', dbErr.message);
-        }
+        const dbEmails = jobs.map(job => ({
+            to: job.data.to,
+            subject: job.data.subject,
+            text: job.data.text,
+            html: job.data.html,
+            status: 'pending',
+            attempts: 0,
+            executeAt: job.opts.delay > 0 ? new Date(Date.now() + job.opts.delay) : new Date()
+        }));
+        await PendingEmail.insertMany(dbEmails);
+        console.log(`[Mail Portal] Successfully saved ${jobs.length} emails to MongoDB pending queue.`);
+    } catch (dbErr) {
+        console.error('[Mail Portal] Failed to save emails to MongoDB pending queue:', dbErr.message);
     }
     
     // Log the footprint for initiating the batch mail

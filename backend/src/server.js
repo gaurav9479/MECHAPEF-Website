@@ -20,7 +20,7 @@ process.on('uncaughtException', (error) => {
 import app from './app.js';
 import connectDB from './config/database.js';
 import { startCronJobs } from './utils/cron.js';
-import { startRegistrationWorker } from './workers/registrationWorker.js';
+import { checkAndToggleRedis } from './queues/registrationQueue.js';
 import { startDbEmailWorker } from './workers/dbEmailWorker.js';
 
 const PORT = process.env.PORT || 5000;
@@ -36,9 +36,9 @@ const startServer = async () => {
             
             // Start background jobs
             startCronJobs();
-            startRegistrationWorker();
+            checkAndToggleRedis(); // Initial check on boot
+            setInterval(checkAndToggleRedis, 5 * 60 * 1000); // Check every 5 mins as fallback
             startDbEmailWorker();
-            import('./workers/email.worker.js').catch(err => console.error('Failed to load email worker:', err));
         });
     } catch (error) {
         console.error('Failed to start server:', error.message);

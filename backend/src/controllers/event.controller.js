@@ -7,6 +7,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import logFootprint from '../utils/logFootprint.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, PAGINATION } from '../constants/index.js';
 import ImageKit from 'imagekit';
+import { checkAndToggleRedis } from '../queues/registrationQueue.js';
 
 export const createEvent = asyncHandler(async (req, res) => {
     const {
@@ -58,6 +59,9 @@ export const createEvent = asyncHandler(async (req, res) => {
     await newEvent.populate('createdBy', 'name email');
 
     logFootprint(req, 'CREATE', 'Event', `Created event: ${newEvent.title}`);
+    
+    // Trigger Redis check since an active event might have been created
+    checkAndToggleRedis().catch(err => console.error(err));
 
     return res
         .status(HTTP_STATUS.CREATED)
@@ -168,6 +172,9 @@ export const updateEvent = asyncHandler(async (req, res) => {
 
     logFootprint(req, 'UPDATE', 'Event', `Updated event: ${event.title}`);
 
+    // Trigger Redis check since an active event might have changed status
+    checkAndToggleRedis().catch(err => console.error(err));
+
     return res
         .status(HTTP_STATUS.OK)
         .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event updated successfully'));
@@ -193,6 +200,9 @@ export const deleteEvent = asyncHandler(async (req, res) => {
 
     logFootprint(req, 'DELETE', 'Event', `Deleted event: ${event.title}`);
 
+    // Trigger Redis check since an active event might have been deleted
+    checkAndToggleRedis().catch(err => console.error(err));
+
     return res
         .status(HTTP_STATUS.OK)
         .json(new APIResponse(HTTP_STATUS.OK, {}, 'Event deleted successfully'));
@@ -212,6 +222,9 @@ export const endEvent = asyncHandler(async (req, res) => {
     event.status = 'Ended';
     event.endedAt = new Date();
     await event.save();
+    
+    // Trigger Redis check since an active event might have ended
+    checkAndToggleRedis().catch(err => console.error(err));
 
     return res
         .status(HTTP_STATUS.OK)

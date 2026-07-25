@@ -6,6 +6,18 @@ import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, REGISTRATION_TYPES } from '../constants/index.js';
 import { enqueueRegistration, isRegistrationQueueEnabled } from '../queues/registrationQueue.js';
+import fs from 'fs';
+import path from 'path';
+
+// Absolute path to backup file
+const backupFilePath = path.join(process.cwd(), 'registrations_backup.log');
+
+const appendBackupLog = (payload) => {
+    const logEntry = JSON.stringify({ timestamp: new Date().toISOString(), payload }) + '\n';
+    fs.appendFile(backupFilePath, logEntry, (err) => {
+        if (err) console.error('[Backup Log] Failed to write registration backup:', err.message);
+    });
+};
 
 // Shared helper — used by both direct write and Redis fallback path
 const saveRegistrationDirectly = async (payload, eventTitle) => {
@@ -87,7 +99,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         }
     }
 
-    if (new Date() > event.registrationDeadline) {
+    if (!event.isRegistrationOpen) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.REGISTRATION_CLOSED);
     }
 
@@ -173,6 +185,9 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         paymentStatus: event.registrationFee > 0 ? 'Pending' : 'NotApplicable',
         customData: customData || {}
     };
+
+    // Fail-safe backup: write to local file BEFORE any external system interaction
+    appendBackupLog(payload);
 
     // Try queue first — if Redis is up, enqueue and return early
     if (isRegistrationQueueEnabled()) {

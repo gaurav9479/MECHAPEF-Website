@@ -248,7 +248,7 @@ eventSchema.virtual('isLive').get(function () {
 
 /** Already existing – kept as-is */
 eventSchema.virtual('isRegistrationOpen').get(function () {
-    if (!this.registrationDeadline) return false;
+    if (!this.registrationDeadline || this.isTBD) return false;
     const now = new Date();
     return now < this.registrationDeadline && this.isActive && this.deletedAt === null;
 });
