@@ -154,9 +154,10 @@ const EventDetails = () => {
         <div className="event-header">
           <div className="event-category-tag">{event.category}</div>
           <h1>{event.title}</h1>
-          <p className="event-meta">
-            📍 {event.isTBD && event.venue.toLowerCase() === 'tbd' ? 'To Be Decided' : event.venue} &nbsp; | &nbsp; 📅 {event.isTBD ? 'To Be Decided' : new Date(event.startTime).toLocaleDateString()}
-          </p>
+          <div className="event-meta-pills">
+            <span className="meta-pill">📍 {event.isTBD && event.venue.toLowerCase() === 'tbd' ? 'To Be Decided' : event.venue}</span>
+            <span className="meta-pill">📅 {event.isTBD ? 'To Be Decided' : new Date(event.startTime).toLocaleDateString()}</span>
+          </div>
         </div>
 
         <div className="event-content">
@@ -166,25 +167,25 @@ const EventDetails = () => {
             
             <div className="event-meta-item">
               <FaGraduationCap className="meta-icon" />
-              <div>
+              <div className="meta-content">
                 <span className="meta-label">Eligible Branches</span>
-                <span className="meta-value">
+                <div className="tags-container">
                   {event.eligibleBranches?.length > 0 
-                    ? event.eligibleBranches.join(', ') 
-                    : 'All Branches'}
-                </span>
+                    ? event.eligibleBranches.map((b, i) => <span key={i} className="cute-tag">{b}</span>)
+                    : <span className="cute-tag">All Branches</span>}
+                </div>
               </div>
             </div>
 
             <div className="event-meta-item">
               <FaGraduationCap className="meta-icon" />
-              <div>
+              <div className="meta-content">
                 <span className="meta-label">Eligible Years</span>
-                <span className="meta-value">
+                <div className="tags-container">
                   {event.eligibleYears?.length > 0 
-                    ? event.eligibleYears.map(y => y === 5 ? 'Alumni' : `${y}${['st','nd','rd','th'][Math.min(y-1, 3)]} Year`).join(', ')
-                    : 'All Years'}
-                </span>
+                    ? event.eligibleYears.map((y, i) => <span key={i} className="cute-tag">{y === 5 ? 'Alumni' : `${y}${['st','nd','rd','th'][Math.min(y-1, 3)]} Year`}</span>)
+                    : <span className="cute-tag">All Years</span>}
+                </div>
               </div>
             </div>
 

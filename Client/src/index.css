@@ -90,3 +90,8 @@ body::after {
   pointer-events: none;
   z-index: 9999;
 }
+
+body.admin-mode::after {
+  display: none !important;
+  background: none !important;
+}

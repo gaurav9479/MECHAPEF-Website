@@ -40,6 +40,14 @@ const AdminSidebar = () => {
     setIsOpen(false);
   }, [location.pathname]);
 
+  // Add a class to body to hide global gradients while in admin mode
+  useEffect(() => {
+    document.body.classList.add('admin-mode');
+    return () => {
+      document.body.classList.remove('admin-mode');
+    };
+  }, []);
+
   return (
     <>
       {/* Mobile Hamburger Button */}

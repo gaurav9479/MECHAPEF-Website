@@ -2,11 +2,6 @@
 * { box-sizing: border-box; }
 
 /* Hide global gradients (bottom/left) from the body when in admin mode */
-body:has(.admin-layout)::before,
-body:has(.admin-layout)::after {
-  display: none !important;
-  background: none !important;
-}
 .admin-modal-overlay {
   position: fixed;
   inset: 0;
@@ -327,7 +322,7 @@ body:has(.admin-layout)::after {
   text-transform: uppercase;
   font-family: 'Orbitron', sans-serif;
 }
-.form-group input,
+.form-group input:not([type="checkbox"]),
 .form-group textarea,
 .form-group select {
   background: rgba(255,255,255,0.05);
@@ -341,11 +336,21 @@ body:has(.admin-layout)::after {
   transition: border-color 0.2s;
   width: 100%;
 }
-.form-group input:focus,
+.form-group input:not([type="checkbox"]):focus,
 .form-group textarea:focus,
 .form-group select:focus { border-color: #ff0000; }
 .form-group select option { background: #111; }
 .form-group textarea { resize: vertical; min-height: 100px; }
+.form-group input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+  appearance: auto;
+  transition: none !important;
+  transform: none !important;
+}
 .modal-actions {
   display: flex;
   gap: 12px;

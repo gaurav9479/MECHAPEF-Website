@@ -51,7 +51,10 @@ const AdminEvents = () => {
   useEffect(() => {
     // Only cache if we are creating an event (not editing) and the modal is open
     if (!editingEvent && showModal) {
-      localStorage.setItem('mechapef_adminEventFormDraft', JSON.stringify(form));
+      const timer = setTimeout(() => {
+        localStorage.setItem('mechapef_adminEventFormDraft', JSON.stringify(form));
+      }, 500); // 500ms debounce to prevent lag on keystrokes/clicks
+      return () => clearTimeout(timer);
     }
   }, [form, editingEvent, showModal]);
 
@@ -279,11 +282,11 @@ const AdminEvents = () => {
                 </div>
                 <div className="form-group" style={{justifyContent:'flex-end'}}>
                   <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer'}}>
-                    <input type="checkbox" checked={form.featured} onChange={e => f('featured', e.target.checked)} style={{width:'auto'}} />
+                    <input type="checkbox" checked={form.featured} onChange={e => f('featured', e.target.checked)} />
                     Featured Event
                   </label>
                   <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer', marginLeft:'20px'}}>
-                    <input type="checkbox" checked={form.isTBD} onChange={e => f('isTBD', e.target.checked)} style={{width:'auto'}} />
+                    <input type="checkbox" checked={form.isTBD} onChange={e => f('isTBD', e.target.checked)} />
                     TBD (To Be Decided)
                   </label>
                 </div>
@@ -319,29 +322,35 @@ const AdminEvents = () => {
                     {BRANCHES.map(branch => {
                       const isChecked = form.eligibleBranches.includes(branch);
                       return (
-                        <label key={branch} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={isChecked} 
-                            onChange={() => {
-                              if (isChecked) {
-                                f('eligibleBranches', form.eligibleBranches.filter(b => b !== branch));
-                              } else {
-                                f('eligibleBranches', [...form.eligibleBranches, branch]);
-                              }
-                            }}
-                            style={{ width: 'auto' }}
-                          />
-                          {branch}
+                        <label key={branch} style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
+                          <span style={{ width: '28px', flexShrink: 0, display: 'flex', alignItems: 'center', height: '20px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isChecked} 
+                              onChange={() => {
+                                if (isChecked) {
+                                  f('eligibleBranches', form.eligibleBranches.filter(b => b !== branch));
+                                } else {
+                                  f('eligibleBranches', [...form.eligibleBranches, branch]);
+                                }
+                              }}
+                            />
+                          </span>
+                          <span style={{ lineHeight: '20px' }}>{branch}</span>
                         </label>
                       );
                     })}
                   </div>
-                  {form.eligibleBranches.length === 0 && (
-                    <span style={{ color: '#ff4444', fontSize: '0.75rem', marginTop: '5px', display: 'block' }}>
-                      * At least one branch must be selected
-                    </span>
-                  )}
+                  <span style={{ 
+                    color: '#ff4444', 
+                    fontSize: '0.75rem', 
+                    marginTop: '5px', 
+                    display: 'block',
+                    visibility: form.eligibleBranches.length === 0 ? 'visible' : 'hidden',
+                    height: '14px'
+                  }}>
+                    * At least one branch must be selected
+                  </span>
                 </div>
 
                 {/* Eligible Years Selection */}
@@ -373,29 +382,35 @@ const AdminEvents = () => {
                     ].map(yearObj => {
                       const isChecked = form.eligibleYears.includes(yearObj.val);
                       return (
-                        <label key={yearObj.val} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={isChecked} 
-                            onChange={() => {
-                              if (isChecked) {
-                                f('eligibleYears', form.eligibleYears.filter(y => y !== yearObj.val));
-                              } else {
-                                f('eligibleYears', [...form.eligibleYears, yearObj.val]);
-                              }
-                            }}
-                            style={{ width: 'auto' }}
-                          />
-                          {yearObj.label}
+                        <label key={yearObj.val} style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
+                          <span style={{ width: '28px', flexShrink: 0, display: 'flex', alignItems: 'center', height: '20px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isChecked} 
+                              onChange={() => {
+                                if (isChecked) {
+                                  f('eligibleYears', form.eligibleYears.filter(y => y !== yearObj.val));
+                                } else {
+                                  f('eligibleYears', [...form.eligibleYears, yearObj.val]);
+                                }
+                              }}
+                            />
+                          </span>
+                          <span style={{ lineHeight: '20px' }}>{yearObj.label}</span>
                         </label>
                       );
                     })}
                   </div>
-                  {form.eligibleYears.length === 0 && (
-                    <span style={{ color: '#ff4444', fontSize: '0.75rem', marginTop: '5px', display: 'block' }}>
-                      * At least one year must be selected
-                    </span>
-                  )}
+                  <span style={{ 
+                    color: '#ff4444', 
+                    fontSize: '0.75rem', 
+                    marginTop: '5px', 
+                    display: 'block',
+                    visibility: form.eligibleYears.length === 0 ? 'visible' : 'hidden',
+                    height: '14px'
+                  }}>
+                    * At least one year must be selected
+                  </span>
                 </div>
 
                 <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
@@ -429,7 +444,6 @@ const AdminEvents = () => {
                           type="checkbox" 
                           checked={field.isRequired} 
                           onChange={e => updateCustomField(idx, 'isRequired', e.target.checked)} 
-                          style={{ width: 'auto' }}
                         /> Req
                       </label>
                       <button type="button" className="btn-danger" onClick={() => removeCustomField(idx)} style={{ padding: '8px' }}>

@@ -21,14 +21,8 @@ const PastEventsStack = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        let resData = null;
-        if (window.pastEventsPromise) {
-          resData = await window.pastEventsPromise;
-          window.pastEventsPromise = null; 
-        } else {
-          const res = await api.get('/past-events');
-          resData = res.data;
-        }
+        const res = await api.get('/past-events');
+        const resData = res.data;
 
         if (resData && resData.data && resData.data.length > 0) {
           setPastEvents(resData.data);
@@ -60,7 +54,7 @@ const PastEventsStack = () => {
               start: "top top",
               end: () => "+=" + (pastEvents.length * 100) + "%",
               pin: true,
-              scrub: 1,
+              scrub: 1.5,
               pinSpacing: true,
               invalidateOnRefresh: true
             }
@@ -80,9 +74,9 @@ const PastEventsStack = () => {
           scrollTrigger: {
             trigger: sectionRef.current,
             start: 'top top',
-            end: () => "+=" + (cards.length * 150) + "%", // Increased length per card
+            end: () => "+=" + (cards.length * 150) + "%",
             pin: true,
-            scrub: 1,
+            scrub: 1.5,
             pinSpacing: true,
             invalidateOnRefresh: true
           }
@@ -101,23 +95,23 @@ const PastEventsStack = () => {
         // Animate the first card in with a delay
         tl.fromTo(cards[0], 
           { y: window.innerHeight, opacity: 0, scale: 0.8 },
-          { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1, ease: 'power2.out' }, 
+          { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'power3.out' }, 
           0.5
         );
 
         cards.forEach((card, index) => {
           if (index === 0) return;
           
-          const startTime = 0.5 + index;
+          const startTime = 0.5 + (index * 0.85); // Overlap for smoother continuous flow
           tl.fromTo(card, 
             { y: window.innerHeight, opacity: 0, scale: 0.8 },
-            { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1, ease: 'power2.out' }, 
+            { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'power3.out' }, 
             startTime
           );
           
           for(let j = 0; j < index; j++) {
              const diff = index - j;
-             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -25 * diff, rotation: j % 2 === 0 ? -4 : 4, duration: 1, ease: 'power2.out' }, startTime);
+             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -25 * diff, rotation: j % 2 === 0 ? -4 : 4, duration: 1.2, ease: 'power3.out' }, startTime);
           }
         });
         
