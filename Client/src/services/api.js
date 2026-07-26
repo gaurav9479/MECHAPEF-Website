@@ -76,27 +76,38 @@ api.get = async (url, config = {}) => {
   const CACHE_TIME = 2 * 60 * 1000; // 2 minutes
   const cachedData = localStorage.getItem(cacheKey);
 
-  // Return cached response if available and valid
   if (cachedData) {
     try {
       const parsedData = JSON.parse(cachedData);
-      
-      if (parsedData.timestamp && (Date.now() - parsedData.timestamp < CACHE_TIME)) {
-        return Promise.resolve({
-          data: parsedData.data,
-          status: 200,
-          statusText: 'OK (Cached)',
-          headers: {},
-          config,
-          request: {}
-        });
+      const isFresh = parsedData.timestamp && (Date.now() - parsedData.timestamp < CACHE_TIME);
+
+      // Background revalidation if stale
+      if (!isFresh) {
+        originalGet.call(api, url, config).then(response => {
+          if (response.status === 200) {
+            localStorage.setItem(cacheKey, JSON.stringify({
+              timestamp: Date.now(),
+              data: response.data
+            }));
+          }
+        }).catch(() => {});
       }
+
+      // Always return cached data immediately for instant 0ms UI load
+      return Promise.resolve({
+        data: parsedData.data,
+        status: 200,
+        statusText: isFresh ? 'OK (Cached)' : 'OK (Cached Stale)',
+        headers: {},
+        config,
+        request: {}
+      });
     } catch (e) {
       console.error('Cache parse error:', e);
     }
   }
 
-  // Make network request and cache the result
+  // Make network request if no cache is present
   const response = await originalGet.call(api, url, config);
   if (response.status === 200) {
     localStorage.setItem(cacheKey, JSON.stringify({

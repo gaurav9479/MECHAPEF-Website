@@ -14,6 +14,7 @@ import MobileLiveEvents from './MobileLiveEvents';
 import PremiumSponsorPanel from '../LiveEventsSlider/PremiumSponsorPanel';
 import MobileDepartmentStack from './MobileDepartmentStack';
 import MobileTeam from './MobileTeam';
+import MobileSponsors from './MobileSponsors';
 import MobileCTA from './MobileCTA';
 
 const MobileHome = () => {
@@ -23,85 +24,70 @@ const MobileHome = () => {
   const [activeAnnouncement, setActiveAnnouncement] = useState(null);
   const [deptImages, setDeptImages]     = useState([]);
   const [team, setTeam]                 = useState({ fy: [], sy: [], ty: [] });
-  const [loading, setLoading]           = useState(true);
+  const [sponsors, setSponsors]         = useState([]);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const p1 = new Promise((resolve) => {
-          apiGetCached('/past-events', () => {
-            resolve();
-          }).catch(resolve);
-        });
+    // 1. Past events prefetch
+    apiGetCached('/past-events', () => {}).catch(() => {});
 
-        const p2 = new Promise((resolve) => {
-          apiGetCached('/announcements', (data) => {
-            const items   = data.data?.announcements || data.data || [];
-            const banners = items.filter(n => n.isActive);
-            banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-            setSlides(banners);
-            resolve();
-          }).catch(resolve);
-        });
+    // 2. Announcements fetch
+    apiGetCached('/announcements', (data) => {
+      const items   = data.data?.announcements || data.data || [];
+      const banners = items.filter(n => n.isActive);
+      banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      setSlides(banners);
+    }).catch(() => {});
 
-        const p3 = new Promise((resolve) => {
-          apiGetCached('/upload/sections?device=mobile', (data) => {
-            const map = {};
-            (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
+    // 3. Sponsors fetch (Current & Past Sponsors)
+    apiGetCached('/sponsors', (data) => {
+      const all = data.data?.sponsors || data.data || [];
+      setSponsors(all);
+    }).catch(() => {});
 
-            const mk = (prefix, label) => {
-              return Object.keys(map)
-                .filter(k => k.startsWith(prefix + '_') && map[k].imageURL)
-                .sort((a, b) => {
-                  const defaultOrderA = parseInt(a.replace(prefix + '_', ''));
-                  const defaultOrderB = parseInt(b.replace(prefix + '_', ''));
-                  const orderA = map[a].order || defaultOrderA;
-                  const orderB = map[b].order || defaultOrderB;
-                  if (orderA !== orderB) return orderA - orderB;
-                  return defaultOrderA - defaultOrderB;
-                })
-                .map(k => {
-                  const img = map[k];
-                  return {
-                    name: img.name || `Member`,
-                    regNo: img.regNo || label,
-                    imageURL: img.imageURL
-                  };
-                });
+    // 4. Section images (Dept & Team)
+    apiGetCached('/upload/sections?device=mobile', (data) => {
+      const map = {};
+      (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });
+
+      const mk = (prefix, label) => {
+        return Object.keys(map)
+          .filter(k => k.startsWith(prefix + '_') && map[k].imageURL)
+          .sort((a, b) => {
+            const defaultOrderA = parseInt(a.replace(prefix + '_', ''));
+            const defaultOrderB = parseInt(b.replace(prefix + '_', ''));
+            const orderA = map[a].order || defaultOrderA;
+            const orderB = map[b].order || defaultOrderB;
+            if (orderA !== orderB) return orderA - orderB;
+            return defaultOrderA - defaultOrderB;
+          })
+          .map(k => {
+            const img = map[k];
+            return {
+              name: img.name || `Member`,
+              regNo: img.regNo || label,
+              imageURL: img.imageURL
             };
-            
-            setTeam({
-              fy: mk('team_ty', 'Final Year'),
-              sy: mk('team_sy', 'Pre-Final'),
-              ty: mk('team_fy', '2nd Year'),
-            });
+          });
+      };
+      
+      setTeam({
+        fy: mk('team_ty', 'Final Year'),
+        sy: mk('team_sy', 'Pre-Final'),
+        ty: mk('team_fy', '2nd Year'),
+      });
 
-            const dImgs = Object.keys(map)
-              .filter(k => k.startsWith('dept_') && k.endsWith('_mob') && map[k].imageURL)
-              .sort((a, b) => {
-                const numA = parseInt(a.replace('dept_', '').replace('_mob', '')) || 0;
-                const numB = parseInt(b.replace('dept_', '').replace('_mob', '')) || 0;
-                return numA - numB;
-              })
-              .map(k => map[k].imageURL);
-              
-            setDeptImages(dImgs);
-            resolve();
-          }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(resolve);
-        });
-
-        await Promise.all([p1, p2, p3]);
-      } catch (e) {
-        console.error('Data fetch failed', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+      const dImgs = Object.keys(map)
+        .filter(k => k.startsWith('dept_') && k.endsWith('_mob') && map[k].imageURL)
+        .sort((a, b) => {
+          const numA = parseInt(a.replace('dept_', '').replace('_mob', '')) || 0;
+          const numB = parseInt(b.replace('dept_', '').replace('_mob', '')) || 0;
+          return numA - numB;
+        })
+        .map(k => map[k].imageURL);
+        
+      setDeptImages(dImgs);
+    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(() => {});
   }, []);
-
-  if (loading) return null;
 
   return (
     <div className="mh-root">
@@ -140,6 +126,7 @@ const MobileHome = () => {
       )}
 
       <MobileDepartmentStack images={deptImages} />
+      <MobileSponsors sponsors={sponsors} navigate={navigate} />
       <MobileTeam team={team} />
       <MobileCTA navigate={navigate} />
     </div>

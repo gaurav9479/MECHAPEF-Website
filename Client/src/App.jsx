@@ -23,6 +23,7 @@ import AlbumView from './Pages/Gallery/AlbumView';
 import Profile from './Pages/Profile/Profile';
 import Events from './Pages/Events/Events';
 import AdminSpecialSponsor from './Pages/Admin/AdminSpecialSponsor';
+import AdminMessages from './Pages/Admin/AdminMessages';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
@@ -161,6 +162,15 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={['super-admin']}>
               <AdminFootprints />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'media-lead']}>
+              <AdminMessages />
             </ProtectedRoute>
           }
         />

@@ -17,13 +17,30 @@ import {
   FaShoePrints
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 import './AdminSidebar.css';
 
 const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [unseenCount, setUnseenCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, hasRole } = useAuth();
+
+  const fetchUnseenCount = async () => {
+    try {
+      const res = await api.get('/contact/unseen-count');
+      setUnseenCount(res.data?.data?.unseenCount || 0);
+    } catch (e) {
+      // Ignore background errors
+    }
+  };
+
+  useEffect(() => {
+    fetchUnseenCount();
+    const interval = setInterval(fetchUnseenCount, 30000); // Check every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -79,6 +96,31 @@ const AdminSidebar = () => {
             <FaCog /> Dashboard
           </Link>
           
+          {(hasRole('super-admin') || hasRole('content-lead') || hasRole('media-lead')) && (
+            <Link to="/admin/messages" className={`sidebar-link ${location.pathname === '/admin/messages' ? 'active' : ''}`}>
+              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                <FaEnvelope />
+                {unseenCount > 0 && (
+                  <span 
+                    title={`${unseenCount} unseen message(s)`}
+                    style={{ 
+                      position: 'absolute', 
+                      top: '-4px', 
+                      right: '-4px', 
+                      width: '9px', 
+                      height: '9px', 
+                      borderRadius: '50%', 
+                      backgroundColor: '#ffcc00', 
+                      boxShadow: '0 0 8px #ffcc00',
+                      border: '1px solid #000'
+                    }} 
+                  />
+                )}
+              </div>
+              Messages
+            </Link>
+          )}
+
           {(hasRole('super-admin') || hasRole('content-lead')) && (
             <>
               <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`}>

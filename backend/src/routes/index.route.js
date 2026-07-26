@@ -12,6 +12,7 @@ import pastEventsRoutes from './pastEvents.route.js';
 import magazineRoutes from './magazine.route.js';
 import mailRoutes from './mail.route.js';
 import footprintRoutes from './footprint.route.js';
+import contactRoutes from './contact.route.js';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use('/past-events', pastEventsRoutes);
 router.use('/magazine', magazineRoutes);
 router.use('/mail', mailRoutes);
 router.use('/footprints', footprintRoutes);
+router.use('/contact', contactRoutes);
 
 router.get('/health', (req, res) => {
     res.status(200).json({

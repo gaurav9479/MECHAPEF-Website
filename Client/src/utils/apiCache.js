@@ -1,6 +1,6 @@
 import api from '../services/api';
 
-const CACHE_DURATION_MS = 60 * 1000; // 1 minute caching for better performance
+const CACHE_DURATION_MS = 2 * 60 * 1000; // 2 minutes caching for images and data
 
 // Global map to store ongoing requests and prevent duplicate concurrent API calls
 const pendingRequests = {};
