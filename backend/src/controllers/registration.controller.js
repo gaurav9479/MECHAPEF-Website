@@ -26,7 +26,7 @@ const saveRegistrationDirectly = async (payload, eventTitle) => {
 
     await Promise.all([
         registration.populate('eventId', 'title'),
-        registration.populate('registeredBy', 'name email'),
+        registration.populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy'),
         Event.findByIdAndUpdate(payload.eventId, { $inc: { totalRegistrations: 1 } }),
         User.findByIdAndUpdate(
             payload.registeredBy,
@@ -234,7 +234,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
 
     await Promise.all([
         registration.populate('eventId', 'title'),
-        registration.populate('registeredBy', 'name email'),
+        registration.populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy'),
         Event.findByIdAndUpdate(eventId, { $inc: { totalRegistrations: 1 } }),
         User.findByIdAndUpdate(
             req.user.userId,
@@ -324,7 +324,7 @@ export const getEventRegistrations = asyncHandler(async (req, res) => {
             .sort({ registeredAt: -1 })
             .limit(parseInt(limit))
             .skip((parseInt(page) - 1) * parseInt(limit))
-            .populate('registeredBy', 'name email')
+            .populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy')
             .populate('eventId', 'title'),
         Registration.countDocuments(filter)
     ]);

@@ -90,12 +90,20 @@ const EventDetails = () => {
       }
     };
     checkRegistration();
+
+    // Auto open registration modal if user was redirected back after login
+    if (sessionStorage.getItem('auto_open_reg') === 'true') {
+      sessionStorage.removeItem('auto_open_reg');
+      setShowModal(true);
+    }
   }, [id, user]);
 
   const handleRegisterClick = () => {
     if (!user) {
       showToast('Please login to register', 'error');
-      setTimeout(() => navigate('/login'), 1500);
+      sessionStorage.setItem('redirect_after_login', window.location.pathname + window.location.search);
+      sessionStorage.setItem('auto_open_reg', 'true');
+      setTimeout(() => navigate('/login', { state: { from: { pathname: window.location.pathname, search: window.location.search } } }), 1200);
       return;
     }
     setShowModal(true);
@@ -294,7 +302,15 @@ const EventDetails = () => {
                     <h4>Your Details</h4>
                     <p><strong>Name:</strong> {user?.name}</p>
                     <p><strong>Email:</strong> {user?.email}</p>
-                    <p><strong>Reg No:</strong> {user?.collegeRegNo || 'N/A'}</p>
+                    <p><strong>Reg No:</strong> {user?.collegeRegNo || <span style={{color:'#ff4444'}}>Not set</span>}</p>
+                    <p><strong>Phone:</strong> {user?.phoneNumber || <span style={{color:'#ff4444'}}>Not set</span>}</p>
+                    <p><strong>Branch:</strong> {user?.branch || <span style={{color:'#ff4444'}}>Not set</span>}</p>
+                    <p><strong>Year:</strong> {user?.yearOfStudy ? `${user.yearOfStudy} Year` : <span style={{color:'#ff4444'}}>Not set</span>}</p>
+                    {(!user?.collegeRegNo || !user?.phoneNumber || !user?.branch || !user?.yearOfStudy) && (
+                      <p style={{ fontSize: '0.8rem', color: '#ffaa00', marginTop: '6px' }}>
+                        ⚠️ Missing info? <a href="/profile" style={{ color: '#00ccff', textDecoration: 'underline' }}>Update Profile</a>
+                      </p>
+                    )}
                     <p className="reg-auto-note">* These details will be automatically submitted with your registration.</p>
                   </div>
                 </div>

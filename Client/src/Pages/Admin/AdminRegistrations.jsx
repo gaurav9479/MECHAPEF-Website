@@ -93,6 +93,8 @@ const AdminRegistrations = () => {
               <tr>
                 <th>Name</th>
                 <th>Reg No</th>
+                <th>Branch</th>
+                <th>Year</th>
                 <th>Email</th>
                 <th>Type</th>
                 <th>Verified</th>
@@ -101,9 +103,9 @@ const AdminRegistrations = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
+                <tr><td colSpan="8" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
               ) : registrations.length === 0 ? (
-                <tr><td colSpan="6" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No registrations yet.</td></tr>
+                <tr><td colSpan="8" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No registrations yet.</td></tr>
               ) : registrations.map(reg => {
                 const name = reg.registeredBy?.name;
                 return (
@@ -112,6 +114,8 @@ const AdminRegistrations = () => {
                       {name ? name : <span style={{ color: '#ff4444' }}>Not Registered</span>}
                     </td>
                     <td>{reg.registeredBy?.collegeRegNo || '-'}</td>
+                    <td>{reg.registeredBy?.branch || '-'}</td>
+                    <td>{reg.registeredBy?.yearOfStudy ? `${reg.registeredBy.yearOfStudy} Yr` : '-'}</td>
                     <td>{reg.registeredBy?.email || '-'}</td>
                     <td><span className="tag">{reg.registrationType}</span></td>
                     <td>
