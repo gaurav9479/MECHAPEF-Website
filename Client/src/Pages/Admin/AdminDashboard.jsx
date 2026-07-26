@@ -6,8 +6,15 @@ import api from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import './AdminDashboard.css';
 
+import { Navigate } from 'react-router-dom';
+
 const AdminDashboard = () => {
-  const { logout } = useAuth();
+  const { logout, user, hasRole } = useAuth();
+
+  if (user?.role === 'volunteer') {
+    return <Navigate to="/admin/scanner" replace />;
+  }
+
   const navigate = useNavigate();
   const handleLogout = async () => { await logout(); navigate('/login'); };
   const location = useLocation();

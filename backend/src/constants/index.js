@@ -3,6 +3,7 @@ export const USER_ROLES = {
     SUPER_ADMIN: 'super-admin',
     CONTENT_LEAD: 'content-lead',
     MEDIA_LEAD: 'media-lead',
+    VOLUNTEER: 'volunteer',
     MEMBER: 'member',
     GENERAL_USER: 'general-user'
 };

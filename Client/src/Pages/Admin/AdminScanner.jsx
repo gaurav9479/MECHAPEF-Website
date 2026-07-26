@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { FaQrcode, FaCheckCircle, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import './AdminScanner.css';
 
 const AdminScanner = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [availableStages, setAvailableStages] = useState(['Stage 1: Check-in']);
   const [selectedStage, setSelectedStage] = useState('Stage 1: Check-in');
+  const [isEndorsed, setIsEndorsed] = useState(false);
 
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
@@ -32,6 +35,22 @@ const AdminScanner = () => {
     api.get('/events').then(res => {
       const evList = res.data.data?.events || [];
       setEvents(evList);
+
+      // Check if user is an endorsed Scanner Holder
+      if (user?.assignedEvent) {
+        const assignedEvId = typeof user.assignedEvent === 'object' ? user.assignedEvent._id : user.assignedEvent;
+        const matchedEv = evList.find(e => e._id === assignedEvId);
+        if (matchedEv) {
+          setSelectedEventId(matchedEv._id);
+          const stages = matchedEv.ticketStages && matchedEv.ticketStages.length > 0 ? matchedEv.ticketStages : ['Stage 1: Check-in'];
+          setAvailableStages(stages);
+          const targetStg = user.assignedStage || stages[0];
+          setSelectedStage(targetStg);
+          setIsEndorsed(true);
+          return;
+        }
+      }
+
       if (evList.length > 0) {
         setSelectedEventId(evList[0]._id);
         const stages = evList[0].ticketStages && evList[0].ticketStages.length > 0 ? evList[0].ticketStages : ['Stage 1: Check-in'];
@@ -39,7 +58,7 @@ const AdminScanner = () => {
         setSelectedStage(stages[0]);
       }
     }).catch(() => {});
-  }, []);
+  }, [user]);
 
   const handleEventChange = (eventId) => {
     setSelectedEventId(eventId);
@@ -138,26 +157,58 @@ const AdminScanner = () => {
     };
   }, []);
 
+  const handleBackClick = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    try {
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(() => {});
+        scannerRef.current = null;
+      }
+    } catch {
+      // Ignore cleanup error
+    }
+
+    const target = user?.role === 'volunteer' ? '/' : (user?.role === 'super-admin' || user?.role === 'content-lead' || user?.role === 'media-lead') ? '/admin' : '/';
+    window.location.href = target;
+  };
+
   return (
     <div className="admin-scanner-page">
       <div className="scanner-header">
-        <button className="scanner-back-btn" onClick={() => navigate('/admin')}>
-          <FaArrowLeft /> Back to Admin
+        <button 
+          className="scanner-back-btn" 
+          type="button" 
+          onClick={handleBackClick} 
+          style={{ position: 'relative', zIndex: 9999, cursor: 'pointer', pointerEvents: 'auto' }}
+        >
+          <FaArrowLeft /> {user?.role === 'volunteer' ? 'Back to Home' : 'Back to Admin'}
         </button>
         <h1><FaQrcode /> Ticket Scanner</h1>
-        <p>Scan participant QR codes at the entry gate.</p>
+        <p>Scan participant QR codes at entry & verification stations.</p>
       </div>
 
       <div className="scanner-container">
         {/* Stage Selection Bar */}
-        <div style={{ background: '#111116', border: '1px solid #22222a', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+        <div style={{ background: '#111116', border: isEndorsed ? '1px solid #00e5ff' : '1px solid #22222a', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+          {isEndorsed && (
+            <div style={{ background: 'rgba(0, 229, 255, 0.1)', border: '1px solid rgba(0, 229, 255, 0.3)', color: '#00e5ff', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🔒 ENDORSED SCANNER STATION</span>
+              <span>•</span>
+              <span>Assigned specifically for your account</span>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ flex: '1 1 250px' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', color: '#ff1f01', fontWeight: 'bold', marginBottom: '6px' }}>Select Event:</label>
               <select 
                 value={selectedEventId} 
                 onChange={(e) => handleEventChange(e.target.value)}
-                style={{ width: '100%', padding: '10px 14px', background: '#1a1a20', color: '#fff', border: '1px solid #333', borderRadius: '8px', fontSize: '0.9rem' }}
+                disabled={isEndorsed}
+                style={{ width: '100%', padding: '10px 14px', background: '#1a1a20', color: '#fff', border: '1px solid #333', borderRadius: '8px', fontSize: '0.9rem', opacity: isEndorsed ? 0.8 : 1 }}
               >
                 {events.map(ev => (
                   <option key={ev._id} value={ev._id}>{ev.title}</option>
@@ -170,7 +221,8 @@ const AdminScanner = () => {
               <select 
                 value={selectedStage} 
                 onChange={(e) => setSelectedStage(e.target.value)}
-                style={{ width: '100%', padding: '10px 14px', background: '#0d2d3a', color: '#00e5ff', border: '1px solid #00e5ff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}
+                disabled={isEndorsed}
+                style={{ width: '100%', padding: '10px 14px', background: '#0d2d3a', color: '#00e5ff', border: '1px solid #00e5ff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', opacity: isEndorsed ? 0.8 : 1 }}
               >
                 {availableStages.map((stg, i) => (
                   <option key={i} value={stg}>{stg}</option>

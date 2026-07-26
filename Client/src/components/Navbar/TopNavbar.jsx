@@ -7,6 +7,7 @@ import {
   FaBars,
   FaTimes,
   FaUserCircle,
+  FaQrcode,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
@@ -179,6 +180,12 @@ const TopNavbar = () => {
     navigate("/admin");
   };
 
+  const goScanner = () => {
+    setAvatarMenuOpen(false);
+    setMenuOpen(false);
+    navigate("/admin/scanner");
+  };
+
   const toggleAvatar = (e) => {
     e.stopPropagation();
     setAvatarMenuOpen((prev) => !prev);
@@ -337,6 +344,9 @@ const TopNavbar = () => {
                     </div>
                     <div className="dropdown-divider"></div>
                     <button onClick={goProfile}><FaUserCircle />My Profile</button>
+                    {user?.role === 'volunteer' && (
+                      <button onClick={goScanner} style={{ color: '#00e5ff', fontWeight: 'bold' }}><FaQrcode />Ticket Scanner</button>
+                    )}
                     {(hasRole("content-lead") || hasRole("media-lead") || hasRole("super-admin")) && (
                       <button onClick={goAdmin}><FaUserShield />Admin Portal</button>
                     )}
@@ -364,6 +374,9 @@ const TopNavbar = () => {
                   </div>
                   <div className="dropdown-divider"></div>
                   <button onClick={goProfile}><FaUserCircle />My Profile</button>
+                  {user?.role === 'volunteer' && (
+                    <button onClick={goScanner} style={{ color: '#00e5ff', fontWeight: 'bold' }}><FaQrcode />Ticket Scanner</button>
+                  )}
                   {(hasRole("content-lead") || hasRole("media-lead") || hasRole("super-admin")) && (
                     <button onClick={goAdmin}><FaUserShield />Admin Portal</button>
                   )}

@@ -267,7 +267,7 @@ export const logout = asyncHandler(async (req, res) => {
 
 
 export const getCurrentUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user.userId).populate('assignedEvent', 'title ticketStages');
     if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, { user: user.getPublicProfile() }, 'User profile retrieved')
@@ -315,7 +315,7 @@ export const verifyUser = asyncHandler(async (req, res) => {
 });
 
 export const updateUserRole = asyncHandler(async (req, res) => {
-    const { role } = req.body;
+    const { role, assignedEvent, assignedStage } = req.body;
 
     if (!role) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Role is required');
 
@@ -323,6 +323,8 @@ export const updateUserRole = asyncHandler(async (req, res) => {
     if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
 
     user.role = role;
+    if (assignedEvent !== undefined) user.assignedEvent = assignedEvent || null;
+    if (assignedStage !== undefined) user.assignedStage = assignedStage || null;
     await user.save({ validateBeforeSave: false });
 
     return res.status(HTTP_STATUS.OK).json(

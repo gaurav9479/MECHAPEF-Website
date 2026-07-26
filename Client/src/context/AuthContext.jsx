@@ -18,6 +18,7 @@ const ROLE_POWER = {
   'super-admin': 5,
   'content-lead': 4,
   'media-lead': 4,
+  'volunteer': 3,
   'member': 2,
   'general-user': 1,
 };

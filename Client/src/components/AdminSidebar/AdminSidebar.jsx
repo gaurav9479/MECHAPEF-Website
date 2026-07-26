@@ -25,7 +25,7 @@ const AdminSidebar = () => {
   const [unseenCount, setUnseenCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, hasRole } = useAuth();
+  const { logout, hasRole, user } = useAuth();
 
   const fetchUnseenCount = async () => {
     try {
@@ -92,55 +92,63 @@ const AdminSidebar = () => {
           </div>
         </div>
         <nav className="sidebar-nav">
-          <Link to="/admin" className={`sidebar-link ${location.pathname === '/admin' ? 'active' : ''}`}>
-            <FaCog /> Dashboard
-          </Link>
-          
-          {(hasRole('super-admin') || hasRole('content-lead') || hasRole('media-lead')) && (
-            <Link to="/admin/messages" className={`sidebar-link ${location.pathname === '/admin/messages' ? 'active' : ''}`}>
-              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                <FaEnvelope />
-                {unseenCount > 0 && (
-                  <span 
-                    title={`${unseenCount} unseen message(s)`}
-                    style={{ 
-                      position: 'absolute', 
-                      top: '-4px', 
-                      right: '-4px', 
-                      width: '9px', 
-                      height: '9px', 
-                      borderRadius: '50%', 
-                      backgroundColor: '#ffcc00', 
-                      boxShadow: '0 0 8px #ffcc00',
-                      border: '1px solid #000'
-                    }} 
-                  />
-                )}
-              </div>
-              Messages
+          {user?.role === 'volunteer' ? (
+            <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`}>
+              <FaQrcode /> Scan Tickets
             </Link>
-          )}
-
-          {(hasRole('super-admin') || hasRole('content-lead')) && (
+          ) : (
             <>
-              <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`}>
-                <FaCalendarAlt /> Live Events
+              <Link to="/admin" className={`sidebar-link ${location.pathname === '/admin' ? 'active' : ''}`}>
+                <FaCog /> Dashboard
               </Link>
-              <Link to="/admin/past-events" className={`sidebar-link ${location.pathname === '/admin/past-events' ? 'active' : ''}`}>
-                <FaCalendarAlt /> Past Events
-              </Link>
-              <Link to="/admin/team" className={`sidebar-link ${location.pathname === '/admin/team' ? 'active' : ''}`}>
-                <FaUsers /> Team
-              </Link>
-              <Link to="/admin/announcements" className={`sidebar-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>
-                <FaBullhorn /> Announcements
-              </Link>
-              <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`}>
-                <FaCog /> Management
-              </Link>
-              <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`}>
-                <FaQrcode /> Scan Tickets
-              </Link>
+              
+              {(hasRole('super-admin') || hasRole('content-lead') || hasRole('media-lead')) && (
+                <Link to="/admin/messages" className={`sidebar-link ${location.pathname === '/admin/messages' ? 'active' : ''}`}>
+                  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                    <FaEnvelope />
+                    {unseenCount > 0 && (
+                      <span 
+                        title={`${unseenCount} unseen message(s)`}
+                        style={{ 
+                          position: 'absolute', 
+                          top: '-4px', 
+                          right: '-4px', 
+                          width: '9px', 
+                          height: '9px', 
+                          borderRadius: '50%', 
+                          backgroundColor: '#ffcc00', 
+                          boxShadow: '0 0 8px #ffcc00',
+                          border: '1px solid #000'
+                        }} 
+                      />
+                    )}
+                  </div>
+                  Messages
+                </Link>
+              )}
+
+              {(hasRole('super-admin') || hasRole('content-lead')) && (
+                <>
+                  <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`}>
+                    <FaCalendarAlt /> Live Events
+                  </Link>
+                  <Link to="/admin/past-events" className={`sidebar-link ${location.pathname === '/admin/past-events' ? 'active' : ''}`}>
+                    <FaCalendarAlt /> Past Events
+                  </Link>
+                  <Link to="/admin/team" className={`sidebar-link ${location.pathname === '/admin/team' ? 'active' : ''}`}>
+                    <FaUsers /> Team
+                  </Link>
+                  <Link to="/admin/announcements" className={`sidebar-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>
+                    <FaBullhorn /> Announcements
+                  </Link>
+                  <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`}>
+                    <FaCog /> Management
+                  </Link>
+                  <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`}>
+                    <FaQrcode /> Scan Tickets
+                  </Link>
+                </>
+              )}
             </>
           )}
 

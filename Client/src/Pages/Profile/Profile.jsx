@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import Navbar from '../../components/Navbar/Navbar';
+import { useNavigate } from 'react-router-dom';
 import TicketModal from './TicketModal';
-import { FaTicketAlt } from 'react-icons/fa';
+import { FaTicketAlt, FaQrcode } from 'react-icons/fa';
 import './Profile.css';
 
 const Profile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     branch: '',

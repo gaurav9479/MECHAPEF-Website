@@ -7,7 +7,7 @@ import 'cropperjs/dist/cropper.css';
 import {
   FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake,
   FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle, FaTimesCircle,
-  FaImage, FaUpload, FaEdit, FaCrop, FaSearch, FaTrash
+  FaImage, FaUpload, FaEdit, FaCrop, FaSearch, FaTrash, FaQrcode
 } from 'react-icons/fa';
 import api from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
@@ -72,6 +72,15 @@ const AdminManagement = () => {
   const [filterVerified, setFilterVerified] = useState('');
   const [verifyingId, setVerifyingId] = useState(null);
   const [toast, setToast] = useState(null);
+
+  // ── Volunteer Endorsement Modal State ──
+  const [endorseModalUser, setEndorseModalUser] = useState(null);
+  const [endorseEvents, setEndorseEvents] = useState([]);
+  const [endorseEventId, setEndorseEventId] = useState('');
+  const [endorseStages, setEndorseStages] = useState(['Stage 1: Check-in']);
+  const [endorseStage, setEndorseStage] = useState('Stage 1: Check-in');
+  const [endorseSubmitting, setEndorseSubmitting] = useState(false);
+
   // ── Notices Tab State ──
   const [notices, setNotices] = useState([]);
   const [noticeForm, setNoticeForm] = useState({ title: '', description: '', priority: 'Medium', targetType: 'None', isActive: true, eventSponsors: [] });
@@ -110,6 +119,52 @@ const AdminManagement = () => {
     finally { setUsersLoading(false); }
   }, [filterRole, filterVerified]);
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  const openEndorseModal = async (u) => {
+    setEndorseModalUser(u);
+    try {
+      const res = await api.get('/events');
+      const evList = res.data.data?.events || [];
+      setEndorseEvents(evList);
+      if (evList.length > 0) {
+        const firstEv = u.assignedEvent ? (evList.find(e => e._id === (typeof u.assignedEvent === 'object' ? u.assignedEvent._id : u.assignedEvent)) || evList[0]) : evList[0];
+        setEndorseEventId(firstEv._id);
+        const stgs = firstEv.ticketStages && firstEv.ticketStages.length > 0 ? firstEv.ticketStages : ['Stage 1: Check-in'];
+        setEndorseStages(stgs);
+        setEndorseStage(u.assignedStage || stgs[0]);
+      }
+    } catch {
+      showToast('Error loading events for endorsement', 'error');
+    }
+  };
+
+  const handleEndorseEventChange = (evId) => {
+    setEndorseEventId(evId);
+    const ev = endorseEvents.find(e => e._id === evId);
+    const stgs = ev?.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Check-in'];
+    setEndorseStages(stgs);
+    setEndorseStage(stgs[0]);
+  };
+
+  const saveEndorsement = async () => {
+    if (!endorseModalUser) return;
+    setEndorseSubmitting(true);
+    try {
+      await api.patch(`/auth/users/${endorseModalUser._id}/role`, {
+        role: 'volunteer',
+        assignedEvent: endorseEventId,
+        assignedStage: endorseStage
+      });
+      showToast(`User endorsed as Volunteer for ${endorseStage}!`);
+      setEndorseModalUser(null);
+      fetchUsers();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to save endorsement', 'error');
+    } finally {
+      setEndorseSubmitting(false);
+    }
+  };
+
   const toggleVerify = async (userId, currentlyVerified) => {
     setVerifyingId(userId);
     try {
@@ -126,8 +181,13 @@ const AdminManagement = () => {
   };
 
   const updateRole = async (userId, newRole) => {
+    if (newRole === 'volunteer') {
+      const targetUser = users.find(u => u._id === userId);
+      if (targetUser) openEndorseModal(targetUser);
+      return;
+    }
     try {
-      await api.patch(`/auth/users/${userId}/role`, { role: newRole });
+      await api.patch(`/auth/users/${userId}/role`, { role: newRole, assignedEvent: null, assignedStage: null });
       showToast('User role updated successfully');
       fetchUsers();
     } catch (err) {
@@ -380,6 +440,7 @@ const AdminManagement = () => {
                               <option value="super-admin">Super Admin</option>
                               <option value="content-lead">Content Lead</option>
                               <option value="media-lead">Media Lead</option>
+                              <option value="volunteer">Volunteer (Scanner Only)</option>
                               <option value="member">Member</option>
                               <option value="general-user">General User</option>
                             </select>
@@ -798,6 +859,70 @@ const AdminManagement = () => {
           </div>
         )}
       </main>
+
+      {/* Endorse Volunteer Scanner Station Modal */}
+      {endorseModalUser && (
+        <div className="modal-overlay" onClick={() => setEndorseModalUser(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', background: '#111116', border: '1px solid #00e5ff', boxShadow: '0 0 25px rgba(0, 229, 255, 0.25)' }}>
+            <div className="modal-header">
+              <h2 style={{ color: '#00e5ff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FaQrcode /> Endorse Volunteer Scanner Station
+              </h2>
+              <button className="modal-close" onClick={() => setEndorseModalUser(null)}>×</button>
+            </div>
+            
+            <div style={{ padding: '20px' }}>
+              <div style={{ background: '#1c1c24', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #333' }}>
+                <strong style={{ color: '#fff', fontSize: '1rem', display: 'block' }}>{endorseModalUser.name}</strong>
+                <span style={{ color: '#aaa', fontSize: '0.85rem' }}>{endorseModalUser.email} {endorseModalUser.collegeRegNo ? `(${endorseModalUser.collegeRegNo})` : ''}</span>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#ff1f01', fontWeight: 'bold', marginBottom: '6px' }}>
+                  1. Select Event for Scanner Station:
+                </label>
+                <select 
+                  value={endorseEventId} 
+                  onChange={e => handleEndorseEventChange(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', background: '#1c1c24', color: '#fff', border: '1px solid #444', borderRadius: '8px', fontSize: '0.9rem' }}
+                >
+                  {endorseEvents.map(ev => (
+                    <option key={ev._id} value={ev._id}>{ev.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#00e5ff', fontWeight: 'bold', marginBottom: '6px' }}>
+                  2. Select Assigned Verification Stage / Station:
+                </label>
+                <select 
+                  value={endorseStage} 
+                  onChange={e => setEndorseStage(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', background: '#0d2d3a', color: '#00e5ff', border: '1px solid #00e5ff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}
+                >
+                  {endorseStages.map((stg, idx) => (
+                    <option key={idx} value={stg}>{stg}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn-secondary" onClick={() => setEndorseModalUser(null)}>Cancel</button>
+                <button 
+                  type="button" 
+                  onClick={saveEndorsement}
+                  disabled={endorseSubmitting}
+                  style={{ background: 'linear-gradient(135deg, #00b0ff 0%, #00e5ff 100%)', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 0 12px rgba(0, 229, 255, 0.4)' }}
+                >
+                  {endorseSubmitting ? 'Saving...' : '✓ Endorse Scanner Station'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && <div className={`admin-toast ${toast.type}`}>{toast.msg}</div>}
     </div>
   );

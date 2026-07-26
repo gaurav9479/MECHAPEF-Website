@@ -125,6 +125,18 @@ const userSchema = new mongoose.Schema(
 
         branch: String,
 
+        assignedEvent: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Event',
+            default: null
+        },
+
+        assignedStage: {
+            type: String,
+            trim: true,
+            default: null
+        },
+
         githubURL: {
             type: String,
             trim: true

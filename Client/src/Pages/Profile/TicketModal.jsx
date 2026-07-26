@@ -5,6 +5,14 @@ import './TicketModal.css';
 
 const TicketModal = ({ registration, onClose }) => {
   const [qrZoom, setQrZoom] = useState(false);
+  const [liveTime, setLiveTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveTime(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -32,7 +40,13 @@ const TicketModal = ({ registration, onClose }) => {
 
           <div className="bp-main">
             <div className="bp-header">
-              <span className="bp-airline"><FaTicketAlt /> MECHAPEF </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="bp-airline"><FaTicketAlt /> MECHAPEF </span>
+                <span style={{ background: 'rgba(0, 229, 255, 0.15)', color: '#00e5ff', border: '1px solid rgba(0, 229, 255, 0.4)', padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00e5ff', display: 'inline-block', animation: 'pulse 1.5s infinite' }}></span>
+                  LIVE TICKET • {liveTime.toLocaleTimeString()}
+                </span>
+              </div>
               <button onClick={onClose} className="bp-close-btn"><FaTimes /></button>
             </div>
 

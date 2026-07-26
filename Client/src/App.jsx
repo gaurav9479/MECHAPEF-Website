@@ -205,7 +205,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/scanner"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'volunteer']}>
               <AdminScanner />
             </ProtectedRoute>
           }
