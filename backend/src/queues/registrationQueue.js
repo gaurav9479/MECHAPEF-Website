@@ -3,13 +3,15 @@ import IORedis from 'ioredis';
 import Event from '../models/event.model.js';
 import { startRegistrationWorker, stopRegistrationWorker } from '../workers/registrationWorker.js';
 
+import { SystemConfig } from '../models/systemConfig.model.js';
+
 let redisConnection = null;
 let registrationQueue = null;
 const QUEUE_NAME = 'RegistrationQueue';
 
 export const isRegistrationQueueEnabled = () => Boolean(registrationQueue);
 
-export const checkAndToggleRedis = async () => {
+export const checkAndToggleRedis = async (overrideMode = null) => {
     try {
         const now = new Date();
         const hasActiveEvent = await Event.exists({
@@ -23,12 +25,46 @@ export const checkAndToggleRedis = async () => {
             ],
             registrationDeadline: { $gt: now }
         });
-        const redisUrl = process.env.REDIS_URL;
-        const isRedisEnabled = process.env.ENABLE_REDIS === 'true';
 
-        if (!redisUrl || !isRedisEnabled) return;
+        const sysConfig = await SystemConfig.findOne().catch(() => null);
+        const modeType = overrideMode || sysConfig?.redisModeType || 'AUTO';
+        
+        // Calculate current hour in IST (Asia/Kolkata timezone)
+        const istFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Kolkata',
+            hour: 'numeric',
+            hour12: false
+        });
+        const currentIstHour = parseInt(istFormatter.format(now), 10); // 0 to 23
 
-        if (hasActiveEvent && !redisConnection) {
+        const startHour = sysConfig?.startHour ?? 10; // 10 AM
+        const endHour = sysConfig?.endHour ?? 23;     // 11 PM
+
+        const isTimeInWindow = currentIstHour >= startHour && currentIstHour < endHour;
+
+        let shouldEnableRedis = false;
+        if (modeType === 'ALWAYS_ON') {
+            shouldEnableRedis = true;
+        } else if (modeType === 'ALWAYS_OFF') {
+            shouldEnableRedis = false;
+        } else {
+            // AUTO Mode: Enable if event registration is active AND current time is 10:00 AM - 11:00 PM IST
+            shouldEnableRedis = Boolean(hasActiveEvent && isTimeInWindow);
+        }
+
+        const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+
+        if (!shouldEnableRedis) {
+            if (redisConnection) {
+                console.log(`[RedisManager] Disconnecting Redis (Mode: ${modeType}, IST Hour: ${currentIstHour}:00, Active Event: ${Boolean(hasActiveEvent)})...`);
+                await stopRegistrationWorker();
+                if (registrationQueue) { await registrationQueue.close(); registrationQueue = null; }
+                if (redisConnection) { redisConnection.disconnect(); redisConnection = null; }
+            }
+            return;
+        }
+
+        if (shouldEnableRedis && !redisConnection) {
             console.log('[RedisManager] Active event found, initializing Redis...');
             redisConnection = new IORedis(redisUrl, { 
                 maxRetriesPerRequest: null,
