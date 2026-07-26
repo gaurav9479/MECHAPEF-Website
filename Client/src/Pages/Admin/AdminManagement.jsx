@@ -359,31 +359,37 @@ const AdminManagement = () => {
                       <td style={{ fontFamily: 'sans-serif', fontSize: '0.85rem' }}>{u.email}</td>
                       <td style={{ fontFamily: 'monospace', color: '#aaa' }}>{u.collegeRegNo || '—'}</td>
                       <td>
-                        <select 
-                          value={u.role} 
-                          onChange={(e) => updateRole(u._id, e.target.value)}
-                          style={{ padding: '4px', fontSize: '0.8rem', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', cursor: 'pointer' }}
-                        >
-                          <option value="super-admin">Super Admin</option>
-                          <option value="content-lead">Content Lead</option>
-                          <option value="media-lead">Media Lead</option>
-                          <option value="member">Member</option>
-                          <option value="general-user">General User</option>
-                        </select>
+                        {(() => {
+                          const isMechOrProd = u.branch && (u.branch.toLowerCase().includes('mechanical') || u.branch.toLowerCase().includes('production') || u.branch.toLowerCase().includes('pie') || u.isMechaPefMember);
+                          const effectiveRole = (u.role === 'general-user' && isMechOrProd) ? 'member' : (u.role || 'general-user');
+                          return (
+                            <select 
+                              value={effectiveRole} 
+                              onChange={(e) => updateRole(u._id, e.target.value)}
+                              style={{ 
+                                padding: '6px 10px', 
+                                fontSize: '0.82rem', 
+                                background: effectiveRole === 'member' ? '#0d2d3a' : '#222', 
+                                color: effectiveRole === 'member' ? '#00e5ff' : '#fff', 
+                                border: effectiveRole === 'member' ? '1px solid #00e5ff' : '1px solid #444', 
+                                borderRadius: '6px', 
+                                fontWeight: effectiveRole === 'member' ? '700' : 'normal',
+                                cursor: 'pointer' 
+                              }}
+                            >
+                              <option value="super-admin">Super Admin</option>
+                              <option value="content-lead">Content Lead</option>
+                              <option value="media-lead">Media Lead</option>
+                              <option value="member">Member</option>
+                              <option value="general-user">General User</option>
+                            </select>
+                          );
+                        })()}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '0.85rem', color: '#ccc' }}>
-                            {u.branch || '—'}
-                          </span>
-                          {(u.branch?.toLowerCase().includes('mechanical') || u.branch?.toLowerCase().includes('production') || u.isMechaPefMember) ? (
-                            <span style={{ fontSize: '0.68rem', fontWeight: '800', color: '#00e5ff', background: 'rgba(0, 229, 255, 0.12)', border: '1px solid rgba(0, 229, 255, 0.35)', padding: '2px 7px', borderRadius: '4px', width: 'fit-content' }}>
-                              ★ Member
-                            </span>
-                          ) : (
-                            <span style={{ fontSize: '0.68rem', color: '#777' }}>Non-Member</span>
-                          )}
-                        </div>
+                        <span style={{ fontSize: '0.85rem', color: '#ccc' }}>
+                          {u.branch || '—'}
+                        </span>
                       </td>
                       <td>{u.yearOfStudy ? `Year ${u.yearOfStudy}` : '—'}</td>
                       <td>

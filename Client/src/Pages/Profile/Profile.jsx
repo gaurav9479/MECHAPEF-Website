@@ -94,7 +94,7 @@ const Profile = () => {
                 <p className="profile-role" style={{ margin: 0 }}>{user?.role}</p>
                 {(user?.isMechaPefMember || user?.branch?.toLowerCase().includes('mechanical') || user?.branch?.toLowerCase().includes('production')) ? (
                   <span className="member-badge" style={{ background: 'linear-gradient(135deg, #00b0ff 0%, #00e5ff 100%)', color: '#000', fontSize: '0.72rem', fontWeight: '900', padding: '3px 10px', borderRadius: '12px', letterSpacing: '0.5px', textTransform: 'uppercase', boxShadow: '0 0 12px rgba(0, 229, 255, 0.4)' }}>
-                    ★ MechaPEF Member
+                    MechaPEF Member
                   </span>
                 ) : (
                   <span className="non-member-badge" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#aaa', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>

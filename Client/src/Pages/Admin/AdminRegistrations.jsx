@@ -114,16 +114,7 @@ const AdminRegistrations = () => {
                       {name ? name : <span style={{ color: '#ff4444' }}>Not Registered</span>}
                     </td>
                     <td>{reg.registeredBy?.collegeRegNo || '-'}</td>
-                    <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span>{reg.registeredBy?.branch || '-'}</span>
-                        {(reg.registeredBy?.branch?.toLowerCase().includes('mechanical') || reg.registeredBy?.branch?.toLowerCase().includes('production') || reg.registeredBy?.isMechaPefMember) && (
-                          <span style={{ fontSize: '0.65rem', fontWeight: '800', color: '#00e5ff', background: 'rgba(0, 229, 255, 0.12)', border: '1px solid rgba(0, 229, 255, 0.35)', padding: '1px 5px', borderRadius: '4px', width: 'fit-content' }}>
-                            ★ Member
-                          </span>
-                        )}
-                      </div>
-                    </td>
+                    <td>{reg.registeredBy?.branch || '-'}</td>
                     <td>{reg.registeredBy?.yearOfStudy ? `${reg.registeredBy.yearOfStudy} Yr` : '-'}</td>
                     <td>{reg.registeredBy?.email || '-'}</td>
                     <td><span className="tag">{reg.registrationType}</span></td>
