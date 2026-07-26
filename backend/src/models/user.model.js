@@ -225,6 +225,16 @@ userSchema.methods.getPublicProfile = function () {
     delete user.emailVerificationExpiry;
     delete user.resetPasswordToken;
     delete user.resetPasswordExpire;
+
+    if (user.branch) {
+        const b = user.branch.toLowerCase();
+        user.isMechaPefMember = b.includes('mechanical') || b.includes('production') || b.includes('pie');
+        user.memberTag = user.isMechaPefMember ? 'Member' : 'Non-Member';
+    } else {
+        user.isMechaPefMember = false;
+        user.memberTag = 'Non-Member';
+    }
+
     return user;
 };
 

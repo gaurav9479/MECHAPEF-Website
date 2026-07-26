@@ -74,12 +74,19 @@ export const register = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.CONFLICT, 'This college registration number is already registered');
     }
 
+    const isMechOrProd = parsedBranch && (
+        parsedBranch.toLowerCase().includes('mechanical') || 
+        parsedBranch.toLowerCase().includes('production') ||
+        parsedBranch.toLowerCase().includes('pie')
+    );
+    const assignedRole = isMechOrProd ? 'member' : 'general-user';
+
     const newUser = new User({
         name: name.trim(),
         email: email.toLowerCase(),
         password,
         collegeRegNo: regnoFromEmail.toUpperCase(),
-        role: 'general-user',
+        role: assignedRole,
         requestedRole: req.body.requestedRole || null,
         isVerified: false,
         unverifiedRequestExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -466,21 +473,30 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         { new: true }
     );
 
-    if (user && (!user.branch || !user.yearOfStudy)) {
-        if (!user.branch && parsedBranch) user.branch = parsedBranch;
-        if (!user.yearOfStudy && parsedYear) user.yearOfStudy = parsedYear;
-        await user.save();
+    const isMechOrProd = parsedBranch && (
+        parsedBranch.toLowerCase().includes('mechanical') || 
+        parsedBranch.toLowerCase().includes('production') ||
+        parsedBranch.toLowerCase().includes('pie')
+    );
+
+    if (user) {
+        let shouldSave = false;
+        if (!user.branch && parsedBranch) { user.branch = parsedBranch; shouldSave = true; }
+        if (!user.yearOfStudy && parsedYear) { user.yearOfStudy = parsedYear; shouldSave = true; }
+        if (user.role === 'general-user' && isMechOrProd) { user.role = 'member'; shouldSave = true; }
+        if (shouldSave) await user.save();
     }
 
     // New user — create them
     if (!user) {
+        const assignedRole = isMechOrProd ? 'member' : 'general-user';
         user = await User.create({
             name,
             email,
             collegeRegNo: collegeRegNo.toUpperCase(),
             branch: parsedBranch,
             yearOfStudy: parsedYear,
-            role: 'general-user',
+            role: assignedRole,
             isVerified: true,
             password: Math.random().toString(36).slice(-10) + 'A1!'
         });

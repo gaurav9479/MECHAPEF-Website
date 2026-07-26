@@ -60,8 +60,23 @@ const fixUserBranchesAndYears = async () => {
         if (fixedCount > 0) {
             console.log(`[Migration] Successfully fixed ${fixedCount} users.`);
         }
+
+        // Upgrade any existing Mechanical or Production general-users to member role
+        const upgradeResult = await User.updateMany(
+            {
+                role: 'general-user',
+                $or: [
+                    { branch: /mechanical/i },
+                    { branch: /production/i }
+                ]
+            },
+            { $set: { role: 'member' } }
+        );
+        if (upgradeResult.modifiedCount > 0) {
+            console.log(`[Migration] Upgraded ${upgradeResult.modifiedCount} Mechanical & Production users to member role.`);
+        }
     } catch (err) {
-        console.error('[Migration] Error updating user branches:', err);
+        console.error('[Migration] Error updating user branches/roles:', err);
     }
 };
 

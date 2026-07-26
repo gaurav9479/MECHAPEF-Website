@@ -372,9 +372,18 @@ const AdminManagement = () => {
                         </select>
                       </td>
                       <td>
-                        <span style={{ fontSize: '0.85rem', color: '#ccc' }}>
-                          {u.branch || '—'}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{ fontSize: '0.85rem', color: '#ccc' }}>
+                            {u.branch || '—'}
+                          </span>
+                          {(u.branch?.toLowerCase().includes('mechanical') || u.branch?.toLowerCase().includes('production') || u.isMechaPefMember) ? (
+                            <span style={{ fontSize: '0.68rem', fontWeight: '800', color: '#00e5ff', background: 'rgba(0, 229, 255, 0.12)', border: '1px solid rgba(0, 229, 255, 0.35)', padding: '2px 7px', borderRadius: '4px', width: 'fit-content' }}>
+                              ★ Member
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '0.68rem', color: '#777' }}>Non-Member</span>
+                          )}
+                        </div>
                       </td>
                       <td>{u.yearOfStudy ? `Year ${u.yearOfStudy}` : '—'}</td>
                       <td>
