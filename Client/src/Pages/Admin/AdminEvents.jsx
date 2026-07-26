@@ -27,7 +27,7 @@ const emptyForm = {
   ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']
 };
 const AdminEvents = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => { await logout(); navigate('/login'); };
   const [events, setEvents] = useState([]);
@@ -40,6 +40,57 @@ const AdminEvents = () => {
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleDelete = async (id) => {
+    if (user?.role !== 'super-admin') {
+      showToast('Only a Super Admin can initiate event deletion', 'error');
+      return;
+    }
+    if (!window.confirm('⚠️ INITIATE MULTI-SIG DELETION: Are you sure you want to list this event for deletion? This will require approval from 2 additional SuperAdmins (3 total votes).')) return;
+    try {
+      const res = await api.delete(`/events/${id}`);
+      showToast(res.data?.message || 'Event deletion initiated. Awaiting approval from 2 more SuperAdmins.');
+      fetchEvents();
+    } catch (err) { showToast(err.response?.data?.message || 'Failed to initiate deletion', 'error'); }
+  };
+
+  const handleApproveDelete = async (id) => {
+    if (!window.confirm('✓ APPROVE EVENT DELETION: Are you sure you want to cast your SuperAdmin vote to approve deleting this event?')) return;
+    try {
+      const res = await api.post(`/events/${id}/approve-deletion`);
+      const { isFullyApproved, csvData, csvFileName } = res.data?.data || {};
+
+      if (isFullyApproved && csvData) {
+        // Automatic browser CSV file download trigger for the final approving SuperAdmin
+        const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', csvFileName || `FINAL_REGISTRATIONS_BACKUP_${id}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('📥 Deletion Fully Approved! Final Registration Backup CSV automatically downloaded.');
+      } else {
+        showToast(res.data?.message || 'Deletion approval recorded!');
+      }
+
+      fetchEvents();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to approve deletion', 'error');
+    }
+  };
+
+  const handleCancelDelete = async (id) => {
+    if (!window.confirm('CANCEL DELETION REQUEST: Restore this event back to Active state?')) return;
+    try {
+      const res = await api.post(`/events/${id}/cancel-deletion`);
+      showToast(res.data?.message || 'Deletion request cancelled. Event restored.');
+      fetchEvents();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to cancel deletion', 'error');
+    }
   };
 
   const addTicketStage = () => {
@@ -120,14 +171,6 @@ const AdminEvents = () => {
       ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']
     });
     setShowModal(true);
-  };
-  const handleDelete = async (id) => {
-    if (!window.confirm('WARNING: Are you sure you want to permanently delete this event? All associated registrations and data will be permanently wiped out!')) return;
-    try {
-      await eventService.delete(id);
-      showToast('Event deleted');
-      fetchEvents();
-    } catch { showToast('Failed to delete', 'error'); }
   };
 
   const handleEndEvent = async (id) => {
@@ -234,7 +277,7 @@ const AdminEvents = () => {
               ) : events.length === 0 ? (
                 <tr><td colSpan="5" style={{textAlign:'center', color:'#555', padding:'30px'}}>No events yet. Create one!</td></tr>
               ) : events.map(ev => (
-                <tr key={ev._id}>
+                <tr key={ev._id} style={{ background: ev.deletionState?.status === 'APPROVED_RETENTION' ? 'rgba(255, 31, 1, 0.05)' : ev.deletionState?.status === 'PENDING_APPROVAL' ? 'rgba(255, 170, 0, 0.05)' : 'transparent' }}>
                   <td>
                     <strong style={{color:'#fff'}}>{ev.title}</strong>
                     {ev.featured && <span className="tag" style={{marginLeft:'8px', backgroundColor:'#222'}}>Featured</span>}
@@ -242,24 +285,73 @@ const AdminEvents = () => {
                   <td>{ev.isTBD ? 'TBD' : new Date(ev.startTime).toLocaleDateString()}</td>
                   <td>{ev.isTBD && ev.venue === 'TBD' ? 'TBD' : ev.venue}</td>
                   <td>
-                    <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`}>
-                      {ev.status || 'Upcoming'}
-                    </span>
+                    {ev.deletionState?.status === 'PENDING_APPROVAL' ? (
+                      <span className="tag" style={{ background: 'rgba(255, 170, 0, 0.2)', color: '#ffaa00', border: '1px solid #ffaa00' }}>
+                        ⚠️ DELETION PENDING ({ev.deletionState.approvals?.length || 1}/3 Votes)
+                      </span>
+                    ) : ev.deletionState?.status === 'APPROVED_RETENTION' ? (
+                      <span className="tag" style={{ background: 'rgba(255, 31, 1, 0.2)', color: '#ff4444', border: '1px solid #ff4444' }}>
+                        ⏳ VANISHES IN 7 DAYS ({ev.deletionState.vanishAt ? new Date(ev.deletionState.vanishAt).toLocaleDateString() : 'Queued'})
+                      </span>
+                    ) : (
+                      <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`}>
+                        {ev.status || 'Upcoming'}
+                      </span>
+                    )}
                   </td>
-                  <td style={{display:'flex', gap:'8px'}}>
-                    {ev.status !== 'Ended' && (
+                  <td style={{display:'flex', gap:'8px', alignItems: 'center', flexWrap: 'wrap'}}>
+                    {/* Multi-Sig Approval & Deletion Action Controls */}
+                    {ev.deletionState?.status === 'PENDING_APPROVAL' && user?.role === 'super-admin' && (
+                      <>
+                        <button
+                          className="btn-primary"
+                          title="Cast SuperAdmin Vote to Approve Deletion"
+                          onClick={() => handleApproveDelete(ev._id)}
+                          style={{ padding: '4px 10px', fontSize: '0.78rem', background: '#00c864', color: '#000', fontWeight: 'bold' }}
+                        >
+                          ✓ Approve Deletion
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          title="Cancel Deletion Request"
+                          onClick={() => handleCancelDelete(ev._id)}
+                          style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
+
+                    {ev.deletionState?.status === 'APPROVED_RETENTION' && user?.role === 'super-admin' && (
+                      <button
+                        className="btn-secondary"
+                        title="Restore Event before 7-day purge"
+                        onClick={() => handleCancelDelete(ev._id)}
+                        style={{ padding: '4px 10px', fontSize: '0.78rem', color: '#00e5ff', borderColor: '#00e5ff' }}
+                      >
+                        🔄 Restore Event
+                      </button>
+                    )}
+
+                    {ev.status !== 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
                       <button className="btn-secondary" title="End Event" onClick={() => handleEndEvent(ev._id)} style={{padding:'6px 10px'}}>
                         <FaCheckCircle style={{color: '#ffaa00'}} />
                       </button>
                     )}
-                    {ev.status === 'Ended' && (
+                    {ev.status === 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
                       <button className="btn-danger" title="Wipe Form Data & Files" onClick={() => handleWipeData(ev._id)} style={{padding:'6px 10px'}}>
                         🧹
                       </button>
                     )}
                     <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{padding:'6px 10px'}}><FaUsers /></Link>
                     <button className="btn-secondary" style={{padding:'6px 10px'}} onClick={() => openEdit(ev)}><FaEdit /></button>
-                    <button className="btn-danger" style={{padding:'6px 10px'}} onClick={() => handleDelete(ev._id)}><FaTrash /></button>
+                    
+                    {/* ONLY SuperAdmin can see/trigger event deletion */}
+                    {user?.role === 'super-admin' && ev.deletionState?.status === 'ACTIVE' && (
+                      <button className="btn-danger" title="List Event for Multi-Sig Deletion" style={{padding:'6px 10px'}} onClick={() => handleDelete(ev._id)}>
+                        <FaTrash />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

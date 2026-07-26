@@ -122,4 +122,28 @@ export const startCronJobs = () => {
             console.error('❌ Error executing Keep-Alive Ping:', error.message);
         }
     });
+
+    // Run every hour to check and permanently purge events whose 7-day retention period has expired
+    cron.schedule('0 * * * *', async () => {
+        try {
+            const now = new Date();
+            const expiredEvents = await Event.find({
+                'deletionState.status': 'APPROVED_RETENTION',
+                'deletionState.vanishAt': { $lte: now }
+            });
+
+            if (expiredEvents.length > 0) {
+                console.log(`🗑️ [7-Day Auto-Purge] Found ${expiredEvents.length} event(s) past 7-day retention deadline. Vanishing data...`);
+                for (const ev of expiredEvents) {
+                    // 1. Delete all associated registration records completely
+                    const regDeleteResult = await Registration.deleteMany({ eventId: ev._id });
+                    // 2. Completely remove the event document
+                    await Event.findByIdAndDelete(ev._id);
+                    console.log(`✅ [7-Day Auto-Purge] Successfully vanished event "${ev.title}" and purged ${regDeleteResult.deletedCount} registration records.`);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error executing 7-Day Event Auto-Purge Cron:', error.message);
+        }
+    });
 };

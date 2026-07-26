@@ -186,6 +186,41 @@ const eventSchema = new mongoose.Schema(
             default: true
         },
 
+        deletionState: {
+            status: {
+                type: String,
+                enum: ['ACTIVE', 'PENDING_APPROVAL', 'APPROVED_RETENTION', 'PURGED'],
+                default: 'ACTIVE'
+            },
+            initiatedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+                default: null
+            },
+            initiatedAt: {
+                type: Date,
+                default: null
+            },
+            approvals: [{
+                approvedBy: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User'
+                },
+                approvedAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }],
+            approvedAt: {
+                type: Date,
+                default: null
+            },
+            vanishAt: {
+                type: Date,
+                default: null
+            }
+        },
+
         deletedAt: {
             type: Date,
             default: null
