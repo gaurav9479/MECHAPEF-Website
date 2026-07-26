@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { apiGetCached } from '../../utils/apiCache';
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 import './PastSponsors.css';
 
 const PastSponsors = ({ showCurrentSponsors = true }) => {
@@ -57,8 +58,10 @@ const PastSponsors = ({ showCurrentSponsors = true }) => {
                 >
                   {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
                     <img
-                      src={sponsor.logoURL}
+                      src={getOptimizedImageUrl(sponsor.logoURL)}
                       alt={sponsor.companyName}
+                      loading="lazy"
+                      decoding="async"
                       style={{ maxHeight: '60px', maxWidth: '140px', objectFit: 'contain' }}
                       onError={e => { e.target.style.display = 'none'; }}
                     />
@@ -127,8 +130,10 @@ const PastSponsors = ({ showCurrentSponsors = true }) => {
                           {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
                             <>
                               <img
-                                src={sponsor.logoURL}
+                                src={getOptimizedImageUrl(sponsor.logoURL)}
                                 alt={sponsor.type || 'Sponsor'}
+                                loading="lazy"
+                                decoding="async"
                                 onError={e => {
                                   e.target.style.display = 'none';
                                   const fb = e.target.parentNode.querySelector('.logo-fallback');

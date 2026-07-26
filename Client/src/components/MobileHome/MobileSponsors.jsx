@@ -4,6 +4,7 @@ import { FaHandshake } from 'react-icons/fa';
 import { HeadingGearIcon, Reveal } from './MobileShared';
 import { stagger, fadeUp } from './MobileAnimVariants';
 import PastSponsors from '../PastSponsors/PastSponsors';
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 
 const MobileSponsors = ({ sponsors = [], navigate }) => {
   const currentSponsors = sponsors.filter(sp => !sp.isPastSponsor);
@@ -31,7 +32,7 @@ const MobileSponsors = ({ sponsors = [], navigate }) => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => sp.websiteURL && window.open(sp.websiteURL, '_blank')}>
                 {sp.logoURL && !sp.logoURL.includes('placeholder.com')
-                  ? <img src={sp.logoURL} alt={sp.companyName}
+                  ? <img src={getOptimizedImageUrl(sp.logoURL)} alt={sp.companyName} loading="lazy" decoding="async"
                       onError={e => { e.target.style.display = 'none'; }} />
                   : <span className="mh-sponsor-name-text">{sp.companyName}</span>
                 }
