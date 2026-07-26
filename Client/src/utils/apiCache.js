@@ -1,9 +1,33 @@
 import api from '../services/api';
+import { preloadImage } from './imageOptimizer';
 
 const CACHE_DURATION_MS = 2 * 60 * 1000; // 2 minutes caching for images and data
 
 // Global map to store ongoing requests and prevent duplicate concurrent API calls
 const pendingRequests = {};
+
+// Automatically warm up browser image cache when payload contains image URLs
+const extractAndPreloadImages = (payload) => {
+  if (!payload) return;
+  const target = payload.data || payload;
+
+  if (target.logoURL) preloadImage(target.logoURL);
+
+  if (Array.isArray(target)) {
+    target.forEach(item => {
+      if (item.logoURL) preloadImage(item.logoURL);
+      if (item.imageURL) preloadImage(item.imageURL);
+      if (item.bannerURL) preloadImage(item.bannerURL);
+      if (item.mobileImageURL) preloadImage(item.mobileImageURL);
+    });
+  }
+
+  if (target.images && Array.isArray(target.images)) {
+    target.images.forEach(img => {
+      if (img.imageURL) preloadImage(img.imageURL);
+    });
+  }
+};
 
 export const apiGetCached = async (url, callback, options = {}) => {
   const cacheKey = `api_cache_${url}`;
@@ -15,6 +39,7 @@ export const apiGetCached = async (url, callback, options = {}) => {
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
+      extractAndPreloadImages(parsed.data);
       
       // Serve cached data instantly (Stale-While-Revalidate)
       callback(parsed.data, true);
@@ -34,6 +59,7 @@ export const apiGetCached = async (url, callback, options = {}) => {
   if (pendingRequests[url]) {
     try {
       const res = await pendingRequests[url];
+      extractAndPreloadImages(res.data);
       callback(res.data, false);
       return res;
     } catch (error) {
@@ -45,6 +71,7 @@ export const apiGetCached = async (url, callback, options = {}) => {
   // 2. Fetch fresh data from API in background (if no cache or expired)
   const fetchPromise = api.get(url, options).then(res => {
     const freshData = res.data;
+    extractAndPreloadImages(freshData);
     
     // Save to localStorage
     localStorage.setItem(cacheKey, JSON.stringify({

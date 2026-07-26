@@ -190,13 +190,23 @@ const AdminManagement = () => {
   };
   useEffect(() => { if (activeTab === 'images') fetchSectionImages(); }, [activeTab]);
 
+  const clearSectionCache = () => {
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('api_cache_/upload/sections')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {}
+  };
+
   const deleteImage = async () => {
     const currentSectionLabel = dynamicSectionKeys.find(s => s.key === selectedSection)?.label;
     if (!window.confirm(`Are you sure you want to delete the image for ${currentSectionLabel}?`)) return;
     setDeletingImage(true);
     try {
       await api.delete(`/upload/sections/${selectedSection}`);
-      localStorage.removeItem('api_cache_/upload/sections');
+      clearSectionCache();
       setSectionImages(prev => {
         const copy = { ...prev };
         delete copy[selectedSection];
@@ -260,7 +270,7 @@ const AdminManagement = () => {
         imageURL: url,
         imagekitFileId: fileId,
       });
-      localStorage.removeItem('api_cache_/upload/sections');
+      clearSectionCache();
       showToast('Image uploaded & saved!');
       setCropping(false);
       setCropSrc(null);

@@ -54,10 +54,21 @@ const AdminGallery = () => {
     setShowModal(true);
   };
 
+  const clearGalleryCache = () => {
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('api_cache_/gallery')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {}
+  };
+
   const deleteAlbum = async (id) => {
     if (!window.confirm('Delete this album completely?')) return;
     try {
       await api.delete(`/gallery/${id}`);
+      clearGalleryCache();
       showToast('Album deleted');
       fetchAlbums();
     } catch (err) {
@@ -76,6 +87,7 @@ const AdminGallery = () => {
         await api.post('/gallery', form);
         showToast('Album created');
       }
+      clearGalleryCache();
       setShowModal(false);
       fetchAlbums();
     } catch (err) {
@@ -112,6 +124,7 @@ const AdminGallery = () => {
       }
 
       await api.post(`/gallery/${manageImagesAlbum._id}/images`, { images: uploadedImages });
+      clearGalleryCache();
       showToast(`${uploadedImages.length} images added successfully`);
       
 
@@ -130,6 +143,7 @@ const AdminGallery = () => {
     if (!window.confirm('Remove this image?')) return;
     try {
       await api.delete(`/gallery/${manageImagesAlbum._id}/images/${imageId}`);
+      clearGalleryCache();
       setAlbumImages(prev => prev.filter(img => img._id !== imageId));
       showToast('Image removed');
       fetchAlbums();

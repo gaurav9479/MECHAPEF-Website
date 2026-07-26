@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 import './PastEventsStack.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -17,23 +19,27 @@ const PastEventsStack = () => {
   
   const [pastEvents, setPastEvents] = useState(skeletonEvents);
   const [loading, setLoading] = useState(true);
+  const [specialSponsor, setSpecialSponsor] = useState(null);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await api.get('/past-events');
-        const resData = res.data;
-
-        if (resData && resData.data && resData.data.length > 0) {
-          setPastEvents(resData.data);
+    const fetchEvents = () => {
+      apiGetCached('/past-events', (data) => {
+        const eventsList = data.data?.events || data.data || [];
+        if (eventsList.length > 0) {
+          setPastEvents(eventsList);
         }
-      } catch (err) {
-        console.error("Failed to fetch past events:", err);
-      } finally {
         setLoading(false);
-      }
+      }).catch(err => {
+        console.error("Failed to fetch past events:", err);
+        setLoading(false);
+      });
     };
     fetchEvents();
+
+    // Fetch Special Sponsor for card top-right branding
+    apiGetCached('/special-sponsor/active', (data) => {
+      if (data?.data) setSpecialSponsor(data.data);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -175,7 +181,33 @@ const PastEventsStack = () => {
                   <div className="pe-left">
                     <img src={window.innerWidth <= 768 && event.mobileImageURL ? event.mobileImageURL : event.imageURL} alt={event.title} />
                   </div>
-                  <div className="pe-right">
+                  <div className="pe-right" style={{ position: 'relative' }}>
+                    {specialSponsor?.logoURL && specialSponsor?.showEventCardsLogo !== false && (
+                      <div 
+                        className="card-special-sponsor-badge" 
+                        style={{ 
+                          position: 'absolute', 
+                          top: '16px', 
+                          right: '20px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          background: 'rgba(255, 255, 255, 0.95)', 
+                          backdropFilter: 'blur(8px)', 
+                          padding: '6px 12px', 
+                          borderRadius: '24px', 
+                          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
+                          border: '1px solid rgba(0, 0, 0, 0.08)',
+                          zIndex: 10
+                        }}
+                      >
+                        <img 
+                          src={getOptimizedImageUrl(specialSponsor.logoURL)} 
+                          alt={specialSponsor.name} 
+                          style={{ height: '28px', maxWidth: '100px', objectFit: 'contain' }} 
+                        />
+                      </div>
+                    )}
                     <div className="pe-date">{event.date}</div>
                     <h3>{event.title}</h3>
                     <div style={{ display: 'block', overflow: 'hidden' }}>

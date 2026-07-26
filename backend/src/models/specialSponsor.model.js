@@ -7,8 +7,18 @@ const specialSponsorSchema = new mongoose.Schema({
   tagline: { type: String, default: '' },
   
   // Display feature toggles
-  showFloatingBubbles: { type: Boolean, default: false },
+  showCoBrandingLogo: { type: Boolean, default: true },
+  showFloatingBubbles: { type: Boolean, default: true },
+  showEventCardsLogo: { type: Boolean, default: true },
+  showTeamTitleCoBranding: { type: Boolean, default: true },
+  showTeamCardsLogo: { type: Boolean, default: true },
   includeInEmails: { type: Boolean, default: false },
+
+  // Brand Font & Styling Takeover
+  customFontUrl: { type: String, default: '' },
+  customFontFamily: { type: String, default: '' },
+  brandColor: { type: String, default: '#ff1f01' },
+  applyBrandFont: { type: Boolean, default: false },
   
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });

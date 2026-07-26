@@ -11,6 +11,7 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import './Gallery.css';
 
 const AlbumView = () => {
@@ -24,11 +25,12 @@ const AlbumView = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    api.get(`/gallery/${id}`).then(res => {
-      setAlbum(res.data.data.album);
-    }).catch(err => {
+    apiGetCached(`/gallery/${id}`, (data) => {
+      const alb = data.data?.album || data.album || data;
+      setAlbum(alb);
+      setLoading(false);
+    }, { cacheDuration: 3 * 60 * 60 * 1000 }).catch(err => {
       console.error(err);
-    }).finally(() => {
       setLoading(false);
     });
   }, [id]);

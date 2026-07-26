@@ -22,14 +22,15 @@ export const getActiveSpecialSponsor = async (req, res) => {
 // Create or update special sponsor (Admin only)
 export const upsertSpecialSponsor = async (req, res) => {
   try {
-    const { name, logoURL, logoFileId, tagline, showFloatingBubbles, includeInEmails } = req.body;
+    const { 
+      name, logoURL, logoFileId, tagline, 
+      showCoBrandingLogo, showFloatingBubbles, showEventCardsLogo, showTeamTitleCoBranding, showTeamCardsLogo, includeInEmails,
+      customFontUrl, customFontFamily, brandColor, applyBrandFont
+    } = req.body;
 
-    // We only want ONE active special sponsor at a time.
-    // If they create/update one, we make it the active one.
     let sponsor = await SpecialSponsor.findOne();
 
     if (sponsor) {
-      // If updating with a new logo, delete the old one
       if (logoFileId && sponsor.logoFileId !== logoFileId) {
         try {
           await imagekit.deleteFile(sponsor.logoFileId);
@@ -42,14 +43,25 @@ export const upsertSpecialSponsor = async (req, res) => {
       if (logoURL) sponsor.logoURL = logoURL;
       if (logoFileId) sponsor.logoFileId = logoFileId;
       sponsor.tagline = tagline || '';
-      sponsor.showFloatingBubbles = showFloatingBubbles ?? false;
+      sponsor.showCoBrandingLogo = showCoBrandingLogo ?? true;
+      sponsor.showFloatingBubbles = showFloatingBubbles ?? true;
+      sponsor.showEventCardsLogo = showEventCardsLogo ?? true;
+      sponsor.showTeamTitleCoBranding = showTeamTitleCoBranding ?? true;
+      sponsor.showTeamCardsLogo = showTeamCardsLogo ?? true;
       sponsor.includeInEmails = includeInEmails ?? false;
+      sponsor.customFontUrl = customFontUrl || '';
+      sponsor.customFontFamily = customFontFamily || '';
+      sponsor.brandColor = brandColor || '#ff1f01';
+      sponsor.applyBrandFont = applyBrandFont ?? false;
       sponsor.isActive = true;
 
       await sponsor.save();
     } else {
       sponsor = await SpecialSponsor.create({
-        name, logoURL, logoFileId, tagline, showFloatingBubbles, includeInEmails, isActive: true
+        name, logoURL, logoFileId, tagline, 
+        showCoBrandingLogo, showFloatingBubbles, showEventCardsLogo, showTeamTitleCoBranding, showTeamCardsLogo, includeInEmails,
+        customFontUrl, customFontFamily, brandColor, applyBrandFont,
+        isActive: true
       });
     }
 

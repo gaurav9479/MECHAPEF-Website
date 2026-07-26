@@ -33,6 +33,7 @@ const TopNavbar = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showNotices, setShowNotices] = useState(false);
   const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
+  const [specialSponsor, setSpecialSponsor] = useState(null);
 
   useEffect(() => {
     apiGetCached('/announcements', (data) => {
@@ -41,6 +42,34 @@ const TopNavbar = () => {
       const seenNotices = JSON.parse(localStorage.getItem('seen_notices') || '[]');
       const hasUnread = active.some(n => !seenNotices.includes(n._id));
       setHasUnreadNotice(hasUnread);
+    }).catch(() => {});
+
+    // Fetch active special sponsor for Co-Branding & Brand Font Takeover
+    apiGetCached('/special-sponsor/active', (data) => {
+      const sp = data.data;
+      if (sp) {
+        setSpecialSponsor(sp);
+        
+        // Inject Custom Brand Font & Accent Color if takeover enabled
+        if (sp.applyBrandFont) {
+          if (sp.customFontUrl) {
+            const fontLinkId = 'special-sponsor-font-link';
+            if (!document.getElementById(fontLinkId)) {
+              const link = document.createElement('link');
+              link.id = fontLinkId;
+              link.rel = 'stylesheet';
+              link.href = sp.customFontUrl;
+              document.head.appendChild(link);
+            }
+          }
+          if (sp.customFontFamily) {
+            document.documentElement.style.setProperty('--special-brand-font', sp.customFontFamily);
+          }
+          if (sp.brandColor) {
+            document.documentElement.style.setProperty('--special-brand-color', sp.brandColor);
+          }
+        }
+      }
     }).catch(() => {});
   }, [showNotices]);
 
@@ -207,12 +236,23 @@ const TopNavbar = () => {
       <div className="navbar-hover-zone"></div>
 
       <nav className={`navbar ${isScrolled ? "navbar-hidden" : "navbar-visible"}`}>
-        <div className="logo" onClick={() => handleNavClick("/")} style={{ cursor: "pointer" }}>
+        <div className="logo" onClick={() => handleNavClick("/")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
           <FaCog className="logo-icon" />
           <div className="logo-text">
             <div className="logo-main">Mecha<span>PEF</span></div>
             <div className="logo-sub">MNNIT</div>
           </div>
+
+          {specialSponsor?.logoURL && specialSponsor?.showCoBrandingLogo !== false && (
+            <div className="cobranding-sponsor" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: '10px', borderLeft: '2px solid rgba(255, 255, 255, 0.2)', paddingLeft: '14px', height: '42px' }}>
+              <span style={{ color: specialSponsor?.brandColor || '#ff1f01', fontWeight: '900', fontSize: '1.4rem', fontFamily: 'sans-serif', lineHeight: 1 }}>×</span>
+              <img 
+                src={specialSponsor.logoURL} 
+                alt={specialSponsor.name} 
+                style={{ height: '42px', maxWidth: '160px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.25))' }} 
+              />
+            </div>
+          )}
         </div>
 
         <div className="mobile-toggle" onClick={() => setMenuOpen(!menuOpen)}>

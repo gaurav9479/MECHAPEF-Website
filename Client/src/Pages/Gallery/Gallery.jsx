@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import './Gallery.css';
 
 const Gallery = () => {
@@ -11,14 +12,14 @@ const Gallery = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-
     window.scrollTo(0, 0);
 
-    api.get('/gallery').then(res => {
-      setAlbums(res.data.data.albums);
-    }).catch(err => {
+    apiGetCached('/gallery', (data) => {
+      const albumsList = data.data?.albums || data.albums || [];
+      setAlbums(albumsList);
+      setLoading(false);
+    }, { cacheDuration: 3 * 60 * 60 * 1000 }).catch(err => {
       console.error(err);
-    }).finally(() => {
       setLoading(false);
     });
   }, []);

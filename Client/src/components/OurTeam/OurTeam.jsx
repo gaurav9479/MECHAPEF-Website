@@ -5,8 +5,10 @@ import api from '../../services/api';
 import { apiGetCached } from '../../utils/apiCache';
 import './OurTeam.css';
 
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
+
 /* ─── Single card with glitch hover ─────────────────────────── */
-const TeamCard = ({ data, num, index, fallbackRole, isFinalYear }) => {
+const TeamCard = ({ data, num, index, fallbackRole, isFinalYear, specialSponsor }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -60px 0px' });
 
@@ -14,30 +16,61 @@ const TeamCard = ({ data, num, index, fallbackRole, isFinalYear }) => {
     <motion.div
       ref={ref}
       className={`team-card ${isFinalYear ? 'final-year-card' : ''}`}
+      style={{ position: 'relative' }}
       initial={{ opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay: index * 0.05 }}
     >
+      {/* Special Sponsor Logo Badge in Top Right */}
+      {specialSponsor?.logoURL && specialSponsor?.showTeamCardsLogo !== false && (
+        <div 
+          className="team-card-sponsor-badge"
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            zIndex: 15,
+            background: 'rgba(255, 255, 255, 0.92)',
+            backdropFilter: 'blur(8px)',
+            padding: '4px 8px',
+            borderRadius: '20px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid rgba(0, 0, 0, 0.08)'
+          }}
+        >
+          <img 
+            src={getOptimizedImageUrl(specialSponsor.logoURL)} 
+            alt={specialSponsor.name} 
+            style={{ height: '20px', maxWidth: '65px', objectFit: 'contain' }} 
+          />
+        </div>
+      )}
+
       {/* Corner accents */}
       <span className="corner-accent corner-tr" />
       <span className="corner-accent corner-bl" />
-
-
 
       <div className="card-img-placeholder">
         {data?.url ? (
           <>
             <img
-              src={data.url}
+              src={getOptimizedImageUrl(data.url)}
               alt={data.name || `Member ${num}`}
               className="card-img"
+              loading="lazy"
+              decoding="async"
             />
             {/* Glitch overlay clone */}
             <img
-              src={data.url}
+              src={getOptimizedImageUrl(data.url)}
               alt=""
               aria-hidden="true"
               className="card-img card-img-glitch"
+              loading="lazy"
+              decoding="async"
             />
           </>
         ) : (
@@ -54,7 +87,7 @@ const TeamCard = ({ data, num, index, fallbackRole, isFinalYear }) => {
 };
 
 /* ─── Layer row with framer-motion reveal ───────────────────── */
-const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
+const TeamLayer = ({ title, sectionPrefix, imagesMap, specialSponsor }) => {
   const cards = Object.keys(imagesMap)
     .filter(k => k.startsWith(sectionPrefix + '_') && imagesMap[k].url)
     .sort((a, b) => {
@@ -104,6 +137,7 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
                 index={idx}
                 fallbackRole={fallbackRole}
                 isFinalYear={sectionPrefix === 'team_ty'}
+                specialSponsor={specialSponsor}
               />
             );
           })}
@@ -116,6 +150,7 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap }) => {
 /* ─── Main Section ──────────────────────────────────────────── */
 const OurTeam = () => {
   const [imagesMap, setImagesMap] = useState({});
+  const [specialSponsor, setSpecialSponsor] = useState(null);
   const sectionRef = useRef(null);
 
   /* Spotlight mouse tracking */
@@ -142,9 +177,13 @@ const OurTeam = () => {
         });
       }
       setImagesMap(imgMap);
-    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(error => {
+    }, { cacheDuration: 3 * 60 * 60 * 1000 }).catch(error => {
       console.error('Failed to load section images:', error);
     });
+
+    apiGetCached('/special-sponsor/active', (data) => {
+      if (data?.data) setSpecialSponsor(data.data);
+    }).catch(() => {});
   };
 
   useEffect(() => {
@@ -167,8 +206,35 @@ const OurTeam = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}
         >
           OUR TEAM
+          {specialSponsor?.logoURL && specialSponsor?.showTeamTitleCoBranding !== false && (
+            <span className="team-heading-cobrand" style={{ display: 'inline-flex', alignItems: 'center', gap: '14px', marginLeft: '4px' }}>
+              <span 
+                style={{ 
+                  color: specialSponsor?.brandColor || '#ff1f01', 
+                  fontWeight: '900', 
+                  fontSize: 'clamp(1.8rem, 5vw, 3rem)', 
+                  fontFamily: 'sans-serif', 
+                  lineHeight: 1,
+                  textShadow: '0 0 20px rgba(255, 31, 1, 0.5)'
+                }}
+              >
+                ×
+              </span>
+              <img 
+                src={getOptimizedImageUrl(specialSponsor.logoURL)} 
+                alt={specialSponsor.name} 
+                style={{ 
+                  height: 'clamp(36px, 5.5vw, 56px)', 
+                  maxWidth: 'clamp(120px, 16vw, 190px)', 
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.3))'
+                }} 
+              />
+            </span>
+          )}
         </motion.h1>
         <motion.p
           className="team-subtitle"
@@ -183,9 +249,9 @@ const OurTeam = () => {
 
       {/* Scroll Container */}
       <div className="team-scroll-container">
-        <TeamLayer title="Final Year Seniors" sectionPrefix="team_ty" imagesMap={imagesMap} />
-        <TeamLayer title="Pre-final Year"     sectionPrefix="team_sy" imagesMap={imagesMap} />
-        <TeamLayer title="Second Year"        sectionPrefix="team_fy" imagesMap={imagesMap} />
+        <TeamLayer title="Final Year Seniors" sectionPrefix="team_ty" imagesMap={imagesMap} specialSponsor={specialSponsor} />
+        <TeamLayer title="Pre-final Year"     sectionPrefix="team_sy" imagesMap={imagesMap} specialSponsor={specialSponsor} />
+        <TeamLayer title="Second Year"        sectionPrefix="team_fy" imagesMap={imagesMap} specialSponsor={specialSponsor} />
       </div>
     </section>
   );
