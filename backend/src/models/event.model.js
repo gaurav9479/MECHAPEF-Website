@@ -176,6 +176,11 @@ const eventSchema = new mongoose.Schema(
             default: 0
         },
 
+        ticketStages: {
+            type: [String],
+            default: ['Stage 1: Check-in']
+        },
+
         isActive: {
             type: Boolean,
             default: true

@@ -279,35 +279,100 @@ export const getUserRegistrations = asyncHandler(async (req, res) => {
 });
 
 export const markAttendance = asyncHandler(async (req, res) => {
-    const { attended } = req.body;
+    const { attended, stageName } = req.body;
 
     if (attended === undefined) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Attended status is required');
     }
 
     // Load registration first to detect previous attendance state
-    const registration = await Registration.findById(req.params.id).populate('eventId', 'title');
+    const registration = await Registration.findById(req.params.id).populate('eventId', 'title ticketStages');
 
     if (!registration) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
 
-    // If trying to mark attended=true but already marked, return a friendly flag
-    if (attended && registration.attendanceMarked) {
+    const eventStages = registration.eventId?.ticketStages || ['Stage 1: Check-in'];
+    const activeStage = stageName || eventStages[0] || 'Stage 1: Check-in';
+
+    if (attended) {
+        // Check if activeStage is already completed
+        const existingStageIndex = (registration.completedStages || []).findIndex(
+            s => s.stageName.toLowerCase() === activeStage.toLowerCase()
+        );
+
+        if (existingStageIndex !== -1) {
+            return res
+                .status(HTTP_STATUS.OK)
+                .json(new APIResponse(HTTP_STATUS.OK, {
+                    registration,
+                    alreadyMarked: true,
+                    stageName: activeStage,
+                    completedStages: registration.completedStages
+                }, `Ticket already scanned for "${activeStage}"`));
+        }
+
+        // 10-Minute Cooldown Check between scans for the same ticket
+        const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+        let lastScannedAt = registration.attendanceMarkedAt ? new Date(registration.attendanceMarkedAt).getTime() : 0;
+        if (registration.completedStages && registration.completedStages.length > 0) {
+            const latestStageScan = Math.max(...registration.completedStages.map(s => new Date(s.scannedAt).getTime()));
+            if (latestStageScan > lastScannedAt) lastScannedAt = latestStageScan;
+        }
+
+        if (lastScannedAt > 0) {
+            const timeSinceLastScan = Date.now() - lastScannedAt;
+            if (timeSinceLastScan < COOLDOWN_MS) {
+                const remainingMs = COOLDOWN_MS - timeSinceLastScan;
+                const remainingMins = Math.floor(remainingMs / (60 * 1000));
+                const remainingSecs = Math.floor((remainingMs % (60 * 1000)) / 1000);
+
+                return res
+                    .status(HTTP_STATUS.OK)
+                    .json(new APIResponse(HTTP_STATUS.OK, {
+                        registration,
+                        cooldownActive: true,
+                        remainingMins,
+                        remainingSecs,
+                        stageName: activeStage,
+                        completedStages: registration.completedStages
+                    }, `Scan Cooldown: Ticket was scanned recently. Please wait ${remainingMins}m ${remainingSecs}s before scanning next stage.`));
+            }
+        }
+
+        // Push new stage completion
+        if (!registration.completedStages) registration.completedStages = [];
+        registration.completedStages.push({
+            stageName: activeStage,
+            scannedAt: new Date(),
+            scannedBy: req.user.userId
+        });
+
+        registration.attendanceMarked = true;
+        registration.attendanceMarkedAt = new Date();
+        registration.attendanceMarkedBy = req.user.userId;
+        await registration.save();
+
         return res
             .status(HTTP_STATUS.OK)
-            .json(new APIResponse(HTTP_STATUS.OK, { registration, alreadyMarked: true }, 'Attendance was already marked'));
+            .json(new APIResponse(HTTP_STATUS.OK, {
+                registration,
+                alreadyMarked: false,
+                stageName: activeStage,
+                completedStages: registration.completedStages
+            }, `"${activeStage}" verified successfully!`));
+    } else {
+        // Reset attendance if unchecking
+        registration.attendanceMarked = false;
+        registration.attendanceMarkedAt = null;
+        registration.attendanceMarkedBy = null;
+        registration.completedStages = [];
+        await registration.save();
+
+        return res
+            .status(HTTP_STATUS.OK)
+            .json(new APIResponse(HTTP_STATUS.OK, { registration, alreadyMarked: false }, 'Attendance reset successfully'));
     }
-
-    // Otherwise update the attendance fields
-    registration.attendanceMarked = attended;
-    registration.attendanceMarkedAt = attended ? new Date() : null;
-    registration.attendanceMarkedBy = attended ? req.user.userId : null;
-    await registration.save();
-
-    return res
-        .status(HTTP_STATUS.OK)
-        .json(new APIResponse(HTTP_STATUS.OK, { registration, alreadyMarked: false }, 'Attendance marked successfully'));
 });
 
 export const getEventRegistrations = asyncHandler(async (req, res) => {

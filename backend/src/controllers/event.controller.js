@@ -53,6 +53,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         customFormFields: customFormFields || [],
         eligibleBranches: eligibleBranches || [],
         eligibleYears: eligibleYears || [1, 2, 3, 4],
+        ticketStages: req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in'],
         isTBD: isTBD || false,
         createdBy: req.user.userId
     });
@@ -153,6 +154,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'customFormFields',
         'eligibleBranches',
         'eligibleYears',
+        'ticketStages',
         'isTBD'
     ];
 

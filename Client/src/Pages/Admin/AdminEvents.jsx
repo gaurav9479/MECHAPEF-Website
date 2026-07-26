@@ -23,7 +23,8 @@ const emptyForm = {
   title: '', description: '', category: 'Mechapef-Event',
   startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
   maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
-  customFormFields: [], eligibleBranches: [], eligibleYears: []
+  customFormFields: [], eligibleBranches: [], eligibleYears: [],
+  ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']
 };
 const AdminEvents = () => {
   const { logout } = useAuth();
@@ -40,6 +41,33 @@ const AdminEvents = () => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const addTicketStage = () => {
+    const current = form.ticketStages || [];
+    f('ticketStages', [...current, `Stage ${current.length + 1}: Custom Check-in`]);
+  };
+
+  const updateTicketStage = (index, value) => {
+    const current = [...(form.ticketStages || [])];
+    current[index] = value;
+    f('ticketStages', current);
+  };
+
+  const removeTicketStage = (index) => {
+    const current = (form.ticketStages || []).filter((_, i) => i !== index);
+    f('ticketStages', current);
+  };
+
+  const setStagePreset = (count) => {
+    if (count === 1) {
+      f('ticketStages', ['Stage 1: Main Gate Entry']);
+    } else if (count === 2) {
+      f('ticketStages', ['Stage 1: Main Gate Entry', 'Stage 2: Kit / Food Collection']);
+    } else if (count === 3) {
+      f('ticketStages', ['Stage 1: Main Gate Entry', 'Stage 2: Food & Refreshment', 'Stage 3: Certificate / Stage Entry']);
+    }
+  };
+
   const fetchEvents = async () => {
     try {
       const res = await eventService.getAll({ limit: 50 });
@@ -88,7 +116,8 @@ const AdminEvents = () => {
       prizes: ev.prizes || '',
       customFormFields: ev.customFormFields || [],
       eligibleBranches: ev.eligibleBranches || [],
-      eligibleYears: ev.eligibleYears || []
+      eligibleYears: ev.eligibleYears || [],
+      ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']
     });
     setShowModal(true);
   };
@@ -459,6 +488,55 @@ const AdminEvents = () => {
                     </div>
                   ))}
                   {form.customFormFields.length === 0 && <p style={{ color: '#888', fontSize: '0.9rem' }}>No custom fields added. Default fields (Name, Email, Reg No) are always included.</p>}
+                </div>
+
+                {/* Ticket Verification Stages (Scanning Stations) */}
+                <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div>
+                      <h3 style={{ margin: 0, color: '#ff1f01' }}>Ticket Verification Stages (Scanning Stations)</h3>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#888' }}>
+                        Define custom check-in stages (e.g. Stage 1: Main Gate, Stage 2: Food & Kit Collection).
+                      </p>
+                    </div>
+                    <button type="button" className="btn-secondary" onClick={addTicketStage} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+                      <FaPlus /> Add Stage
+                    </button>
+                  </div>
+
+                  {/* Stage Presets */}
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#aaa' }}>Quick Presets:</span>
+                    <button type="button" onClick={() => setStagePreset(1)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#222', border: '1px solid #444', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>
+                      1-Stage (Gate Entry)
+                    </button>
+                    <button type="button" onClick={() => setStagePreset(2)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#222', border: '1px solid #ff1f01', color: '#ff1f01', borderRadius: '4px', cursor: 'pointer' }}>
+                      2-Stage (Gate + Food/Kit)
+                    </button>
+                    <button type="button" onClick={() => setStagePreset(3)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#222', border: '1px solid #00e5ff', color: '#00e5ff', borderRadius: '4px', cursor: 'pointer' }}>
+                      3-Stage (Gate + Food + Certificate)
+                    </button>
+                  </div>
+
+                  {(form.ticketStages || []).map((stage, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '8px', alignItems: 'center', backgroundColor: '#111', padding: '10px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '0.85rem', color: '#ff1f01', fontWeight: 'bold', width: '70px', flexShrink: 0 }}>
+                        Stage {idx + 1}:
+                      </span>
+                      <input 
+                        value={stage} 
+                        onChange={e => updateTicketStage(idx, e.target.value)} 
+                        placeholder={`Stage ${idx + 1} Name (e.g. Stage 1: Main Gate Check-in)`} 
+                        required 
+                        style={{ flex: 1, background: '#1c1c20', color: '#fff', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px' }}
+                      />
+                      {(form.ticketStages || []).length > 1 && (
+                        <button type="button" className="btn-danger" onClick={() => removeTicketStage(idx)} style={{ padding: '8px' }}>
+                          <FaTrash />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="modal-actions">

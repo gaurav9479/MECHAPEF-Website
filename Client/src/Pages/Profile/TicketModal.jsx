@@ -70,6 +70,38 @@ const TicketModal = ({ registration, onClose }) => {
                   <strong className="bp-value">{registration.registrationType}</strong>
                 </div>
               </div>
+
+              {/* Verification Stages Progress */}
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed rgba(255, 255, 255, 0.15)' }}>
+                <span className="bp-label" style={{ display: 'block', marginBottom: '8px', color: '#ff1f01' }}>TICKET VERIFICATION STAGES</span>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {((event.ticketStages && event.ticketStages.length > 0) ? event.ticketStages : ['Stage 1: Check-in']).map((stageName, idx) => {
+                    const completed = (registration.completedStages || []).find(
+                      s => s.stageName?.toLowerCase() === stageName?.toLowerCase()
+                    );
+                    return (
+                      <div 
+                        key={idx} 
+                        style={{
+                          padding: '5px 10px',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: completed ? 'rgba(0, 229, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                          border: completed ? '1px solid rgba(0, 229, 255, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                          color: completed ? '#00e5ff' : '#888'
+                        }}
+                      >
+                        <span>{completed ? '✓' : '⏳'}</span>
+                        <span>{stageName}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 

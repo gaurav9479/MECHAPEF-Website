@@ -7,26 +7,67 @@ import './AdminScanner.css';
 
 const AdminScanner = () => {
   const navigate = useNavigate();
+  const [events, setEvents] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState('');
+  const [availableStages, setAvailableStages] = useState(['Stage 1: Check-in']);
+  const [selectedStage, setSelectedStage] = useState('Stage 1: Check-in');
+
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [alreadyMarked, setAlreadyMarked] = useState(false);
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   const isProcessingRef = useRef(false);
   const lastScannedRef = useRef(null);
   const scannerRef = useRef(null);
+  const selectedStageRef = useRef(selectedStage);
+
+  useEffect(() => {
+    selectedStageRef.current = selectedStage;
+  }, [selectedStage]);
+
+  useEffect(() => {
+    api.get('/events').then(res => {
+      const evList = res.data.data?.events || [];
+      setEvents(evList);
+      if (evList.length > 0) {
+        setSelectedEventId(evList[0]._id);
+        const stages = evList[0].ticketStages && evList[0].ticketStages.length > 0 ? evList[0].ticketStages : ['Stage 1: Check-in'];
+        setAvailableStages(stages);
+        setSelectedStage(stages[0]);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const handleEventChange = (eventId) => {
+    setSelectedEventId(eventId);
+    const ev = events.find(e => e._id === eventId);
+    const stages = ev?.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Check-in'];
+    setAvailableStages(stages);
+    setSelectedStage(stages[0]);
+  };
 
   const verifyAndMarkAttendance = async (eventId, regId) => {
     setLoading(true);
     setError(null);
     setScanResult(null);
+    setCooldownActive(false);
+    setStatusMessage('');
 
     try {
-      const res = await api.put(`/events/${eventId}/registrations/${regId}/attendance`, { attended: true });
+      const stageToVerify = selectedStageRef.current || 'Stage 1: Check-in';
+      const res = await api.put(`/events/${eventId}/registrations/${regId}/attendance`, {
+        attended: true,
+        stageName: stageToVerify
+      });
       const payload = res.data.data || {};
-      // prefer registration object if returned
-      setScanResult(payload.registration || payload);
+      const reg = payload.registration || payload;
+      setScanResult(reg);
       setAlreadyMarked(!!payload.alreadyMarked);
+      setCooldownActive(!!payload.cooldownActive);
+      setStatusMessage(res.data.message || (payload.alreadyMarked ? `Already scanned for ${stageToVerify}` : `${stageToVerify} Verified!`));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to verify ticket.');
     } finally {
@@ -36,8 +77,10 @@ const AdminScanner = () => {
       setTimeout(() => {
         setScanResult(null);
         setError(null);
+        setCooldownActive(false);
+        setStatusMessage('');
         lastScannedRef.current = null;
-      }, 1000);
+      }, 4000);
     }
   };
 
@@ -106,6 +149,37 @@ const AdminScanner = () => {
       </div>
 
       <div className="scanner-container">
+        {/* Stage Selection Bar */}
+        <div style={{ background: '#111116', border: '1px solid #22222a', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ flex: '1 1 250px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#ff1f01', fontWeight: 'bold', marginBottom: '6px' }}>Select Event:</label>
+              <select 
+                value={selectedEventId} 
+                onChange={(e) => handleEventChange(e.target.value)}
+                style={{ width: '100%', padding: '10px 14px', background: '#1a1a20', color: '#fff', border: '1px solid #333', borderRadius: '8px', fontSize: '0.9rem' }}
+              >
+                {events.map(ev => (
+                  <option key={ev._id} value={ev._id}>{ev.title}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ flex: '1 1 280px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#00e5ff', fontWeight: 'bold', marginBottom: '6px' }}>Active Scanning Station / Stage:</label>
+              <select 
+                value={selectedStage} 
+                onChange={(e) => setSelectedStage(e.target.value)}
+                style={{ width: '100%', padding: '10px 14px', background: '#0d2d3a', color: '#00e5ff', border: '1px solid #00e5ff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}
+              >
+                {availableStages.map((stg, i) => (
+                  <option key={i} value={stg}>{stg}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div className="scanner-grid">
           <div id="reader" className="qr-reader-box"></div>
 
@@ -113,17 +187,20 @@ const AdminScanner = () => {
             {loading ? (
               <div className="scanner-status-card loading-card">
                 <div className="status-icon loading-icon"></div>
-                <h2>VERIFYING...</h2>
-                <p>Hold on while we validate the ticket.</p>
+                <h2>VERIFYING STAGE...</h2>
+                <p>{selectedStage}</p>
               </div>
             ) : scanResult ? (
-              <div className={alreadyMarked ? "scanner-status-card already-card" : "scanner-status-card success-card"}>
-                <div className={alreadyMarked ? "status-icon already-circle" : "status-icon verified-circle"}>
-                  {alreadyMarked ? <FaExclamationTriangle /> : <FaCheckCircle />}
+              <div className={cooldownActive ? "scanner-status-card already-card" : alreadyMarked ? "scanner-status-card already-card" : "scanner-status-card success-card"}>
+                <div className={cooldownActive || alreadyMarked ? "status-icon already-circle" : "status-icon verified-circle"}>
+                  {cooldownActive || alreadyMarked ? <FaExclamationTriangle /> : <FaCheckCircle />}
                 </div>
-                <h2>{alreadyMarked ? 'ALREADY SCANNED' : 'VERIFIED'}</h2>
-                <p>Ticket ID: {scanResult._id?.slice(-6).toUpperCase()}</p>
-                {scanResult.name && <p>{scanResult.name}</p>}
+                <h2>{cooldownActive ? 'SCAN COOLDOWN ACTIVE' : alreadyMarked ? 'ALREADY SCANNED' : 'VERIFIED!'}</h2>
+                <h3 style={{ color: cooldownActive ? '#ff9900' : alreadyMarked ? '#ffaa00' : '#00e5ff', margin: '8px 0', fontSize: '1rem' }}>
+                  {selectedStage}
+                </h3>
+                <p style={{ fontWeight: 'bold', color: cooldownActive ? '#ffaa00' : '#fff', marginTop: '6px' }}>{statusMessage}</p>
+                <p style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '4px' }}>Ticket: {scanResult._id?.slice(-6).toUpperCase()}</p>
               </div>
             ) : error ? (
               <div className="scanner-status-card error-card">
@@ -135,8 +212,11 @@ const AdminScanner = () => {
               </div>
             ) : (
               <div className="scanner-status-card idle-card">
-                <h2>Ready</h2>
-                <p>Scan next ticket on the left.</p>
+                <span style={{ fontSize: '0.78rem', background: '#0d2d3a', color: '#00e5ff', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
+                  Active Stage: {selectedStage}
+                </span>
+                <h2>Ready To Scan</h2>
+                <p>Point camera at participant ticket QR code.</p>
               </div>
             )}
           </div>
