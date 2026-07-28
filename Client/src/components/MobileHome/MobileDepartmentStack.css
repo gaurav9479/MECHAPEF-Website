@@ -23,7 +23,7 @@
   position: relative;
   width: 90%;
   max-width: 400px;
-  height: 60vh; /* Adjust height based on mobile aspect ratio */
+  aspect-ratio: 9 / 13;
   margin: 0 auto;
 }
 

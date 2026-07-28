@@ -44,12 +44,22 @@ const AdminSidebar = () => {
 
   const handleLogout = async (e) => {
     e.preventDefault();
+    setIsOpen(false);
     await logout();
     navigate('/');
   };
 
   const closeSidebar = () => {
     setIsOpen(false);
+  };
+
+  const handleNav = (e, path) => {
+    if (window.innerWidth <= 768) {
+      e.preventDefault();
+      window.location.href = path;
+    } else {
+      setIsOpen(false);
+    }
   };
 
   // Close sidebar when route changes on mobile
@@ -93,17 +103,17 @@ const AdminSidebar = () => {
         </div>
         <nav className="sidebar-nav">
           {user?.role === 'volunteer' ? (
-            <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`}>
+            <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/scanner')}>
               <FaQrcode /> Scan Tickets
             </Link>
           ) : (
             <>
-              <Link to="/admin" className={`sidebar-link ${location.pathname === '/admin' ? 'active' : ''}`}>
+              <Link to="/admin" className={`sidebar-link ${location.pathname === '/admin' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin')}>
                 <FaCog /> Dashboard
               </Link>
               
               {(hasRole('super-admin') || hasRole('content-lead') || hasRole('media-lead')) && (
-                <Link to="/admin/messages" className={`sidebar-link ${location.pathname === '/admin/messages' ? 'active' : ''}`}>
+                <Link to="/admin/messages" className={`sidebar-link ${location.pathname === '/admin/messages' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/messages')}>
                   <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                     <FaEnvelope />
                     {unseenCount > 0 && (
@@ -129,22 +139,22 @@ const AdminSidebar = () => {
 
               {(hasRole('super-admin') || hasRole('content-lead')) && (
                 <>
-                  <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`}>
+                  <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/events')}>
                     <FaCalendarAlt /> Live Events
                   </Link>
-                  <Link to="/admin/past-events" className={`sidebar-link ${location.pathname === '/admin/past-events' ? 'active' : ''}`}>
+                  <Link to="/admin/past-events" className={`sidebar-link ${location.pathname === '/admin/past-events' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/past-events')}>
                     <FaCalendarAlt /> Past Events
                   </Link>
-                  <Link to="/admin/team" className={`sidebar-link ${location.pathname === '/admin/team' ? 'active' : ''}`}>
+                  <Link to="/admin/team" className={`sidebar-link ${location.pathname === '/admin/team' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/team')}>
                     <FaUsers /> Team
                   </Link>
-                  <Link to="/admin/announcements" className={`sidebar-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>
+                  <Link to="/admin/announcements" className={`sidebar-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/announcements')}>
                     <FaBullhorn /> Announcements
                   </Link>
-                  <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`}>
+                  <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/management')}>
                     <FaCog /> Management
                   </Link>
-                  <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`}>
+                  <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/scanner')}>
                     <FaQrcode /> Scan Tickets
                   </Link>
                 </>
@@ -154,16 +164,16 @@ const AdminSidebar = () => {
 
           {(hasRole('super-admin') || hasRole('media-lead')) && (
             <>
-              <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`}>
+              <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/sponsors')}>
                 <FaHandshake /> Sponsors
               </Link>
-              <Link to="/admin/special-sponsor" className={`sidebar-link ${location.pathname === '/admin/special-sponsor' ? 'active' : ''}`}>
+              <Link to="/admin/special-sponsor" className={`sidebar-link ${location.pathname === '/admin/special-sponsor' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/special-sponsor')}>
                 <FaHandshake /> Special Sponsor
               </Link>
-              <Link to="/admin/magazine" className={`sidebar-link ${location.pathname === '/admin/magazine' ? 'active' : ''}`}>
+              <Link to="/admin/magazine" className={`sidebar-link ${location.pathname === '/admin/magazine' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/magazine')}>
                 <FaBook /> Magazine
               </Link>
-              <Link to="/admin/gallery" className={`sidebar-link ${location.pathname === '/admin/gallery' ? 'active' : ''}`}>
+              <Link to="/admin/gallery" className={`sidebar-link ${location.pathname === '/admin/gallery' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/gallery')}>
                 <FaImages /> Gallery
               </Link>
             </>
@@ -171,17 +181,17 @@ const AdminSidebar = () => {
 
           {hasRole('super-admin') && (
             <>
-              <Link to="/admin/mail" className={`sidebar-link ${location.pathname === '/admin/mail' ? 'active' : ''}`}>
+              <Link to="/admin/mail" className={`sidebar-link ${location.pathname === '/admin/mail' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/mail')}>
                 <FaEnvelope /> Mail
               </Link>
-              <Link to="/admin/footprints" className={`sidebar-link ${location.pathname === '/admin/footprints' ? 'active' : ''}`}>
+              <Link to="/admin/footprints" className={`sidebar-link ${location.pathname === '/admin/footprints' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/footprints')}>
                 <FaShoePrints /> Footprints
               </Link>
             </>
           )}
         </nav>
         <div className="sidebar-bottom">
-          <Link to="/" className="sidebar-link"><FaHome /> View Site</Link>
+          <Link to="/" className="sidebar-link" onClick={(e) => handleNav(e, '/')}><FaHome /> View Site</Link>
           <button onClick={handleLogout} className="sidebar-logout"><FaSignOutAlt /> Logout</button>
         </div>
       </aside>
