@@ -40,24 +40,27 @@ const BASE_SECTION_KEYS = [
   { key: 'join_bot', label: 'Join Us Bot Image', aspectRatio: NaN }
 ];
 
-const getDynamicSectionKeys = (sectionImages, extraFy, extraSy, extraTy) => {
-  let maxFy = 10, maxSy = 10, maxTy = 10;
+const getDynamicSectionKeys = (sectionImages, extraFy, extraSy, extraTy, extraAl) => {
+  let maxFy = 10, maxSy = 10, maxTy = 10, maxAl = 10;
   Object.keys(sectionImages).forEach(k => {
     if (k.startsWith('team_fy_')) maxFy = Math.max(maxFy, parseInt(k.replace('team_fy_', '')));
     if (k.startsWith('team_sy_')) maxSy = Math.max(maxSy, parseInt(k.replace('team_sy_', '')));
     if (k.startsWith('team_ty_')) maxTy = Math.max(maxTy, parseInt(k.replace('team_ty_', '')));
+    if (k.startsWith('team_al_')) maxAl = Math.max(maxAl, parseInt(k.replace('team_al_', '')));
   });
 
   maxFy += extraFy;
   maxSy += extraSy;
   maxTy += extraTy;
+  maxAl += extraAl;
 
   const dynamicKeys = [...BASE_SECTION_KEYS];
   for (let i = 1; i <= maxFy; i++) dynamicKeys.push({ key: `team_fy_${i}`, label: `Team Second Year ${i}`, aspectRatio: 1 });
   for (let i = 1; i <= maxSy; i++) dynamicKeys.push({ key: `team_sy_${i}`, label: `Team Pre-final Year ${i}`, aspectRatio: 1 });
   for (let i = 1; i <= maxTy; i++) dynamicKeys.push({ key: `team_ty_${i}`, label: `Team Final Year ${i}`, aspectRatio: 3/4 });
+  for (let i = 1; i <= maxAl; i++) dynamicKeys.push({ key: `team_al_${i}`, label: `Team Notable Alumni ${i}`, aspectRatio: 3/4 });
   
-  return { dynamicKeys, counts: { fy: maxFy, sy: maxSy, ty: maxTy } };
+  return { dynamicKeys, counts: { fy: maxFy, sy: maxSy, ty: maxTy, al: maxAl } };
 };
 const AdminManagement = () => {
   const { logout } = useAuth();
@@ -124,8 +127,9 @@ const AdminManagement = () => {
   const [extraFy, setExtraFy] = useState(0);
   const [extraSy, setExtraSy] = useState(0);
   const [extraTy, setExtraTy] = useState(0);
+  const [extraAl, setExtraAl] = useState(0);
 
-  const { dynamicKeys: dynamicSectionKeys, counts: slotCounts } = getDynamicSectionKeys(sectionImages, extraFy, extraSy, extraTy);
+  const { dynamicKeys: dynamicSectionKeys, counts: slotCounts } = getDynamicSectionKeys(sectionImages, extraFy, extraSy, extraTy, extraAl);
   const [cropSrc, setCropSrc] = useState(null);
   const [cropping, setCropping] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -706,6 +710,7 @@ const AdminManagement = () => {
                       if (newCat === 'Our Team (Second Year)') return s.key.startsWith('team_fy_');
                       if (newCat === 'Our Team (Pre-Final Year)') return s.key.startsWith('team_sy_');
                       if (newCat === 'Our Team (Final Year)') return s.key.startsWith('team_ty_');
+                      if (newCat === 'Our Team (Notable Alumni)') return s.key.startsWith('team_al_');
                       return !s.key.startsWith('team_');
                     });
                     if (filtered.length > 0) setSelectedSection(filtered[0].key);
@@ -715,11 +720,17 @@ const AdminManagement = () => {
                   <option value="Our Team (Second Year)">Our Team (Second Year)</option>
                   <option value="Our Team (Pre-Final Year)">Our Team (Pre-Final Year)</option>
                   <option value="Our Team (Final Year)">Our Team (Final Year)</option>
+                  <option value="Our Team (Notable Alumni)">Our Team (Notable Alumni)</option>
                 </select>
                 {selectedCategory.startsWith('Our Team') && (
                   <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px', gap: '5px' }}>
                     <div style={{ color: '#aaa', fontSize: '14px', marginBottom: '5px' }}>
-                      Currently showing {selectedCategory === 'Our Team (Second Year)' ? slotCounts.fy : selectedCategory === 'Our Team (Pre-Final Year)' ? slotCounts.sy : slotCounts.ty} slots.
+                      Currently showing {
+                        selectedCategory === 'Our Team (Second Year)' ? slotCounts.fy : 
+                        selectedCategory === 'Our Team (Pre-Final Year)' ? slotCounts.sy : 
+                        selectedCategory === 'Our Team (Final Year)' ? slotCounts.ty : 
+                        slotCounts.al
+                      } slots.
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button 
@@ -729,6 +740,7 @@ const AdminManagement = () => {
                           if (selectedCategory === 'Our Team (Second Year)') setExtraFy(p => p + 1);
                           else if (selectedCategory === 'Our Team (Pre-Final Year)') setExtraSy(p => p + 1);
                           else if (selectedCategory === 'Our Team (Final Year)') setExtraTy(p => p + 1);
+                          else if (selectedCategory === 'Our Team (Notable Alumni)') setExtraAl(p => p + 1);
                         }}
                       >
                         + 1 Slot
@@ -740,6 +752,7 @@ const AdminManagement = () => {
                           if (selectedCategory === 'Our Team (Second Year)') setExtraFy(p => Math.max(0, p - 1));
                           else if (selectedCategory === 'Our Team (Pre-Final Year)') setExtraSy(p => Math.max(0, p - 1));
                           else if (selectedCategory === 'Our Team (Final Year)') setExtraTy(p => Math.max(0, p - 1));
+                          else if (selectedCategory === 'Our Team (Notable Alumni)') setExtraAl(p => Math.max(0, p - 1));
                         }}
                       >
                         - 1 Slot
@@ -759,6 +772,7 @@ const AdminManagement = () => {
                       if (selectedCategory === 'Our Team (Second Year)') return s.key.startsWith('team_fy_');
                       if (selectedCategory === 'Our Team (Pre-Final Year)') return s.key.startsWith('team_sy_');
                       if (selectedCategory === 'Our Team (Final Year)') return s.key.startsWith('team_ty_');
+                      if (selectedCategory === 'Our Team (Notable Alumni)') return s.key.startsWith('team_al_');
                       return !s.key.startsWith('team_');
                     })
                     .sort((a, b) => {

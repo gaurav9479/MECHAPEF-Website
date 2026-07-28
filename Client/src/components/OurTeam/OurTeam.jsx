@@ -107,6 +107,7 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap, specialSponsor }) => {
     team_fy: 'Junior Member',
     team_sy: 'Core Member',
     team_ty: 'Senior Member',
+    team_al: 'Notable Alumni',
   };
   const fallbackRole = fallbackMap[sectionPrefix] || 'Member';
 
@@ -136,7 +137,7 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap, specialSponsor }) => {
                 num={num}
                 index={idx}
                 fallbackRole={fallbackRole}
-                isFinalYear={sectionPrefix === 'team_ty'}
+                isFinalYear={sectionPrefix === 'team_ty' || sectionPrefix === 'team_al'}
                 specialSponsor={specialSponsor}
               />
             );
@@ -249,6 +250,7 @@ const OurTeam = () => {
 
       {/* Scroll Container */}
       <div className="team-scroll-container">
+        <TeamLayer title="Notable Alumni"             sectionPrefix="team_al" imagesMap={imagesMap} specialSponsor={specialSponsor} />
         <TeamLayer title="Final Year Seniors" sectionPrefix="team_ty" imagesMap={imagesMap} specialSponsor={specialSponsor} />
         <TeamLayer title="Pre-final Year"     sectionPrefix="team_sy" imagesMap={imagesMap} specialSponsor={specialSponsor} />
         <TeamLayer title="Second Year"        sectionPrefix="team_fy" imagesMap={imagesMap} specialSponsor={specialSponsor} />

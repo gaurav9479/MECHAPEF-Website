@@ -71,6 +71,7 @@ const MobileHome = () => {
       };
       
       setTeam({
+        al: mk('team_al', 'Notable Alumni'),
         fy: mk('team_ty', 'Final Year'),
         sy: mk('team_sy', 'Pre-Final'),
         ty: mk('team_fy', '2nd Year'),

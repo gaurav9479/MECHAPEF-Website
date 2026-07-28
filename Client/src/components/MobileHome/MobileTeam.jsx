@@ -7,6 +7,7 @@ import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 const MobileTeam = ({ team }) => {
   const [specialSponsor, setSpecialSponsor] = useState(null);
   const [activeTab, setActiveTab] = useState(() => {
+    if (team.al && team.al.length > 0) return 'al';
     if (team.fy && team.fy.length > 0) return 'fy';
     if (team.sy && team.sy.length > 0) return 'sy';
     if (team.ty && team.ty.length > 0) return 'ty';
@@ -20,6 +21,7 @@ const MobileTeam = ({ team }) => {
   }, []);
 
   const tabDefs = [
+    { key: 'al', label: 'Notable Alumni' },
     { key: 'fy', label: 'Final Year' },
     { key: 'sy', label: 'Pre-Final'  },
     { key: 'ty', label: '2nd Year'   },
