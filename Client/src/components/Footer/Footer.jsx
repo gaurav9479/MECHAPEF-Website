@@ -77,10 +77,10 @@ const Footer = () => {
               <FaEnvelope className="info-icon" />
               <p>mechapef@mnnit.ac.in</p>
             </div>
-            <div className="info-item">
+            {/* <div className="info-item">
               <FaPhoneAlt className="info-icon" />
               <p>+91 98765 43210</p>
-            </div>
+            </div> */}
           </div>
 
           <div className="footer-socials">

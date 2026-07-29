@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as authController from '../controllers/auth.controller.js';
 import { authenticate, checkRole } from '../middleware/auth.middleware.js';
+import { authLimiter } from '../middleware/security.middleware.js';
 
 const router = Router();
 
@@ -18,8 +19,8 @@ router.post('/reset-password/:token', microsoftOnlyAuth);
 
 // Microsoft OAuth2
 router.get('/microsoft/url', authController.getMicrosoftAuthUrl);
-router.post('/microsoft/callback', authController.microsoftLoginCallback);
-router.post('/microsoft/token', authController.microsoftTokenLogin);
+router.post('/microsoft/callback', authLimiter, authController.microsoftLoginCallback);
+router.post('/microsoft/token', authLimiter, authController.microsoftTokenLogin);
 
 // Authenticated user routes
 router.post('/logout', authenticate, authController.logout);

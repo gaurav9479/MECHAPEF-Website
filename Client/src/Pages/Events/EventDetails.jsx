@@ -6,6 +6,7 @@ import Footer from '../../components/Footer/Footer';
 import { FaGraduationCap } from 'react-icons/fa';
 import { eventService } from '../../services/services';
 import api from '../../services/api';
+import { Helmet } from 'react-helmet-async';
 import './EventDetails.css';
 
 const EventDetails = () => {
@@ -179,6 +180,12 @@ const EventDetails = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{event.title} | MechaPEF MNNIT</title>
+        <meta name="description" content={event.description.substring(0, 150) + (event.description.length > 150 ? '...' : '')} />
+        <meta property="og:title" content={`${event.title} | MechaPEF MNNIT`} />
+        <meta property="og:description" content={event.description.substring(0, 150) + (event.description.length > 150 ? '...' : '')} />
+      </Helmet>
       <Navbar />
       <div className="event-details-wrapper">
         <div className="event-header">

@@ -144,7 +144,7 @@ const AdminManagement = () => {
   const fetchUsers = useCallback(async () => {
     setUsersLoading(true);
     try {
-      const params = {};
+      const params = { limit: 5000 };
       if (filterRole) params.role = filterRole;
       if (filterVerified !== '') params.isVerified = filterVerified;
       const res = await api.get('/auth/users', { params });
@@ -190,8 +190,8 @@ const AdminManagement = () => {
         assignedStage: endorseStage
       });
       showToast(`User endorsed as Volunteer for ${endorseStage}!`);
+      setUsers(prev => prev.map(u => u._id === endorseModalUser._id ? { ...u, role: 'volunteer', assignedEvent: endorseEventId, assignedStage: endorseStage } : u));
       setEndorseModalUser(null);
-      fetchUsers();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to save endorsement', 'error');
     } finally {
@@ -209,7 +209,7 @@ const AdminManagement = () => {
         await api.patch(`/auth/users/${userId}/verify`, { isVerified: true });
         showToast('User verified successfully');
       }
-      fetchUsers();
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isVerified: !currentlyVerified } : u));
     } catch { showToast('Failed to update', 'error'); }
     finally { setVerifyingId(null); }
   };
@@ -223,7 +223,7 @@ const AdminManagement = () => {
     try {
       await api.patch(`/auth/users/${userId}/role`, { role: newRole, assignedEvent: null, assignedStage: null });
       showToast('User role updated successfully');
-      fetchUsers();
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole, assignedEvent: null, assignedStage: null } : u));
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update role', 'error');
     }
@@ -485,6 +485,7 @@ const AdminManagement = () => {
                 <option value="super-admin">Super Admin</option>
                 <option value="content-lead">Content Lead</option>
                 <option value="media-lead">Media Lead</option>
+                <option value="volunteer">Volunteer</option>
                 <option value="member">Member</option>
                 <option value="general-user">General User</option>
               </select>
