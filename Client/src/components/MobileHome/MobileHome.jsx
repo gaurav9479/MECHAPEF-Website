@@ -95,7 +95,7 @@ const MobileHome = () => {
       <MobileHero navigate={navigate} />
       <MobileStats />
       <MobileAbout />
-      <LearningLogos />
+      {/* <LearningLogos /> */}
       <PastEventsStack />
       <MobileLiveEvents slides={slides} navigate={navigate} onActiveSlideChange={setActiveAnnouncement} />
       <HeroTicker />

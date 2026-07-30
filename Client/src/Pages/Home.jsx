@@ -99,7 +99,7 @@ const Home = () => {
         
         <div id="home"><HeroIntro /></div>
         <div id="about-us"><AboutWheel /></div>
-        <div id="learning"><LearningLogos /></div>
+        {/* <div id="learning"><LearningLogos /></div> */}
         <div id="past-events"><PastEventsStack /></div>
         <div id="live-events"><LiveEventsSlider /></div>
         <div id="our-department"><OurDepartment /></div>
