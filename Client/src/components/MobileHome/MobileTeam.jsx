@@ -6,19 +6,22 @@ import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 
 const MobileTeam = ({ team }) => {
   const [specialSponsor, setSpecialSponsor] = useState(null);
-  const [activeTab, setActiveTab] = useState(() => {
-    if (team.al && team.al.length > 0) return 'al';
-    if (team.fy && team.fy.length > 0) return 'fy';
-    if (team.sy && team.sy.length > 0) return 'sy';
-    if (team.ty && team.ty.length > 0) return 'ty';
-    return 'fy';
-  });
+  const [activeTab, setActiveTab] = useState('al');
 
   useEffect(() => {
     apiGetCached('/special-sponsor/active', (data) => {
       if (data?.data) setSpecialSponsor(data.data);
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!team[activeTab] || team[activeTab].length === 0) {
+      if (team.al && team.al.length > 0) setActiveTab('al');
+      else if (team.fy && team.fy.length > 0) setActiveTab('fy');
+      else if (team.sy && team.sy.length > 0) setActiveTab('sy');
+      else if (team.ty && team.ty.length > 0) setActiveTab('ty');
+    }
+  }, [team]);
 
   const tabDefs = [
     { key: 'al', label: 'Notable Alumni' },

@@ -41,24 +41,32 @@ const MobileDepartmentStack = ({ images }) => {
           }
         });
 
+        // Fade in and scale up the header smoothly as the section is pinned
+        const mdsHeader = sectionRef.current.querySelector('.mds-header');
+        mobileTl.fromTo(mdsHeader,
+          { opacity: 0, scale: 0.7, y: 30 },
+          { opacity: 0.8, scale: 1, y: 0, duration: 0.8, ease: "power2.out" },
+          0
+        );
+
         // Bring wrapper up slightly
         mobileTl.to(mobileCardsWrapper, {
           y: 0,
-          duration: 0.5,
+          duration: 0.8,
           ease: "none"
-        }, 0);
+        }, 0.3);
 
         // Animate first card
         mobileTl.fromTo(cards[0], 
           { y: window.innerHeight, opacity: 0, scale: 0.8 },
           { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'power3.out' }, 
-          0.5
+          0.7
         );
 
         cards.forEach((card, index) => {
           if (index === 0) return;
           
-          const startTime = 0.5 + (index * 0.85); 
+          const startTime = 0.7 + (index * 0.85); 
           mobileTl.fromTo(card, 
             { y: window.innerHeight, opacity: 0, scale: 0.8 },
             { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'power3.out' }, 
@@ -97,21 +105,21 @@ const MobileDepartmentStack = ({ images }) => {
 
   return (
     <section ref={sectionRef} className="mds-section mh-section">
-      <Reveal>
-        <div className="mh-sec-hd" style={{ 
-          position: 'absolute', 
-          top: '45%', 
-          left: '50%', 
-          transform: 'translate(-50%, -50%)', 
-          zIndex: 0, 
-          width: '100%' 
-        }}>
-          <h2 className="mh-sec-title" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', color: '#ffffff', letterSpacing: '6px', textAlign: 'center', fontSize: '2.5rem', opacity: 0.8 }}>
-            <span>OUR</span>
-            <span>DEPARTMENT</span>
-          </h2>
-        </div>
-      </Reveal>
+      <div className="mh-sec-hd mds-header" style={{ 
+        position: 'absolute', 
+        top: '45%', 
+        left: '50%', 
+        transform: 'translate(-50%, -50%)', 
+        zIndex: 0, 
+        width: '100%',
+        opacity: 0,
+        pointerEvents: 'none'
+      }}>
+        <h2 className="mh-sec-title" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', color: '#ffffff', letterSpacing: '6px', textAlign: 'center', fontSize: '2.5rem' }}>
+          <span>OUR</span>
+          <span>DEPARTMENT</span>
+        </h2>
+      </div>
 
       <div className="mds-container" style={{ zIndex: 5 }}>
         <div className="mds-cards-wrapper">

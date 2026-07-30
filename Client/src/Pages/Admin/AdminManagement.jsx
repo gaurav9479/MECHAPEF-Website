@@ -10,6 +10,7 @@ import {
   FaImage, FaUpload, FaEdit, FaCrop, FaSearch, FaTrash, FaQrcode
 } from 'react-icons/fa';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import '../Admin/AdminDashboard.css';
 import './AdminManagement.css';
@@ -140,18 +141,24 @@ const AdminManagement = () => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
-  // ── Fetch Users ──────────────────────────────────────────────────────────
+  // ── Fetch Users (Cached) ──────────────────────────────────────────────────
+  const clearUsersCache = () => {
+    localStorage.removeItem('api_cache_/auth/users?limit=5000');
+  };
+
   const fetchUsers = useCallback(async () => {
     setUsersLoading(true);
     try {
-      const params = { limit: 5000 };
-      if (filterRole) params.role = filterRole;
-      if (filterVerified !== '') params.isVerified = filterVerified;
-      const res = await api.get('/auth/users', { params });
-      setUsers(res.data.data?.users || []);
-    } catch { showToast('Failed to load users', 'error'); }
-    finally { setUsersLoading(false); }
-  }, [filterRole, filterVerified]);
+      await apiGetCached('/auth/users?limit=5000', (data) => {
+        setUsers(data.data?.users || []);
+      }, { cacheDuration: 10 * 60 * 1000 }); // Cache for 10 minutes
+    } catch { 
+      showToast('Failed to load users', 'error'); 
+    } finally { 
+      setUsersLoading(false); 
+    }
+  }, []);
+
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const openEndorseModal = async (u) => {
@@ -190,6 +197,7 @@ const AdminManagement = () => {
         assignedStage: endorseStage
       });
       showToast(`User endorsed as Volunteer for ${endorseStage}!`);
+      clearUsersCache();
       setUsers(prev => prev.map(u => u._id === endorseModalUser._id ? { ...u, role: 'volunteer', assignedEvent: endorseEventId, assignedStage: endorseStage } : u));
       setEndorseModalUser(null);
     } catch (err) {
@@ -209,6 +217,7 @@ const AdminManagement = () => {
         await api.patch(`/auth/users/${userId}/verify`, { isVerified: true });
         showToast('User verified successfully');
       }
+      clearUsersCache();
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, isVerified: !currentlyVerified } : u));
     } catch { showToast('Failed to update', 'error'); }
     finally { setVerifyingId(null); }
@@ -223,18 +232,28 @@ const AdminManagement = () => {
     try {
       await api.patch(`/auth/users/${userId}/role`, { role: newRole, assignedEvent: null, assignedStage: null });
       showToast('User role updated successfully');
+      clearUsersCache();
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole, assignedEvent: null, assignedStage: null } : u));
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update role', 'error');
     }
   };
 
-  const filteredUsers = users.filter(u =>
-    !search ||
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.collegeRegNo?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = !search ||
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      u.collegeRegNo?.toLowerCase().includes(search.toLowerCase());
+
+    const matchesRole = !filterRole || u.role === filterRole;
+
+    let matchesVerified = true;
+    if (filterVerified !== '') {
+      matchesVerified = filterVerified === 'true' ? u.isVerified === true : u.isVerified === false;
+    }
+
+    return matchesSearch && matchesRole && matchesVerified;
+  });
   // ── Fetch Notices ────────────────────────────────────────────────────────
   const fetchNotices = async () => {
     const [annRes, sponRes] = await Promise.all([
