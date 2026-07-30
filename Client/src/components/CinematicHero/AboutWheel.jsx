@@ -81,7 +81,7 @@ const AboutWheel = () => {
                 </motion.div>
                 <motion.div className="dash-card card-wide dash-card-glow" style={{ x: card3X, y: card3Y }}>
                   <div className="dash-icon-bg"><FaUserGraduate /></div>
-                  <h3 className="dash-num">1000+</h3>
+                  <h3 className="dash-num">500+</h3>
                   <h4 className="dash-title">Students Impacted</h4>
                   <p className="dash-sub">and growing with every semester</p>
                 </motion.div>
@@ -90,13 +90,13 @@ const AboutWheel = () => {
               <div className="dash-col col-right">
                 <motion.div className="dash-card card-wide dash-card-glow" style={{ x: card2X, y: card2Y }}>
                   <div className="dash-icon-bg"><FaHistory /></div>
-                  <h3 className="dash-num">5+</h3>
+                  <h3 className="dash-num">3+</h3>
                   <h4 className="dash-title">Years of Legacy</h4>
                   <p className="dash-sub">of knowledge and mentorship programmes</p>
                 </motion.div>
                 <motion.div className="dash-card card-tall dash-card-glow" style={{ y: card4Y, x: card4X }}>
                   <div className="dash-icon-bg"><FaCalendarCheck /></div>
-                  <h3 className="dash-num">50+</h3>
+                  <h3 className="dash-num">15+</h3>
                   <h4 className="dash-title">Events Conducted</h4>
                   <p className="dash-sub text-red">workshops, competitions and more</p>
                 </motion.div>
