@@ -206,7 +206,8 @@
 .card-img-placeholder {
   position: relative;
   width: 100%;
-  height: clamp(190px, 28vw, 240px);
+  aspect-ratio: 3 / 4;
+  height: auto;
   background: linear-gradient(135deg, #141414, #0a0a0a);
   display: flex;
   align-items: center;
@@ -361,16 +362,12 @@
   .card-name           { font-size: 0.85rem; }
 
   /* Keep images on mobile — just smaller */
-  .card-img-placeholder { height: 150px; }
   .team-card            { width: 150px; }
 
   /* Final year seniors - maintain 3:4 aspect ratio and keep them slightly larger than normal on mobile */
   .final-year-card {
     width: 170px;
     border-bottom: 2px solid #ff1f01;
-  }
-  .final-year-card .card-img-placeholder {
-    height: 226px; /* 170 * (4/3) = ~226 */
   }
 
   /* Make final year hover effects persistent or more pronounced on mobile tap */
