@@ -192,13 +192,13 @@ const AdminManagement = () => {
     setEndorseSubmitting(true);
     try {
       await api.patch(`/auth/users/${endorseModalUser._id}/role`, {
-        role: 'volunteer',
+        role: 'endorsed-volunteer',
         assignedEvent: endorseEventId,
         assignedStage: endorseStage
       });
       showToast(`User endorsed as Volunteer for ${endorseStage}!`);
       clearUsersCache();
-      setUsers(prev => prev.map(u => u._id === endorseModalUser._id ? { ...u, role: 'volunteer', assignedEvent: endorseEventId, assignedStage: endorseStage } : u));
+      setUsers(prev => prev.map(u => u._id === endorseModalUser._id ? { ...u, role: 'endorsed-volunteer', assignedEvent: endorseEventId, assignedStage: endorseStage } : u));
       setEndorseModalUser(null);
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to save endorsement', 'error');
@@ -224,7 +224,7 @@ const AdminManagement = () => {
   };
 
   const updateRole = async (userId, newRole) => {
-    if (newRole === 'volunteer') {
+    if (newRole === 'endorsed-volunteer') {
       const targetUser = users.find(u => u._id === userId);
       if (targetUser) openEndorseModal(targetUser);
       return;
@@ -503,8 +503,8 @@ const AdminManagement = () => {
                 <option value="">All Roles</option>
                 <option value="super-admin">Super Admin</option>
                 <option value="content-lead">Content Lead</option>
-                <option value="media-lead">Media Lead</option>
-                <option value="volunteer">Volunteer</option>
+                <option value="event-lead">Event Lead</option>
+                <option value="endorsed-volunteer">Endorsed Volunteer</option>
                 <option value="member">Member</option>
                 <option value="general-user">General User</option>
               </select>
@@ -566,8 +566,8 @@ const AdminManagement = () => {
                             >
                               <option value="super-admin">Super Admin</option>
                               <option value="content-lead">Content Lead</option>
-                              <option value="media-lead">Media Lead</option>
-                              <option value="volunteer">Volunteer (Scanner Only)</option>
+                              <option value="event-lead">Event Lead</option>
+                              <option value="endorsed-volunteer">Endorsed Volunteer</option>
                               <option value="member">Member</option>
                               <option value="general-user">General User</option>
                             </select>

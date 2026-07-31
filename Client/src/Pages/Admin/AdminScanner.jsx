@@ -172,7 +172,7 @@ const AdminScanner = () => {
       // Ignore cleanup error
     }
 
-    const target = user?.role === 'volunteer' ? '/' : (user?.role === 'super-admin' || user?.role === 'content-lead' || user?.role === 'media-lead') ? '/admin' : '/';
+    const target = user?.role === 'endorsed-volunteer' ? '/' : (user?.role === 'super-admin' || user?.role === 'content-lead' || user?.role === 'event-lead') ? '/admin' : '/';
     window.location.href = target;
   };
 
@@ -185,7 +185,7 @@ const AdminScanner = () => {
           onClick={handleBackClick} 
           style={{ position: 'relative', zIndex: 9999, cursor: 'pointer', pointerEvents: 'auto' }}
         >
-          <FaArrowLeft /> {user?.role === 'volunteer' ? 'Back to Home' : 'Back to Admin'}
+          <FaArrowLeft /> {user?.role === 'endorsed-volunteer' ? 'Back to Home' : 'Back to Admin'}
         </button>
         <h1><FaQrcode /> Ticket Scanner</h1>
         <p>Scan participant QR codes at entry & verification stations.</p>

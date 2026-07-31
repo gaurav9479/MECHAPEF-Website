@@ -102,7 +102,7 @@ const AdminSidebar = () => {
           </div>
         </div>
         <nav className="sidebar-nav">
-          {user?.role === 'volunteer' ? (
+          {user?.role === 'endorsed-volunteer' ? (
             <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/scanner')}>
               <FaQrcode /> Scan Tickets
             </Link>
@@ -112,7 +112,7 @@ const AdminSidebar = () => {
                 <FaCog /> Dashboard
               </Link>
               
-              {(hasRole('super-admin') || hasRole('content-lead') || hasRole('media-lead')) && (
+              {(hasRole('super-admin') || hasRole('content-lead') || hasRole('event-lead')) && (
                 <Link to="/admin/messages" className={`sidebar-link ${location.pathname === '/admin/messages' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/messages')}>
                   <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                     <FaEnvelope />
@@ -162,7 +162,7 @@ const AdminSidebar = () => {
             </>
           )}
 
-          {(hasRole('super-admin') || hasRole('media-lead')) && (
+          {(hasRole('super-admin') || hasRole('event-lead')) && (
             <>
               <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/sponsors')}>
                 <FaHandshake /> Sponsors

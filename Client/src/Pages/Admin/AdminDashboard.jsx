@@ -11,7 +11,7 @@ import { Navigate } from 'react-router-dom';
 const AdminDashboard = () => {
   const { logout, user, hasRole } = useAuth();
 
-  if (user?.role === 'volunteer') {
+  if (user?.role === 'endorsed-volunteer') {
     return <Navigate to="/admin/scanner" replace />;
   }
 
