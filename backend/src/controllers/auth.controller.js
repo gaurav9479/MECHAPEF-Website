@@ -10,15 +10,40 @@ import crypto from 'crypto';
 const PASSWORD_RESET_SUCCESS_MESSAGE = 'If an account with that email exists, a password reset link has been sent.';
 const PASSWORD_RESET_EXPIRY_MS = 15 * 60 * 1000;
 
+function parseStudentInfoFromRegNo(regNo) {
+    if (!regNo || regNo.length < 8) return { branch: undefined, yearOfStudy: undefined };
+    
+    const enrollmentYear = parseInt(regNo.substring(0, 4), 10);
+    const branchCode = regNo.substring(4, 5);
+    
+    if (isNaN(enrollmentYear)) return { branch: undefined, yearOfStudy: undefined };
+
+    let yearOfStudy = 2027 - enrollmentYear;
+    if (yearOfStudy < 1) yearOfStudy = 1;
+    if (yearOfStudy > 5) yearOfStudy = 5;
+
+    const branchMap = {
+        '0': 'Biotechnology',
+        '1': 'Chemical Engineering',
+        '2': 'Civil Engineering',
+        '3': 'Computer Science and Engineering',
+        '4': 'Electronics and Communication Engineering',
+        '5': 'Electrical Engineering',
+        '6': 'Mechanical Engineering',
+        '7': 'Production and Industrial Engineering',
+        '8': 'Electronics and Computational Mechanics',
+        '9': 'Materials Engineering'
+    };
+
+    const branch = branchMap[branchCode];
+    return { branch, yearOfStudy };
+}
+
 export const register = asyncHandler(async (req, res) => {
-    const { name, email, password, collegeRegNo, yearOfStudy, branch, phoneNumber } = req.body;
+    const { name, email, password, phoneNumber } = req.body;
 
     if (!name || !email || !password) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Name, email, and password are required');
-    }
-
-    if (!collegeRegNo) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'College registration number is required for registration');
     }
 
     const mnnitEmailRegex = /^[a-z]+\.[0-9]+@mnnit\.ac\.in$/;
@@ -27,8 +52,10 @@ export const register = asyncHandler(async (req, res) => {
     }
 
     const regnoFromEmail = email.toLowerCase().split('.')[1].split('@')[0];
-    if (regnoFromEmail !== collegeRegNo.toLowerCase()) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Wrong credential');
+    const { branch: parsedBranch, yearOfStudy: parsedYear } = parseStudentInfoFromRegNo(regnoFromEmail);
+
+    if (!parsedBranch || !parsedYear) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Unable to parse branch and year of study from email address');
     }
 
     if (req.body.role && req.body.role !== 'general-user') {
@@ -37,7 +64,7 @@ export const register = asyncHandler(async (req, res) => {
 
     const [existingEmail, existingRegNo] = await Promise.all([
         User.findOne({ email: email.toLowerCase() }),
-        User.findOne({ collegeRegNo: collegeRegNo.toUpperCase() })
+        User.findOne({ collegeRegNo: regnoFromEmail.toUpperCase() })
     ]);
 
     if (existingEmail) {
@@ -47,17 +74,24 @@ export const register = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.CONFLICT, 'This college registration number is already registered');
     }
 
+    const isMechOrProd = parsedBranch && (
+        parsedBranch.toLowerCase().includes('mechanical') || 
+        parsedBranch.toLowerCase().includes('production') ||
+        parsedBranch.toLowerCase().includes('pie')
+    );
+    const assignedRole = isMechOrProd ? 'member' : 'general-user';
+
     const newUser = new User({
         name: name.trim(),
         email: email.toLowerCase(),
         password,
-        collegeRegNo: collegeRegNo.toUpperCase(),
-        role: 'genera',
+        collegeRegNo: regnoFromEmail.toUpperCase(),
+        role: assignedRole,
         requestedRole: req.body.requestedRole || null,
         isVerified: false,
         unverifiedRequestExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        yearOfStudy: yearOfStudy || undefined,
-        branch: branch || undefined,
+        yearOfStudy: parsedYear,
+        branch: parsedBranch,
         phoneNumber: phoneNumber || undefined,
     });
 
@@ -233,7 +267,7 @@ export const logout = asyncHandler(async (req, res) => {
 
 
 export const getCurrentUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user.userId).populate('assignedEvent', 'title ticketStages');
     if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, { user: user.getPublicProfile() }, 'User profile retrieved')
@@ -242,7 +276,7 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 
 
 export const updateProfile = asyncHandler(async (req, res) => {
-    const allowed = ['name', 'phoneNumber', 'branch', 'yearOfStudy', 'profileImage', 'githubURL', 'linkedinURL', 'otherLinks'];
+    const allowed = ['name', 'phoneNumber', 'profileImage', 'githubURL', 'linkedinURL', 'otherLinks'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
 
@@ -281,7 +315,7 @@ export const verifyUser = asyncHandler(async (req, res) => {
 });
 
 export const updateUserRole = asyncHandler(async (req, res) => {
-    const { role } = req.body;
+    const { role, assignedEvent, assignedStage } = req.body;
 
     if (!role) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Role is required');
 
@@ -289,6 +323,8 @@ export const updateUserRole = asyncHandler(async (req, res) => {
     if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
 
     user.role = role;
+    if (assignedEvent !== undefined) user.assignedEvent = assignedEvent || null;
+    if (assignedStage !== undefined) user.assignedStage = assignedStage || null;
     await user.save({ validateBeforeSave: false });
 
     return res.status(HTTP_STATUS.OK).json(
@@ -426,6 +462,9 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         throw new ApiError(403, 'Only MNNIT email addresses (@mnnit.ac.in) are allowed');
     }
 
+    const collegeRegNo = email.split('@')[0].split('.').pop() || email.split('@')[0];
+    const { branch: parsedBranch, yearOfStudy: parsedYear } = parseStudentInfoFromRegNo(collegeRegNo);
+
     // Atomic update for existing users — single DB round-trip
     let user = await User.findOneAndUpdate(
         { email },
@@ -436,15 +475,30 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         { new: true }
     );
 
+    const isMechOrProd = parsedBranch && (
+        parsedBranch.toLowerCase().includes('mechanical') || 
+        parsedBranch.toLowerCase().includes('production') ||
+        parsedBranch.toLowerCase().includes('pie')
+    );
+
+    if (user) {
+        let shouldSave = false;
+        if (!user.branch && parsedBranch) { user.branch = parsedBranch; shouldSave = true; }
+        if (!user.yearOfStudy && parsedYear) { user.yearOfStudy = parsedYear; shouldSave = true; }
+        if (user.role === 'general-user' && isMechOrProd) { user.role = 'member'; shouldSave = true; }
+        if (shouldSave) await user.save();
+    }
+
     // New user — create them
     if (!user) {
-        const collegeRegNo = email.split('@')[0].split('.').pop() || email.split('@')[0];
-
+        const assignedRole = isMechOrProd ? 'member' : 'general-user';
         user = await User.create({
             name,
             email,
             collegeRegNo: collegeRegNo.toUpperCase(),
-            role: 'general-user',
+            branch: parsedBranch,
+            yearOfStudy: parsedYear,
+            role: assignedRole,
             isVerified: true,
             password: Math.random().toString(36).slice(-10) + 'A1!'
         });

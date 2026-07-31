@@ -1,0 +1,41 @@
+.global-section-indicator {
+  position: fixed;
+  bottom: 5vh;
+  left: 3vw;
+  z-index: 9999;
+  pointer-events: none; /* Allows clicking through it */
+  mix-blend-mode: difference; /* Makes it visible on light/dark backgrounds */
+}
+
+.indicator-content {
+  display: flex;
+  align-items: center;
+  font-family: 'Michroma', sans-serif;
+  color: #fff;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.indicator-number {
+  font-weight: 700;
+}
+
+.indicator-slash {
+  color: #ff1100; /* Cyberpunk Red */
+  margin: 0 10px;
+  font-weight: 900;
+}
+
+.indicator-title {
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Mobile: hide it or move it */
+@media (max-width: 768px) {
+  .global-section-indicator {
+    display: none; /* Hidden on mobile to save space, or can be moved to top */
+  }
+}

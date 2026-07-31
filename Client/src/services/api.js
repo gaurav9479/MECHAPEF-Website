@@ -15,9 +15,9 @@ api.interceptors.request.use((config) => {
 
   const method = config.method?.toLowerCase();
   if (['post', 'put', 'patch', 'delete'].includes(method)) {
-    Object.keys(sessionStorage).forEach(key => {
+    Object.keys(localStorage).forEach(key => {
       if (key.startsWith('api_cache_')) {
-        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
       }
     });
   }
@@ -35,17 +35,17 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !isAuthExchange) {
       localStorage.removeItem('accessToken');
       if (window.location.pathname.startsWith('/admin')) {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     } else if (
-      !error.response || 
-      error.response?.status === 502 || 
-      error.response?.status === 503 || 
+      !error.response ||
+      error.response?.status === 502 ||
+      error.response?.status === 503 ||
       error.response?.status === 504
     ) {
       // Handle Render cold start or severe server overload gracefully
       const queueMessage = 'Heavy traffic right now, you are in a queue. Please wait 30 seconds.';
-      
+
       // If error.response exists, modify its message payload
       if (error.response && error.response.data) {
         error.response.data.message = queueMessage;
@@ -73,16 +73,31 @@ api.get = async (url, config = {}) => {
   }
 
   const cacheKey = `api_cache_${url}_${JSON.stringify(config.params || {})}`;
-  const cachedData = sessionStorage.getItem(cacheKey);
+  const CACHE_TIME = 2 * 60 * 1000; // 2 minutes
+  const cachedData = localStorage.getItem(cacheKey);
 
-  // Return cached response if available
   if (cachedData) {
     try {
       const parsedData = JSON.parse(cachedData);
+      const isFresh = parsedData.timestamp && (Date.now() - parsedData.timestamp < CACHE_TIME);
+
+      // Background revalidation if stale
+      if (!isFresh) {
+        originalGet.call(api, url, config).then(response => {
+          if (response.status === 200) {
+            localStorage.setItem(cacheKey, JSON.stringify({
+              timestamp: Date.now(),
+              data: response.data
+            }));
+          }
+        }).catch(() => {});
+      }
+
+      // Always return cached data immediately for instant 0ms UI load
       return Promise.resolve({
-        data: parsedData,
+        data: parsedData.data,
         status: 200,
-        statusText: 'OK (Cached)',
+        statusText: isFresh ? 'OK (Cached)' : 'OK (Cached Stale)',
         headers: {},
         config,
         request: {}
@@ -92,12 +107,15 @@ api.get = async (url, config = {}) => {
     }
   }
 
-  // Make network request and cache the result
+  // Make network request if no cache is present
   const response = await originalGet.call(api, url, config);
   if (response.status === 200) {
-    sessionStorage.setItem(cacheKey, JSON.stringify(response.data));
+    localStorage.setItem(cacheKey, JSON.stringify({
+      timestamp: Date.now(),
+      data: response.data
+    }));
   }
-  
+
   return response;
 };
 

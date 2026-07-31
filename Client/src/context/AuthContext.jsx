@@ -7,24 +7,26 @@ const AuthContext = createContext(null);
 export const ROLES = {
   SUPER_ADMIN: 'super-admin',
   CONTENT_LEAD: 'content-lead',
-  MEDIA_LEAD: 'media-lead',
+  EVENT_LEAD: 'event-lead',
+  ENDORSED_VOLUNTEER: 'endorsed-volunteer',
   MEMBER: 'member',
   GENERAL_USER: 'general-user',
 };
 
 // 2. Updated hierarchy in case you still use hasRole() anywhere
-// Note: Content and Media leads are put on the same tier here (4)
 const ROLE_POWER = {
   'super-admin': 5,
   'content-lead': 4,
-  'media-lead': 4,
+  'event-lead': 4,
+  'endorsed-volunteer': 3,
   'member': 2,
   'general-user': 1,
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Only start in a loading state if we actually have a token to verify
+  const [loading, setLoading] = useState(!!localStorage.getItem('accessToken'));
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -46,18 +48,15 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
-  const logout = async () => {
-    setLoading(true); // Put the app in a loading state so the UI doesn't flicker
+  const logout = () => {
+    // Clear local state instantly to kick user to landing page immediately
+    localStorage.removeItem('accessToken');
+    setUser(null);
     
-    try {
-      await authService.logout(); 
-    } catch (error) {
-      console.warn("Backend logout failed, forcing local logout.", error);
-    } finally {
-      localStorage.removeItem('accessToken');
-      setUser(null);
-      setLoading(false); 
-    }
+    // Perform backend logout silently in the background
+    authService.logout().catch(error => {
+      console.warn("Backend logout failed.", error);
+    });
   };
 
   // Evaluates hierarchy (e.g., "are they AT LEAST a content-lead?")
@@ -73,8 +72,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 3. Updated convenience variables
-  const canEdit = isRole(ROLES.SUPER_ADMIN, ROLES.CONTENT_LEAD, ROLES.MEDIA_LEAD);
-  const isAdmin = isRole(ROLES.SUPER_ADMIN, ROLES.CONTENT_LEAD, ROLES.MEDIA_LEAD);
+  const canEdit = isRole(ROLES.SUPER_ADMIN, ROLES.CONTENT_LEAD, ROLES.EVENT_LEAD);
+  const isAdmin = isRole(ROLES.SUPER_ADMIN, ROLES.CONTENT_LEAD, ROLES.EVENT_LEAD);
   const isSuperAdmin = isRole(ROLES.SUPER_ADMIN);
 
   return (

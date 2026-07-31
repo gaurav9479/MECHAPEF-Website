@@ -6,8 +6,15 @@ import api from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import './AdminDashboard.css';
 
+import { Navigate } from 'react-router-dom';
+
 const AdminDashboard = () => {
-  const { logout } = useAuth();
+  const { logout, user, hasRole } = useAuth();
+
+  if (user?.role === 'endorsed-volunteer') {
+    return <Navigate to="/admin/scanner" replace />;
+  }
+
   const navigate = useNavigate();
   const handleLogout = async () => { await logout(); navigate('/login'); };
   const location = useLocation();
@@ -44,6 +51,13 @@ const AdminDashboard = () => {
       setStats(s => ({ ...s, sponsors: count }));
     }).catch(() => {});
   }, []);
+  const handleNav = (e, path) => {
+    if (window.innerWidth <= 768) {
+      e.preventDefault();
+      window.location.href = path;
+    }
+  };
+
   const adminLinks = [
     { to: '/admin/events', icon: <FaCalendarAlt />, label: 'Manage Events', desc: 'Create, edit & delete events' },
     { to: '/admin/past-events', icon: <FaCalendarAlt />, label: 'Past Events', desc: 'Manage past events & photos' },
@@ -96,7 +110,7 @@ const AdminDashboard = () => {
         <div className="admin-section-title">Quick Actions</div>
         <div className="admin-quick-grid">
           {adminLinks.map(link => (
-            <Link to={link.to} key={link.to} className="admin-quick-card">
+            <Link to={link.to} key={link.to} className="admin-quick-card" onClick={(e) => handleNav(e, link.to)}>
               <div className="quick-icon">{link.icon}</div>
               <div>
                 <div className="quick-label">{link.label}</div>

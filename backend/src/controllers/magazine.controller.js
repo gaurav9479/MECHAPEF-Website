@@ -12,6 +12,14 @@ export const getMagazine = asyncHandler(async (req, res) => {
     let magazine = await Magazine.findOne();
     if (!magazine) {
         // Return an empty/default structure if none exists
+        // --- NEW PDF SCHEMA ---
+        magazine = await Magazine.create({
+            title: "Latest Magazine PDF",
+            pdfUrl: null,
+            status: "Published"
+        });
+        /*
+        // --- OLD SCHEMA ---
         magazine = await Magazine.create({
             title: "THE MECHAPEF TIMES",
             volumeNumber: "Vol. 1",
@@ -20,6 +28,7 @@ export const getMagazine = asyncHandler(async (req, res) => {
             status: "Draft",
             categories: ["Mechanical News", "Research", "Robotics", "Manufacturing"]
         });
+        */
     }
 
     return res

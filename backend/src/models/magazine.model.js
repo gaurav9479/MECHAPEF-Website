@@ -40,6 +40,13 @@ const galleryImageSchema = new mongoose.Schema({
 });
 
 const magazineSchema = new mongoose.Schema({
+    // --- NEW SCHEMA ---
+    title: { type: String, trim: true, default: 'Latest Magazine' },
+    pdfUrl: { type: String, default: null }, // URL to the uploaded PDF
+    status: { type: String, enum: ['Published', 'Draft'], default: 'Published' },
+
+    // --- OLD SCHEMA COMMENTED OUT ---
+    /*
     // Magazine Information
     title: { type: String, trim: true },
     volumeNumber: { type: String, trim: true },
@@ -96,6 +103,7 @@ const magazineSchema = new mongoose.Schema({
         metaDescription: { type: String, trim: true },
         keywords: { type: String, trim: true }
     }
+    */
 }, { timestamps: true });
 
 export default mongoose.model('Magazine', magazineSchema);

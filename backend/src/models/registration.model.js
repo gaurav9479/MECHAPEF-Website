@@ -100,6 +100,12 @@ const registrationSchema = new mongoose.Schema(
             ref: 'User'
         },
 
+        completedStages: [{
+            stageName: { type: String, required: true },
+            scannedAt: { type: Date, default: Date.now },
+            scannedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+        }],
+
         certificateGenerated: {
             type: Boolean,
             default: false

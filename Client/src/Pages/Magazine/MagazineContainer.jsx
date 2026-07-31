@@ -1,22 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMagazineTransition } from '../../context/MagazineTransitionContext';
 import hookImg from '../../assets/mehapefscroll.png';
+import api from '../../services/api';
 import Magazine from './Magazine';
 
 const MagazineContainer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { transitionState, setTransitionState, isDesktop } = useMagazineTransition();
+  const [hasMagazine, setHasMagazine] = useState(false);
+
+  useEffect(() => {
+    api.get('/magazine')
+      .then((res) => {
+        if (res.data?.data?.magazine?.pdfUrl) {
+          setHasMagazine(true);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to check magazine status", err);
+      });
+  }, []);
 
   const isMagazineRoute = location.pathname.startsWith('/magazine');
+  const isAdminRoute = location.pathname.startsWith('/admin');
   const isOpen = isMagazineRoute || transitionState === 'pullingDown';
   const isRollingUp = transitionState === 'rollingUp';
 
-  if (!isDesktop) {
-      // Mobile behavior: Magazine is just rendered normally without the shutter
-      if (isMagazineRoute) return <Magazine />;
+  if (!isDesktop || isAdminRoute) {
+      // Mobile behavior: Magazine is just rendered normally without the shutter.
+      // Admin behavior: Hide the overlay entirely from the admin portal.
+      if (isMagazineRoute && !isAdminRoute) return <Magazine />;
       return null;
   }
 
@@ -62,34 +78,36 @@ const MagazineContainer = () => {
       `}</style>
       
       {/* The Fixed Hook */}
-      <motion.div 
-        onClick={handleHookClick}
-        style={{ 
-          position: 'absolute', 
-          top: 0, 
-          right: 'clamp(8px, 2vw, 20px)', 
-          zIndex: 50, 
-          cursor: 'pointer', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          width: 'clamp(65px, 6vw, 90px)',
-          transformOrigin: 'top center'
-        }}
-      >
-        <motion.img 
-          src={hookImg} 
-          alt="Magazine Hook" 
+      {(hasMagazine || isMagazineRoute) && (
+        <motion.div 
+          onClick={handleHookClick}
           style={{ 
-            width: '100%', 
-            objectFit: 'contain', 
-            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))',
+            position: 'absolute', 
+            top: 0, 
+            right: 'clamp(8px, 2vw, 20px)', 
+            zIndex: 50, 
+            cursor: 'pointer', 
+            display: 'flex', 
+            justifyContent: 'center', 
+            width: 'clamp(65px, 6vw, 90px)',
             transformOrigin: 'top center'
           }}
-          animate={{ rotate: [-3, 2, -3] }}
-          transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-          onError={(e) => { e.target.src = '/mechapefscroll.png'; }}
-        />
-      </motion.div>
+        >
+          <motion.img 
+            src={hookImg} 
+            alt="Magazine Hook" 
+            style={{ 
+              width: '100%', 
+              objectFit: 'contain', 
+              filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))',
+              transformOrigin: 'top center'
+            }}
+            animate={{ rotate: [-3, 2, -3] }}
+            transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+            onError={(e) => { e.target.src = '/mechapefscroll.png'; }}
+          />
+        </motion.div>
+      )}
 
       {/* The Rolling Shutter (Magazine) */}
       <AnimatePresence>
@@ -106,7 +124,7 @@ const MagazineContainer = () => {
               left: 0,
               width: '100%',
               height: '100vh',
-              overflowY: 'auto',
+              overflow: 'hidden',
               backgroundColor: '#f5f4ef',
               zIndex: 40
             }}

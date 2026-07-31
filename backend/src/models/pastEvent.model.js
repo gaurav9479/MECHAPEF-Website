@@ -24,6 +24,14 @@ const pastEventSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    mobileImageURL: {
+        type: String,
+        default: null
+    },
+    mobileImagekitFileId: {
+        type: String,
+        default: null
+    },
     order: {
         type: Number,
         default: 0

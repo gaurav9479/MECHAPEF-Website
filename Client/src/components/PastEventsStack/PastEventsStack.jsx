@@ -2,30 +2,50 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 import './PastEventsStack.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PastEventsStack = () => {
+const skeletonEvents = [
+  { _id: 'sk1', isSkeleton: true },
+  { _id: 'sk2', isSkeleton: true },
+  { _id: 'sk3', isSkeleton: true }
+];
+
+const PastEventsStack = ({ onLoaded }) => {
   const sectionRef = useRef(null);
-  const [pastEvents, setPastEvents] = useState([]);
+  
+  const [pastEvents, setPastEvents] = useState(skeletonEvents);
   const [loading, setLoading] = useState(true);
+  const [specialSponsor, setSpecialSponsor] = useState(null);
 
   useEffect(() => {
-    api.get('/past-events')
-      .then(res => {
-        setPastEvents(res.data.data || []);
-      })
-      .catch(err => {
-        console.error("Failed to fetch past events:", err);
-      })
-      .finally(() => {
+    const fetchEvents = () => {
+      apiGetCached('/past-events', (data) => {
+        const eventsList = data.data?.events || data.data || [];
+        if (eventsList.length > 0) {
+          setPastEvents(eventsList);
+        }
         setLoading(false);
+        if (onLoaded) onLoaded();
+      }).catch(err => {
+        console.error("Failed to fetch past events:", err);
+        setLoading(false);
+        if (onLoaded) onLoaded();
       });
+    };
+    fetchEvents();
+
+    // Fetch Special Sponsor for card top-right branding
+    apiGetCached('/special-sponsor/active', (data) => {
+      if (data?.data) setSpecialSponsor(data.data);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (loading || pastEvents.length === 0) return;
+    if (pastEvents.length === 0) return;
 
     let ctx;
     const timer = setTimeout(() => {
@@ -40,10 +60,11 @@ const PastEventsStack = () => {
             scrollTrigger: {
               trigger: sectionRef.current,
               start: "top top",
-              end: "+=200%",
+              end: () => "+=" + (pastEvents.length * 100) + "%",
               pin: true,
-              scrub: 1,
-              pinSpacing: true
+              scrub: 1.5,
+              pinSpacing: true,
+              invalidateOnRefresh: true
             }
           });
 
@@ -54,25 +75,26 @@ const PastEventsStack = () => {
           return;
         }
 
+        const cards = gsap.utils.toArray('.gsap-pe-card');
+
         // -- DESKTOP STACKING --
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
             start: 'top top',
-            end: '+=200%',
+            end: () => "+=" + (cards.length * 150) + "%",
             pin: true,
-            scrub: 1,
-            pinSpacing: true
+            scrub: 1.5,
+            pinSpacing: true,
+            invalidateOnRefresh: true
           }
         });
-
-        const cards = gsap.utils.toArray('.gsap-pe-card');
 
         gsap.set(cards, { 
           y: window.innerHeight, 
           opacity: 0, 
           scale: 0.8,
-          rotate: (i) => i % 2 === 0 ? -4 : 4
+          rotation: (i) => i % 2 === 0 ? -4 : 4
         });
 
         // Add an initial blank scroll delay
@@ -81,23 +103,23 @@ const PastEventsStack = () => {
         // Animate the first card in with a delay
         tl.fromTo(cards[0], 
           { y: window.innerHeight, opacity: 0, scale: 0.8 },
-          { y: 0, opacity: 1, scale: 1, duration: 1, ease: 'power2.out' }, 
+          { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'power3.out' }, 
           0.5
         );
 
         cards.forEach((card, index) => {
           if (index === 0) return;
           
-          const startTime = 0.5 + index;
+          const startTime = 0.5 + (index * 0.85); // Overlap for smoother continuous flow
           tl.fromTo(card, 
             { y: window.innerHeight, opacity: 0, scale: 0.8 },
-            { y: 0, opacity: 1, scale: 1, duration: 1, ease: 'power2.out' }, 
+            { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'power3.out' }, 
             startTime
           );
           
           for(let j = 0; j < index; j++) {
              const diff = index - j;
-             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -5 * diff, duration: 1, ease: 'power2.out' }, startTime);
+             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -25 * diff, rotation: j % 2 === 0 ? -4 : 4, duration: 1.2, ease: 'power3.out' }, startTime);
           }
         });
         
@@ -113,7 +135,6 @@ const PastEventsStack = () => {
     };
   }, [loading, pastEvents]);
 
-  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
   if (pastEvents.length === 0) return null;
 
   return (
@@ -143,18 +164,60 @@ const PastEventsStack = () => {
         <div className="pe-gsap-cards-wrapper">
           {pastEvents.map((event, index) => (
             <div 
-              className="pe-stack-card gsap-pe-card"
+              className={`pe-stack-card gsap-pe-card ${event.isSkeleton ? 'pe-shimmer-skeleton' : ''}`}
               key={event._id}
               style={{ zIndex: index + 1 }}
             >
-              <div className="pe-left">
-                <img src={event.imageURL} alt={event.title} />
-              </div>
-              <div className="pe-right">
-                <div className="pe-date">{event.date}</div>
-                <h3>{event.title}</h3>
-                <p>{event.description}</p>
-              </div>
+              {event.isSkeleton ? (
+                <div className="pe-skeleton-content">
+                   <div className="pe-skeleton-img shimmer"></div>
+                   <div className="pe-skeleton-body">
+                      <div className="pe-skeleton-date shimmer"></div>
+                      <div className="pe-skeleton-title shimmer"></div>
+                      <div className="pe-skeleton-desc shimmer"></div>
+                      <div className="pe-skeleton-desc shimmer short"></div>
+                   </div>
+                </div>
+              ) : (
+                <>
+                  <div className="pe-left">
+                    <img src={window.innerWidth <= 768 && event.mobileImageURL ? event.mobileImageURL : event.imageURL} alt={event.title} />
+                  </div>
+                  <div className="pe-right" style={{ position: 'relative' }}>
+                    {specialSponsor?.logoURL && specialSponsor?.showEventCardsLogo !== false && (
+                      <div 
+                        className="card-special-sponsor-badge" 
+                        style={{ 
+                          position: 'absolute', 
+                          top: '16px', 
+                          right: '20px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          background: 'rgba(255, 255, 255, 0.95)', 
+                          backdropFilter: 'blur(8px)', 
+                          padding: '6px 12px', 
+                          borderRadius: '24px', 
+                          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
+                          border: '1px solid rgba(0, 0, 0, 0.08)',
+                          zIndex: 10
+                        }}
+                      >
+                        <img 
+                          src={getOptimizedImageUrl(specialSponsor.logoURL)} 
+                          alt={specialSponsor.name} 
+                          style={{ height: '28px', maxWidth: '100px', objectFit: 'contain' }} 
+                        />
+                      </div>
+                    )}
+                    <div className="pe-date">{event.date}</div>
+                    <h3>{event.title}</h3>
+                    <div style={{ display: 'block', overflow: 'hidden' }}>
+                      <p className="pe-desc-truncate">{event.description}</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>

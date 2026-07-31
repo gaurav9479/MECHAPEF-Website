@@ -40,31 +40,30 @@ export const helmetConfig = helmet({
 });
 
 
-// export const generalLimiter = rateLimit({
-//     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-//     max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-//     message: 'Too many requests from this IP, please try again later.',
-//     standardHeaders: true, 
-//     legacyHeaders: false, 
-//     skip: (req) => process.env.NODE_ENV === 'development'
-// });
+export const generalLimiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true, 
+    legacyHeaders: false, 
+    skip: (req) => process.env.NODE_ENV === 'development'
+});
 
-// export const authLimiter = rateLimit({
-//     windowMs: 15 * 60 * 1000, 
-//     max: 5, 
-//     message: 'Too many authentication attempts, please try again later.',
-//     skipSuccessfulRequests: true, 
-//     standardHeaders: true,
-//     legacyHeaders: false
-// });
+export const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 5, 
+    message: 'Too many authentication attempts, please try again later.',
+    skipSuccessfulRequests: true, 
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
-
-// export const publicLimiter = rateLimit({
-//     windowMs: 60 * 1000, 
-//     max: 30,
-//     standardHeaders: true,
-//     legacyHeaders: false
-// });
+export const publicLimiter = rateLimit({
+    windowMs: 60 * 1000, 
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
 
 export const errorHandler = (err, req, res, next) => {

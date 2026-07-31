@@ -16,7 +16,6 @@
   font-size: 1.2rem;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3);
-  display: none; /* explicitly block */
   align-items: center;
   justify-content: center;
 }
@@ -29,8 +28,7 @@
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
-  z-index: 1030;
+  z-index: 9900;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -38,9 +36,6 @@
 .admin-sidebar-backdrop.active {
   display: none; /* Still hidden on desktop */
 }
-
-/* Base Desktop Sidebar overrides */
-/* Inherits from AdminDashboard.css but we ensure it works everywhere */
 
 /* ====== MOBILE SLIDER ====== */
 @media (max-width: 768px) {
@@ -56,14 +51,18 @@
   .admin-sidebar {
     position: fixed !important;
     top: 0;
-    left: -100% !important; /* hide off canvas */
+    left: -100% !important;
     width: 260px !important;
     height: 100vh !important;
     min-height: 100vh !important;
-    z-index: 1040;
+    z-index: 10400 !important;
+    transform: translateZ(1px); /* Force stacking context on iOS Safari */
+    -webkit-transform: translateZ(1px);
     transition: left 0.3s ease;
     border-right: 1px solid rgba(255, 0, 0, 0.15) !important;
     border-bottom: none !important;
+    background: #0d0d0d !important;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.8);
   }
 
   .admin-sidebar.open {
@@ -73,7 +72,6 @@
   .sidebar-nav {
     flex-direction: column !important;
     overflow-y: auto;
-    padding: 20px !important;
-    height: auto;
+    padding: 20px 12px !important;
   }
 }

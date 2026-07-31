@@ -30,6 +30,10 @@ const sectionImageSchema = new mongoose.Schema({
         type: String,
         default: null,
     },
+    order: {
+        type: Number,
+        default: 0,
+    },
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

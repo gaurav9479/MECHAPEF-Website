@@ -1,25 +1,32 @@
 import React, { useState } from 'react';
 import { motion } from "framer-motion";
-import { FaInstagram, FaLinkedinIn, FaFacebookF, FaTwitter, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt } from "react-icons/fa";
+import { FaInstagram, FaLinkedinIn, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt } from "react-icons/fa";
+import api from '../../services/api';
 import "./Footer.css";
 
 const Footer = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate sending
+    setLoading(true);
     setStatus('Sending...');
-    setTimeout(() => {
-      setStatus('Message sent successfully!');
+    try {
+      const res = await api.post('/contact/submit', formData);
+      setStatus(res.data?.message || 'Message sent successfully!');
       setFormData({ name: '', email: '', message: '' });
-      setTimeout(() => setStatus(''), 3000);
-    }, 1500);
+      setTimeout(() => setStatus(''), 4000);
+    } catch (err) {
+      setStatus(err.response?.data?.message || 'Failed to send message. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,19 +77,17 @@ const Footer = () => {
               <FaEnvelope className="info-icon" />
               <p>mechapef@mnnit.ac.in</p>
             </div>
-            <div className="info-item">
+            {/* <div className="info-item">
               <FaPhoneAlt className="info-icon" />
               <p>+91 98765 43210</p>
-            </div>
+            </div> */}
           </div>
 
           <div className="footer-socials">
             <h3>Follow Our Journey</h3>
             <div className="social-icons">
-              <a href="#" className="social-link"><FaInstagram /></a>
-              <a href="#" className="social-link"><FaLinkedinIn /></a>
-              <a href="#" className="social-link"><FaFacebookF /></a>
-              <a href="#" className="social-link"><FaTwitter /></a>
+              <a href="https://www.instagram.com/mechapef_mnnit/" className="social-link" target="_blank" rel="noreferrer"><FaInstagram /></a>
+              <a href="https://www.linkedin.com/company/mechapef-mnnit" className="social-link" target="_blank" rel="noreferrer"><FaLinkedinIn /></a>
             </div>
           </div>
         </motion.div>

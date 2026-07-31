@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Cropper from 'react-cropper';
@@ -6,58 +7,62 @@ import 'cropperjs/dist/cropper.css';
 import {
   FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake,
   FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle, FaTimesCircle,
-  FaImage, FaUpload, FaEdit, FaCrop, FaSearch
+  FaImage, FaUpload, FaEdit, FaCrop, FaSearch, FaTrash, FaQrcode
 } from 'react-icons/fa';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import '../Admin/AdminDashboard.css';
 import './AdminManagement.css';
+import '../../components/CropperInput/CropperInput.css';
 
-const SECTION_KEYS = [
-  { key: 'dept_1', label: 'Dept Image 1 (Big Left)', aspectRatio: 690/520 },
-  { key: 'dept_2', label: 'Dept Image 2 (Stacked Top)', aspectRatio: 216/250 },
-  { key: 'dept_3', label: 'Dept Image 3 (Stacked Bottom)', aspectRatio: 216/250 },
-  { key: 'dept_4', label: 'Dept Image 4 (Bottom Row 1)', aspectRatio: 335/220 },
-  { key: 'dept_5', label: 'Dept Image 5 (Bottom Row 2)', aspectRatio: 335/220 },
-  { key: 'dept_6', label: 'Dept Image 6 (Bottom Row 3)', aspectRatio: 335/220 },
-  { key: 'dept_7', label: 'Dept Image 7 (Bottom Row 4)', aspectRatio: 335/220 },
+const BASE_SECTION_KEYS = [
+  { key: 'dept_1', label: 'Dept Image 1 (Desktop)', aspectRatio: 1/1.25 },
+  { key: 'dept_1_mob', label: 'Dept Image 1 (Mobile)', aspectRatio: 9/13 },
+  { key: 'dept_2', label: 'Dept Image 2 (Desktop)', aspectRatio: 1/1.25 },
+  { key: 'dept_2_mob', label: 'Dept Image 2 (Mobile)', aspectRatio: 9/13 },
+  { key: 'dept_3', label: 'Dept Image 3 (Desktop)', aspectRatio: 1/1.25 },
+  { key: 'dept_3_mob', label: 'Dept Image 3 (Mobile)', aspectRatio: 9/13 },
+  { key: 'dept_4', label: 'Dept Image 4 (Desktop)', aspectRatio: 1/1.25 },
+  { key: 'dept_4_mob', label: 'Dept Image 4 (Mobile)', aspectRatio: 9/13 },
+  { key: 'dept_5', label: 'Dept Image 5 (Desktop)', aspectRatio: 1/1.25 },
+  { key: 'dept_5_mob', label: 'Dept Image 5 (Mobile)', aspectRatio: 9/13 },
+  { key: 'dept_6', label: 'Dept Image 6 (Desktop)', aspectRatio: 1/1.25 },
+  { key: 'dept_6_mob', label: 'Dept Image 6 (Mobile)', aspectRatio: 9/13 },
+  { key: 'dept_7', label: 'Dept Image 7 (Desktop)', aspectRatio: 1/1.25 },
+  { key: 'dept_7_mob', label: 'Dept Image 7 (Mobile)', aspectRatio: 9/13 },
+  { key: 'dept_8', label: 'Dept Image 8 (Desktop)', aspectRatio: 1/1.25 },
+  { key: 'dept_8_mob', label: 'Dept Image 8 (Mobile)', aspectRatio: 9/13 },
   { key: 'domain_1', label: 'Domain 1 (Automobile/SAE)', aspectRatio: NaN },
   { key: 'domain_2', label: 'Domain 2 (Robotics)', aspectRatio: NaN },
   { key: 'domain_3', label: 'Domain 3 (Design & CAD)', aspectRatio: NaN },
   { key: 'domain_4', label: 'Domain 4 (Manufacturing)', aspectRatio: NaN },
   { key: 'hero_bot', label: 'Hero Bot Image', aspectRatio: NaN },
-  { key: 'join_bot', label: 'Join Us Bot Image', aspectRatio: NaN },
-  { key: 'team_fy_1', label: 'Team First Year 1', aspectRatio: 1 },
-  { key: 'team_fy_2', label: 'Team First Year 2', aspectRatio: 1 },
-  { key: 'team_fy_3', label: 'Team First Year 3', aspectRatio: 1 },
-  { key: 'team_fy_4', label: 'Team First Year 4', aspectRatio: 1 },
-  { key: 'team_fy_5', label: 'Team First Year 5', aspectRatio: 1 },
-  { key: 'team_fy_6', label: 'Team First Year 6', aspectRatio: 1 },
-  { key: 'team_fy_7', label: 'Team First Year 7', aspectRatio: 1 },
-  { key: 'team_fy_8', label: 'Team First Year 8', aspectRatio: 1 },
-  { key: 'team_fy_9', label: 'Team First Year 9', aspectRatio: 1 },
-  { key: 'team_fy_10', label: 'Team First Year 10', aspectRatio: 1 },
-  { key: 'team_sy_1', label: 'Team Second Year 1', aspectRatio: 1 },
-  { key: 'team_sy_2', label: 'Team Second Year 2', aspectRatio: 1 },
-  { key: 'team_sy_3', label: 'Team Second Year 3', aspectRatio: 1 },
-  { key: 'team_sy_4', label: 'Team Second Year 4', aspectRatio: 1 },
-  { key: 'team_sy_5', label: 'Team Second Year 5', aspectRatio: 1 },
-  { key: 'team_sy_6', label: 'Team Second Year 6', aspectRatio: 1 },
-  { key: 'team_sy_7', label: 'Team Second Year 7', aspectRatio: 1 },
-  { key: 'team_sy_8', label: 'Team Second Year 8', aspectRatio: 1 },
-  { key: 'team_sy_9', label: 'Team Second Year 9', aspectRatio: 1 },
-  { key: 'team_sy_10', label: 'Team Second Year 10', aspectRatio: 1 },
-  { key: 'team_ty_1', label: 'Team Third Year 1', aspectRatio: 1 },
-  { key: 'team_ty_2', label: 'Team Third Year 2', aspectRatio: 1 },
-  { key: 'team_ty_3', label: 'Team Third Year 3', aspectRatio: 1 },
-  { key: 'team_ty_4', label: 'Team Third Year 4', aspectRatio: 1 },
-  { key: 'team_ty_5', label: 'Team Third Year 5', aspectRatio: 1 },
-  { key: 'team_ty_6', label: 'Team Third Year 6', aspectRatio: 1 },
-  { key: 'team_ty_7', label: 'Team Third Year 7', aspectRatio: 1 },
-  { key: 'team_ty_8', label: 'Team Third Year 8', aspectRatio: 1 },
-  { key: 'team_ty_9', label: 'Team Third Year 9', aspectRatio: 1 },
-  { key: 'team_ty_10', label: 'Team Third Year 10', aspectRatio: 1 },
+  { key: 'join_bot', label: 'Join Us Bot Image', aspectRatio: NaN }
 ];
+
+const getDynamicSectionKeys = (sectionImages, extraFy, extraSy, extraTy, extraAl) => {
+  let maxFy = 10, maxSy = 10, maxTy = 10, maxAl = 10;
+  Object.keys(sectionImages).forEach(k => {
+    if (k.startsWith('team_fy_')) maxFy = Math.max(maxFy, parseInt(k.replace('team_fy_', '')));
+    if (k.startsWith('team_sy_')) maxSy = Math.max(maxSy, parseInt(k.replace('team_sy_', '')));
+    if (k.startsWith('team_ty_')) maxTy = Math.max(maxTy, parseInt(k.replace('team_ty_', '')));
+    if (k.startsWith('team_al_')) maxAl = Math.max(maxAl, parseInt(k.replace('team_al_', '')));
+  });
+
+  maxFy += extraFy;
+  maxSy += extraSy;
+  maxTy += extraTy;
+  maxAl += extraAl;
+
+  const dynamicKeys = [...BASE_SECTION_KEYS];
+  for (let i = 1; i <= maxFy; i++) dynamicKeys.push({ key: `team_fy_${i}`, label: `Team Second Year ${i}`, aspectRatio: 1 });
+  for (let i = 1; i <= maxSy; i++) dynamicKeys.push({ key: `team_sy_${i}`, label: `Team Pre-final Year ${i}`, aspectRatio: 1 });
+  for (let i = 1; i <= maxTy; i++) dynamicKeys.push({ key: `team_ty_${i}`, label: `Team Final Year ${i}`, aspectRatio: 3/4 });
+  for (let i = 1; i <= maxAl; i++) dynamicKeys.push({ key: `team_al_${i}`, label: `Team Notable Alumni ${i}`, aspectRatio: 3/4 });
+  
+  return { dynamicKeys, counts: { fy: maxFy, sy: maxSy, ty: maxTy, al: maxAl } };
+};
 const AdminManagement = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -71,6 +76,45 @@ const AdminManagement = () => {
   const [filterVerified, setFilterVerified] = useState('');
   const [verifyingId, setVerifyingId] = useState(null);
   const [toast, setToast] = useState(null);
+
+  // ── System Config / Redis Toggle State ──
+  const [redisModeType, setRedisModeType] = useState('AUTO');
+  const [redisLoading, setRedisLoading] = useState(false);
+
+  const fetchSystemConfig = async () => {
+    try {
+      const res = await api.get('/system/config');
+      setRedisModeType(res.data.data?.config?.redisModeType || 'AUTO');
+    } catch {
+      // ignore background errors
+    }
+  };
+
+  useEffect(() => {
+    fetchSystemConfig();
+  }, []);
+
+  const changeRedisModeType = async (newType) => {
+    setRedisLoading(true);
+    try {
+      const res = await api.put('/system/config', { redisModeType: newType });
+      setRedisModeType(newType);
+      showToast(res.data?.message || `Redis Mode updated to ${newType}`);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update Redis mode', 'error');
+    } finally {
+      setRedisLoading(false);
+    }
+  };
+
+  // ── Volunteer Endorsement Modal State ──
+  const [endorseModalUser, setEndorseModalUser] = useState(null);
+  const [endorseEvents, setEndorseEvents] = useState([]);
+  const [endorseEventId, setEndorseEventId] = useState('');
+  const [endorseStages, setEndorseStages] = useState(['Stage 1: Check-in']);
+  const [endorseStage, setEndorseStage] = useState('Stage 1: Check-in');
+  const [endorseSubmitting, setEndorseSubmitting] = useState(false);
+
   // ── Notices Tab State ──
   const [notices, setNotices] = useState([]);
   const [noticeForm, setNoticeForm] = useState({ title: '', description: '', priority: 'Medium', targetType: 'None', isActive: true, eventSponsors: [] });
@@ -80,7 +124,13 @@ const AdminManagement = () => {
   // ── Image Manager Tab State ──
   const [sectionImages, setSectionImages] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('Our Department');
-  const [selectedSection, setSelectedSection] = useState(SECTION_KEYS[0].key);
+  const [selectedSection, setSelectedSection] = useState('hero_bot');
+  const [extraFy, setExtraFy] = useState(0);
+  const [extraSy, setExtraSy] = useState(0);
+  const [extraTy, setExtraTy] = useState(0);
+  const [extraAl, setExtraAl] = useState(0);
+
+  const { dynamicKeys: dynamicSectionKeys, counts: slotCounts } = getDynamicSectionKeys(sectionImages, extraFy, extraSy, extraTy, extraAl);
   const [cropSrc, setCropSrc] = useState(null);
   const [cropping, setCropping] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -91,19 +141,72 @@ const AdminManagement = () => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
-  // ── Fetch Users ──────────────────────────────────────────────────────────
+  // ── Fetch Users (Cached) ──────────────────────────────────────────────────
+  const clearUsersCache = () => {
+    localStorage.removeItem('api_cache_/auth/users?limit=5000');
+  };
+
   const fetchUsers = useCallback(async () => {
     setUsersLoading(true);
     try {
-      const params = {};
-      if (filterRole) params.role = filterRole;
-      if (filterVerified !== '') params.isVerified = filterVerified;
-      const res = await api.get('/auth/users', { params });
-      setUsers(res.data.data?.users || []);
-    } catch { showToast('Failed to load users', 'error'); }
-    finally { setUsersLoading(false); }
-  }, [filterRole, filterVerified]);
+      await apiGetCached('/auth/users?limit=5000', (data) => {
+        setUsers(data.data?.users || []);
+      }, { cacheDuration: 10 * 60 * 1000 }); // Cache for 10 minutes
+    } catch { 
+      showToast('Failed to load users', 'error'); 
+    } finally { 
+      setUsersLoading(false); 
+    }
+  }, []);
+
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  const openEndorseModal = async (u) => {
+    setEndorseModalUser(u);
+    try {
+      const res = await api.get('/events');
+      const evList = res.data.data?.events || [];
+      setEndorseEvents(evList);
+      if (evList.length > 0) {
+        const firstEv = u.assignedEvent ? (evList.find(e => e._id === (typeof u.assignedEvent === 'object' ? u.assignedEvent._id : u.assignedEvent)) || evList[0]) : evList[0];
+        setEndorseEventId(firstEv._id);
+        const stgs = firstEv.ticketStages && firstEv.ticketStages.length > 0 ? firstEv.ticketStages : ['Stage 1: Check-in'];
+        setEndorseStages(stgs);
+        setEndorseStage(u.assignedStage || stgs[0]);
+      }
+    } catch {
+      showToast('Error loading events for endorsement', 'error');
+    }
+  };
+
+  const handleEndorseEventChange = (evId) => {
+    setEndorseEventId(evId);
+    const ev = endorseEvents.find(e => e._id === evId);
+    const stgs = ev?.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Check-in'];
+    setEndorseStages(stgs);
+    setEndorseStage(stgs[0]);
+  };
+
+  const saveEndorsement = async () => {
+    if (!endorseModalUser) return;
+    setEndorseSubmitting(true);
+    try {
+      await api.patch(`/auth/users/${endorseModalUser._id}/role`, {
+        role: 'endorsed-volunteer',
+        assignedEvent: endorseEventId,
+        assignedStage: endorseStage
+      });
+      showToast(`User endorsed as Volunteer for ${endorseStage}!`);
+      clearUsersCache();
+      setUsers(prev => prev.map(u => u._id === endorseModalUser._id ? { ...u, role: 'endorsed-volunteer', assignedEvent: endorseEventId, assignedStage: endorseStage } : u));
+      setEndorseModalUser(null);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to save endorsement', 'error');
+    } finally {
+      setEndorseSubmitting(false);
+    }
+  };
+
   const toggleVerify = async (userId, currentlyVerified) => {
     setVerifyingId(userId);
     try {
@@ -114,27 +217,43 @@ const AdminManagement = () => {
         await api.patch(`/auth/users/${userId}/verify`, { isVerified: true });
         showToast('User verified successfully');
       }
-      fetchUsers();
+      clearUsersCache();
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isVerified: !currentlyVerified } : u));
     } catch { showToast('Failed to update', 'error'); }
     finally { setVerifyingId(null); }
   };
 
   const updateRole = async (userId, newRole) => {
+    if (newRole === 'endorsed-volunteer') {
+      const targetUser = users.find(u => u._id === userId);
+      if (targetUser) openEndorseModal(targetUser);
+      return;
+    }
     try {
-      await api.patch(`/auth/users/${userId}/role`, { role: newRole });
+      await api.patch(`/auth/users/${userId}/role`, { role: newRole, assignedEvent: null, assignedStage: null });
       showToast('User role updated successfully');
-      fetchUsers();
+      clearUsersCache();
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole, assignedEvent: null, assignedStage: null } : u));
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update role', 'error');
     }
   };
 
-  const filteredUsers = users.filter(u =>
-    !search ||
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.collegeRegNo?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = !search ||
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      u.collegeRegNo?.toLowerCase().includes(search.toLowerCase());
+
+    const matchesRole = !filterRole || u.role === filterRole;
+
+    let matchesVerified = true;
+    if (filterVerified !== '') {
+      matchesVerified = filterVerified === 'true' ? u.isVerified === true : u.isVerified === false;
+    }
+
+    return matchesSearch && matchesRole && matchesVerified;
+  });
   // ── Fetch Notices ────────────────────────────────────────────────────────
   const fetchNotices = async () => {
     const [annRes, sponRes] = await Promise.all([
@@ -184,12 +303,23 @@ const AdminManagement = () => {
   };
   useEffect(() => { if (activeTab === 'images') fetchSectionImages(); }, [activeTab]);
 
+  const clearSectionCache = () => {
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('api_cache_/upload/sections')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {}
+  };
+
   const deleteImage = async () => {
-    const currentSectionLabel = SECTION_KEYS.find(s => s.key === selectedSection)?.label;
+    const currentSectionLabel = dynamicSectionKeys.find(s => s.key === selectedSection)?.label;
     if (!window.confirm(`Are you sure you want to delete the image for ${currentSectionLabel}?`)) return;
     setDeletingImage(true);
     try {
       await api.delete(`/upload/sections/${selectedSection}`);
+      clearSectionCache();
       setSectionImages(prev => {
         const copy = { ...prev };
         delete copy[selectedSection];
@@ -204,9 +334,26 @@ const AdminManagement = () => {
     }
   };
 
-  const onFileSelect = (e) => {
-    const file = e.target.files[0];
+  const onFileSelect = async (e) => {
+    let file = e.target.files[0];
     if (!file) return;
+
+    if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+      try {
+        const { default: heic2any } = await import('heic2any');
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+        });
+        const blobArray = Array.isArray(convertedBlob) ? convertedBlob : [convertedBlob];
+        file = new File(blobArray, file.name.replace(/\.hei[cf]/i, '.jpg'), { type: "image/jpeg" });
+      } catch (error) {
+        console.error("HEIC conversion error:", error);
+        showToast("Failed to convert HEIC/HEIF image", "error");
+        return;
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = () => { setCropSrc(reader.result); setCropping(true); };
     reader.readAsDataURL(file);
@@ -229,13 +376,14 @@ const AdminManagement = () => {
       });
       const { url, fileId } = uploadRes.data.data;
       // Save to SectionImage model
-      const section = SECTION_KEYS.find(s => s.key === selectedSection);
+      const section = dynamicSectionKeys.find(s => s.key === selectedSection);
       await api.post('/upload/sections', {
         sectionKey: selectedSection,
         label: section?.label,
         imageURL: url,
         imagekitFileId: fileId,
       });
+      clearSectionCache();
       showToast('Image uploaded & saved!');
       setCropping(false);
       setCropSrc(null);
@@ -244,7 +392,7 @@ const AdminManagement = () => {
       showToast(err.response?.data?.message || 'Upload failed', 'error');
     } finally { setUploading(false); }
   };
-  const currentSectionLabel = SECTION_KEYS.find(s => s.key === selectedSection)?.label;
+  const currentSectionLabel = dynamicSectionKeys.find(s => s.key === selectedSection)?.label;
 
   return (
     <div className="admin-layout">
@@ -267,6 +415,79 @@ const AdminManagement = () => {
         {/* ══════════════ USERS TAB ══════════════ */}
         {activeTab === 'users' && (
           <div>
+            {/* Redis Queue Toggle Switch Card */}
+            <div style={{ background: redisModeType === 'AUTO' ? 'linear-gradient(135deg, rgba(255, 31, 1, 0.08) 0%, rgba(58, 13, 13, 0.4) 100%)' : redisModeType === 'ALWAYS_ON' ? 'linear-gradient(135deg, rgba(0, 200, 100, 0.08) 0%, rgba(10, 45, 25, 0.4) 100%)' : 'rgba(255,255,255,0.02)', border: redisModeType === 'AUTO' ? '1px solid #ff1f01' : redisModeType === 'ALWAYS_ON' ? '1px solid #00c864' : '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', transition: 'all 0.3s ease' }}>
+              <div style={{ flex: '1 1 300px' }}>
+                <h4 style={{ margin: 0, color: redisModeType === 'AUTO' ? '#ff1f01' : redisModeType === 'ALWAYS_ON' ? '#00c864' : '#aaa', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ⚡ High-Traffic Redis Queue Mode (BullMQ)
+                </h4>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.82rem', color: '#bbb', lineHeight: '1.4' }}>
+                  {redisModeType === 'AUTO' 
+                    ? '🤖 AUTO SCHEDULE: Automatically turns ON daily between 10:00 AM – 11:00 PM IST during active event registrations. Off-peak hours use Direct DB writes.'
+                    : redisModeType === 'ALWAYS_ON'
+                    ? '🟢 ALWAYS ON: All registration requests are queued via high-speed Redis memory (24/7).'
+                    : '⚪ ALWAYS OFF: All registration requests write directly to MongoDB (Bypasses Redis).'}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', background: '#0a0a0f', padding: '4px', borderRadius: '10px', border: '1px solid #222' }}>
+                <button
+                  type="button"
+                  disabled={redisLoading}
+                  onClick={() => changeRedisModeType('AUTO')}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 'bold',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: redisModeType === 'AUTO' ? '#ff1f01' : 'transparent',
+                    color: redisModeType === 'AUTO' ? '#fff' : '#aaa',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  🤖 AUTO (10 AM - 11 PM)
+                </button>
+                <button
+                  type="button"
+                  disabled={redisLoading}
+                  onClick={() => changeRedisModeType('ALWAYS_ON')}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 'bold',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: redisModeType === 'ALWAYS_ON' ? '#00c864' : 'transparent',
+                    color: redisModeType === 'ALWAYS_ON' ? '#000' : '#aaa',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  ⚡ ALWAYS ON
+                </button>
+                <button
+                  type="button"
+                  disabled={redisLoading}
+                  onClick={() => changeRedisModeType('ALWAYS_OFF')}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 'bold',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: redisModeType === 'ALWAYS_OFF' ? '#333' : 'transparent',
+                    color: redisModeType === 'ALWAYS_OFF' ? '#fff' : '#aaa',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  ⚪ OFF
+                </button>
+              </div>
+            </div>
+
             {/* Filters */}
             <div className="mgmt-filters">
               <div className="mgmt-search">
@@ -282,7 +503,8 @@ const AdminManagement = () => {
                 <option value="">All Roles</option>
                 <option value="super-admin">Super Admin</option>
                 <option value="content-lead">Content Lead</option>
-                <option value="media-lead">Media Lead</option>
+                <option value="event-lead">Event Lead</option>
+                <option value="endorsed-volunteer">Endorsed Volunteer</option>
                 <option value="member">Member</option>
                 <option value="general-user">General User</option>
               </select>
@@ -307,7 +529,7 @@ const AdminManagement = () => {
                     <th>Email</th>
                     <th>Reg No</th>
                     <th>Role</th>
-                    <th>Requested</th>
+                    <th>Branch</th>
                     <th>Year</th>
                     <th>Verified</th>
                     <th>Toggle</th>
@@ -324,24 +546,37 @@ const AdminManagement = () => {
                       <td style={{ fontFamily: 'sans-serif', fontSize: '0.85rem' }}>{u.email}</td>
                       <td style={{ fontFamily: 'monospace', color: '#aaa' }}>{u.collegeRegNo || '—'}</td>
                       <td>
-                        <select 
-                          value={u.role} 
-                          onChange={(e) => updateRole(u._id, e.target.value)}
-                          style={{ padding: '4px', fontSize: '0.8rem', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', cursor: 'pointer' }}
-                        >
-                          <option value="super-admin">Super Admin</option>
-                          <option value="content-lead">Content Lead</option>
-                          <option value="media-lead">Media Lead</option>
-                          <option value="member">Member</option>
-                          <option value="general-user">General User</option>
-                        </select>
+                        {(() => {
+                          const isMechOrProd = u.branch && (u.branch.toLowerCase().includes('mechanical') || u.branch.toLowerCase().includes('production') || u.branch.toLowerCase().includes('pie') || u.isMechaPefMember);
+                          const effectiveRole = (u.role === 'general-user' && isMechOrProd) ? 'member' : (u.role || 'general-user');
+                          return (
+                            <select 
+                              value={effectiveRole} 
+                              onChange={(e) => updateRole(u._id, e.target.value)}
+                              style={{ 
+                                padding: '6px 10px', 
+                                fontSize: '0.82rem', 
+                                background: '#222', 
+                                color: '#fff', 
+                                border: '1px solid #444', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer' 
+                              }}
+                            >
+                              <option value="super-admin">Super Admin</option>
+                              <option value="content-lead">Content Lead</option>
+                              <option value="event-lead">Event Lead</option>
+                              <option value="endorsed-volunteer">Endorsed Volunteer</option>
+                              <option value="member">Member</option>
+                              <option value="general-user">General User</option>
+                            </select>
+                          );
+                        })()}
                       </td>
                       <td>
-                        {u.requestedRole ? (
-                          <span className="tag" style={{ border: '1px solid #ffaa00', color: '#ffaa00', background: 'transparent' }}>
-                            {u.requestedRole}
-                          </span>
-                        ) : '—'}
+                        <span style={{ fontSize: '0.85rem', color: '#ccc' }}>
+                          {u.branch || '—'}
+                        </span>
                       </td>
                       <td>{u.yearOfStudy ? `Year ${u.yearOfStudy}` : '—'}</td>
                       <td>
@@ -490,13 +725,60 @@ const AdminManagement = () => {
                   onChange={(e) => {
                     const newCat = e.target.value;
                     setSelectedCategory(newCat);
-                    const filtered = SECTION_KEYS.filter(s => newCat === 'Our Team' ? s.key.startsWith('team_') : !s.key.startsWith('team_'));
-                    setSelectedSection(filtered[0]?.key);
+                    const filtered = dynamicSectionKeys.filter(s => {
+                      if (newCat === 'Our Team (Second Year)') return s.key.startsWith('team_fy_');
+                      if (newCat === 'Our Team (Pre-Final Year)') return s.key.startsWith('team_sy_');
+                      if (newCat === 'Our Team (Final Year)') return s.key.startsWith('team_ty_');
+                      if (newCat === 'Our Team (Notable Alumni)') return s.key.startsWith('team_al_');
+                      return !s.key.startsWith('team_');
+                    });
+                    if (filtered.length > 0) setSelectedSection(filtered[0].key);
                   }}
                 >
                   <option value="Our Department">Our Department</option>
-                  <option value="Our Team">Our Team</option>
+                  <option value="Our Team (Second Year)">Our Team (Second Year)</option>
+                  <option value="Our Team (Pre-Final Year)">Our Team (Pre-Final Year)</option>
+                  <option value="Our Team (Final Year)">Our Team (Final Year)</option>
+                  <option value="Our Team (Notable Alumni)">Our Team (Notable Alumni)</option>
                 </select>
+                {selectedCategory.startsWith('Our Team') && (
+                  <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px', gap: '5px' }}>
+                    <div style={{ color: '#aaa', fontSize: '14px', marginBottom: '5px' }}>
+                      Currently showing {
+                        selectedCategory === 'Our Team (Second Year)' ? slotCounts.fy : 
+                        selectedCategory === 'Our Team (Pre-Final Year)' ? slotCounts.sy : 
+                        selectedCategory === 'Our Team (Final Year)' ? slotCounts.ty : 
+                        slotCounts.al
+                      } slots.
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button 
+                        className="btn-secondary" 
+                        style={{ padding: '8px 12px', background: '#ff9800', color: '#000', border: 'none', flex: 1 }}
+                        onClick={() => {
+                          if (selectedCategory === 'Our Team (Second Year)') setExtraFy(p => p + 1);
+                          else if (selectedCategory === 'Our Team (Pre-Final Year)') setExtraSy(p => p + 1);
+                          else if (selectedCategory === 'Our Team (Final Year)') setExtraTy(p => p + 1);
+                          else if (selectedCategory === 'Our Team (Notable Alumni)') setExtraAl(p => p + 1);
+                        }}
+                      >
+                        + 1 Slot
+                      </button>
+                      <button 
+                        className="btn-secondary" 
+                        style={{ padding: '8px 12px', background: '#444', color: '#fff', border: 'none', flex: 1 }}
+                        onClick={() => {
+                          if (selectedCategory === 'Our Team (Second Year)') setExtraFy(p => Math.max(0, p - 1));
+                          else if (selectedCategory === 'Our Team (Pre-Final Year)') setExtraSy(p => Math.max(0, p - 1));
+                          else if (selectedCategory === 'Our Team (Final Year)') setExtraTy(p => Math.max(0, p - 1));
+                          else if (selectedCategory === 'Our Team (Notable Alumni)') setExtraAl(p => Math.max(0, p - 1));
+                        }}
+                      >
+                        - 1 Slot
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div style={{ flex: 1 }}>
                 <h3>2. Select Image Space</h3>
@@ -505,11 +787,27 @@ const AdminManagement = () => {
                   value={selectedSection}
                   onChange={(e) => setSelectedSection(e.target.value)}
                 >
-                  {SECTION_KEYS.filter(s => selectedCategory === 'Our Team' ? s.key.startsWith('team_') : !s.key.startsWith('team_')).map(s => (
-                    <option key={s.key} value={s.key}>
-                      {s.label} {sectionImages[s.key]?.imageURL ? ' (✓ Image set)' : ' (No image)'}
-                    </option>
-                  ))}
+                  {dynamicSectionKeys.filter(s => {
+                      if (selectedCategory === 'Our Team (Second Year)') return s.key.startsWith('team_fy_');
+                      if (selectedCategory === 'Our Team (Pre-Final Year)') return s.key.startsWith('team_sy_');
+                      if (selectedCategory === 'Our Team (Final Year)') return s.key.startsWith('team_ty_');
+                      if (selectedCategory === 'Our Team (Notable Alumni)') return s.key.startsWith('team_al_');
+                      return !s.key.startsWith('team_');
+                    })
+                    .sort((a, b) => {
+                      const getOrder = (key) => sectionImages[key]?.order || (key.startsWith('team_') ? parseInt(key.split('_').pop()) : 0);
+                      return getOrder(a.key) - getOrder(b.key);
+                    })
+                    .map(s => {
+                      const imgData = sectionImages[s.key];
+                      const currentOrder = imgData?.order || (s.key.startsWith('team_') ? parseInt(s.key.split('_').pop()) : '');
+                      const displayName = imgData?.name ? imgData.name : s.label;
+                      return (
+                        <option key={s.key} value={s.key}>
+                          {s.key.startsWith('team_') ? `[#${currentOrder}] ` : ''}{displayName} {imgData?.imageURL ? ' (✓ Image)' : ' (No image)'}
+                        </option>
+                      )
+                    })}
                 </select>
               </div>
             </div>
@@ -520,23 +818,34 @@ const AdminManagement = () => {
               </h3>
               {/* Current Image Preview */}
               {sectionImages[selectedSection]?.imageURL && (
-                <div className="current-img-preview" style={{ position: 'relative' }}>
+                <div 
+                  className="current-img-preview" 
+                  style={{ 
+                    position: 'relative',
+                    maxWidth: (dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '240px' : '450px',
+                    aspectRatio: dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
+                    marginBottom: '24px'
+                  }}
+                >
                   <div className="current-img-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>Current Image</span>
                     <button 
                       onClick={deleteImage} 
                       disabled={deletingImage}
-                      style={{ background: '#ff0000', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                      className="delete-img-btn"
                     >
-                      {deletingImage ? 'Deleting...' : 'Delete Image'}
+                      <FaTrash style={{ marginRight: '6px' }} />
+                      {deletingImage ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                   <img 
                     src={sectionImages[selectedSection].imageURL} 
                     alt="current" 
                     style={{ 
-                      aspectRatio: SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
-                      objectFit: 'cover'
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block'
                     }}
                   />
                 </div>
@@ -547,54 +856,64 @@ const AdminManagement = () => {
                   className="upload-zone" 
                   onClick={() => fileInputRef.current?.click()}
                   style={{
-                    aspectRatio: SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
-                    maxHeight: '400px',
+                    maxWidth: (dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '240px' : '450px',
+                    aspectRatio: dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio || 'auto',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    padding: (dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio <= 1) ? '24px 12px' : '56px 36px'
                   }}
                 >
                   <FaUpload className="upload-zone-icon" />
                   <p>Click to select image for <strong>{currentSectionLabel}</strong></p>
                   <p className="upload-zone-sub">JPG, PNG, WebP — will be cropped before upload</p>
-                  <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFileSelect} />
+                  <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" style={{ display: 'none' }} onChange={onFileSelect} />
                 </div>
               )}
               {/* Cropper */}
-              {cropping && cropSrc && (
-                <div className="cropper-area">
-                  <div className="cropper-label">
-                    <FaCrop /> Crop the image — then click Upload
+              {cropping && cropSrc && createPortal(
+                <div
+                  className="cropper-modal-overlay"
+                  onClick={() => { setCropping(false); setCropSrc(null); }}
+                >
+                  <div className="cropper-modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="cropper-modal-header">
+                      <h3><FaCrop /> Crop Image</h3>
+                      <button className="cropper-close-btn" onClick={() => { setCropping(false); setCropSrc(null); }}>
+                        <FaTimesCircle />
+                      </button>
+                    </div>
+
+                    <div className="cropper-modal-body">
+                      <Cropper
+                        ref={cropperRef}
+                        src={cropSrc}
+                        style={{ height: '400px', width: '100%' }}
+                        aspectRatio={dynamicSectionKeys.find(s => s.key === selectedSection)?.aspectRatio ?? NaN}
+                        guides={true}
+                        viewMode={1}
+                        autoCropArea={1}
+                        background={false}
+                        responsive={true}
+                        checkOrientation={false}
+                        cropBoxResizable={true}
+                        zoomable={false}
+                        dragMode="move"
+                      />
+                    </div>
+
+                    <div className="cropper-modal-footer">
+                      <button className="cropper-btn-cancel" onClick={() => { setCropping(false); setCropSrc(null); }}>
+                        Cancel
+                      </button>
+                      <button className="cropper-btn-save" onClick={uploadCropped} disabled={uploading}>
+                        {uploading ? 'Uploading...' : <><FaUpload /> Upload Cropped Image</>}
+                      </button>
+                    </div>
                   </div>
-                  <Cropper
-                    ref={cropperRef}
-                    src={cropSrc}
-                    style={{ height: '400px', width: '100%' }}
-                    aspectRatio={SECTION_KEYS.find(s => s.key === selectedSection)?.aspectRatio ?? NaN}
-                    guides={true}
-                    viewMode={1}
-                    autoCropArea={1}
-                    background={false}
-                    responsive={true}
-                    checkOrientation={false}
-                    cropBoxResizable={true}
-                    zoomable={false}
-                    dragMode="move"
-                  />
-                  <div className="cropper-actions">
-                    <button
-                      className="btn-primary"
-                      disabled={uploading}
-                      onClick={uploadCropped}
-                    >
-                      {uploading ? 'Uploading...' : <><FaUpload /> Upload Cropped Image</>}
-                    </button>
-                    <button className="btn-secondary" onClick={() => { setCropping(false); setCropSrc(null); }}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+                </div>,
+                document.body
               )}
               
               {/* Extra Inputs for Team Details */}
@@ -632,17 +951,36 @@ const AdminManagement = () => {
                         placeholder="Enter Reg No or Role"
                       />
                     </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Sequence (Order)</label>
+                      <input 
+                        type="number" 
+                        value={sectionImages[selectedSection]?.order || (selectedSection.startsWith('team_') ? parseInt(selectedSection.split('_').pop()) : '')} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], order: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '4px' }}
+                        placeholder="e.g. 1"
+                      />
+                    </div>
                   </div>
                   <button 
                     onClick={async () => {
                       try {
                         const imgData = sectionImages[selectedSection];
+                        const defaultOrder = selectedSection.startsWith('team_') ? parseInt(selectedSection.split('_').pop()) : 0;
                         await api.post('/upload/sections', {
                           sectionKey: selectedSection,
                           name: imgData?.name || '',
-                          regNo: imgData?.regNo || ''
+                          regNo: imgData?.regNo || '',
+                          order: imgData?.order || defaultOrder
                         });
-                        showToast('Details saved!');
+                        localStorage.removeItem('api_cache_/upload/sections');
+                        fetchSectionImages();
+                        showToast('Details saved and sequences swapped!');
                       } catch (error) {
                         showToast('Failed to save details', 'error');
                       }
@@ -657,6 +995,70 @@ const AdminManagement = () => {
           </div>
         )}
       </main>
+
+      {/* Endorse Volunteer Scanner Station Modal */}
+      {endorseModalUser && (
+        <div className="modal-overlay" onClick={() => setEndorseModalUser(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', background: '#111116', border: '1px solid #00e5ff', boxShadow: '0 0 25px rgba(0, 229, 255, 0.25)' }}>
+            <div className="modal-header">
+              <h2 style={{ color: '#00e5ff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FaQrcode /> Endorse Volunteer Scanner Station
+              </h2>
+              <button className="modal-close" onClick={() => setEndorseModalUser(null)}>×</button>
+            </div>
+            
+            <div style={{ padding: '20px' }}>
+              <div style={{ background: '#1c1c24', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #333' }}>
+                <strong style={{ color: '#fff', fontSize: '1rem', display: 'block' }}>{endorseModalUser.name}</strong>
+                <span style={{ color: '#aaa', fontSize: '0.85rem' }}>{endorseModalUser.email} {endorseModalUser.collegeRegNo ? `(${endorseModalUser.collegeRegNo})` : ''}</span>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#ff1f01', fontWeight: 'bold', marginBottom: '6px' }}>
+                  1. Select Event for Scanner Station:
+                </label>
+                <select 
+                  value={endorseEventId} 
+                  onChange={e => handleEndorseEventChange(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', background: '#1c1c24', color: '#fff', border: '1px solid #444', borderRadius: '8px', fontSize: '0.9rem' }}
+                >
+                  {endorseEvents.map(ev => (
+                    <option key={ev._id} value={ev._id}>{ev.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#00e5ff', fontWeight: 'bold', marginBottom: '6px' }}>
+                  2. Select Assigned Verification Stage / Station:
+                </label>
+                <select 
+                  value={endorseStage} 
+                  onChange={e => setEndorseStage(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', background: '#0d2d3a', color: '#00e5ff', border: '1px solid #00e5ff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}
+                >
+                  {endorseStages.map((stg, idx) => (
+                    <option key={idx} value={stg}>{stg}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn-secondary" onClick={() => setEndorseModalUser(null)}>Cancel</button>
+                <button 
+                  type="button" 
+                  onClick={saveEndorsement}
+                  disabled={endorseSubmitting}
+                  style={{ background: 'linear-gradient(135deg, #00b0ff 0%, #00e5ff 100%)', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 0 12px rgba(0, 229, 255, 0.4)' }}
+                >
+                  {endorseSubmitting ? 'Saving...' : '✓ Endorse Scanner Station'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && <div className={`admin-toast ${toast.type}`}>{toast.msg}</div>}
     </div>
   );

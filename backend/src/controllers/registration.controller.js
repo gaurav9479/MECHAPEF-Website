@@ -6,6 +6,18 @@ import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, REGISTRATION_TYPES } from '../constants/index.js';
 import { enqueueRegistration, isRegistrationQueueEnabled } from '../queues/registrationQueue.js';
+import fs from 'fs';
+import path from 'path';
+
+// Absolute path to backup file
+const backupFilePath = path.join(process.cwd(), 'registrations_backup.log');
+
+const appendBackupLog = (payload) => {
+    const logEntry = JSON.stringify({ timestamp: new Date().toISOString(), payload }) + '\n';
+    fs.appendFile(backupFilePath, logEntry, (err) => {
+        if (err) console.error('[Backup Log] Failed to write registration backup:', err.message);
+    });
+};
 
 // Shared helper — used by both direct write and Redis fallback path
 const saveRegistrationDirectly = async (payload, eventTitle) => {
@@ -14,7 +26,7 @@ const saveRegistrationDirectly = async (payload, eventTitle) => {
 
     await Promise.all([
         registration.populate('eventId', 'title'),
-        registration.populate('registeredBy', 'name email'),
+        registration.populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy'),
         Event.findByIdAndUpdate(payload.eventId, { $inc: { totalRegistrations: 1 } }),
         User.findByIdAndUpdate(
             payload.registeredBy,
@@ -24,6 +36,28 @@ const saveRegistrationDirectly = async (payload, eventTitle) => {
 
     return registration;
 };
+
+// Get the current user's registration for a specific event
+export const getMyRegistrationForEvent = asyncHandler(async (req, res) => {
+    const { id: eventId } = req.params;
+    const userId = req.user.userId;
+
+    const registration = await Registration.findOne({
+        eventId,
+        registeredBy: userId,
+        deletedAt: null
+    }).select('_id registrationType teamName attended paymentStatus createdAt');
+
+    if (!registration) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(
+            new APIResponse(HTTP_STATUS.NOT_FOUND, null, 'Not registered for this event')
+        );
+    }
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, registration, 'Registration found')
+    );
+});
 
 export const registerForEvent = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
@@ -38,7 +72,34 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
 
-    if (new Date() > event.registrationDeadline) {
+    // Check branch and year eligibility for registerer
+    const userObj = await User.findById(req.user.userId);
+    if (!userObj) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
+    }
+
+    if (event.eligibleBranches && event.eligibleBranches.length > 0) {
+        if (!userObj.branch) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please update your branch in your profile before registering');
+        }
+        const isEligible = event.eligibleBranches.some(b => 
+            b.toLowerCase().trim() === userObj.branch.toLowerCase().trim()
+        );
+        if (!isEligible) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Your branch (${userObj.branch}) is not eligible for this event`);
+        }
+    }
+
+    if (event.eligibleYears && event.eligibleYears.length > 0) {
+        if (!userObj.yearOfStudy) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please update your year of study in your profile before registering');
+        }
+        if (!event.eligibleYears.includes(userObj.yearOfStudy)) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Your year of study (${userObj.yearOfStudy}) is not eligible for this event`);
+        }
+    }
+
+    if (!event.isRegistrationOpen) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.REGISTRATION_CLOSED);
     }
 
@@ -71,6 +132,33 @@ export const registerForEvent = asyncHandler(async (req, res) => {
             throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
         }
 
+        // Check branch and year eligibility for team members
+        if (event.eligibleBranches && event.eligibleBranches.length > 0) {
+            const ineligibleMember = members.find(m => {
+                if (!m.branch) return true; // branch not set
+                return !event.eligibleBranches.some(b => b.toLowerCase().trim() === m.branch.toLowerCase().trim());
+            });
+            if (ineligibleMember) {
+                throw new ApiError(
+                    HTTP_STATUS.BAD_REQUEST, 
+                    `Team member ${ineligibleMember.name} (Branch: ${ineligibleMember.branch || 'Not Set'}) is not eligible for this event.`
+                );
+            }
+        }
+
+        if (event.eligibleYears && event.eligibleYears.length > 0) {
+            const ineligibleYearMember = members.find(m => {
+                if (!m.yearOfStudy) return true; // year not set
+                return !event.eligibleYears.includes(m.yearOfStudy);
+            });
+            if (ineligibleYearMember) {
+                throw new ApiError(
+                    HTTP_STATUS.BAD_REQUEST, 
+                    `Team member ${ineligibleYearMember.name} (Year: ${ineligibleYearMember.yearOfStudy || 'Not Set'}) is not eligible for this event.`
+                );
+            }
+        }
+
         const registeredMembers = await Registration.find({
             eventId,
             'teamMembers.userId': { $in: teamMemberIds },
@@ -97,6 +185,9 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         paymentStatus: event.registrationFee > 0 ? 'Pending' : 'NotApplicable',
         customData: customData || {}
     };
+
+    // Fail-safe backup: write to local file BEFORE any external system interaction
+    appendBackupLog(payload);
 
     // Try queue first — if Redis is up, enqueue and return early
     if (isRegistrationQueueEnabled()) {
@@ -143,7 +234,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
 
     await Promise.all([
         registration.populate('eventId', 'title'),
-        registration.populate('registeredBy', 'name email'),
+        registration.populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy'),
         Event.findByIdAndUpdate(eventId, { $inc: { totalRegistrations: 1 } }),
         User.findByIdAndUpdate(
             req.user.userId,
@@ -188,29 +279,100 @@ export const getUserRegistrations = asyncHandler(async (req, res) => {
 });
 
 export const markAttendance = asyncHandler(async (req, res) => {
-    const { attended } = req.body;
+    const { attended, stageName } = req.body;
 
     if (attended === undefined) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Attended status is required');
     }
 
-    const registration = await Registration.findByIdAndUpdate(
-        req.params.id,
-        {
-            attendanceMarked: attended,
-            attendanceMarkedAt: attended ? new Date() : null,
-            attendanceMarkedBy: attended ? req.user.userId : null
-        },
-        { new: true }
-    ).populate('eventId', 'title');
+    // Load registration first to detect previous attendance state
+    const registration = await Registration.findById(req.params.id).populate('eventId', 'title ticketStages');
 
     if (!registration) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
 
-    return res
-        .status(HTTP_STATUS.OK)
-        .json(new APIResponse(HTTP_STATUS.OK, { registration }, 'Attendance marked successfully'));
+    const eventStages = registration.eventId?.ticketStages || ['Stage 1: Check-in'];
+    const activeStage = stageName || eventStages[0] || 'Stage 1: Check-in';
+
+    if (attended) {
+        // Check if activeStage is already completed
+        const existingStageIndex = (registration.completedStages || []).findIndex(
+            s => s.stageName.toLowerCase() === activeStage.toLowerCase()
+        );
+
+        if (existingStageIndex !== -1) {
+            return res
+                .status(HTTP_STATUS.OK)
+                .json(new APIResponse(HTTP_STATUS.OK, {
+                    registration,
+                    alreadyMarked: true,
+                    stageName: activeStage,
+                    completedStages: registration.completedStages
+                }, `Ticket already scanned for "${activeStage}"`));
+        }
+
+        // 10-Minute Cooldown Check between scans for the same ticket
+        const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+        let lastScannedAt = registration.attendanceMarkedAt ? new Date(registration.attendanceMarkedAt).getTime() : 0;
+        if (registration.completedStages && registration.completedStages.length > 0) {
+            const latestStageScan = Math.max(...registration.completedStages.map(s => new Date(s.scannedAt).getTime()));
+            if (latestStageScan > lastScannedAt) lastScannedAt = latestStageScan;
+        }
+
+        if (lastScannedAt > 0) {
+            const timeSinceLastScan = Date.now() - lastScannedAt;
+            if (timeSinceLastScan < COOLDOWN_MS) {
+                const remainingMs = COOLDOWN_MS - timeSinceLastScan;
+                const remainingMins = Math.floor(remainingMs / (60 * 1000));
+                const remainingSecs = Math.floor((remainingMs % (60 * 1000)) / 1000);
+
+                return res
+                    .status(HTTP_STATUS.OK)
+                    .json(new APIResponse(HTTP_STATUS.OK, {
+                        registration,
+                        cooldownActive: true,
+                        remainingMins,
+                        remainingSecs,
+                        stageName: activeStage,
+                        completedStages: registration.completedStages
+                    }, `Scan Cooldown: Ticket was scanned recently. Please wait ${remainingMins}m ${remainingSecs}s before scanning next stage.`));
+            }
+        }
+
+        // Push new stage completion
+        if (!registration.completedStages) registration.completedStages = [];
+        registration.completedStages.push({
+            stageName: activeStage,
+            scannedAt: new Date(),
+            scannedBy: req.user.userId
+        });
+
+        registration.attendanceMarked = true;
+        registration.attendanceMarkedAt = new Date();
+        registration.attendanceMarkedBy = req.user.userId;
+        await registration.save();
+
+        return res
+            .status(HTTP_STATUS.OK)
+            .json(new APIResponse(HTTP_STATUS.OK, {
+                registration,
+                alreadyMarked: false,
+                stageName: activeStage,
+                completedStages: registration.completedStages
+            }, `"${activeStage}" verified successfully!`));
+    } else {
+        // Reset attendance if unchecking
+        registration.attendanceMarked = false;
+        registration.attendanceMarkedAt = null;
+        registration.attendanceMarkedBy = null;
+        registration.completedStages = [];
+        await registration.save();
+
+        return res
+            .status(HTTP_STATUS.OK)
+            .json(new APIResponse(HTTP_STATUS.OK, { registration, alreadyMarked: false }, 'Attendance reset successfully'));
+    }
 });
 
 export const getEventRegistrations = asyncHandler(async (req, res) => {
@@ -227,7 +389,7 @@ export const getEventRegistrations = asyncHandler(async (req, res) => {
             .sort({ registeredAt: -1 })
             .limit(parseInt(limit))
             .skip((parseInt(page) - 1) * parseInt(limit))
-            .populate('registeredBy', 'name email')
+            .populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy')
             .populate('eventId', 'title'),
         Registration.countDocuments(filter)
     ]);

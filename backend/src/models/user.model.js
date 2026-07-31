@@ -125,6 +125,18 @@ const userSchema = new mongoose.Schema(
 
         branch: String,
 
+        assignedEvent: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Event',
+            default: null
+        },
+
+        assignedStage: {
+            type: String,
+            trim: true,
+            default: null
+        },
+
         githubURL: {
             type: String,
             trim: true
@@ -183,11 +195,9 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ isActive: 1, deletedAt: 1 });
-userSchema.index({ collegeRegNo: 1 }, { sparse: true, unique: true }); // sparse so null values are allowed
 // TTL index: auto delete document when current time > unverifiedRequestExpiresAt
 userSchema.index({ unverifiedRequestExpiresAt: 1 }, { expireAfterSeconds: 0 });
 
@@ -227,6 +237,16 @@ userSchema.methods.getPublicProfile = function () {
     delete user.emailVerificationExpiry;
     delete user.resetPasswordToken;
     delete user.resetPasswordExpire;
+
+    if (user.branch) {
+        const b = user.branch.toLowerCase();
+        user.isMechaPefMember = b.includes('mechanical') || b.includes('production') || b.includes('pie');
+        user.memberTag = user.isMechaPefMember ? 'Member' : 'Non-Member';
+    } else {
+        user.isMechaPefMember = false;
+        user.memberTag = 'Non-Member';
+    }
+
     return user;
 };
 

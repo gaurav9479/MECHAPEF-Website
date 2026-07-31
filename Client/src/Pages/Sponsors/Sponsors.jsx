@@ -112,20 +112,22 @@ const SponsorCard = ({ sponsor, index }) => (
     transition={{ duration: 0.5, delay: index * 0.08, ease: 'easeOut' }}
     whileHover={{ y: -6 }}
   >
-    <div className="sponsor-card-logo">
-      {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
-        <img
-          src={sponsor.logoURL}
-          alt={`${sponsor.companyName} logo`}
-          onError={e => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
-        />
-      ) : (
-        <span>{sponsor.companyName?.charAt(0) || 'M'}</span>
-      )}
+    <div className="sponsor-card-left" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      <div className="sponsor-card-logo">
+        {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
+          <img
+            src={sponsor.logoURL}
+            alt={`${sponsor.companyName} logo`}
+            onError={e => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+          />
+        ) : (
+          <span>{sponsor.companyName?.charAt(0) || 'M'}</span>
+        )}
+      </div>
+      <p className={`sponsor-tier sponsor-tier-badge tier-badge-${(sponsor.tier || '').toLowerCase()}`}>{sponsor.tier}</p>
     </div>
     <div>
-      <p className={`sponsor-tier sponsor-tier-badge tier-badge-${(sponsor.tier || '').toLowerCase()}`}>{sponsor.tier}</p>
-      <h3>{sponsor.companyName}</h3>
+      <h3 style={{ marginTop: 0 }}>{sponsor.companyName}</h3>
       {sponsor.description && <p className="sponsor-desc">{sponsor.description}</p>}
     </div>
   </motion.article>

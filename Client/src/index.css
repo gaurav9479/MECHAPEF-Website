@@ -13,8 +13,12 @@ img {
 }
 
 html{
-  scroll-behavior:smooth;
   overflow-x: clip;
+}
+
+:root {
+  --special-brand-font: inherit;
+  --special-brand-color: #ff1f01;
 }
 
 body{
@@ -22,6 +26,14 @@ body{
   color:white;
   font-family:Poppins,sans-serif;
   overflow-x: clip;
+}
+
+/* Special Sponsor Brand Typography Takeover */
+.mh-sec-title,
+.past-sponsors-container h2,
+.section-header h2,
+.brand-font-takeover {
+  font-family: var(--special-brand-font, inherit);
 }
 
 /* Hide scrollbar globally for a cleaner look */
@@ -89,4 +101,9 @@ body::after {
   background: linear-gradient(to top, #050505 0%, transparent 100%);
   pointer-events: none;
   z-index: 9999;
+}
+
+body.admin-mode::after {
+  display: none !important;
+  background: none !important;
 }

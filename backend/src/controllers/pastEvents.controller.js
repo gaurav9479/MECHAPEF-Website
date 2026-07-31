@@ -11,7 +11,7 @@ export const getPastEvents = async (req, res) => {
 
 export const createPastEvent = async (req, res) => {
     try {
-        const { title, date, description, imageURL, imagekitFileId } = req.body;
+        const { title, date, description, imageURL, imagekitFileId, mobileImageURL, mobileImagekitFileId } = req.body;
         if (!title || !date || !description || !imageURL) {
             return res.status(400).json({ success: false, message: 'Missing required fields' });
         }
@@ -26,6 +26,8 @@ export const createPastEvent = async (req, res) => {
             description,
             imageURL,
             imagekitFileId,
+            mobileImageURL,
+            mobileImagekitFileId,
             order: newOrder,
             updatedBy: req.user._id
         });

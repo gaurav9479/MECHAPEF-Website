@@ -397,9 +397,8 @@ body:has(.gallery-page)::before {
 }
 .yarl__button {
   color: rgba(255, 255, 255, 0.7) !important;
-  transition: color 0.2s ease, transform 0.2s ease !important;
+  transition: color 0.2s ease !important;
 }
 .yarl__button:hover {
   color: #ff0000 !important;
-  transform: scale(1.1);
 }

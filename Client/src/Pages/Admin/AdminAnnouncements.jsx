@@ -26,21 +26,23 @@ const AdminAnnouncements = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [allSponsors, setAllSponsors] = useState([]);
-  
+  const [allEvents, setAllEvents] = useState([]);
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
   const fetchItems = async () => {
     try {
-      const [annRes, sponRes] = await Promise.all([
+      const [annRes, sponRes, eventRes] = await Promise.all([
         api.get('/announcements'),
-        api.get('/sponsors')
+        api.get('/sponsors'),
+        api.get('/events')
       ]);
       setItems(annRes.data.data?.announcements || annRes.data.data || []);
       const sp = sponRes.data.data?.sponsors || sponRes.data.data || [];
       // we can show all active sponsors in dropdown
       setAllSponsors(sp.filter(s => s.isActive !== false));
+      setAllEvents(eventRes.data.data?.events || []);
     } catch { showToast('Failed to load data', 'error'); }
     finally { setLoading(false); }
   };
@@ -163,8 +165,28 @@ const AdminAnnouncements = () => {
                   </select>
                 </div>
                 <div className="form-group full">
-                  <label>Target Link / Event ID (Optional)</label>
-                  <input value={form.targetLink} onChange={e => f('targetLink', e.target.value)} placeholder="/events/EVENT_ID or https://..." />
+                  <label>Endorsement (Optional)</label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <select 
+                      style={{ flex: 1 }}
+                      value={allEvents.some(e => e._id === form.targetLink) ? form.targetLink : (form.targetLink ? 'external' : '')} 
+                      onChange={e => f('targetLink', e.target.value === 'external' ? 'https://' : e.target.value)}
+                    >
+                      <option value="">-- No Endorsement --</option>
+                      {allEvents.map(evt => (
+                        <option key={evt._id} value={evt._id}>{evt.title}</option>
+                      ))}
+                      <option value="external">Custom / External Link</option>
+                    </select>
+                    {(!allEvents.some(e => e._id === form.targetLink) && form.targetLink !== '') && (
+                      <input 
+                        style={{ flex: 1 }}
+                        value={form.targetLink} 
+                        onChange={e => f('targetLink', e.target.value)} 
+                        placeholder="https://..." 
+                      />
+                    )}
+                  </div>
                 </div>
                 
                 <div className="form-group full">

@@ -3,6 +3,7 @@ export const USER_ROLES = {
     SUPER_ADMIN: 'super-admin',
     CONTENT_LEAD: 'content-lead',
     MEDIA_LEAD: 'media-lead',
+    VOLUNTEER: 'volunteer',
     MEMBER: 'member',
     GENERAL_USER: 'general-user'
 };
@@ -21,7 +22,7 @@ export const SUB_TEAMS = {
 export const SUB_TEAMS_ARRAY = Object.values(SUB_TEAMS);
 
 export const EVENT_CATEGORIES = {
-    MECHAPEF_EVENT: 'MechapefEvent',
+    MECHAPEF_EVENT: 'Mechapef-Event',
     DEPARTMENTAL: 'Departmental'
 };
 

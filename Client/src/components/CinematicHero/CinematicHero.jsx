@@ -16,6 +16,7 @@ import '../About/About.css';
 import api from '../../services/api';
 import EditableImage from '../EditableImage/EditableImage';
 import { Link } from 'react-router-dom';
+import { apiGetCached } from '../../utils/apiCache';
 
 const CinematicHero = () => {
   const navigate = useNavigate();
@@ -23,19 +24,18 @@ const CinematicHero = () => {
   
   const [imagesMap, setImagesMap] = useState({});
 
-  const fetchSectionImages = async () => {
-    try {
-      const res = await api.get('/upload/sections');
+  const fetchSectionImages = () => {
+    apiGetCached('/upload/sections', (data) => {
       const imgMap = {};
-      if (res.data.data?.images) {
-        res.data.data.images.forEach(img => {
+      if (data?.data?.images) {
+        data.data.images.forEach(img => {
           imgMap[img.sectionKey] = img.imageURL;
         });
       }
       setImagesMap(imgMap);
-    } catch (error) {
+    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(error => {
       console.error("Failed to load section images:", error);
-    }
+    });
   };
 
   useEffect(() => {
@@ -528,10 +528,12 @@ const CinematicHero = () => {
 
               <motion.div className="s5-social-grid" style={{ x: s5Line4X, opacity: s5Line4Op }}>
                 <div className="social-icon"><FaEnvelope /></div>
-                <div className="social-icon"><FaInstagram /></div>
-                <div className="social-icon"><FaLinkedinIn /></div>
-                <div className="social-icon"><FaFacebookF /></div>
-                <div className="social-icon"><FaTwitter /></div>
+                <a href="https://www.instagram.com/mechapef_mnnit/" target="_blank" rel="noreferrer" style={{color: 'inherit'}}>
+                  <div className="social-icon"><FaInstagram /></div>
+                </a>
+                <a href="https://www.linkedin.com/company/mechapef-mnnit" target="_blank" rel="noreferrer" style={{color: 'inherit'}}>
+                  <div className="social-icon"><FaLinkedinIn /></div>
+                </a>
               </motion.div>
             </div>
           </div>

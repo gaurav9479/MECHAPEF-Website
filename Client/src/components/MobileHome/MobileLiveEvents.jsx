@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaArrowRight, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { HeadingGearIcon, Reveal } from './MobileShared';
 
-const MobileLiveEvents = ({ slides, navigate }) => {
+const MobileLiveEvents = ({ slides, navigate, onActiveSlideChange }) => {
   const [slideIdx, setSlideIdx] = useState(0);
+
+  useEffect(() => {
+    if (onActiveSlideChange && slides.length > 0) {
+      onActiveSlideChange(slides[slideIdx]);
+    }
+  }, [slideIdx, slides, onActiveSlideChange]);
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -24,7 +30,7 @@ const MobileLiveEvents = ({ slides, navigate }) => {
         <div className="mh-sec-hd">
           <span className="mh-tag">LIVE EVENTS</span>
           <h2 className="mh-sec-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-            UPCOMING EVENTS
+            ANNOUNCEMENTS
             <HeadingGearIcon size={26} />
           </h2>
         </div>
@@ -44,7 +50,7 @@ const MobileLiveEvents = ({ slides, navigate }) => {
               <div
                 key={slide._id}
                 className={`mh-slide ${idx === slideIdx ? 'active' : ''}`}
-                style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : {}}
+                style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : { background: 'linear-gradient(135deg, #660a00 0%, #111111 100%)' }}
               >
                 <div className="mh-slide-overlay">
                   <span className="mh-slide-tag">{slide.targetType || 'Announcement'}</span>
@@ -74,6 +80,7 @@ const MobileLiveEvents = ({ slides, navigate }) => {
           </div>
         )}
       </Reveal>
+
     </section>
   );
 };

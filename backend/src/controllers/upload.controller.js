@@ -49,7 +49,18 @@ export const uploadImage = asyncHandler(async (req, res) => {
 
 // ── Get all section images ───────────────────────────────────────────────────
 export const getSectionImages = asyncHandler(async (req, res) => {
-    const images = await SectionImage.find().sort({ sectionKey: 1 });
+    const { device } = req.query;
+    let filter = {};
+    
+    if (device === 'mobile') {
+        // Mobile needs team images and mobile gallery (_mob)
+        filter = { sectionKey: { $regex: /_mob$|^team_/ } };
+    } else if (device === 'desktop') {
+        // Desktop needs team images and desktop gallery (no _mob)
+        filter = { sectionKey: { $not: /_mob$/ } };
+    }
+
+    const images = await SectionImage.find(filter).sort({ sectionKey: 1 });
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, { images }, 'Section images fetched')
     );
@@ -57,14 +68,32 @@ export const getSectionImages = asyncHandler(async (req, res) => {
 
 // ── Update a section image ───────────────────────────────────────────────────
 export const updateSectionImage = asyncHandler(async (req, res) => {
-    const { sectionKey, label, imageURL, imagekitFileId, name, regNo } = req.body;
+    const { sectionKey, label, imageURL, imagekitFileId, name, regNo, order } = req.body;
     if (!sectionKey) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey is required');
+
+    const existingImage = await SectionImage.findOne({ sectionKey });
+    const oldOrder = existingImage ? existingImage.order : 0;
+    const newOrder = order !== undefined ? Number(order) : oldOrder;
+
+    if (existingImage && newOrder !== oldOrder && sectionKey.startsWith('team_')) {
+        const prefix = sectionKey.split('_').slice(0, 2).join('_');
+        const conflict = await SectionImage.findOne({ 
+            sectionKey: { $regex: `^${prefix}_` },
+            order: newOrder
+        });
+
+        if (conflict) {
+            conflict.order = oldOrder;
+            await conflict.save();
+        }
+    }
 
     const updateData = { sectionKey, label: label || sectionKey, updatedBy: req.user?.userId || null };
     if (imageURL !== undefined) updateData.imageURL = imageURL;
     if (imagekitFileId !== undefined) updateData.imagekitFileId = imagekitFileId;
     if (name !== undefined) updateData.name = name;
     if (regNo !== undefined) updateData.regNo = regNo;
+    if (order !== undefined) updateData.order = newOrder;
 
     const image = await SectionImage.findOneAndUpdate(
         { sectionKey },

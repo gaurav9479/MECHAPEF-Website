@@ -6,15 +6,28 @@ import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshak
 import api from '../../services/api';
 import { eventService } from '../../services/services';
 import './AdminDashboard.css';
-const CATEGORIES = ['MechapefEvent', 'Departmental'];
+const CATEGORIES = ['Mechapef-Event', 'Departmental'];
+const BRANCHES = [
+  'Biotechnology',
+  'Chemical Engineering',
+  'Civil Engineering',
+  'Computer Science and Engineering',
+  'Electronics and Communication Engineering',
+  'Electrical Engineering',
+  'Mechanical Engineering',
+  'Electronics and Computational Mechanics',
+  'Materials Engineering',
+  'Production and Industrial Engineering'
+];
 const emptyForm = {
-  title: '', description: '', category: 'MechapefEvent',
-  startTime: '', endTime: '', venue: '', registrationDeadline: '',
-  maxTeamSize: 1, registrationFee: 0, featured: false, rules: '', prizes: '',
-  customFormFields: []
+  title: '', description: '', category: 'Mechapef-Event',
+  startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
+  maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
+  customFormFields: [], eligibleBranches: [], eligibleYears: [],
+  ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']
 };
 const AdminEvents = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => { await logout(); navigate('/login'); };
   const [events, setEvents] = useState([]);
@@ -28,6 +41,84 @@ const AdminEvents = () => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const handleDelete = async (id) => {
+    if (user?.role !== 'super-admin') {
+      showToast('Only a Super Admin can initiate event deletion', 'error');
+      return;
+    }
+    if (!window.confirm('⚠️ INITIATE MULTI-SIG DELETION: Are you sure you want to list this event for deletion? This will require approval from 2 additional SuperAdmins (3 total votes).')) return;
+    try {
+      const res = await api.delete(`/events/${id}`);
+      showToast(res.data?.message || 'Event deletion initiated. Awaiting approval from 2 more SuperAdmins.');
+      fetchEvents();
+    } catch (err) { showToast(err.response?.data?.message || 'Failed to initiate deletion', 'error'); }
+  };
+
+  const handleApproveDelete = async (id) => {
+    if (!window.confirm('✓ APPROVE EVENT DELETION: Are you sure you want to cast your SuperAdmin vote to approve deleting this event?')) return;
+    try {
+      const res = await api.post(`/events/${id}/approve-deletion`);
+      const { isFullyApproved, csvData, csvFileName } = res.data?.data || {};
+
+      if (isFullyApproved && csvData) {
+        // Automatic browser CSV file download trigger for the final approving SuperAdmin
+        const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', csvFileName || `FINAL_REGISTRATIONS_BACKUP_${id}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('📥 Deletion Fully Approved! Final Registration Backup CSV automatically downloaded.');
+      } else {
+        showToast(res.data?.message || 'Deletion approval recorded!');
+      }
+
+      fetchEvents();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to approve deletion', 'error');
+    }
+  };
+
+  const handleCancelDelete = async (id) => {
+    if (!window.confirm('CANCEL DELETION REQUEST: Restore this event back to Active state?')) return;
+    try {
+      const res = await api.post(`/events/${id}/cancel-deletion`);
+      showToast(res.data?.message || 'Deletion request cancelled. Event restored.');
+      fetchEvents();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to cancel deletion', 'error');
+    }
+  };
+
+  const addTicketStage = () => {
+    const current = form.ticketStages || [];
+    f('ticketStages', [...current, `Stage ${current.length + 1}: Custom Check-in`]);
+  };
+
+  const updateTicketStage = (index, value) => {
+    const current = [...(form.ticketStages || [])];
+    current[index] = value;
+    f('ticketStages', current);
+  };
+
+  const removeTicketStage = (index) => {
+    const current = (form.ticketStages || []).filter((_, i) => i !== index);
+    f('ticketStages', current);
+  };
+
+  const setStagePreset = (count) => {
+    if (count === 1) {
+      f('ticketStages', ['Stage 1: Main Gate Entry']);
+    } else if (count === 2) {
+      f('ticketStages', ['Stage 1: Main Gate Entry', 'Stage 2: Kit / Food Collection']);
+    } else if (count === 3) {
+      f('ticketStages', ['Stage 1: Main Gate Entry', 'Stage 2: Food & Refreshment', 'Stage 3: Certificate / Stage Entry']);
+    }
+  };
+
   const fetchEvents = async () => {
     try {
       const res = await eventService.getAll({ limit: 50 });
@@ -36,9 +127,29 @@ const AdminEvents = () => {
     finally { setLoading(false); }
   };
   useEffect(() => { fetchEvents(); }, []);
+
+  useEffect(() => {
+    // Only cache if we are creating an event (not editing) and the modal is open
+    if (!editingEvent && showModal) {
+      const timer = setTimeout(() => {
+        localStorage.setItem('mechapef_adminEventFormDraft', JSON.stringify(form));
+      }, 500); // 500ms debounce to prevent lag on keystrokes/clicks
+      return () => clearTimeout(timer);
+    }
+  }, [form, editingEvent, showModal]);
+
   const openCreate = () => {
     setEditingEvent(null);
-    setForm(emptyForm);
+    const draft = localStorage.getItem('mechapef_adminEventFormDraft');
+    if (draft) {
+      try {
+        setForm(JSON.parse(draft));
+      } catch (e) {
+        setForm(emptyForm);
+      }
+    } else {
+      setForm(emptyForm);
+    }
     setShowModal(true);
   };
   const openEdit = (ev) => {
@@ -48,22 +159,18 @@ const AdminEvents = () => {
       category: ev.category, venue: ev.venue,
       startTime: ev.startTime?.slice(0, 16),
       endTime: ev.endTime?.slice(0, 16),
+      registrationStartDate: ev.registrationStartDate?.slice(0, 16) || '',
       registrationDeadline: ev.registrationDeadline?.slice(0, 16),
       maxTeamSize: ev.maxTeamSize, registrationFee: ev.registrationFee,
-      featured: ev.featured,
+      featured: ev.featured, isTBD: ev.isTBD || false,
       rules: Array.isArray(ev.rules) ? ev.rules.join('\n') : '',
       prizes: ev.prizes || '',
-      customFormFields: ev.customFormFields || []
+      customFormFields: ev.customFormFields || [],
+      eligibleBranches: ev.eligibleBranches || [],
+      eligibleYears: ev.eligibleYears || [],
+      ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']
     });
     setShowModal(true);
-  };
-  const handleDelete = async (id) => {
-    if (!window.confirm('WARNING: Are you sure you want to permanently delete this event? All associated registrations and data will be permanently wiped out!')) return;
-    try {
-      await eventService.delete(id);
-      showToast('Event deleted');
-      fetchEvents();
-    } catch { showToast('Failed to delete', 'error'); }
   };
 
   const handleEndEvent = async (id) => {
@@ -89,9 +196,24 @@ const AdminEvents = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.eligibleBranches || form.eligibleBranches.length === 0) {
+      showToast('At least one eligible branch must be selected', 'error');
+      setSubmitting(false);
+      return;
+    }
+    if (!form.eligibleYears || form.eligibleYears.length === 0) {
+      showToast('At least one eligible year must be selected', 'error');
+      setSubmitting(false);
+      return;
+    }
     setSubmitting(true);
     const payload = {
       ...form,
+      venue: form.isTBD && !form.venue ? 'TBD' : form.venue,
+      startTime: form.isTBD && !form.startTime ? '2099-12-31T00:00' : form.startTime,
+      endTime: form.isTBD && !form.endTime ? '2099-12-31T23:59' : form.endTime,
+      registrationStartDate: form.isTBD && !form.registrationStartDate ? '2099-12-01T00:00' : (form.registrationStartDate || undefined),
+      registrationDeadline: form.isTBD && !form.registrationDeadline ? '2099-12-30T23:59' : form.registrationDeadline,
       rules: form.rules ? form.rules.split('\n').filter(Boolean) : [],
       maxTeamSize: Number(form.maxTeamSize),
       registrationFee: Number(form.registrationFee),
@@ -103,6 +225,8 @@ const AdminEvents = () => {
       } else {
         await eventService.create(payload);
         showToast('Event created!');
+        localStorage.removeItem('mechapef_adminEventFormDraft');
+        setForm(emptyForm);
       }
       setShowModal(false);
       fetchEvents();
@@ -153,32 +277,81 @@ const AdminEvents = () => {
               ) : events.length === 0 ? (
                 <tr><td colSpan="5" style={{textAlign:'center', color:'#555', padding:'30px'}}>No events yet. Create one!</td></tr>
               ) : events.map(ev => (
-                <tr key={ev._id}>
+                <tr key={ev._id} style={{ background: ev.deletionState?.status === 'APPROVED_RETENTION' ? 'rgba(255, 31, 1, 0.05)' : ev.deletionState?.status === 'PENDING_APPROVAL' ? 'rgba(255, 170, 0, 0.05)' : 'transparent' }}>
                   <td>
                     <strong style={{color:'#fff'}}>{ev.title}</strong>
                     {ev.featured && <span className="tag" style={{marginLeft:'8px', backgroundColor:'#222'}}>Featured</span>}
                   </td>
-                  <td>{new Date(ev.startTime).toLocaleDateString()}</td>
-                  <td>{ev.venue}</td>
+                  <td>{ev.isTBD ? 'TBD' : new Date(ev.startTime).toLocaleDateString()}</td>
+                  <td>{ev.isTBD && ev.venue === 'TBD' ? 'TBD' : ev.venue}</td>
                   <td>
-                    <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`}>
-                      {ev.status || 'Upcoming'}
-                    </span>
+                    {ev.deletionState?.status === 'PENDING_APPROVAL' ? (
+                      <span className="tag" style={{ background: 'rgba(255, 170, 0, 0.2)', color: '#ffaa00', border: '1px solid #ffaa00' }}>
+                        ⚠️ DELETION PENDING ({ev.deletionState.approvals?.length || 1}/3 Votes)
+                      </span>
+                    ) : ev.deletionState?.status === 'APPROVED_RETENTION' ? (
+                      <span className="tag" style={{ background: 'rgba(255, 31, 1, 0.2)', color: '#ff4444', border: '1px solid #ff4444' }}>
+                        ⏳ VANISHES IN 7 DAYS ({ev.deletionState.vanishAt ? new Date(ev.deletionState.vanishAt).toLocaleDateString() : 'Queued'})
+                      </span>
+                    ) : (
+                      <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`}>
+                        {ev.status || 'Upcoming'}
+                      </span>
+                    )}
                   </td>
-                  <td style={{display:'flex', gap:'8px'}}>
-                    {ev.status !== 'Ended' && (
+                  <td style={{display:'flex', gap:'8px', alignItems: 'center', flexWrap: 'wrap'}}>
+                    {/* Multi-Sig Approval & Deletion Action Controls */}
+                    {ev.deletionState?.status === 'PENDING_APPROVAL' && user?.role === 'super-admin' && (
+                      <>
+                        <button
+                          className="btn-primary"
+                          title="Cast SuperAdmin Vote to Approve Deletion"
+                          onClick={() => handleApproveDelete(ev._id)}
+                          style={{ padding: '4px 10px', fontSize: '0.78rem', background: '#00c864', color: '#000', fontWeight: 'bold' }}
+                        >
+                          ✓ Approve Deletion
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          title="Cancel Deletion Request"
+                          onClick={() => handleCancelDelete(ev._id)}
+                          style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
+
+                    {ev.deletionState?.status === 'APPROVED_RETENTION' && user?.role === 'super-admin' && (
+                      <button
+                        className="btn-secondary"
+                        title="Restore Event before 7-day purge"
+                        onClick={() => handleCancelDelete(ev._id)}
+                        style={{ padding: '4px 10px', fontSize: '0.78rem', color: '#00e5ff', borderColor: '#00e5ff' }}
+                      >
+                        🔄 Restore Event
+                      </button>
+                    )}
+
+                    {ev.status !== 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
                       <button className="btn-secondary" title="End Event" onClick={() => handleEndEvent(ev._id)} style={{padding:'6px 10px'}}>
                         <FaCheckCircle style={{color: '#ffaa00'}} />
                       </button>
                     )}
-                    {ev.status === 'Ended' && (
+                    {ev.status === 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
                       <button className="btn-danger" title="Wipe Form Data & Files" onClick={() => handleWipeData(ev._id)} style={{padding:'6px 10px'}}>
                         🧹
                       </button>
                     )}
                     <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{padding:'6px 10px'}}><FaUsers /></Link>
                     <button className="btn-secondary" style={{padding:'6px 10px'}} onClick={() => openEdit(ev)}><FaEdit /></button>
-                    <button className="btn-danger" style={{padding:'6px 10px'}} onClick={() => handleDelete(ev._id)}><FaTrash /></button>
+                    
+                    {/* ONLY SuperAdmin can see/trigger event deletion */}
+                    {user?.role === 'super-admin' && ev.deletionState?.status === 'ACTIVE' && (
+                      <button className="btn-danger" title="List Event for Multi-Sig Deletion" style={{padding:'6px 10px'}} onClick={() => handleDelete(ev._id)}>
+                        <FaTrash />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -208,20 +381,24 @@ const AdminEvents = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Venue *</label>
-                  <input value={form.venue} onChange={e => f('venue', e.target.value)} required placeholder="Event venue" />
+                  <label>Venue {!form.isTBD && '*'}</label>
+                  <input value={form.venue} onChange={e => f('venue', e.target.value)} required={!form.isTBD} disabled={form.isTBD} placeholder={form.isTBD ? "TBD" : "Event venue"} />
                 </div>
                 <div className="form-group">
-                  <label>Start Time *</label>
-                  <input type="datetime-local" value={form.startTime} onChange={e => f('startTime', e.target.value)} required />
+                  <label>Start Time {!form.isTBD && '*'}</label>
+                  <input type="datetime-local" value={form.startTime} onChange={e => f('startTime', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
                 </div>
                 <div className="form-group">
-                  <label>End Time *</label>
-                  <input type="datetime-local" value={form.endTime} onChange={e => f('endTime', e.target.value)} required />
+                  <label>End Time {!form.isTBD && '*'}</label>
+                  <input type="datetime-local" value={form.endTime} onChange={e => f('endTime', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
                 </div>
                 <div className="form-group">
-                  <label>Registration Deadline *</label>
-                  <input type="datetime-local" value={form.registrationDeadline} onChange={e => f('registrationDeadline', e.target.value)} required />
+                  <label>Registration Start Date</label>
+                  <input type="datetime-local" value={form.registrationStartDate} onChange={e => f('registrationStartDate', e.target.value)} disabled={form.isTBD} placeholder="Immediate if left empty" />
+                </div>
+                <div className="form-group">
+                  <label>Registration Deadline {!form.isTBD && '*'}</label>
+                  <input type="datetime-local" value={form.registrationDeadline} onChange={e => f('registrationDeadline', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
                 </div>
                 <div className="form-group">
                   <label>Max Team Size</label>
@@ -233,8 +410,12 @@ const AdminEvents = () => {
                 </div>
                 <div className="form-group" style={{justifyContent:'flex-end'}}>
                   <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer'}}>
-                    <input type="checkbox" checked={form.featured} onChange={e => f('featured', e.target.checked)} style={{width:'auto'}} />
+                    <input type="checkbox" checked={form.featured} onChange={e => f('featured', e.target.checked)} />
                     Featured Event
+                  </label>
+                  <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer', marginLeft:'20px'}}>
+                    <input type="checkbox" checked={form.isTBD} onChange={e => f('isTBD', e.target.checked)} />
+                    TBD (To Be Decided)
                   </label>
                 </div>
                 <div className="form-group full">
@@ -244,6 +425,120 @@ const AdminEvents = () => {
                 <div className="form-group full">
                   <label>Prizes</label>
                   <input value={form.prizes} onChange={e => f('prizes', e.target.value)} placeholder="1st: ₹5000, 2nd: ₹3000" />
+                </div>
+
+                {/* Eligible Branches Selection */}
+                <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <label style={{ fontSize: '0.9rem', color: '#ff1f01', fontWeight: 'bold' }}>Eligible Branches *</label>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      onClick={() => {
+                        if (form.eligibleBranches.length === BRANCHES.length) {
+                          f('eligibleBranches', []);
+                        } else {
+                          f('eligibleBranches', [...BRANCHES]);
+                        }
+                      }}
+                      style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                    >
+                      {form.eligibleBranches.length === BRANCHES.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px', backgroundColor: '#111', padding: '15px', borderRadius: '8px' }}>
+                    {BRANCHES.map(branch => {
+                      const isChecked = form.eligibleBranches.includes(branch);
+                      return (
+                        <label key={branch} style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
+                          <span style={{ width: '28px', flexShrink: 0, display: 'flex', alignItems: 'center', height: '20px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isChecked} 
+                              onChange={() => {
+                                if (isChecked) {
+                                  f('eligibleBranches', form.eligibleBranches.filter(b => b !== branch));
+                                } else {
+                                  f('eligibleBranches', [...form.eligibleBranches, branch]);
+                                }
+                              }}
+                            />
+                          </span>
+                          <span style={{ lineHeight: '20px' }}>{branch}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <span style={{ 
+                    color: '#ff4444', 
+                    fontSize: '0.75rem', 
+                    marginTop: '5px', 
+                    display: 'block',
+                    visibility: form.eligibleBranches.length === 0 ? 'visible' : 'hidden',
+                    height: '14px'
+                  }}>
+                    * At least one branch must be selected
+                  </span>
+                </div>
+
+                {/* Eligible Years Selection */}
+                <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <label style={{ fontSize: '0.9rem', color: '#ff1f01', fontWeight: 'bold' }}>Eligible Years *</label>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      onClick={() => {
+                        if (form.eligibleYears.length === 5) {
+                          f('eligibleYears', []);
+                        } else {
+                          f('eligibleYears', [1, 2, 3, 4, 5]);
+                        }
+                      }}
+                      style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                    >
+                      {form.eligibleYears.length === 5 ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px', backgroundColor: '#111', padding: '15px', borderRadius: '8px' }}>
+                    {[
+                      { val: 1, label: '1st Year' },
+                      { val: 2, label: '2nd Year' },
+                      { val: 3, label: '3rd Year' },
+                      { val: 4, label: '4th Year' },
+                      { val: 5, label: 'Alumni / 5th' }
+                    ].map(yearObj => {
+                      const isChecked = form.eligibleYears.includes(yearObj.val);
+                      return (
+                        <label key={yearObj.val} style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
+                          <span style={{ width: '28px', flexShrink: 0, display: 'flex', alignItems: 'center', height: '20px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isChecked} 
+                              onChange={() => {
+                                if (isChecked) {
+                                  f('eligibleYears', form.eligibleYears.filter(y => y !== yearObj.val));
+                                } else {
+                                  f('eligibleYears', [...form.eligibleYears, yearObj.val]);
+                                }
+                              }}
+                            />
+                          </span>
+                          <span style={{ lineHeight: '20px' }}>{yearObj.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <span style={{ 
+                    color: '#ff4444', 
+                    fontSize: '0.75rem', 
+                    marginTop: '5px', 
+                    display: 'block',
+                    visibility: form.eligibleYears.length === 0 ? 'visible' : 'hidden',
+                    height: '14px'
+                  }}>
+                    * At least one year must be selected
+                  </span>
                 </div>
 
                 <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
@@ -277,7 +572,6 @@ const AdminEvents = () => {
                           type="checkbox" 
                           checked={field.isRequired} 
                           onChange={e => updateCustomField(idx, 'isRequired', e.target.checked)} 
-                          style={{ width: 'auto' }}
                         /> Req
                       </label>
                       <button type="button" className="btn-danger" onClick={() => removeCustomField(idx)} style={{ padding: '8px' }}>
@@ -286,6 +580,55 @@ const AdminEvents = () => {
                     </div>
                   ))}
                   {form.customFormFields.length === 0 && <p style={{ color: '#888', fontSize: '0.9rem' }}>No custom fields added. Default fields (Name, Email, Reg No) are always included.</p>}
+                </div>
+
+                {/* Ticket Verification Stages (Scanning Stations) */}
+                <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div>
+                      <h3 style={{ margin: 0, color: '#ff1f01' }}>Ticket Verification Stages (Scanning Stations)</h3>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#888' }}>
+                        Define custom check-in stages (e.g. Stage 1: Main Gate, Stage 2: Food & Kit Collection).
+                      </p>
+                    </div>
+                    <button type="button" className="btn-secondary" onClick={addTicketStage} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+                      <FaPlus /> Add Stage
+                    </button>
+                  </div>
+
+                  {/* Stage Presets */}
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#aaa' }}>Quick Presets:</span>
+                    <button type="button" onClick={() => setStagePreset(1)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#222', border: '1px solid #444', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>
+                      1-Stage (Gate Entry)
+                    </button>
+                    <button type="button" onClick={() => setStagePreset(2)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#222', border: '1px solid #ff1f01', color: '#ff1f01', borderRadius: '4px', cursor: 'pointer' }}>
+                      2-Stage (Gate + Food/Kit)
+                    </button>
+                    <button type="button" onClick={() => setStagePreset(3)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#222', border: '1px solid #00e5ff', color: '#00e5ff', borderRadius: '4px', cursor: 'pointer' }}>
+                      3-Stage (Gate + Food + Certificate)
+                    </button>
+                  </div>
+
+                  {(form.ticketStages || []).map((stage, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '8px', alignItems: 'center', backgroundColor: '#111', padding: '10px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '0.85rem', color: '#ff1f01', fontWeight: 'bold', width: '70px', flexShrink: 0 }}>
+                        Stage {idx + 1}:
+                      </span>
+                      <input 
+                        value={stage} 
+                        onChange={e => updateTicketStage(idx, e.target.value)} 
+                        placeholder={`Stage ${idx + 1} Name (e.g. Stage 1: Main Gate Check-in)`} 
+                        required 
+                        style={{ flex: 1, background: '#1c1c20', color: '#fff', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px' }}
+                      />
+                      {(form.ticketStages || []).length > 1 && (
+                        <button type="button" className="btn-danger" onClick={() => removeTicketStage(idx)} style={{ padding: '8px' }}>
+                          <FaTrash />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="modal-actions">

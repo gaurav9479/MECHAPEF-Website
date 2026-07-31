@@ -10,6 +10,9 @@ const AdminMail = () => {
   const [endorsementId, setEndorsementId] = useState('');
   const [customSubject, setCustomSubject] = useState('');
   const [customBody, setCustomBody] = useState('');
+  const [customEmails, setCustomEmails] = useState([]);
+  const [scheduleType, setScheduleType] = useState('immediate');
+  const [csvFileName, setCsvFileName] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -49,6 +52,11 @@ const AdminMail = () => {
       return;
     }
 
+    if (targetRole === 'custom_csv' && customEmails.length === 0) {
+      showToast('Please upload a valid CSV file containing emails.', 'error');
+      return;
+    }
+
     if (endorsementType !== 'custom' && !endorsementId) {
       showToast('Please select an item to endorse.', 'error');
       return;
@@ -61,7 +69,9 @@ const AdminMail = () => {
         endorsementType: endorsementType === 'custom' ? null : endorsementType,
         endorsementId: endorsementType === 'custom' ? null : endorsementId,
         customSubject,
-        customBody
+        customBody,
+        customEmails,
+        scheduleType
       };
       
       const res = await api.post('/mail/send', payload);
@@ -71,10 +81,35 @@ const AdminMail = () => {
       setCustomSubject('');
       setCustomBody('');
       setEndorsementId('');
+      setCustomEmails([]);
+      setCsvFileName('');
     } catch (error) {
       showToast(error.response?.data?.message || 'Failed to send email', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCsvUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCsvFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target.result;
+        // Split by newline or comma and extract emails
+        const emails = text.split(/[\n,;]+/)
+          .map(e => e.trim().replace(/^["']|["']$/g, ''))
+          .filter(e => e && e.includes('@'));
+        const uniqueEmails = [...new Set(emails)];
+        setCustomEmails(uniqueEmails);
+        if (uniqueEmails.length === 0) {
+          showToast('No valid emails found in the CSV file.', 'error');
+        } else {
+          showToast(`Found ${uniqueEmails.length} valid email(s) in CSV.`, 'success');
+        }
+      };
+      reader.readAsText(file);
     }
   };
 
@@ -100,10 +135,24 @@ const AdminMail = () => {
                 <option value="all">All Registered Users</option>
                 <option value="super-admin">Super Admins Only</option>
                 <option value="content-lead">Content Leads Only</option>
-                <option value="event-lead">Event Leads Only</option>
+                <option value="media-lead">Media Leads Only</option>
                 <option value="member">Members Only</option>
+                <option value="custom_csv">Custom (Upload CSV)</option>
               </select>
             </div>
+
+            {targetRole === 'custom_csv' && (
+              <div className="form-group">
+                <label>Upload CSV File (Emails)</label>
+                <input 
+                  type="file" 
+                  accept=".csv,.txt"
+                  onChange={handleCsvUpload}
+                  className="form-control"
+                />
+                {csvFileName && <small style={{color: '#ff1f01', marginTop: '5px', display: 'block'}}>Loaded {customEmails.length} email(s) from {csvFileName}</small>}
+              </div>
+            )}
 
             <div className="form-group">
               <label>Email Type</label>
@@ -118,6 +167,18 @@ const AdminMail = () => {
                 <option value="custom">Custom Email</option>
                 <option value="announcement">Endorse an Announcement (Notice)</option>
                 <option value="event">Endorse an Event</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Scheduling Strategy</label>
+              <select 
+                value={scheduleType} 
+                onChange={(e) => setScheduleType(e.target.value)}
+                className="form-control"
+              >
+                <option value="immediate">Send Immediately</option>
+                <option value="smart_batch">Smart Batch (100 mails/hour)</option>
               </select>
             </div>
 

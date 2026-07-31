@@ -22,6 +22,8 @@ import Gallery from './Pages/Gallery/Gallery';
 import AlbumView from './Pages/Gallery/AlbumView';
 import Profile from './Pages/Profile/Profile';
 import Events from './Pages/Events/Events';
+import AdminSpecialSponsor from './Pages/Admin/AdminSpecialSponsor';
+import AdminMessages from './Pages/Admin/AdminMessages';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
@@ -78,7 +80,6 @@ const AnimatedRoutes = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/sponsors" element={<Sponsors />} />
-        <Route path="/magazine" element={<div style={{ minHeight: '100vh', width: '100%', backgroundColor: '#f5f4ef' }} />} />
 
         {/* Profile */}
         <Route
@@ -166,6 +167,15 @@ const AnimatedRoutes = () => {
         />
 
         <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'media-lead']}>
+              <AdminMessages />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/admin/magazine"
           element={
             <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'media-lead']}>
@@ -195,7 +205,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/scanner"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'event-lead', 'endorsed-volunteer']}>
               <AdminScanner />
             </ProtectedRoute>
           }
@@ -211,6 +221,19 @@ const AnimatedRoutes = () => {
               toastMessage="Access Denied: Only Media Leads and Super Admins can manage Sponsors."
             >
               <AdminSponsors />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/special-sponsor"
+          element={
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'media-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Media Leads and Super Admins can manage the Special Sponsor."
+            >
+              <AdminSpecialSponsor />
             </ProtectedRoute>
           }
         />

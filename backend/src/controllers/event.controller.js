@@ -7,6 +7,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import logFootprint from '../utils/logFootprint.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, PAGINATION } from '../constants/index.js';
 import ImageKit from 'imagekit';
+import { checkAndToggleRedis } from '../queues/registrationQueue.js';
 
 export const createEvent = asyncHandler(async (req, res) => {
     const {
@@ -17,12 +18,16 @@ export const createEvent = asyncHandler(async (req, res) => {
         endTime,
         venue,
         maxTeamSize,
+        registrationStartDate,
         registrationDeadline,
         featured,
         rules,
         prizes,
         registrationFee,
-        customFormFields
+        customFormFields,
+        eligibleBranches,
+        eligibleYears,
+        isTBD
     } = req.body;
     if (!title || !description || !category || !startTime || !endTime || !venue || !registrationDeadline) {
         throw new ApiError(
@@ -39,12 +44,17 @@ export const createEvent = asyncHandler(async (req, res) => {
         endTime: new Date(endTime),
         venue,
         maxTeamSize: maxTeamSize || 1,
+        registrationStartDate: registrationStartDate ? new Date(registrationStartDate) : null,
         registrationDeadline: new Date(registrationDeadline),
         featured: featured || false,
         rules: rules || [],
         prizes: prizes || null,
         registrationFee: registrationFee || 0,
         customFormFields: customFormFields || [],
+        eligibleBranches: eligibleBranches || [],
+        eligibleYears: eligibleYears || [1, 2, 3, 4],
+        ticketStages: req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in'],
+        isTBD: isTBD || false,
         createdBy: req.user.userId
     });
 
@@ -52,6 +62,9 @@ export const createEvent = asyncHandler(async (req, res) => {
     await newEvent.populate('createdBy', 'name email');
 
     logFootprint(req, 'CREATE', 'Event', `Created event: ${newEvent.title}`);
+    
+    // Trigger Redis check since an active event might have been created
+    checkAndToggleRedis().catch(err => console.error(err));
 
     return res
         .status(HTTP_STATUS.CREATED)
@@ -131,13 +144,18 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'endTime',
         'venue',
         'maxTeamSize',
+        'registrationStartDate',
         'registrationDeadline',
         'featured',
         'rules',
         'prizes',
         'registrationFee',
         'isActive',
-        'customFormFields'
+        'customFormFields',
+        'eligibleBranches',
+        'eligibleYears',
+        'ticketStages',
+        'isTBD'
     ];
 
     const updates = {};
@@ -159,6 +177,9 @@ export const updateEvent = asyncHandler(async (req, res) => {
 
     logFootprint(req, 'UPDATE', 'Event', `Updated event: ${event.title}`);
 
+    // Trigger Redis check since an active event might have changed status
+    checkAndToggleRedis().catch(err => console.error(err));
+
     return res
         .status(HTTP_STATUS.OK)
         .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event updated successfully'));
@@ -166,27 +187,170 @@ export const updateEvent = asyncHandler(async (req, res) => {
 
 
 export const deleteEvent = asyncHandler(async (req, res) => {
-    const event = await Event.findByIdAndUpdate(
-        req.params.id,
-        { deletedAt: new Date() },
-        { new: true }
-    );
+    const userId = req.user.userId;
+    const event = await Event.findById(req.params.id);
 
-    if (!event) {
+    if (!event || event.deletedAt) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
 
-    // Also delete all associated registrations
-    await Registration.updateMany(
-        { eventId: event._id },
-        { deletedAt: new Date() }
-    );
+    if (event.deletionState?.status === 'PENDING_APPROVAL') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event deletion request is already pending multi-admin approval');
+    }
 
-    logFootprint(req, 'DELETE', 'Event', `Deleted event: ${event.title}`);
+    if (event.deletionState?.status === 'APPROVED_RETENTION') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event is already approved for deletion and queued in 7-day retention period');
+    }
+
+    // Initiate deletion request with 1st vote (Initiator)
+    event.deletionState = {
+        status: 'PENDING_APPROVAL',
+        initiatedBy: userId,
+        initiatedAt: new Date(),
+        approvals: [{ approvedBy: userId, approvedAt: new Date() }],
+        approvedAt: null,
+        vanishAt: null
+    };
+
+    await event.save();
+    logFootprint(req, 'DELETE_INITIATED', 'Event', `Initiated deletion request for event: ${event.title}`);
 
     return res
         .status(HTTP_STATUS.OK)
-        .json(new APIResponse(HTTP_STATUS.OK, {}, 'Event deleted successfully'));
+        .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event deletion initiated. Requires approval from 2 additional SuperAdmins (3 total votes).'));
+});
+
+export const approveEventDeletion = asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const event = await Event.findById(req.params.id).populate('deletionState.approvals.approvedBy', 'name email');
+
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (!event.deletionState || event.deletionState.status !== 'PENDING_APPROVAL') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No pending deletion request found for this event');
+    }
+
+    const alreadyApproved = event.deletionState.approvals.some(
+        a => (a.approvedBy?._id || a.approvedBy).toString() === userId.toString()
+    );
+
+    if (alreadyApproved) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You have already approved this event deletion request');
+    }
+
+    event.deletionState.approvals.push({ approvedBy: userId, approvedAt: new Date() });
+
+    let csvData = null;
+    let csvFileName = null;
+
+    // Total required approvals: 3 SuperAdmins (Initiator + 2 Approvers)
+    if (event.deletionState.approvals.length >= 3) {
+        event.deletionState.status = 'APPROVED_RETENTION';
+        event.deletionState.approvedAt = new Date();
+        // 7 Days Retention Period before vanishing completely!
+        event.deletionState.vanishAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        
+        // Hide from public website
+        event.isActive = false;
+        event.isRegistrationOpen = false;
+
+        // Generate automatic final CSV backup string
+        const registrations = await Registration.find({ eventId: event._id, deletedAt: null })
+            .populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy');
+
+        const customFieldsSet = new Set();
+        registrations.forEach(reg => {
+            if (reg.customData) {
+                Object.keys(reg.customData).forEach(key => customFieldsSet.add(key));
+            }
+        });
+        const customFields = Array.from(customFieldsSet);
+
+        const escapeCSV = (val) => {
+            if (val === null || val === undefined) return '';
+            const str = String(val);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        let csvString = 'Name,Email,College Reg No,Phone Number,Branch,Year of Study,Registration Type,Team Name,Verified,';
+        csvString += customFields.join(',') + '\n';
+
+        registrations.forEach(reg => {
+            const user = reg.registeredBy || {};
+            const row = [
+                escapeCSV(user.name),
+                escapeCSV(user.email),
+                escapeCSV(user.collegeRegNo),
+                escapeCSV(user.phoneNumber),
+                escapeCSV(user.branch),
+                escapeCSV(user.yearOfStudy),
+                escapeCSV(reg.registrationType),
+                escapeCSV(reg.teamName),
+                escapeCSV(reg.isVerified ? 'Yes' : 'No')
+            ];
+
+            customFields.forEach(field => {
+                row.push(escapeCSV(reg.customData ? reg.customData[field] : ''));
+            });
+
+            csvString += row.join(',') + '\n';
+        });
+
+        csvData = csvString;
+        const sanitizedTitle = (event.title || 'Event').replace(/[^a-zA-Z0-9_-]/g, '_');
+        csvFileName = `FINAL_BACKUP_${sanitizedTitle}_Registrations.csv`;
+    }
+
+    await event.save();
+
+    const totalApprovals = event.deletionState.approvals.length;
+    const isFullyApproved = totalApprovals >= 3;
+
+    logFootprint(req, 'DELETE_APPROVED', 'Event', `Approved deletion for event ${event.title} (${totalApprovals}/3 approvals)`);
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(
+            HTTP_STATUS.OK,
+            { event, totalApprovals, isFullyApproved, csvData, csvFileName },
+            isFullyApproved
+                ? 'Event deletion fully approved by 3 SuperAdmins! Automatic CSV backup generated and registration data queued to vanish in 7 days.'
+                : `Approval recorded (${totalApprovals}/3 SuperAdmin votes). Needs ${3 - totalApprovals} more approval(s).`
+        )
+    );
+});
+
+export const cancelEventDeletion = asyncHandler(async (req, res) => {
+    const event = await Event.findById(req.params.id);
+
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (event.deletionState?.status === 'PURGED') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event has already been permanently purged');
+    }
+
+    event.deletionState = {
+        status: 'ACTIVE',
+        initiatedBy: null,
+        initiatedAt: null,
+        approvals: [],
+        approvedAt: null,
+        vanishAt: null
+    };
+    event.isActive = true;
+
+    await event.save();
+    logFootprint(req, 'DELETE_CANCELLED', 'Event', `Cancelled deletion request for event: ${event.title}`);
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { event }, 'Event deletion request cancelled. Event restored to Active state.')
+    );
 });
 
 export const endEvent = asyncHandler(async (req, res) => {
@@ -203,6 +367,9 @@ export const endEvent = asyncHandler(async (req, res) => {
     event.status = 'Ended';
     event.endedAt = new Date();
     await event.save();
+    
+    // Trigger Redis check since an active event might have ended
+    checkAndToggleRedis().catch(err => console.error(err));
 
     return res
         .status(HTTP_STATUS.OK)

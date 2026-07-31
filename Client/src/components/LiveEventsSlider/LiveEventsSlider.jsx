@@ -23,7 +23,7 @@ const LiveEventsSlider = () => {
       banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setSlides(banners);
       setLoading(false);
-    }).catch(err => {
+    }, { cacheDuration: 2 * 60 * 1000 }).catch(err => {
       console.error("Failed to load banners", err);
       setLoading(false);
     });
@@ -83,7 +83,7 @@ const LiveEventsSlider = () => {
           <div 
             key={slide._id} 
             className={`slide ${index === currentIdx ? 'active' : ''}`}
-            style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : {}}
+            style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : { background: 'linear-gradient(135deg, #660a00 0%, #111111 100%)' }}
           >
             
             <div className="slide-overlay">
@@ -125,7 +125,7 @@ const LiveEventsSlider = () => {
         )}
       </div>
 
-      <HeroTicker />
+      <HeroTicker hasSponsors={slides[currentIdx]?.eventSponsors?.length > 0} />
 
       {/* Render the Active Event's Sponsors below the Ticker */}
       {slides[currentIdx]?.targetType === 'Event' && slides[currentIdx]?.eventSponsors?.length > 0 && (

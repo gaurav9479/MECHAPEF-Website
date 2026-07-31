@@ -1,27 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import './DomainsChain.css';
 
 const DomainsChain = () => {
   const [imagesMap, setImagesMap] = useState({});
 
   useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const res = await api.get('/upload/sections');
-        const imgMap = {};
-        if (res.data.data?.images) {
-          res.data.data.images.forEach(img => {
-            imgMap[img.sectionKey] = img.imageURL;
-          });
-        }
-        setImagesMap(imgMap);
-      } catch (error) {
-        console.error("Failed to load section images:", error);
+    apiGetCached('/upload/sections', (data) => {
+      const imgMap = {};
+      if (data?.data?.images) {
+        data.data.images.forEach(img => {
+          imgMap[img.sectionKey] = img.imageURL;
+        });
       }
-    };
-    fetchImages();
+      setImagesMap(imgMap);
+    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(error => {
+      console.error("Failed to load section images:", error);
+    });
   }, []);
 
   const domains = [

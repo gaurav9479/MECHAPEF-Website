@@ -54,10 +54,21 @@ const AdminGallery = () => {
     setShowModal(true);
   };
 
+  const clearGalleryCache = () => {
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('api_cache_/gallery')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {}
+  };
+
   const deleteAlbum = async (id) => {
     if (!window.confirm('Delete this album completely?')) return;
     try {
       await api.delete(`/gallery/${id}`);
+      clearGalleryCache();
       showToast('Album deleted');
       fetchAlbums();
     } catch (err) {
@@ -76,6 +87,7 @@ const AdminGallery = () => {
         await api.post('/gallery', form);
         showToast('Album created');
       }
+      clearGalleryCache();
       setShowModal(false);
       fetchAlbums();
     } catch (err) {
@@ -112,6 +124,7 @@ const AdminGallery = () => {
       }
 
       await api.post(`/gallery/${manageImagesAlbum._id}/images`, { images: uploadedImages });
+      clearGalleryCache();
       showToast(`${uploadedImages.length} images added successfully`);
       
 
@@ -130,6 +143,7 @@ const AdminGallery = () => {
     if (!window.confirm('Remove this image?')) return;
     try {
       await api.delete(`/gallery/${manageImagesAlbum._id}/images/${imageId}`);
+      clearGalleryCache();
       setAlbumImages(prev => prev.filter(img => img._id !== imageId));
       showToast('Image removed');
       fetchAlbums();
@@ -231,7 +245,7 @@ const AdminGallery = () => {
                 <label>Cover Image</label>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   {form.coverImageURL && <img src={form.coverImageURL} alt="cover" style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />}
-                  <input type="file" accept="image/*" id="coverUpload" style={{ display: 'none' }} onChange={handleCoverUpload} />
+                  <input type="file" accept="image/*,.heic,.heif" id="coverUpload" style={{ display: 'none' }} onChange={handleCoverUpload} />
                   <label htmlFor="coverUpload" className="btn-secondary" style={{ cursor: 'pointer', padding: '8px 12px', display: 'inline-block' }}>Upload Cover</label>
                 </div>
               </div>
@@ -280,7 +294,7 @@ const AdminGallery = () => {
             <div className="admin-modal-body" style={{ padding: '20px' }}>
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <p>Upload new images to this album. You can select multiple images at once.</p>
-                <input type="file" multiple accept="image/*" id="multiUpload" style={{ display: 'none' }} onChange={handleImageUpload} disabled={uploadingImages} />
+                <input type="file" multiple accept="image/*,.heic,.heif" id="multiUpload" style={{ display: 'none' }} onChange={handleImageUpload} disabled={uploadingImages} />
                 <label htmlFor="multiUpload" className="btn-primary" style={{ cursor: uploadingImages ? 'not-allowed' : 'pointer', padding: '10px 15px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                   <FaUpload /> {uploadingImages ? 'Uploading...' : 'Upload Images'}
                 </label>

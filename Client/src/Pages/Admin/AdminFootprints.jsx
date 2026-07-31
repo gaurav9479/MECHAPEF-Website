@@ -9,8 +9,10 @@ const AdminFootprints = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Only fetch manually via Refresh button as requested
   useEffect(() => {
-    fetchFootprints();
+    // fetchFootprints();
+    setLoading(false); // Make sure it doesn't show loading indefinitely at start
   }, []);
 
   const fetchFootprints = async () => {
@@ -39,9 +41,20 @@ const AdminFootprints = () => {
     <div className="admin-layout">
       <AdminSidebar />
       <main className="admin-main">
-        <div className="admin-header">
-          <h1><FaShoePrints /> Digital Footprints</h1>
-          <p>Audit log of admin actions (Logs vanish after 1 week)</p>
+        <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1><FaShoePrints /> Digital Footprints</h1>
+            <p>Audit log of admin actions (Logs vanish after 1 week)</p>
+          </div>
+          <button 
+            onClick={fetchFootprints} 
+            disabled={loading}
+            className="action-btn"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <FaHistory className={loading ? 'spin' : ''} />
+            {loading ? 'Refreshing...' : 'Refresh Logs'}
+          </button>
         </div>
 
         {error && <div className="admin-alert error">{error}</div>}
@@ -66,7 +79,7 @@ const AdminFootprints = () => {
                     <tr>
                       <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
                         <FaHistory style={{ fontSize: '2rem', color: '#555', marginBottom: '1rem' }} />
-                        <div>No recent admin actions found.</div>
+                        <div>Click "Refresh Logs" to load the latest admin actions.</div>
                       </td>
                     </tr>
                   ) : (

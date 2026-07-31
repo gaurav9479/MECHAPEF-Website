@@ -14,7 +14,14 @@ const Login = () => {
   const { microsoftLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/';
+
+  const getRedirectTarget = () => {
+    if (location.state?.from?.pathname) {
+      return `${location.state.from.pathname}${location.state.from.search || ''}`;
+    }
+    return sessionStorage.getItem('redirect_after_login') || '/';
+  };
+  const from = getRedirectTarget();
 
   useEffect(() => {
     if (window.location.hostname === '127.0.0.1' && window.location.port === '5173') {
@@ -47,9 +54,13 @@ const Login = () => {
           sessionStorage.removeItem('ms_redirect_uri');
           sessionStorage.removeItem('ms_scope');
           sessionStorage.setItem('ms_auth_redirect', 'true');
+          
+          const target = sessionStorage.getItem('redirect_after_login') || from || '/';
+          sessionStorage.removeItem('redirect_after_login');
+
           // Clear URL and redirect
           window.history.replaceState({}, document.title, window.location.pathname);
-          navigate(from, { replace: true });
+          navigate(target, { replace: true });
         })
         .catch((err) => {
           console.error('Microsoft login failed:', err);
@@ -64,6 +75,9 @@ const Login = () => {
     try {
       setLoading(true);
       setError('');
+      if (from && from !== '/') {
+        sessionStorage.setItem('redirect_after_login', from);
+      }
       const res = await authService.getMicrosoftUrl();
       if (res.data.data.code_verifier) {
           sessionStorage.setItem('ms_pkce_verifier', res.data.data.code_verifier);

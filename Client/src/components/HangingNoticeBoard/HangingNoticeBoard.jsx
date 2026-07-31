@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaExternalLinkAlt, FaMicrochip, FaShieldAlt, FaWifi } from 'react-icons/fa';
+import { FaTimes, FaExternalLinkAlt, FaCog, FaWrench, FaClipboardList } from 'react-icons/fa';
 import api from '../../services/api';
 import './HangingNoticeBoard.css';
 
@@ -23,7 +23,7 @@ const useTypewriter = (text, speed = 28, start = false) => {
 };
 
 /* ── Single notice row with typewriter + decode ── */
-const NoticeRow = ({ notice, index, onNavigate }) => {
+const NoticeRow = ({ notice, index, onNavigate, isSeen }) => {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   const [decoding, setDecoding] = useState(true);
@@ -57,7 +57,7 @@ const NoticeRow = ({ notice, index, onNavigate }) => {
       initial={{ opacity: 0, x: -24 }}
       animate={visible ? { opacity: 1, x: 0 } : {}}
       transition={{ duration: 0.4, delay: index * 0.12 }}
-      onClick={() => notice.targetLink && onNavigate(notice.targetLink)}
+      onClick={() => onNavigate()}
     >
       {/* Left: index number */}
       <div className="hnb-row-idx">{String(index + 1).padStart(2, '0')}</div>
@@ -67,9 +67,16 @@ const NoticeRow = ({ notice, index, onNavigate }) => {
 
       {/* Main text - decode then typewriter */}
       <div className="hnb-row-content">
-        <div className="hnb-row-title">
+        <div className="hnb-row-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {decoding ? decoded : typed}
           <span className="hnb-cursor">█</span>
+          {!isSeen && (
+            <span style={{
+              width: '8px', height: '8px', borderRadius: '50%',
+              background: '#ffff00', display: 'inline-block',
+              boxShadow: '0 0 5px #ffff00'
+            }} title="New Notice" />
+          )}
         </div>
         <div className="hnb-row-meta">
           <span>{notice.targetType || 'GENERAL'}</span>
@@ -93,17 +100,23 @@ const HangingNoticeBoard = ({ onClose }) => {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bootLine, setBootLine] = useState(0);
+  const [seenNotices, setSeenNotices] = useState(() => JSON.parse(localStorage.getItem('seen_notices') || '[]'));
   const navigate = useNavigate();
 
   const BOOT_LINES = [
-    '> MECHAPEF SECURITY SYSTEM v4.2.1',
-    '> Authenticating operator... [OK]',
-    '> Loading encrypted notice feed...',
-    '> Decryption keys verified [AES-256]',
-    '> SYSTEM READY.',
+    '> RELEASING HYDRAULIC LOCKS...',
+    '> ALIGNING GEARS...',
+    '> UNROLLING NOTICE FEED...',
+    '> MECHANICAL SYSTEM READY.',
   ];
 
-  const handleNoticeClick = (link) => {
+  const handleNoticeClick = (notice) => {
+    const link = notice.targetLink;
+    if (!seenNotices.includes(notice._id)) {
+      const updated = [...seenNotices, notice._id];
+      setSeenNotices(updated);
+      localStorage.setItem('seen_notices', JSON.stringify(updated));
+    }
     if (!link) return;
     onClose();
     if (link.startsWith('http')) window.open(link, '_blank');
@@ -153,19 +166,19 @@ const HangingNoticeBoard = ({ onClose }) => {
           {/* ── Terminal Header Bar ── */}
           <div className="hnb-header-bar">
             <div className="hnb-header-left">
-              <FaShieldAlt className="hnb-header-icon" />
-              <span className="hnb-header-title">MECHAPEF <span>SECURE TERMINAL</span></span>
+              <FaClipboardList className="hnb-header-icon" />
+              <span className="hnb-header-title">MECHAPEF <span>NOTICE BOARD</span></span>
             </div>
             <div className="hnb-header-right">
-              <div className="hnb-wifi"><FaWifi /><span className="hnb-wifi-blink" /></div>
-              <div className="hnb-chip"><FaMicrochip /></div>
+              <div className="hnb-wifi"><FaCog className="spin-cog" /></div>
+              <div className="hnb-chip"><FaWrench /></div>
               <button className="hnb-close-btn" onClick={onClose}><FaTimes /></button>
             </div>
           </div>
 
-          {/* ── Scanline overlay ── */}
-          <div className="hnb-scanlines" aria-hidden="true" />
-          <div className="hnb-crt-glow" aria-hidden="true" />
+          {/* ── Mechanical overlay ── */}
+          <div className="hnb-metal-texture" aria-hidden="true" />
+          <div className="hnb-caution-stripe top" aria-hidden="true" />
 
           {/* ── Boot Sequence ── */}
           <div className="hnb-boot-seq">
@@ -195,16 +208,23 @@ const HangingNoticeBoard = ({ onClose }) => {
               <div className="hnb-empty">NO ACTIVE NOTICES FOUND IN DATABASE.</div>
             ) : (
               notices.map((n, i) => (
-                <NoticeRow key={n._id} notice={n} index={i} onNavigate={handleNoticeClick} />
+                <NoticeRow 
+                  key={n._id} 
+                  notice={n} 
+                  index={i} 
+                  onNavigate={() => handleNoticeClick(n)} 
+                  isSeen={seenNotices.includes(n._id)} 
+                />
               ))
             )}
           </div>
 
           {/* ── Footer Status Bar ── */}
           <div className="hnb-footer-bar">
-            <span className="hnb-status-tag active">● SECURE</span>
-            <span>ENC: AES-256</span>
-            <span>VER: 4.2.1</span>
+            <div className="hnb-caution-stripe bottom" aria-hidden="true" />
+            <span className="hnb-status-tag active">● ONLINE</span>
+            <span>SYSTEM: MANUAL</span>
+            <span>GEAR: 4</span>
             <span className="hnb-blink-text">LIVE</span>
           </div>
         </motion.div>

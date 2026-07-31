@@ -24,6 +24,11 @@ const eventSchema = new mongoose.Schema(
             default: null
         },
 
+        isTBD: {
+            type: Boolean,
+            default: false
+        },
+
         description: {
             type: String,
             required: [true, 'Event description is required'],
@@ -70,15 +75,27 @@ const eventSchema = new mongoose.Schema(
             min: [1, 'Max team size must be at least 1']
         },
 
+        registrationStartDate: {
+            type: Date,
+            default: null,
+            validate: {
+                validator(value) {
+                    if (!value || !this.registrationDeadline) return true;
+                    return value <= this.registrationDeadline;
+                },
+                message: 'Registration start date must be before or equal to registration deadline'
+            }
+        },
+
         registrationDeadline: {
             type: Date,
             required: [true, 'Registration deadline is required'],
             validate: {
                 validator(value) {
-                    if (!this.startTime) return true;
-                    return value < this.startTime;
+                    if (!this.endTime) return true;
+                    return value <= this.endTime;
                 },
-                message: 'Registration deadline must be before event start time'
+                message: 'Registration deadline must be before or equal to event end time'
             }
         },
 
@@ -116,6 +133,28 @@ const eventSchema = new mongoose.Schema(
             isRequired: { type: Boolean, default: false }
         }],
 
+        eligibleBranches: {
+            type: [String],
+            required: [true, 'Eligible branches are required'],
+            validate: {
+                validator(value) {
+                    return value && value.length > 0;
+                },
+                message: 'At least one eligible branch must be selected'
+            }
+        },
+
+        eligibleYears: {
+            type: [Number],
+            required: [true, 'Eligible years are required'],
+            validate: {
+                validator(value) {
+                    return value && value.length > 0;
+                },
+                message: 'At least one eligible year must be selected'
+            }
+        },
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -137,9 +176,49 @@ const eventSchema = new mongoose.Schema(
             default: 0
         },
 
+        ticketStages: {
+            type: [String],
+            default: ['Stage 1: Check-in']
+        },
+
         isActive: {
             type: Boolean,
             default: true
+        },
+
+        deletionState: {
+            status: {
+                type: String,
+                enum: ['ACTIVE', 'PENDING_APPROVAL', 'APPROVED_RETENTION', 'PURGED'],
+                default: 'ACTIVE'
+            },
+            initiatedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+                default: null
+            },
+            initiatedAt: {
+                type: Date,
+                default: null
+            },
+            approvals: [{
+                approvedBy: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User'
+                },
+                approvedAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }],
+            approvedAt: {
+                type: Date,
+                default: null
+            },
+            vanishAt: {
+                type: Date,
+                default: null
+            }
         },
 
         deletedAt: {
@@ -221,8 +300,9 @@ eventSchema.virtual('isLive').get(function () {
 
 /** Already existing – kept as-is */
 eventSchema.virtual('isRegistrationOpen').get(function () {
-    if (!this.registrationDeadline) return false;
+    if (!this.registrationDeadline || this.isTBD) return false;
     const now = new Date();
+    if (this.registrationStartDate && now < new Date(this.registrationStartDate)) return false;
     return now < this.registrationDeadline && this.isActive && this.deletedAt === null;
 });
 

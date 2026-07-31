@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
 import { useMagazineTransition } from "../../context/MagazineTransitionContext";
+import { apiGetCached } from "../../utils/apiCache";
 import "./Navbar.css";
 
 const MagazineSidebar = () => {
@@ -21,7 +22,18 @@ const MagazineSidebar = () => {
 
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [showNotices, setShowNotices] = useState(false);
+  const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
   const desktopRef = useRef(null);
+
+  useEffect(() => {
+    apiGetCached('/announcements', (data) => {
+      const items = data.data?.announcements || data.data || [];
+      const active = items.filter(n => n.isActive);
+      const seenNotices = JSON.parse(localStorage.getItem('seen_notices') || '[]');
+      const hasUnread = active.some(n => !seenNotices.includes(n._id));
+      setHasUnreadNotice(hasUnread);
+    }).catch(() => {});
+  }, [showNotices]);
 
   const handleNavClick = (targetRoute, callback) => {
     if (location.pathname === '/magazine' && transitionState === 'idle') {
@@ -149,7 +161,22 @@ const MagazineSidebar = () => {
             <span>Our Team</span>
           </li>
           <li onClick={() => setShowNotices(true)}>
-            <span>Notice Board</span>
+            <span style={{ position: 'relative', display: 'inline-block' }}>
+              Notice Board
+              {hasUnreadNotice && (
+                <span style={{
+                  position: 'absolute',
+                  top: '0px',
+                  right: '-14px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#ffff00',
+                  boxShadow: '0 0 5px #ffff00',
+                  display: 'inline-block'
+                }} title="New Notice" />
+              )}
+            </span>
           </li>
         </ul>
 

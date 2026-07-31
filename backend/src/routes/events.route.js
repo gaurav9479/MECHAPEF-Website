@@ -33,6 +33,20 @@ router.delete(
     eventController.deleteEvent
 );
 
+router.post(
+    '/:id/approve-deletion',
+    authenticate,
+    checkRole(['super-admin']),
+    eventController.approveEventDeletion
+);
+
+router.post(
+    '/:id/cancel-deletion',
+    authenticate,
+    checkRole(['super-admin']),
+    eventController.cancelEventDeletion
+);
+
 router.patch(
     '/:id/end',
     authenticate,
@@ -55,6 +69,14 @@ router.get(
 );
 
 // Event Registration Routes
+
+// User: Check their own registration status for this event
+router.get(
+    '/:id/my-registration',
+    authenticate,
+    registrationController.getMyRegistrationForEvent
+);
+
 router.post(
     '/:eventId/register',
     authenticate,

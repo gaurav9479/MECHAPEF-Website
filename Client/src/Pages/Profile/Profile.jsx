@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import Navbar from '../../components/Navbar/Navbar';
+import { useNavigate } from 'react-router-dom';
 import TicketModal from './TicketModal';
-import { FaTicketAlt } from 'react-icons/fa';
+import { FaTicketAlt, FaQrcode } from 'react-icons/fa';
 import './Profile.css';
 
 const Profile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     branch: '',
@@ -55,7 +57,7 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.patch('/auth/profile', formData);
+      await api.put('/auth/profile', formData);
       setToast({ msg: 'Profile updated successfully!', type: 'success' });
       setTimeout(() => setToast(null), 3000);
       // Wait a moment and maybe reload to fetch fresh user context if needed,
@@ -90,7 +92,18 @@ const Profile = () => {
             )}
             <div className="profile-header-info">
               <h1>{user?.name}</h1>
-              <p className="profile-role">{user?.role}</p>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', margin: '4px 0 8px 0', flexWrap: 'wrap' }}>
+                <p className="profile-role" style={{ margin: 0 }}>{user?.role}</p>
+                {(user?.isMechaPefMember || user?.branch?.toLowerCase().includes('mechanical') || user?.branch?.toLowerCase().includes('production')) ? (
+                  <span className="member-badge" style={{ background: 'linear-gradient(135deg, #00b0ff 0%, #00e5ff 100%)', color: '#000', fontSize: '0.72rem', fontWeight: '900', padding: '3px 10px', borderRadius: '12px', letterSpacing: '0.5px', textTransform: 'uppercase', boxShadow: '0 0 12px rgba(0, 229, 255, 0.4)' }}>
+                    MechaPEF Member
+                  </span>
+                ) : (
+                  <span className="non-member-badge" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#aaa', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    Non-Member
+                  </span>
+                )}
+              </div>
               <p className="profile-email">{user?.email}</p>
             </div>
           </div>
@@ -102,13 +115,13 @@ const Profile = () => {
             </div>
 
             <div className="form-group">
-              <label>Branch</label>
-              <input type="text" name="branch" value={formData.branch} onChange={handleChange} />
+              <label>Branch (Automatic from Reg No)</label>
+              <input type="text" name="branch" value={formData.branch} disabled style={{ backgroundColor: '#151518', cursor: 'not-allowed', color: '#888' }} />
             </div>
 
             <div className="form-group">
-              <label>Year of Study</label>
-              <input type="number" name="yearOfStudy" min="1" max="5" value={formData.yearOfStudy} onChange={handleChange} />
+              <label>Year of Study (Automatic from Reg No)</label>
+              <input type="text" name="yearOfStudy" value={formData.yearOfStudy} disabled style={{ backgroundColor: '#151518', cursor: 'not-allowed', color: '#888' }} />
             </div>
 
             <div className="form-group">

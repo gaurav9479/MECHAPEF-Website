@@ -3,6 +3,7 @@ import ApiError from '../utils/ApiError.js';
 import APIResponse from '../utils/APIResponse.js';
 import Album from '../models/album.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
+import logFootprint from '../utils/logFootprint.js';
 
 export const getAllAlbums = asyncHandler(async (req, res) => {
     // Determine whether to fetch only active albums
@@ -37,6 +38,8 @@ export const createAlbum = asyncHandler(async (req, res) => {
         createdBy: req.user?.userId
     });
 
+    logFootprint(req, 'CREATE', 'Album', `Created album: ${album.title}`);
+
     return res.status(HTTP_STATUS.CREATED).json(new APIResponse(HTTP_STATUS.CREATED, { album }, 'Album created'));
 });
 
@@ -53,12 +56,16 @@ export const updateAlbum = asyncHandler(async (req, res) => {
     const album = await Album.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
     if (!album) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Album not found');
 
+    logFootprint(req, 'UPDATE', 'Album', `Updated album: ${album.title}`);
+
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { album }, 'Album updated'));
 });
 
 export const deleteAlbum = asyncHandler(async (req, res) => {
     const album = await Album.findByIdAndDelete(req.params.id);
     if (!album) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Album not found');
+
+    logFootprint(req, 'DELETE', 'Album', `Deleted album: ${album.title}`);
 
     // Note: We could also delete the associated ImageKit files here, but it's okay to just delete the DB record for now.
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, {}, 'Album deleted'));
@@ -77,6 +84,8 @@ export const addImagesToAlbum = asyncHandler(async (req, res) => {
     album.images.push(...images);
     await album.save();
 
+    logFootprint(req, 'UPDATE', 'Album', `Added ${images.length} image(s) to album: ${album.title}`);
+
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { album }, 'Images added to album'));
 });
 
@@ -89,6 +98,8 @@ export const removeImageFromAlbum = asyncHandler(async (req, res) => {
 
     album.images = album.images.filter(img => img._id.toString() !== imageId);
     await album.save();
+
+    logFootprint(req, 'UPDATE', 'Album', `Removed an image from album: ${album.title}`);
 
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { album }, 'Image removed from album'));
 });
