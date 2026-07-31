@@ -156,7 +156,7 @@ const TopNavbar = () => {
       handleNavClick("/login");
       return;
     }
-    if (hasRole("content-lead") || hasRole("event-lead") || hasRole("super-admin")) {
+    if (hasRole("event-lead") || hasRole("media-lead") || hasRole("super-admin")) {
       handleNavClick("/admin");
     }
   };
@@ -347,7 +347,7 @@ const TopNavbar = () => {
                     {user?.role === 'endorsed-volunteer' && (
                       <button onClick={goScanner} style={{ color: '#00e5ff', fontWeight: 'bold' }}><FaQrcode />Ticket Scanner</button>
                     )}
-                    {(hasRole("content-lead") || hasRole("event-lead") || hasRole("super-admin")) && (
+                    {(hasRole("event-lead") || hasRole("media-lead") || hasRole("super-admin")) && (
                       <button onClick={goAdmin}><FaUserShield />Admin Portal</button>
                     )}
                     <button className="logout-btn" onClick={handleLogout}><FaSignOutAlt />Logout</button>
@@ -377,7 +377,7 @@ const TopNavbar = () => {
                   {user?.role === 'endorsed-volunteer' && (
                     <button onClick={goScanner} style={{ color: '#00e5ff', fontWeight: 'bold' }}><FaQrcode />Ticket Scanner</button>
                   )}
-                  {(hasRole("content-lead") || hasRole("event-lead") || hasRole("super-admin")) && (
+                  {(hasRole("event-lead") || hasRole("media-lead") || hasRole("super-admin")) && (
                     <button onClick={goAdmin}><FaUserShield />Admin Portal</button>
                   )}
                   <button className="logout-btn" onClick={handleLogout}><FaSignOutAlt />Logout</button>

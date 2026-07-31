@@ -89,7 +89,8 @@ const AnimatedRoutes = () => {
               allowedRoles={[
                 'general-user',
                 'member',
-                'content-lead',
+                'endorsed-volunteer',
+                'event-lead',
                 'media-lead',
                 'super-admin'
               ]}
@@ -101,11 +102,10 @@ const AnimatedRoutes = () => {
 
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Dashboard */}
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'media-lead']}>
+            <ProtectedRoute allowedRoles={['super-admin', 'event-lead', 'media-lead', 'endorsed-volunteer']}>
               <AdminDashboard />
             </ProtectedRoute>
           }
@@ -115,7 +115,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/events"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads and Super Admins can manage Live Events."
+            >
               <AdminEvents />
             </ProtectedRoute>
           }
@@ -124,7 +128,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/past-events"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads and Super Admins can manage Past Events."
+            >
               <PastEventsManager />
             </ProtectedRoute>
           }
@@ -133,7 +141,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/events/:eventId/registrations"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads and Super Admins can view registrations."
+            >
               <AdminRegistrations />
             </ProtectedRoute>
           }
@@ -142,7 +154,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/team"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads and Super Admins can manage the Team."
+            >
               <AdminTeam />
             </ProtectedRoute>
           }
@@ -151,7 +167,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/mail"
           element={
-            <ProtectedRoute allowedRoles={['super-admin']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Super Admins can send mail."
+            >
               <AdminMail />
             </ProtectedRoute>
           }
@@ -160,7 +180,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/footprints"
           element={
-            <ProtectedRoute allowedRoles={['super-admin']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Super Admins can manage footprints."
+            >
               <AdminFootprints />
             </ProtectedRoute>
           }
@@ -169,7 +193,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/messages"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'media-lead']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead', 'media-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads, Media Leads, and Super Admins can access Messages."
+            >
               <AdminMessages />
             </ProtectedRoute>
           }
@@ -178,7 +206,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/magazine"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'media-lead']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads and Super Admins can manage the Magazine."
+            >
               <AdminMagazine />
             </ProtectedRoute>
           }
@@ -187,7 +219,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/announcements"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead', 'media-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads, Media Leads, and Super Admins can manage Announcements."
+            >
               <AdminAnnouncements />
             </ProtectedRoute>
           }
@@ -196,7 +232,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/management"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'media-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Media Leads and Super Admins can access Management."
+            >
               <AdminManagement />
             </ProtectedRoute>
           }
@@ -205,20 +245,24 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin/scanner"
           element={
-            <ProtectedRoute allowedRoles={['super-admin', 'content-lead', 'event-lead', 'endorsed-volunteer']}>
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead', 'endorsed-volunteer']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Scanner Volunteers and Event Leads can access Ticket Scanner."
+            >
               <AdminScanner />
             </ProtectedRoute>
           }
         />
 
-        {/* Media Lead */}
+        {/* Event Lead */}
         <Route
           path="/admin/sponsors"
           element={
             <ProtectedRoute
-              allowedRoles={['super-admin', 'media-lead']}
+              allowedRoles={['super-admin', 'event-lead']}
               fallbackPath="/admin"
-              toastMessage="Access Denied: Only Media Leads and Super Admins can manage Sponsors."
+              toastMessage="Access Denied: Only Event Leads and Super Admins can manage Sponsors."
             >
               <AdminSponsors />
             </ProtectedRoute>
@@ -229,9 +273,9 @@ const AnimatedRoutes = () => {
           path="/admin/special-sponsor"
           element={
             <ProtectedRoute
-              allowedRoles={['super-admin', 'media-lead']}
+              allowedRoles={['super-admin', 'event-lead']}
               fallbackPath="/admin"
-              toastMessage="Access Denied: Only Media Leads and Super Admins can manage the Special Sponsor."
+              toastMessage="Access Denied: Only Event Leads and Super Admins can manage the Special Sponsor."
             >
               <AdminSpecialSponsor />
             </ProtectedRoute>

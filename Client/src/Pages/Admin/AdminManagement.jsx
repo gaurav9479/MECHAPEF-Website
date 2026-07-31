@@ -64,10 +64,16 @@ const getDynamicSectionKeys = (sectionImages, extraFy, extraSy, extraTy, extraAl
   return { dynamicKeys, counts: { fy: maxFy, sy: maxSy, ty: maxTy, al: maxAl } };
 };
 const AdminManagement = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => { await logout(); navigate('/login'); };
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState(user?.role === 'media-lead' ? 'images' : 'users');
+
+  useEffect(() => {
+    if (user?.role === 'media-lead') {
+      setActiveTab('images');
+    }
+  }, [user]);
   // ── Users Tab State ──
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
@@ -401,12 +407,16 @@ const AdminManagement = () => {
         <div className="admin-form-topbar">
           <h1>Management</h1>
           <div className="mgmt-tabs">
-            <button className={`mgmt-tab ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
-              <FaUsers /> Members
-            </button>
-            <button className={`mgmt-tab ${activeTab === 'notices' ? 'active' : ''}`} onClick={() => setActiveTab('notices')}>
-              <FaBullhorn /> Notices
-            </button>
+            {user?.role !== 'media-lead' && (
+              <>
+                <button className={`mgmt-tab ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
+                  <FaUsers /> Members
+                </button>
+                <button className={`mgmt-tab ${activeTab === 'notices' ? 'active' : ''}`} onClick={() => setActiveTab('notices')}>
+                  <FaBullhorn /> Notices
+                </button>
+              </>
+            )}
             <button className={`mgmt-tab ${activeTab === 'images' ? 'active' : ''}`} onClick={() => setActiveTab('images')}>
               <FaImage /> Image Manager
             </button>
@@ -502,8 +512,8 @@ const AdminManagement = () => {
               <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="mgmt-select">
                 <option value="">All Roles</option>
                 <option value="super-admin">Super Admin</option>
-                <option value="content-lead">Content Lead</option>
                 <option value="event-lead">Event Lead</option>
+                <option value="media-lead">Media Lead</option>
                 <option value="endorsed-volunteer">Endorsed Volunteer</option>
                 <option value="member">Member</option>
                 <option value="general-user">General User</option>
@@ -564,8 +574,8 @@ const AdminManagement = () => {
                               }}
                             >
                               <option value="super-admin">Super Admin</option>
-                              <option value="content-lead">Content Lead</option>
                               <option value="event-lead">Event Lead</option>
+                              <option value="media-lead">Media Lead</option>
                               <option value="endorsed-volunteer">Endorsed Volunteer</option>
                               <option value="member">Member</option>
                               <option value="general-user">General User</option>
