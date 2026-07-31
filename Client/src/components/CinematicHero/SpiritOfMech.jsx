@@ -6,25 +6,25 @@ import wheelImg from "../../assets/wheel.png";
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
 import EditableImage from '../EditableImage/EditableImage';
 import api from '../../services/api';
+import { apiGetCached } from '../../utils/apiCache';
 import '../CinematicHero/CinematicHero.css';
 
 const SpiritOfMech = () => {
   const containerRef = useRef(null);
   const [imagesMap, setImagesMap] = useState({});
 
-  const fetchSectionImages = async () => {
-    try {
-      const res = await api.get('/upload/sections');
+  const fetchSectionImages = () => {
+    apiGetCached('/upload/sections', (data) => {
       const imgMap = {};
-      if (res.data.data?.images) {
-        res.data.data.images.forEach(img => {
+      if (data?.data?.images) {
+        data.data.images.forEach(img => {
           imgMap[img.sectionKey] = img.imageURL;
         });
       }
       setImagesMap(imgMap);
-    } catch (error) {
+    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(error => {
       console.error("Failed to load section images:", error);
-    }
+    });
   };
 
   useEffect(() => {

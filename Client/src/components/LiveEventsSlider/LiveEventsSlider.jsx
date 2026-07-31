@@ -23,7 +23,7 @@ const LiveEventsSlider = () => {
       banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setSlides(banners);
       setLoading(false);
-    }).catch(err => {
+    }, { cacheDuration: 2 * 60 * 1000 }).catch(err => {
       console.error("Failed to load banners", err);
       setLoading(false);
     });

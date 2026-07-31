@@ -36,7 +36,7 @@ const MobileHome = () => {
       const banners = items.filter(n => n.isActive);
       banners.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setSlides(banners);
-    }).catch(() => {});
+    }, { cacheDuration: 2 * 60 * 1000 }).catch(() => {});
 
     // 3. Sponsors fetch (Current & Past Sponsors)
     apiGetCached('/sponsors', (data) => {

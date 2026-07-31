@@ -14,7 +14,7 @@ const skeletonEvents = [
   { _id: 'sk3', isSkeleton: true }
 ];
 
-const PastEventsStack = () => {
+const PastEventsStack = ({ onLoaded }) => {
   const sectionRef = useRef(null);
   
   const [pastEvents, setPastEvents] = useState(skeletonEvents);
@@ -29,9 +29,11 @@ const PastEventsStack = () => {
           setPastEvents(eventsList);
         }
         setLoading(false);
+        if (onLoaded) onLoaded();
       }).catch(err => {
         console.error("Failed to fetch past events:", err);
         setLoading(false);
+        if (onLoaded) onLoaded();
       });
     };
     fetchEvents();

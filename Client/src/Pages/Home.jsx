@@ -21,34 +21,69 @@ const Home = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [specialSponsorConfig, setSpecialSponsorConfig] = useState(null);
+  const [firstSectionReady, setFirstSectionReady] = useState(false);
+  const [loadStage, setLoadStage] = useState(0); 
+  // 0: Wait for sponsor config
+  // 1: Render Hero & AboutUs. Start PastEvents fetch.
+  // 2: PastEvents finished. Render OurDepartment & LiveEvents.
+  // 3: Render OurTeam & rest of the page.
 
   useEffect(() => {
-    // Fetch special sponsor config
+    // 1. Fetch special sponsor config immediately to establish first section
     api.get('/special-sponsor/active').then(res => {
-      if (res.data?.data) setSpecialSponsorConfig(res.data.data);
+      if (res.data?.data) {
+        const sp = res.data.data;
+        setSpecialSponsorConfig(sp);
+        
+        // Apply custom font/brand styling if applicable
+        if (sp.customFontUrl && sp.applyBrandFont) {
+          const link = document.createElement('link');
+          link.href = sp.customFontUrl;
+          link.rel = 'stylesheet';
+          document.head.appendChild(link);
+          document.body.style.fontFamily = `'${sp.customFontFamily}', sans-serif`;
+        }
+      }
     }).catch(err => {
       console.log('No active special sponsor or error fetching');
+    }).finally(() => {
+      // First section config is established
+      setFirstSectionReady(true);
+      setLoadStage(1);
     });
-    // Prefetch team images immediately when the site loads so they are instantly visible on scroll
+  }, []);
+
+  useEffect(() => {
+    if (loadStage === 2) {
+      // Since OurDepartment has no API calls, immediately progress to stage 3 after a 100ms render frame
+      const t = setTimeout(() => setLoadStage(3), 100);
+      return () => clearTimeout(t);
+    }
+  }, [loadStage]);
+
+  useEffect(() => {
+    if (!firstSectionReady) return;
+
+    // 2. Prefetch team images only AFTER the first section is established
     apiGetCached('/upload/sections?device=desktop', (data) => {
       if (data?.data?.images) {
         data.data.images.forEach(img => {
           if (img.imageURL) {
-            // 1. High priority network fetch
+            // High priority network fetch
             const link = document.createElement('link');
             link.rel = 'preload';
             link.as = 'image';
             link.href = img.imageURL;
             document.head.appendChild(link);
             
-            // 2. Cache in memory
+            // Cache in memory
             const prefetchImg = new Image();
             prefetchImg.src = img.imageURL;
           }
         });
       }
-    }, { cacheDuration: 3 * 60 * 60 * 1000 });
-  }, []);
+    }, { cacheDuration: 2 * 60 * 60 * 1000 });
+  }, [firstSectionReady]);
 
   useLayoutEffect(() => {
     if ('scrollRestoration' in history) {
@@ -96,22 +131,38 @@ const Home = () => {
 
       {/* ── Desktop layout (hidden on mobile via CSS) ── */}
       <div className="desktop-only">
-        
         <div id="home"><HeroIntro /></div>
-        <div id="about-us"><AboutWheel /></div>
-        {/* <div id="learning"><LearningLogos /></div> */}
-        <div id="past-events"><PastEventsStack /></div>
-        <div id="live-events"><LiveEventsSlider /></div>
-        <div id="our-department"><OurDepartment /></div>
-        <div id="our-team"><OurTeam /></div>
-        <div id="sponsors"><PastSponsors /></div>
-        <div id="join"><JoinUsBot /></div>
         
-        <Footer />
+        {/* Render rest of the sections progressively */}
+        {loadStage >= 1 && (
+          <>
+            <div id="about-us"><AboutWheel /></div>
+            {/* <div id="learning"><LearningLogos /></div> */}
+            <div id="past-events">
+              <PastEventsStack onLoaded={() => setLoadStage(2)} />
+            </div>
+          </>
+        )}
+
+        {loadStage >= 2 && (
+          <>
+            <div id="our-department"><OurDepartment /></div>
+            <div id="live-events"><LiveEventsSlider /></div>
+          </>
+        )}
+
+        {loadStage >= 3 && (
+          <>
+            <div id="our-team"><OurTeam /></div>
+            <div id="sponsors"><PastSponsors /></div>
+            <div id="join"><JoinUsBot /></div>
+            <Footer />
+          </>
+        )}
       </div>
 
       {/* ── Mobile layout (hidden on desktop via CSS) ── */}
-      <MobileHome />
+      {firstSectionReady && <MobileHome />}
     </>
   );
 };

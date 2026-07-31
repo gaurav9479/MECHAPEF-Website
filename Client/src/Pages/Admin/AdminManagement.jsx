@@ -416,9 +416,9 @@ const AdminManagement = () => {
         {activeTab === 'users' && (
           <div>
             {/* Redis Queue Toggle Switch Card */}
-            <div style={{ background: redisModeType === 'AUTO' ? 'linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, rgba(13, 45, 58, 0.4) 100%)' : redisModeType === 'ALWAYS_ON' ? 'linear-gradient(135deg, rgba(0, 200, 100, 0.08) 0%, rgba(10, 45, 25, 0.4) 100%)' : 'rgba(255,255,255,0.02)', border: redisModeType === 'AUTO' ? '1px solid #00e5ff' : redisModeType === 'ALWAYS_ON' ? '1px solid #00c864' : '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', transition: 'all 0.3s ease' }}>
+            <div style={{ background: redisModeType === 'AUTO' ? 'linear-gradient(135deg, rgba(255, 31, 1, 0.08) 0%, rgba(58, 13, 13, 0.4) 100%)' : redisModeType === 'ALWAYS_ON' ? 'linear-gradient(135deg, rgba(0, 200, 100, 0.08) 0%, rgba(10, 45, 25, 0.4) 100%)' : 'rgba(255,255,255,0.02)', border: redisModeType === 'AUTO' ? '1px solid #ff1f01' : redisModeType === 'ALWAYS_ON' ? '1px solid #00c864' : '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', transition: 'all 0.3s ease' }}>
               <div style={{ flex: '1 1 300px' }}>
-                <h4 style={{ margin: 0, color: redisModeType === 'AUTO' ? '#00e5ff' : redisModeType === 'ALWAYS_ON' ? '#00c864' : '#aaa', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h4 style={{ margin: 0, color: redisModeType === 'AUTO' ? '#ff1f01' : redisModeType === 'ALWAYS_ON' ? '#00c864' : '#aaa', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   ⚡ High-Traffic Redis Queue Mode (BullMQ)
                 </h4>
                 <p style={{ margin: '6px 0 0 0', fontSize: '0.82rem', color: '#bbb', lineHeight: '1.4' }}>
@@ -442,8 +442,8 @@ const AdminManagement = () => {
                     fontWeight: 'bold',
                     border: 'none',
                     cursor: 'pointer',
-                    background: redisModeType === 'AUTO' ? '#00e5ff' : 'transparent',
-                    color: redisModeType === 'AUTO' ? '#000' : '#aaa',
+                    background: redisModeType === 'AUTO' ? '#ff1f01' : 'transparent',
+                    color: redisModeType === 'AUTO' ? '#fff' : '#aaa',
                     transition: 'all 0.2s ease'
                   }}
                 >
@@ -556,11 +556,10 @@ const AdminManagement = () => {
                               style={{ 
                                 padding: '6px 10px', 
                                 fontSize: '0.82rem', 
-                                background: effectiveRole === 'member' ? '#0d2d3a' : '#222', 
-                                color: effectiveRole === 'member' ? '#00e5ff' : '#fff', 
-                                border: effectiveRole === 'member' ? '1px solid #00e5ff' : '1px solid #444', 
+                                background: '#222', 
+                                color: '#fff', 
+                                border: '1px solid #444', 
                                 borderRadius: '6px', 
-                                fontWeight: effectiveRole === 'member' ? '700' : 'normal',
                                 cursor: 'pointer' 
                               }}
                             >
