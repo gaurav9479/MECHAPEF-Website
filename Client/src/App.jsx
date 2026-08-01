@@ -18,6 +18,8 @@ import AdminFootprints from './Pages/Admin/AdminFootprints';
 import AdminManagement from './Pages/Admin/AdminManagement';
 import AdminGallery from './Pages/Admin/AdminGallery';
 import AdminScanner from './Pages/Admin/AdminScanner';
+import AdminRedis from './Pages/Admin/AdminRedis';
+import AdminProjects from './Pages/Admin/AdminProjects';
 import Gallery from './Pages/Gallery/Gallery';
 import AlbumView from './Pages/Gallery/AlbumView';
 import Profile from './Pages/Profile/Profile';
@@ -27,6 +29,7 @@ import AdminMessages from './Pages/Admin/AdminMessages';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
 import Team from './Pages/Team/Team';
+import Projects from './Pages/Projects/Projects';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import MagazineContainer from './Pages/Magazine/MagazineContainer';
 
@@ -82,6 +85,7 @@ const AnimatedRoutes = () => {
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/sponsors" element={<Sponsors />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/projects" element={<Projects />} />
 
         {/* Profile */}
         <Route
@@ -167,6 +171,19 @@ const AnimatedRoutes = () => {
         />
 
         <Route
+          path="/admin/projects"
+          element={
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'media-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Media Leads and Super Admins can manage 3D Projects."
+            >
+              <AdminProjects />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/admin/mail"
           element={
             <ProtectedRoute
@@ -188,6 +205,33 @@ const AnimatedRoutes = () => {
               toastMessage="Access Denied: Only Super Admins can manage footprints."
             >
               <AdminFootprints />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/redis"
+          element={
+            <ProtectedRoute
+              allowedRoles={['super-admin']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Super Admins can manage Redis settings."
+            >
+              <AdminRedis />
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Alias for easy access */}
+        <Route
+          path="/redis"
+          element={
+            <ProtectedRoute
+              allowedRoles={['super-admin']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Super Admins can manage Redis settings."
+            >
+              <AdminRedis />
             </ProtectedRoute>
           }
         />
