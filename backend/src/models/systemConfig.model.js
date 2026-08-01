@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const systemConfigSchema = new mongoose.Schema(
   {
     enableRedis: { type: Boolean, default: false },
+    enableDualRedis: { type: Boolean, default: false },
     redisModeType: {
       type: String,
       enum: ['AUTO', 'ALWAYS_ON', 'ALWAYS_OFF'],

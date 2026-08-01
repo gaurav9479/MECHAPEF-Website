@@ -3,21 +3,11 @@ import Registration from '../models/registration.model.js';
 import Event from '../models/event.model.js';
 import User from '../models/user.model.js';
 
-let registrationWorker = null;
-const QUEUE_NAME = 'RegistrationQueue';
+let worker1 = null;
+let worker2 = null;
 
-export const startRegistrationWorker = (redisConnection) => {
-    if (!redisConnection) {
-        console.log('[Worker] Redis not configured. Registration worker will not start.');
-        return;
-    }
-
-    if (registrationWorker) {
-        console.log('[Worker] Registration worker is already running.');
-        return;
-    }
-
-    registrationWorker = new Worker(QUEUE_NAME, async (job) => {
+const createWorker = (queueName, redisConnection) => {
+    const worker = new Worker(queueName, async (job) => {
         const {
             eventId,
             registeredBy,
@@ -28,7 +18,7 @@ export const startRegistrationWorker = (redisConnection) => {
             customData
         } = job.data;
 
-        console.log(`[Worker] Processing registration for user ${registeredBy} -> event ${eventId}`);
+        console.log(`[Worker ${queueName}] Processing registration for user ${registeredBy} -> event ${eventId}`);
 
         const event = await Event.findById(eventId);
         if (!event) {
@@ -111,7 +101,7 @@ export const startRegistrationWorker = (redisConnection) => {
             throw error;
         }
 
-        // Atomic increment + addToSet in parallel — no extra countDocuments query
+        // Atomic increment + addToSet in parallel
         await Promise.all([
             Event.findByIdAndUpdate(eventId, { $inc: { totalRegistrations: 1 } }),
             User.findByIdAndUpdate(
@@ -120,7 +110,7 @@ export const startRegistrationWorker = (redisConnection) => {
             )
         ]);
 
-        console.log(`[Worker] Registration saved successfully for user ${registeredBy}`);
+        console.log(`[Worker ${queueName}] Registration saved successfully for user ${registeredBy}`);
         return newRegistration._id;
     }, {
         connection: redisConnection,
@@ -130,46 +120,68 @@ export const startRegistrationWorker = (redisConnection) => {
             duration: 1000,
         },
         settings: {
-            stalledInterval: 300000, // Check for stalled jobs every 5 minutes instead of 30 seconds
-            drainDelay: 300000, // If queue is empty, wait 5 minutes before actively polling for delayed jobs
+            stalledInterval: 300000,
+            drainDelay: 300000,
             lockDuration: 60000,
         }
     });
 
-    registrationWorker.on('completed', (job) => {
-        console.log(`[Worker] Job ${job.id} completed`);
-    });
-
-    registrationWorker.on('failed', (job, err) => {
-        console.error(`[Worker] Job ${job?.id || 'unknown'} failed:`, err.message);
-    });
+    worker.on('completed', (job) => console.log(`[Worker ${queueName}] Job ${job.id} completed`));
+    worker.on('failed', (job, err) => console.error(`[Worker ${queueName}] Job ${job?.id || 'unknown'} failed:`, err.message));
 
     let workerErrorLogged = false;
-    registrationWorker.on('error', async (err) => {
+    worker.on('error', async (err) => {
         if (err.message.includes('max requests limit exceeded')) {
             if (!workerErrorLogged) {
-                console.error('\n⚠️ [Worker] Registration Worker: Upstash daily limit exceeded. Closing background worker to avoid spam. App will process registrations directly.');
+                console.error(`\n⚠️ [Worker ${queueName}] Upstash daily limit exceeded. Closing background worker.`);
                 workerErrorLogged = true;
             }
-            try {
-                await stopRegistrationWorker();
-            } catch (e) {}
+            try { await worker.close(); } catch (e) {}
             return;
         }
-        console.error('[Worker] Registration worker error:', err.message);
+        console.error(`[Worker ${queueName}] error:`, err.message);
     });
 
-    console.log('[Worker] Registration worker started and listening for jobs.');
+    return worker;
+};
+
+export const startRegistrationWorker = (redisConnection1, redisConnection2, queueName1, queueName2) => {
+    if (!redisConnection1) {
+        console.log('[Worker] Redis not configured. Registration worker will not start.');
+        return;
+    }
+
+    if (worker1) {
+        console.log('[Worker] Registration workers are already running.');
+        return;
+    }
+
+    worker1 = createWorker(queueName1, redisConnection1);
+    console.log(`[Worker] Started listening on ${queueName1}`);
+
+    if (redisConnection2) {
+        worker2 = createWorker(queueName2, redisConnection2);
+        console.log(`[Worker] Started listening on ${queueName2}`);
+    }
 };
 
 export const stopRegistrationWorker = async () => {
-    if (registrationWorker) {
+    if (worker1) {
         try {
-            await registrationWorker.close();
-            registrationWorker = null;
-            console.log('[Worker] Registration worker stopped.');
+            await worker1.close();
+            worker1 = null;
+            console.log('[Worker] Worker 1 stopped.');
         } catch (e) {
-            console.error('[Worker] Error stopping worker:', e);
+            console.error('[Worker] Error stopping Worker 1:', e);
+        }
+    }
+    if (worker2) {
+        try {
+            await worker2.close();
+            worker2 = null;
+            console.log('[Worker] Worker 2 stopped.');
+        } catch (e) {
+            console.error('[Worker] Error stopping Worker 2:', e);
         }
     }
 };

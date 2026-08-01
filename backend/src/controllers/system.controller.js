@@ -21,7 +21,7 @@ export const getSystemConfig = asyncHandler(async (req, res) => {
 });
 
 export const updateSystemConfig = asyncHandler(async (req, res) => {
-    const { redisModeType, enableRedis, startHour, endHour, enableSeatLock } = req.body;
+    const { redisModeType, enableRedis, enableDualRedis, startHour, endHour, enableSeatLock } = req.body;
     
     let config = await SystemConfig.findOne();
     if (!config) {
@@ -30,6 +30,7 @@ export const updateSystemConfig = asyncHandler(async (req, res) => {
 
     if (redisModeType) config.redisModeType = redisModeType;
     if (enableRedis !== undefined) config.enableRedis = Boolean(enableRedis);
+    if (enableDualRedis !== undefined) config.enableDualRedis = Boolean(enableDualRedis);
     if (startHour !== undefined) config.startHour = Number(startHour);
     if (endHour !== undefined) config.endHour = Number(endHour);
     if (enableSeatLock !== undefined) config.enableSeatLock = Boolean(enableSeatLock);
