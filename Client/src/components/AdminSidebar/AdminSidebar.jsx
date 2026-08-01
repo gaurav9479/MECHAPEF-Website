@@ -14,7 +14,9 @@ import {
   FaQrcode,
   FaBook,
   FaEnvelope,
-  FaShoePrints
+  FaShoePrints,
+  FaServer,
+  FaCube
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -158,9 +160,14 @@ const AdminSidebar = () => {
               )}
 
               {isRole('super-admin', 'media-lead') && (
-                <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/management')}>
-                  <FaCog /> Management
-                </Link>
+                <>
+                  <Link to="/admin/management" className={`sidebar-link ${location.pathname === '/admin/management' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/management')}>
+                    <FaCog /> Management
+                  </Link>
+                  <Link to="/admin/projects" className={`sidebar-link ${location.pathname === '/admin/projects' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/projects')}>
+                    <FaCube /> 3D Projects
+                  </Link>
+                </>
               )}
 
               {isRole('super-admin', 'event-lead') && (
@@ -198,6 +205,9 @@ const AdminSidebar = () => {
               </Link>
               <Link to="/admin/footprints" className={`sidebar-link ${location.pathname === '/admin/footprints' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/footprints')}>
                 <FaShoePrints /> Footprints
+              </Link>
+              <Link to="/admin/redis" className={`sidebar-link ${location.pathname === '/admin/redis' || location.pathname === '/redis' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/redis')}>
+                <FaServer /> Redis
               </Link>
             </>
           )}

@@ -14,6 +14,7 @@ import mailRoutes from './mail.route.js';
 import footprintRoutes from './footprint.route.js';
 import contactRoutes from './contact.route.js';
 import systemRoutes from './system.routes.js';
+import projectRoutes from './project.routes.js';
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.use('/mail', mailRoutes);
 router.use('/footprints', footprintRoutes);
 router.use('/contact', contactRoutes);
 router.use('/system', systemRoutes);
+router.use('/projects', projectRoutes);
 
 router.get('/health', (req, res) => {
     res.status(200).json({

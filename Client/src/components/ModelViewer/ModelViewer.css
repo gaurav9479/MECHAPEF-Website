@@ -1,0 +1,66 @@
+.model-viewer-container {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  position: relative;
+  background: #050505; /* Deep black to match theme */
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure the model-viewer component takes full space and removes default outlines */
+model-viewer {
+  width: 100%;
+  height: 100%;
+  outline: none;
+  --poster-color: transparent;
+  background-color: transparent;
+}
+
+.model-viewer-loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.model-viewer-loader p {
+  color: #ff1f01;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  margin: 0;
+  animation: pulseText 1.5s infinite;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 31, 1, 0.1);
+  border-top-color: #ff1f01;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Web Component internal shadow part styling for standard poster loading */
+model-viewer::part(default-progress-bar) {
+  background-color: #ff1f01;
+}
