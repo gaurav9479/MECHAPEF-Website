@@ -988,7 +988,7 @@ const AdminManagement = () => {
                           regNo: imgData?.regNo || '',
                           order: imgData?.order || defaultOrder
                         });
-                        localStorage.removeItem('api_cache_/upload/sections');
+                        clearSectionCache();
                         fetchSectionImages();
                         showToast('Details saved and sequences swapped!');
                       } catch (error) {

@@ -64,7 +64,8 @@ const PastEventsStack = ({ onLoaded }) => {
               pin: true,
               scrub: 1.5,
               pinSpacing: true,
-              invalidateOnRefresh: true
+              invalidateOnRefresh: true,
+              anticipatePin: 1
             }
           });
 
@@ -82,11 +83,13 @@ const PastEventsStack = ({ onLoaded }) => {
           scrollTrigger: {
             trigger: sectionRef.current,
             start: 'top top',
-            end: () => "+=" + (cards.length * 150) + "%",
+            end: () => "+=" + ((cards.length * 150) + 120) + "%",
             pin: true,
+            pinType: 'fixed',
             scrub: 1.5,
             pinSpacing: true,
-            invalidateOnRefresh: true
+            invalidateOnRefresh: true,
+            anticipatePin: 1
           }
         });
 
@@ -94,32 +97,39 @@ const PastEventsStack = ({ onLoaded }) => {
           y: window.innerHeight, 
           opacity: 0, 
           scale: 0.8,
-          rotation: (i) => i % 2 === 0 ? -4 : 4
+          rotation: (i) => i % 2 === 0 ? -4 : 4,
+          pointerEvents: 'none'
         });
 
-        // Add an initial blank scroll delay
-        tl.to({}, { duration: 0.5 });
+        const initialBuffer = 0.8;
+        const cardDuration = 1.2;
+        const settleDelay = 0.4;
 
-        // Animate the first card in with a delay
+        // Add an initial blank scroll delay
+        tl.to({}, { duration: initialBuffer });
+
+        // Animate the first card in
         tl.fromTo(cards[0], 
-          { y: window.innerHeight, opacity: 0, scale: 0.8 },
-          { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'power3.out' }, 
-          0.5
+          { y: window.innerHeight, opacity: 0, scale: 0.8, pointerEvents: 'none' },
+          { y: 0, opacity: 1, scale: 1, rotation: 0, duration: cardDuration, ease: 'power3.out', pointerEvents: 'auto' }, 
+          initialBuffer
         );
 
         cards.forEach((card, index) => {
           if (index === 0) return;
           
-          const startTime = 0.5 + (index * 0.85); // Overlap for smoother continuous flow
+          // Calculate start time so this card only enters after the previous card has fully settled + settleDelay
+          const startTime = initialBuffer + cardDuration + settleDelay + (index - 1) * (cardDuration + settleDelay);
+          
           tl.fromTo(card, 
-            { y: window.innerHeight, opacity: 0, scale: 0.8 },
-            { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'power3.out' }, 
+            { y: window.innerHeight, opacity: 0, scale: 0.8, pointerEvents: 'none' },
+            { y: 0, opacity: 1, scale: 1, rotation: 0, duration: cardDuration, ease: 'power3.out', pointerEvents: 'auto' }, 
             startTime
           );
           
           for(let j = 0; j < index; j++) {
              const diff = index - j;
-             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -25 * diff, rotation: j % 2 === 0 ? -4 : 4, duration: 1.2, ease: 'power3.out' }, startTime);
+             tl.to(cards[j], { scale: 1 - (diff * 0.05), y: -25 * diff, rotation: j % 2 === 0 ? -4 : 4, duration: cardDuration, ease: 'power3.out' }, startTime);
           }
         });
         

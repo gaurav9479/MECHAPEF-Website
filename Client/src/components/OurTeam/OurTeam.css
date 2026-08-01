@@ -2,15 +2,6 @@
    OurTeam — Cyberpunk Spotlight & Glitch Edition
    ════════════════════════════════════════════════════════════ */
 
-/* ── Keyframes ──────────────────────────────────────────────── */
-@keyframes glitch {
-  0%   { clip-path: inset(20% 0 60% 0); transform: translate(-3px, 0); }
-  20%  { clip-path: inset(60% 0 10% 0); transform: translate( 3px, 0); }
-  40%  { clip-path: inset(10% 0 80% 0); transform: translate(-2px, 0); }
-  60%  { clip-path: inset(80% 0  5% 0); transform: translate( 2px, 0); }
-  80%  { clip-path: inset(40% 0 40% 0); transform: translate(-1px, 0); }
-  100% { clip-path: inset( 0% 0  0% 0); transform: translate(  0,  0); }
-}
 
 @keyframes scanline {
   0%   { background-position: 0 -100%; }
@@ -232,19 +223,6 @@
   filter: grayscale(0%) contrast(1) brightness(1);
 }
 
-/* ── Glitch Overlay Image ───────────────────────────────────── */
-.card-img-glitch {
-  filter: grayscale(0%) contrast(1.2) brightness(1.1) !important;
-  mix-blend-mode: screen;
-  opacity: 0;
-  pointer-events: none;
-  clip-path: inset(0% 0 0% 0);
-  /* No transition — snappy glitch only */
-  transition: none;
-}
-.team-card:hover .card-img-glitch {
-  animation: glitch 0.3s steps(1, end) forwards;
-}
 
 .placeholder-text {
   color: #333;

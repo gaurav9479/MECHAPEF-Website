@@ -1,34 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { HeadingGearIcon, Reveal, GearSVG } from './MobileShared';
 import { apiGetCached } from '../../utils/apiCache';
 import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 
 const MobileTeam = ({ team }) => {
+  const navigate = useNavigate();
   const [specialSponsor, setSpecialSponsor] = useState(null);
-  const [activeTab, setActiveTab] = useState('al');
 
   useEffect(() => {
     apiGetCached('/special-sponsor/active', (data) => {
       if (data?.data) setSpecialSponsor(data.data);
     }).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (!team[activeTab] || team[activeTab].length === 0) {
-      if (team.al && team.al.length > 0) setActiveTab('al');
-      else if (team.fy && team.fy.length > 0) setActiveTab('fy');
-      else if (team.sy && team.sy.length > 0) setActiveTab('sy');
-      else if (team.ty && team.ty.length > 0) setActiveTab('ty');
-    }
-  }, [team]);
-
-  const tabDefs = [
-    { key: 'al', label: 'Notable Alumni' },
-    { key: 'fy', label: 'Final Year' },
-    { key: 'sy', label: 'Pre-Final'  },
-    { key: 'ty', label: '2nd Year'   },
-  ];
 
   return (
     <section className="mh-section mh-team" id="mh-team">
@@ -67,74 +51,89 @@ const MobileTeam = ({ team }) => {
         </div>
       </Reveal>
 
+      {/* Renders only Final Year Seniors on mobile homepage */}
       <Reveal delay={0.1}>
-        <div className="mh-tabs">
-          {tabDefs.map(t => (
-            <button key={t.key}
-              className={`mh-tab ${activeTab === t.key ? 'active' : ''}`}
-              onClick={() => setActiveTab(t.key)}>
-              {t.label}
-            </button>
-          ))}
+        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', marginBottom: '15px', fontFamily: 'Orbitron, sans-serif', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          Final Year Seniors
         </div>
       </Reveal>
 
-      <AnimatePresence mode="wait">
-        <motion.div key={activeTab} className="mh-team-track"
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0   }}
-          exit={{    opacity: 0, x: -30  }}
-          transition={{ duration: 0.3 }}>
-          {(team[activeTab] && team[activeTab].length > 0) ? (
-            team[activeTab].map((m, i) => (
-              <div key={i} className="mh-team-card" style={{ position: 'relative' }}>
-                {specialSponsor?.logoURL && specialSponsor?.showTeamCardsLogo !== false && (
-                  <div 
-                    className="mobile-team-sponsor-badge"
-                    style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px',
-                      zIndex: 10,
-                      background: 'rgba(255, 255, 255, 0.92)',
-                      backdropFilter: 'blur(8px)',
-                      padding: '3px 6px',
-                      borderRadius: '16px',
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '1px solid rgba(0,0,0,0.08)'
-                    }}
-                  >
-                    <img 
-                      src={getOptimizedImageUrl(specialSponsor.logoURL)} 
-                      alt={specialSponsor.name} 
-                      style={{ height: '16px', maxWidth: '50px', objectFit: 'contain' }} 
-                    />
-                  </div>
-                )}
-                <div className="mh-team-img">
-                  {m.imageURL
-                    ? <img src={getOptimizedImageUrl(m.imageURL)} alt={m.name} loading="lazy" decoding="async" />
-                    : <div className="mh-team-ph">
-                        <GearSVG size={38} speed={12 + (i % 6)} reverse={i % 2 === 0} />
-                      </div>
-                  }
+      <div className="mh-team-track">
+        {(team.fy && team.fy.length > 0) ? (
+          team.fy.map((m, i) => (
+            <div key={i} className="mh-team-card" style={{ position: 'relative' }}>
+              {specialSponsor?.logoURL && specialSponsor?.showTeamCardsLogo !== false && (
+                <div 
+                  className="mobile-team-sponsor-badge"
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    zIndex: 10,
+                    background: 'rgba(255, 255, 255, 0.92)',
+                    backdropFilter: 'blur(8px)',
+                    padding: '3px 6px',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(0,0,0,0.08)'
+                  }}
+                >
+                  <img 
+                    src={getOptimizedImageUrl(specialSponsor.logoURL)} 
+                    alt={specialSponsor.name} 
+                    style={{ height: '16px', maxWidth: '50px', objectFit: 'contain' }} 
+                  />
                 </div>
-                <div className="mh-team-info">
-                  <h4>{m.name || `Member ${i + 1}`}</h4>
-                  <p>{m.regNo}</p>
-                </div>
+              )}
+              <div className="mh-team-img">
+                {m.imageURL
+                  ? <img src={getOptimizedImageUrl(m.imageURL)} alt={m.name} loading="lazy" decoding="async" />
+                  : <div className="mh-team-ph">
+                      <GearSVG size={38} speed={12 + (i % 6)} reverse={i % 2 === 0} />
+                    </div>
+                }
               </div>
-            ))
-          ) : (
-            <div className="mh-no-members" style={{ width: '100%', textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.5)', border: '1px solid #1a0000', borderRadius: '12px', background: '#0d0000' }}>
-              No members added yet.
+              <div className="mh-team-info">
+                <h4>{m.name || `Member ${i + 1}`}</h4>
+                <p>{m.regNo || 'Senior Member'}</p>
+              </div>
             </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+          ))
+        ) : (
+          <div className="mh-no-members" style={{ width: '100%', textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.5)', border: '1px solid #1a0000', borderRadius: '12px', background: '#0d0000' }}>
+            No members added yet.
+          </div>
+        )}
+      </div>
+
+      {/* Explore full team button */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '25px', width: '100%' }}>
+        <button
+          onClick={() => navigate('/team')}
+          style={{
+            background: 'transparent',
+            color: '#ff1f01',
+            border: '1px solid #ff1f01',
+            borderRadius: '4px',
+            padding: '10px 20px',
+            fontSize: '0.9rem',
+            fontFamily: 'Orbitron, sans-serif',
+            cursor: 'pointer',
+            boxShadow: '0 0 10px rgba(255, 31, 1, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            textTransform: 'uppercase',
+            letterSpacing: '1px'
+          }}
+        >
+          <span>Explore Full Team</span>
+          <span>→</span>
+        </button>
+      </div>
     </section>
   );
 };

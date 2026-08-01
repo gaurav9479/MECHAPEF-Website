@@ -26,6 +26,7 @@ import AdminSpecialSponsor from './Pages/Admin/AdminSpecialSponsor';
 import AdminMessages from './Pages/Admin/AdminMessages';
 import EventDetails from './Pages/Events/EventDetails';
 import Sponsors from './Pages/Sponsors/Sponsors';
+import Team from './Pages/Team/Team';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import MagazineContainer from './Pages/Magazine/MagazineContainer';
 
@@ -80,6 +81,7 @@ const AnimatedRoutes = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/sponsors" element={<Sponsors />} />
+        <Route path="/team" element={<Team />} />
 
         {/* Profile */}
         <Route

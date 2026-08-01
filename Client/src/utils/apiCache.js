@@ -96,3 +96,15 @@ export const apiGetCached = async (url, callback, options = {}) => {
   pendingRequests[url] = fetchPromise;
   return fetchPromise;
 };
+
+export const apiClearCache = (url) => {
+  if (url) {
+    localStorage.removeItem(`api_cache_${url}`);
+  } else {
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('api_cache_')) {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+};
