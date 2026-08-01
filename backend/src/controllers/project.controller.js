@@ -1,6 +1,6 @@
 import { Project } from '../models/project.model.js';
 import { APIResponse } from '../utils/APIResponse.js';
-import { ApiError } from '../utils/APIError.js';
+import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { HTTP_STATUS } from '../constants/statusCodes.js';
 
