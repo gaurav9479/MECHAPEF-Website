@@ -1,8 +1,8 @@
 import { Project } from '../models/project.model.js';
-import { APIResponse } from '../utils/APIResponse.js';
-import { ApiError } from '../utils/ApiError.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { HTTP_STATUS } from '../constants/statusCodes.js';
+import APIResponse from '../utils/APIResponse.js';
+import ApiError from '../utils/ApiError.js';
+import asyncHandler from '../utils/asyncHandler.js';
+import { HTTP_STATUS } from '../constants/index.js';
 
 // Create a new project (Admin Only)
 export const createProject = asyncHandler(async (req, res) => {
