@@ -15,14 +15,14 @@ router.get('/:id', eventController.getEventById);
 router.post(
     '/',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     eventController.createEvent
 );
 
 router.put(
     '/:id',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     eventController.updateEvent
 );
 
@@ -50,7 +50,7 @@ router.post(
 router.patch(
     '/:id/end',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     eventController.endEvent
 );
 
@@ -64,7 +64,7 @@ router.delete(
 router.get(
     '/:id/stats',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     eventController.getEventStats
 );
 
@@ -86,21 +86,21 @@ router.post(
 router.get(
     '/:eventId/registrations',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     registrationController.getEventRegistrations
 );
 
 router.get(
     '/:eventId/registrations/export',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     registrationController.exportRegistrationsCSV
 );
 
 router.put(
     '/:eventId/registrations/:id/attendance',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     registrationController.markAttendance
 );
 

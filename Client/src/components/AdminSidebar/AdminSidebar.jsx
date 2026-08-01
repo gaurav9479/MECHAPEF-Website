@@ -139,7 +139,7 @@ const AdminSidebar = () => {
                 </Link>
               )}
 
-              {isRole('super-admin', 'event-lead') && (
+              {isRole('super-admin', 'event-lead', 'media-lead') && (
                 <>
                   <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/events')}>
                     <FaCalendarAlt /> Live Events
@@ -170,7 +170,7 @@ const AdminSidebar = () => {
                 </>
               )}
 
-              {isRole('super-admin', 'event-lead') && (
+              {isRole('super-admin', 'event-lead', 'media-lead') && (
                 <Link to="/admin/scanner" className={`sidebar-link ${location.pathname === '/admin/scanner' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/scanner')}>
                   <FaQrcode /> Scan Tickets
                 </Link>
@@ -178,7 +178,7 @@ const AdminSidebar = () => {
             </>
           )}
 
-          {isRole('super-admin', 'event-lead') && (
+          {isRole('super-admin', 'event-lead', 'media-lead') && (
             <>
               <Link to="/admin/sponsors" className={`sidebar-link ${location.pathname === '/admin/sponsors' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/sponsors')}>
                 <FaHandshake /> Sponsors
