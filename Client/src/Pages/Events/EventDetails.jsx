@@ -188,67 +188,81 @@ const EventDetails = () => {
       </Helmet>
       <Navbar />
       <div className="event-details-wrapper">
-        <div className="event-header">
-          <div className="event-category-tag">{event.category}</div>
-          <h1>{event.title}</h1>
-          <div className="event-meta-pills">
-            <span className="meta-pill">📍 {event.isTBD && event.venue.toLowerCase() === 'tbd' ? 'To Be Decided' : event.venue}</span>
-            <span className="meta-pill">📅 {event.isTBD ? 'To Be Decided' : new Date(event.startTime).toLocaleDateString()}</span>
-          </div>
-        </div>
-
-        <div className="event-content">
-          <div className="event-main">
-            <h3>About the Event</h3>
-            <p className="event-description">{event.description}</p>
-            
-            <div className="event-meta-item">
-              <FaGraduationCap className="meta-icon" />
-              <div className="meta-content">
-                <span className="meta-label">Eligible Branches</span>
-                <div className="tags-container">
-                  {event.eligibleBranches?.length > 0 
-                    ? event.eligibleBranches.map((b, i) => <span key={i} className="cute-tag">{b}</span>)
-                    : <span className="cute-tag">All Branches</span>}
-                </div>
-              </div>
-            </div>
-
-            <div className="event-meta-item">
-              <FaGraduationCap className="meta-icon" />
-              <div className="meta-content">
-                <span className="meta-label">Eligible Years</span>
-                <div className="tags-container">
-                  {event.eligibleYears?.length > 0 
-                    ? event.eligibleYears.map((y, i) => <span key={i} className="cute-tag">{y === 5 ? 'Alumni' : `${y}${['st','nd','rd','th'][Math.min(y-1, 3)]} Year`}</span>)
-                    : <span className="cute-tag">All Years</span>}
-                </div>
-              </div>
-            </div>
-
-            {event.rules && event.rules.length > 0 && (
-              <div className="event-rules">
-                <h3>Rules & Guidelines</h3>
-                <ul>
-                  {event.rules.map((rule, idx) => (
-                    <li key={idx}>{rule}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {event.prizes && (
-              <div className="event-prizes" style={{ marginTop: '30px' }}>
-                <h3 style={{ color: '#ff1f01', marginBottom: '15px' }}>🏆 Prizes & Rewards</h3>
-                <p style={{ fontSize: '1.1rem', color: '#e5e7eb', background: '#111', padding: '15px', borderLeft: '4px solid #ff1f01', borderRadius: '4px', whiteSpace: 'pre-line' }}>
-                  {event.prizes}
-                </p>
-              </div>
-            )}
-          </div>
+        <div className="event-content-split">
           
-          {!event.isTBD && (
-            <div className="event-sidebar">
+          {/* Left Column: 1:1 Poster */}
+          <div className="event-poster-container">
+            {event.bannerURL ? (
+              <img src={event.bannerURL} alt={event.title} className="event-poster-image" />
+            ) : (
+              <div className="event-poster-placeholder">
+                <h2>{event.title.substring(0, 2).toUpperCase()}</h2>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Info & Actions */}
+          <div className="event-info-container">
+            <div className="event-header">
+              <div className="event-category-tag">{event.category}</div>
+              <h1>{event.title}</h1>
+              <div className="event-meta-pills">
+                <span className="meta-pill">📍 {event.isTBD && event.venue.toLowerCase() === 'tbd' ? 'To Be Decided' : event.venue}</span>
+                <span className="meta-pill">📅 {event.isTBD ? 'To Be Decided' : new Date(event.startTime).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            <div className="event-main">
+              <h3>About the Event</h3>
+              <p className="event-description">{event.description}</p>
+              
+              <div className="event-meta-item">
+                <FaGraduationCap className="meta-icon" />
+                <div className="meta-content">
+                  <span className="meta-label">Eligible Branches</span>
+                  <div className="tags-container">
+                    {event.eligibleBranches?.length > 0 
+                      ? event.eligibleBranches.map((b, i) => <span key={i} className="cute-tag">{b}</span>)
+                      : <span className="cute-tag">All Branches</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="event-meta-item">
+                <FaGraduationCap className="meta-icon" />
+                <div className="meta-content">
+                  <span className="meta-label">Eligible Years</span>
+                  <div className="tags-container">
+                    {event.eligibleYears?.length > 0 
+                      ? event.eligibleYears.map((y, i) => <span key={i} className="cute-tag">{y === 5 ? 'Alumni' : `${y}${['st','nd','rd','th'][Math.min(y-1, 3)]} Year`}</span>)
+                      : <span className="cute-tag">All Years</span>}
+                  </div>
+                </div>
+              </div>
+
+              {event.rules && event.rules.length > 0 && (
+                <div className="event-rules">
+                  <h3>Rules & Guidelines</h3>
+                  <ul>
+                    {event.rules.map((rule, idx) => (
+                      <li key={idx}>{rule}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {event.prizes && (
+                <div className="event-prizes" style={{ marginTop: '30px' }}>
+                  <h3 style={{ color: '#ff1f01', marginBottom: '15px' }}>🏆 Prizes & Rewards</h3>
+                  <p style={{ fontSize: '1.1rem', color: '#e5e7eb', background: '#111', padding: '15px', borderLeft: '4px solid #ff1f01', borderRadius: '4px', whiteSpace: 'pre-line' }}>
+                    {event.prizes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Registration Card merged into Right Column */}
+            {!event.isTBD && (
               <div className="event-card-info">
                  {event.registrationStartDate && (
                   <p><strong>Starts:</strong> {new Date(event.registrationStartDate).toLocaleString()}</p>
@@ -290,8 +304,8 @@ const EventDetails = () => {
                   );
                 })()}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

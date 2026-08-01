@@ -24,7 +24,8 @@ const emptyForm = {
   startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
   maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
   customFormFields: [], eligibleBranches: [], eligibleYears: [],
-  ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']
+  ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
+  bannerURL: ''
 };
 const AdminEvents = () => {
   const { user, logout } = useAuth();
@@ -37,6 +38,8 @@ const AdminEvents = () => {
   const [form, setForm] = useState(emptyForm);
   const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
@@ -214,25 +217,44 @@ const AdminEvents = () => {
       endTime: form.isTBD && !form.endTime ? '2099-12-31T23:59' : form.endTime,
       registrationStartDate: form.isTBD && !form.registrationStartDate ? '2099-12-01T00:00' : (form.registrationStartDate || undefined),
       registrationDeadline: form.isTBD && !form.registrationDeadline ? '2099-12-30T23:59' : form.registrationDeadline,
-      rules: form.rules ? form.rules.split('\n').filter(Boolean) : [],
+      rules: form.rules ? (typeof form.rules === 'string' ? form.rules.split('\n').filter(Boolean) : form.rules) : [],
       maxTeamSize: Number(form.maxTeamSize),
       registrationFee: Number(form.registrationFee),
     };
     try {
       if (editingEvent) {
         await eventService.update(editingEvent._id, payload);
-        showToast('Event updated!');
+        showToast('Event updated successfully');
       } else {
         await eventService.create(payload);
-        showToast('Event created!');
-        localStorage.removeItem('mechapef_adminEventFormDraft');
-        setForm(emptyForm);
+        showToast('Event created successfully');
       }
       setShowModal(false);
+      localStorage.removeItem('mechapef_adminEventFormDraft');
       fetchEvents();
+    } catch (err) { showToast(err.response?.data?.message || 'Failed to save', 'error'); }
+    finally { setSubmitting(false); }
+  };
+
+  const handleBannerUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    setUploadingBanner(true);
+    try {
+      const uploadRes = await api.post('/upload/image', formData, { 
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      f('bannerURL', uploadRes.data.data.url);
+      showToast('Poster uploaded successfully');
     } catch (err) {
-      showToast(err.response?.data?.message || 'Error saving event', 'error');
-    } finally { setSubmitting(false); }
+      showToast('Error uploading poster', 'error');
+    } finally {
+      setUploadingBanner(false);
+    }
   };
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -365,7 +387,24 @@ const AdminEvents = () => {
           <div className="modal-box" onClick={e => e.stopPropagation()}>
             <h2>{editingEvent ? 'Edit Event' : 'Create Event'}</h2>
             <form onSubmit={handleSubmit}>
-              <div className="form-grid">
+              <div className="admin-form-grid">
+                <div className="form-group full" style={{ marginBottom: '20px' }}>
+                  <label>Event Poster (1:1 Aspect Ratio Recommended)</label>
+                  {form.bannerURL && (
+                    <div style={{ marginBottom: '10px' }}>
+                      <img src={form.bannerURL} alt="Poster preview" style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #333' }} />
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input type="file" accept="image/*" id="bannerUpload" style={{ display: 'none' }} onChange={handleBannerUpload} disabled={uploadingBanner} />
+                    <label htmlFor="bannerUpload" className="btn-secondary" style={{ cursor: uploadingBanner ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 15px', margin: 0 }}>
+                      <FaImage /> {uploadingBanner ? 'Uploading...' : 'Upload Poster'}
+                    </label>
+                    {form.bannerURL && (
+                      <button type="button" onClick={() => f('bannerURL', '')} className="btn-danger" style={{ padding: '10px 15px' }}>Remove</button>
+                    )}
+                  </div>
+                </div>
                 <div className="form-group full">
                   <label>Title *</label>
                   <input value={form.title} onChange={e => f('title', e.target.value)} required placeholder="Event title" />

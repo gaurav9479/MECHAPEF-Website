@@ -8,6 +8,7 @@ import {
   FaTimes,
   FaUserCircle,
   FaQrcode,
+  FaBell,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
@@ -35,8 +36,15 @@ const TopNavbar = () => {
   const [showNotices, setShowNotices] = useState(false);
   const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
   const [specialSponsor, setSpecialSponsor] = useState(null);
+  const [hasProjects, setHasProjects] = useState(false);
 
   useEffect(() => {
+    // Check for active projects
+    apiGetCached('/projects/active', (data) => {
+      const activeProjects = data.data?.projects || [];
+      setHasProjects(activeProjects.length > 0);
+    }).catch(() => {});
+
     apiGetCached('/announcements', (data) => {
       const items = data.data?.announcements || data.data || [];
       const active = items.filter(n => n.isActive);
@@ -191,6 +199,29 @@ const TopNavbar = () => {
     setAvatarMenuOpen((prev) => !prev);
   };
 
+  const renderBell = () => (
+    <div 
+      className="notice-bell-btn" 
+      onClick={() => { setMenuOpen(false); setShowNotices(true); }}
+      style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', flexShrink: 0 }}
+      title="Notice Board"
+    >
+      <FaBell style={{ fontSize: '1.2rem', color: '#ff1f01' }} />
+      {hasUnreadNotice && (
+        <span style={{
+          position: 'absolute',
+          top: '8px',
+          right: '8px',
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          background: '#ffff00',
+          boxShadow: '0 0 5px #ffff00'
+        }} />
+      )}
+    </div>
+  );
+
   const scrollToSection = (vhMultiplier, id) => {
     handleNavClick("/", () => {
       const mobile = window.innerWidth <= 768;
@@ -302,6 +333,15 @@ const TopNavbar = () => {
             <span>Sponsors</span>
           </li>
 
+          {hasProjects && (
+            <li className={(location.pathname.startsWith("/projects") || (location.pathname === "/" && activeIndex === 6)) ? "active" : ""} onClick={() => handleNavClick("/projects")}>
+              {(location.pathname.startsWith("/projects") || (location.pathname === "/" && activeIndex === 6)) && (
+                <motion.div className="nav-sliding-pill" layoutId="navPillTop" transition={{ type: "spring", stiffness: 300, damping: 30 }} />
+              )}
+              <span>Projects</span>
+            </li>
+          )}
+
           <li className={(location.pathname === "/" && activeIndex === 5) ? "active" : ""} onClick={() => scrollToElement(window.innerWidth <= 768 ? "mh-team" : "our-team")}>
             {(location.pathname === "/" && activeIndex === 5) && (
               <motion.div className="nav-sliding-pill" layoutId="navPillTop" transition={{ type: "spring", stiffness: 300, damping: 30 }} />
@@ -309,27 +349,10 @@ const TopNavbar = () => {
             <span>Our Team</span>
           </li>
 
-          <li onClick={() => { setMenuOpen(false); setShowNotices(true); }}>
-            <span style={{ position: 'relative', display: 'inline-block' }}>
-              Notice Board
-              {hasUnreadNotice && (
-                <span style={{
-                  position: 'absolute',
-                  top: '0px',
-                  right: '-14px',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: '#ffff00',
-                  boxShadow: '0 0 5px #ffff00',
-                  display: 'inline-block'
-                }} title="New Notice" />
-              )}
-            </span>
-          </li>
-
-          <li className="mobile-only-btn">
-            {!user ? (
+          <li className="mobile-only-btn" style={{ width: '100%', marginTop: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', justifyContent: 'center', width: '100%' }}>
+              {renderBell()}
+              {!user ? (
               <MagneticButton className="contact-btn" onClick={handleAuth}>Login</MagneticButton>
             ) : (
               <div className="nav-avatar-container" ref={mobileRef}>
@@ -355,10 +378,12 @@ const TopNavbar = () => {
                 )}
               </div>
             )}
+            </div>
           </li>
         </ul>
 
-        <div className="desktop-only-btn">
+        <div className="desktop-only-btn" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {renderBell()}
           {!user ? (
             <MagneticButton className="contact-btn" onClick={handleAuth}>Login</MagneticButton>
           ) : (
