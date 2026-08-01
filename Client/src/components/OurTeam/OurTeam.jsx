@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { FaCog } from 'react-icons/fa';
 import api from '../../services/api';
 import { apiGetCached } from '../../utils/apiCache';
@@ -55,24 +56,13 @@ const TeamCard = ({ data, num, index, fallbackRole, isFinalYear, specialSponsor 
 
       <div className="card-img-placeholder">
         {data?.url ? (
-          <>
-            <img
-              src={getOptimizedImageUrl(data.url)}
-              alt={data.name || `Member ${num}`}
-              className="card-img"
-              loading="lazy"
-              decoding="async"
-            />
-            {/* Glitch overlay clone */}
-            <img
-              src={getOptimizedImageUrl(data.url)}
-              alt=""
-              aria-hidden="true"
-              className="card-img card-img-glitch"
-              loading="lazy"
-              decoding="async"
-            />
-          </>
+          <img
+            src={getOptimizedImageUrl(data.url)}
+            alt={data.name || `Member ${num}`}
+            className="card-img"
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <span className="placeholder-text">Image {num}</span>
         )}
@@ -150,6 +140,7 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap, specialSponsor }) => {
 
 /* ─── Main Section ──────────────────────────────────────────── */
 const OurTeam = () => {
+  const navigate = useNavigate();
   const [imagesMap, setImagesMap] = useState({});
   const [specialSponsor, setSpecialSponsor] = useState(null);
   const sectionRef = useRef(null);
@@ -250,10 +241,51 @@ const OurTeam = () => {
 
       {/* Scroll Container */}
       <div className="team-scroll-container">
-        <TeamLayer title="Notable Alumni"             sectionPrefix="team_al" imagesMap={imagesMap} specialSponsor={specialSponsor} />
+        {/* Homepage only renders Final Year Seniors */}
         <TeamLayer title="Final Year Seniors" sectionPrefix="team_ty" imagesMap={imagesMap} specialSponsor={specialSponsor} />
-        <TeamLayer title="Pre-final Year"     sectionPrefix="team_sy" imagesMap={imagesMap} specialSponsor={specialSponsor} />
-        <TeamLayer title="Second Year"        sectionPrefix="team_fy" imagesMap={imagesMap} specialSponsor={specialSponsor} />
+      </div>
+
+      {/* Meet the Entire Team Button */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40px', paddingBottom: '20px' }}>
+        <button
+          onClick={() => navigate('/team')}
+          className="meet-team-btn"
+          style={{
+            position: 'relative',
+            background: 'linear-gradient(135deg, #121212 0%, #1c1c1c 100%)',
+            color: '#fff',
+            border: '1px solid #ff1f01',
+            borderRadius: '4px',
+            padding: '12px 28px',
+            fontSize: '1rem',
+            fontFamily: 'Orbitron, sans-serif',
+            cursor: 'pointer',
+            overflow: 'hidden',
+            boxShadow: '0 0 15px rgba(255, 31, 1, 0.2)',
+            transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            zIndex: 10
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = '0 0 25px rgba(255, 31, 1, 0.5)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.background = '#ff1f01';
+            e.currentTarget.style.color = '#000';
+            e.currentTarget.style.fontWeight = 'bold';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 31, 1, 0.2)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, #121212 0%, #1c1c1c 100%)';
+            e.currentTarget.style.color = '#fff';
+            e.currentTarget.style.fontWeight = 'normal';
+          }}
+        >
+          <span>Meet the Entire Team</span>
+          <span style={{ fontSize: '1.2rem' }}>→</span>
+        </button>
       </div>
     </section>
   );

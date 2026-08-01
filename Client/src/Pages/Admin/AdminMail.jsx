@@ -134,7 +134,7 @@ const AdminMail = () => {
               >
                 <option value="all">All Registered Users</option>
                 <option value="super-admin">Super Admins Only</option>
-                <option value="content-lead">Content Leads Only</option>
+                <option value="event-lead">Event Leads Only</option>
                 <option value="media-lead">Media Leads Only</option>
                 <option value="member">Members Only</option>
                 <option value="custom_csv">Custom (Upload CSV)</option>

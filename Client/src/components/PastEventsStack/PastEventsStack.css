@@ -5,6 +5,7 @@
   width: 100%;
   overflow: hidden; /* Prevent horizontal scroll */
   z-index: 1;
+  padding: 0 !important;
 }
 
 .pe-gsap-container {
@@ -14,16 +15,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center; /* Center the wrapper flex child */
 }
 
 .pe-header {
   position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   text-align: center;
   z-index: 0;
+  pointer-events: none; /* Make sure click events pass through to cards */
 }
 
 .section-title {
@@ -32,7 +39,8 @@
   font-weight: 900;
   color: rgb(250, 250, 250); /* Watermark style */
   text-transform: uppercase;
-  margin-bottom: 0;
+  margin: 0;
+  line-height: 1;
   letter-spacing: 5px;
 }
 
@@ -41,17 +49,13 @@
 }
 
 .pe-gsap-cards-wrapper {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   width: 90%;
   max-width: 800px;
   height: 350px;
   display: flex;
   justify-content: center;
   z-index: 10;
-  /* GSAP will animate children inside here */
 }
 
 .pe-stack-card {
@@ -67,6 +71,9 @@
   box-shadow: 0 30px 60px rgba(0,0,0,0.4);
   transform-origin: top center;
   will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(100vh) scale(0.8);
+  pointer-events: none;
 }
 
 .pe-left {

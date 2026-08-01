@@ -172,7 +172,7 @@ const AdminScanner = () => {
       // Ignore cleanup error
     }
 
-    const target = user?.role === 'endorsed-volunteer' ? '/' : (user?.role === 'super-admin' || user?.role === 'content-lead' || user?.role === 'event-lead') ? '/admin' : '/';
+    const target = user?.role === 'endorsed-volunteer' ? '/' : (user?.role === 'super-admin' || user?.role === 'event-lead' || user?.role === 'media-lead') ? '/admin' : '/';
     window.location.href = target;
   };
 
