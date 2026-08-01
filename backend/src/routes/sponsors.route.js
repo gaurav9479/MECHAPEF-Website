@@ -13,28 +13,28 @@ router.get('/', sponsorController.getSponsors);
 router.put(
     '/config',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     configController.updateConfig
 );
 
 router.post(
     '/',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     sponsorController.createSponsor
 );
 
 router.put(
     '/:id',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     sponsorController.updateSponsor
 );
 
 router.delete(
     '/:id',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     sponsorController.deleteSponsor
 );
 

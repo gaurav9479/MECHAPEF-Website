@@ -21,7 +21,7 @@ router.delete(
 router.patch(
     '/:id/verify',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     registrationController.verifyRegistration
 );
 

@@ -11,14 +11,14 @@ router.get('/', teamController.getAllTeam);
 router.post(
     '/',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     teamController.createTeamMember
 );
 
 router.put(
     '/:id',
     authenticate,
-    checkRole(['super-admin', 'content-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
     teamController.updateTeamMember
 );
 

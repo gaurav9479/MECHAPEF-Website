@@ -16,7 +16,7 @@ router.get('/', getPastEvents);
 // Protected Content Management routes
 const adminAuth = [
     authenticate,
-    checkRole(['super-admin', 'content-lead'])
+    checkRole(['super-admin', 'content-lead', 'media-lead'])
 ];
 
 router.post('/', ...adminAuth, createPastEvent);
