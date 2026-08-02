@@ -396,7 +396,7 @@ const TopNavbar = () => {
           </li>
         </ul>
 
-        <div className="desktop-only-btn" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div className="desktop-only-btn">
           {renderBell()}
           {!user ? (
             <MagneticButton className="contact-btn" onClick={handleAuth}>Login</MagneticButton>

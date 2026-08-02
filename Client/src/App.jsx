@@ -85,7 +85,7 @@ const AnimatedRoutes = () => {
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/sponsors" element={<Sponsors />} />
         <Route path="/team" element={<Team />} />
-        <Route path="/projects" element={<Projects />} />
+        <Route path="/projects" element={<Navigate to="/" replace />} />
 
         {/* Profile */}
         <Route
