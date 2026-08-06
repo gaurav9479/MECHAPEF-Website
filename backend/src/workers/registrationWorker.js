@@ -2,6 +2,7 @@ import { Worker } from 'bullmq';
 import Registration from '../models/registration.model.js';
 import Event from '../models/event.model.js';
 import User from '../models/user.model.js';
+import { syncWithGoogleSheet } from '../utils/googleSheetsWebhook.js';
 
 let worker1 = null;
 let worker2 = null;
@@ -99,6 +100,12 @@ const createWorker = (queueName, redisConnection) => {
                 throw new Error('User already registered for this event');
             }
             throw error;
+        }
+
+        // Fetch User to send to webhook
+        const registererObj = await User.findById(registeredBy);
+        if (registererObj) {
+            syncWithGoogleSheet(registererObj, event.title, job.data);
         }
 
         // Atomic increment + addToSet in parallel

@@ -67,7 +67,7 @@ const Team = () => {
   const [loading, setLoading] = useState(true);
   
   // Filtering & Search states
-  const [activeTab, setActiveTab] = useState('team_al'); // 'team_al', 'team_ty', 'team_sy', 'team_fy'
+  const [activeTab, setActiveTab] = useState('team_ty'); // 'team_al', 'team_ty', 'team_sy', 'team_fy'
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchTeamData = () => {

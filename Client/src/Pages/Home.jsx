@@ -21,15 +21,13 @@ const Home = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [specialSponsorConfig, setSpecialSponsorConfig] = useState(null);
-  const [firstSectionReady, setFirstSectionReady] = useState(false);
-  const [loadStage, setLoadStage] = useState(0); 
-  // 0: Wait for sponsor config
+  const [loadStage, setLoadStage] = useState(1); 
   // 1: Render Hero & AboutUs. Start PastEvents fetch.
   // 2: PastEvents finished. Render OurDepartment & LiveEvents.
   // 3: Render OurTeam & rest of the page.
 
   useEffect(() => {
-    // 1. Fetch special sponsor config immediately to establish first section
+    // Fetch special sponsor config in the background without blocking the UI
     api.get('/special-sponsor/active').then(res => {
       if (res.data?.data) {
         const sp = res.data.data;
@@ -46,10 +44,6 @@ const Home = () => {
       }
     }).catch(err => {
       console.log('No active special sponsor or error fetching');
-    }).finally(() => {
-      // First section config is established
-      setFirstSectionReady(true);
-      setLoadStage(1);
     });
   }, []);
 
@@ -62,9 +56,7 @@ const Home = () => {
   }, [loadStage]);
 
   useEffect(() => {
-    if (!firstSectionReady) return;
-
-    // 2. Prefetch team images only AFTER the first section is established
+    // 2. Prefetch team images in the background
     apiGetCached('/upload/sections?device=desktop', (data) => {
       if (data?.data?.images) {
         data.data.images.forEach(img => {
@@ -83,7 +75,7 @@ const Home = () => {
         });
       }
     }, { cacheDuration: 2 * 60 * 60 * 1000 });
-  }, [firstSectionReady]);
+  }, []);
 
   useLayoutEffect(() => {
     if ('scrollRestoration' in history) {
@@ -162,7 +154,7 @@ const Home = () => {
       </div>
 
       {/* ── Mobile layout (hidden on desktop via CSS) ── */}
-      {firstSectionReady && <MobileHome />}
+      <MobileHome />
     </>
   );
 };
