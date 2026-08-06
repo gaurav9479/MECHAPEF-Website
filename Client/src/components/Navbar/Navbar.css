@@ -147,6 +147,9 @@
 }
 
 .desktop-only-btn {
+  display: flex;
+  align-items: center;
+  gap: 20px;
   margin-right: clamp(55px, 6vw, 90px); /* Shift profile button to left to avoid overlapping Notice Board string */
 }
 

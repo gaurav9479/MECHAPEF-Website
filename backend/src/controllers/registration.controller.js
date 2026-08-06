@@ -6,6 +6,7 @@ import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, REGISTRATION_TYPES } from '../constants/index.js';
 import { enqueueRegistration, isRegistrationQueueEnabled } from '../queues/registrationQueue.js';
+import { syncWithGoogleSheet } from '../utils/googleSheetsWebhook.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -33,6 +34,10 @@ const saveRegistrationDirectly = async (payload, eventTitle) => {
             { $addToSet: { participatedEventNames: eventTitle } }
         )
     ]);
+
+    // Send to Google Sheets webhook (fire and forget)
+    // The user data is available inside registration.registeredBy because it was populated above
+    syncWithGoogleSheet(registration.registeredBy, eventTitle, payload);
 
     return registration;
 };

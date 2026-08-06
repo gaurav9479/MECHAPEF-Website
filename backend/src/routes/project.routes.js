@@ -6,7 +6,7 @@ import {
     updateProject,
     deleteProject
 } from '../controllers/project.controller.js';
-import { verifyJWT, authorizeRoles } from '../middleware/auth.middleware.js';
+import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -14,8 +14,8 @@ const router = Router();
 router.route('/active').get(getActiveProjects);
 
 // Protected Admin Routes
-router.use(verifyJWT);
-router.use(authorizeRoles('super-admin', 'media-lead')); // Media Lead & Super Admin can manage projects
+router.use(authenticate);
+router.use(checkRole(['super-admin', 'media-lead'])); // Media Lead & Super Admin can manage projects
 
 router.route('/')
     .post(createProject)
