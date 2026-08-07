@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
-import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle, FaLink } from 'react-icons/fa';
 import api from '../../services/api';
 import { eventService } from '../../services/services';
 import './AdminDashboard.css';
@@ -56,6 +56,13 @@ const AdminEvents = () => {
       showToast(res.data?.message || 'Event deletion initiated. Awaiting approval from 2 more SuperAdmins.');
       fetchEvents();
     } catch (err) { showToast(err.response?.data?.message || 'Failed to initiate deletion', 'error'); }
+  };
+
+  const copyEventLink = (id) => {
+    const url = `${window.location.origin}/events/${id}`;
+    navigator.clipboard.writeText(url)
+      .then(() => showToast('Event link copied to clipboard!'))
+      .catch(() => showToast('Failed to copy link', 'error'));
   };
 
   const handleApproveDelete = async (id) => {
@@ -365,6 +372,14 @@ const AdminEvents = () => {
                         🧹
                       </button>
                     )}
+                    <button 
+                      className="btn-secondary" 
+                      title="Copy Public Link" 
+                      onClick={() => copyEventLink(ev._id)} 
+                      style={{padding:'6px 10px', color: '#00e5ff', borderColor: '#00e5ff'}}
+                    >
+                      <FaLink />
+                    </button>
                     <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{padding:'6px 10px'}}><FaUsers /></Link>
                     <button className="btn-secondary" style={{padding:'6px 10px'}} onClick={() => openEdit(ev)}><FaEdit /></button>
                     
