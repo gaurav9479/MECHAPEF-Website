@@ -471,6 +471,15 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
     }
 
     const customFieldsSet = new Set();
+    
+    // First add all defined custom form fields (questions asked in event config)
+    if (event.customFormFields && Array.isArray(event.customFormFields)) {
+        event.customFormFields.forEach(f => {
+            if (f.fieldName) customFieldsSet.add(f.fieldName);
+        });
+    }
+
+    // Also include any extra custom data keys found in registrations
     registrations.forEach(reg => {
         if (reg.customData) {
             Object.keys(reg.customData).forEach(key => customFieldsSet.add(key));
@@ -487,11 +496,44 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
         return str;
     };
 
-    let csvString = 'Name,Email,College Reg No,Phone Number,Branch,Year of Study,Registration Type,Team Name,Verified,';
-    csvString += customFields.join(',') + '\n';
+    const isDeadlinePassed = new Date() > new Date(event.registrationDeadline);
+    const maxMembers = (event.maxTeamSize && event.maxTeamSize > 1) ? (event.maxTeamSize - 1) : 0;
+
+    // Standard headers
+    let headers = [
+        'Leader Name',
+        'Leader Email',
+        'Leader College Reg No',
+        'Leader Phone Number',
+        'Leader Branch',
+        'Leader Year of Study',
+        'Registration Status',
+        'Registration Type',
+        'Team Name',
+        'Verified'
+    ];
+
+    // Add separate individual columns for each teammate slot
+    for (let i = 1; i <= maxMembers; i++) {
+        headers.push(`Teammate ${i + 1} Name`);
+        headers.push(`Teammate ${i + 1} Reg No`);
+        headers.push(`Teammate ${i + 1} Email`);
+    }
+
+    // Add custom form fields
+    headers = headers.concat(customFields);
+
+    let csvString = headers.map(escapeCSV).join(',') + '\n';
 
     registrations.forEach(reg => {
         const user = reg.registeredBy || {};
+        
+        // Confirmed members excluding leader
+        const confirmedMembers = reg.teamMembers?.filter(m => m.status === 'Confirmed') || [];
+
+        // If registration deadline has passed, unverified registrations are automatically considered Verified
+        const effectiveIsVerified = reg.isVerified || isDeadlinePassed;
+
         const row = [
             escapeCSV(user.name),
             escapeCSV(user.email),
@@ -499,13 +541,27 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
             escapeCSV(user.phoneNumber),
             escapeCSV(user.branch),
             escapeCSV(user.yearOfStudy),
+            escapeCSV(reg.registrationStatus || 'Confirmed'),
             escapeCSV(reg.registrationType),
             escapeCSV(reg.teamName),
-            escapeCSV(reg.isVerified ? 'Yes' : 'No')
+            escapeCSV(effectiveIsVerified ? 'Yes' : 'No')
         ];
 
+        // Fill individual columns for each teammate slot
+        for (let i = 0; i < maxMembers; i++) {
+            const member = confirmedMembers[i];
+            row.push(escapeCSV(member ? member.name : ''));
+            row.push(escapeCSV(member ? member.collegeRegNo : ''));
+            row.push(escapeCSV(member ? member.email : ''));
+        }
+
+        // Fill custom form fields answers
         customFields.forEach(field => {
-            row.push(escapeCSV(reg.customData ? reg.customData[field] : ''));
+            let val = reg.customData ? reg.customData[field] : '';
+            if (val && typeof val === 'object' && val.url) {
+                val = val.url; // Export uploaded file link directly
+            }
+            row.push(escapeCSV(val));
         });
 
         csvString += row.join(',') + '\n';
