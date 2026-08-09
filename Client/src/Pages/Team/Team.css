@@ -458,15 +458,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100px 0;
-  gap: 20px;
+  padding: 40px 0;
+  gap: 10px;
 }
 
 .loading-gear-spin {
-  font-size: 3.5rem;
+  font-size: 2rem;
   color: #ff1f01;
   filter: drop-shadow(0 0 10px rgba(255, 31, 1, 0.4));
-  animation: gearRotateSlow 3.5s linear infinite;
+  animation: gearRotateSlow 2s linear infinite;
 }
 
 .team-loading-state p {

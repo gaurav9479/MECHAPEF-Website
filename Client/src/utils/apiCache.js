@@ -1,7 +1,29 @@
 import api from '../services/api';
 import { preloadImage } from './imageOptimizer';
 
-const CACHE_DURATION_MS = 2 * 60 * 1000; // 2 minutes caching for images and data
+const getCacheDuration = (url, options) => {
+  if (options && options.cacheDuration !== undefined) return options.cacheDuration;
+
+  const urlLower = url.toLowerCase();
+
+  // Admin routes should not be cached
+  if (urlLower.includes('/auth/users') || urlLower.includes('admin')) {
+    return 0; 
+  }
+
+  // Team section: 2 hours
+  if (urlLower.includes('/team')) {
+    return 2 * 60 * 60 * 1000;
+  }
+
+  // Events, Announcements, Banners: 2 minutes
+  if (urlLower.includes('/events') || urlLower.includes('/announcements') || urlLower.includes('/upload/sections')) {
+    return 2 * 60 * 1000;
+  }
+
+  // Rest: 4 hours
+  return 4 * 60 * 60 * 1000;
+};
 
 // Global map to store ongoing requests and prevent duplicate concurrent API calls
 const pendingRequests = {};
@@ -46,7 +68,7 @@ export const apiGetCached = async (url, callback, options = {}) => {
       hasServedCache = true;
       
       // If cache is less than the duration old, skip the background fetch to avoid spamming the server on rapid reloads
-      const duration = options.cacheDuration || CACHE_DURATION_MS;
+      const duration = getCacheDuration(url, options);
       if (Date.now() - parsed.timestamp < duration) {
         return;
       }

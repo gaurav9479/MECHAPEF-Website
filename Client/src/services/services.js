@@ -62,6 +62,8 @@ export const eventService = {
   delete: (id) => api.delete(`/events/${id}`),
   getStats: (id) => api.get(`/events/${id}/stats`),
   register: (eventId, data) => api.post(`/events/${eventId}/register`, data),
+  searchTeams: (eventId, query) => api.get(`/events/${eventId}/teams`, { params: { query } }),
+  checkUser: (eventId, regNo) => api.get(`/events/${eventId}/check-user/${regNo}`),
   getRegistrations: (eventId) => api.get(`/events/${eventId}/registrations`),
   markAttendance: (registrationId, data) => api.put(`/registrations/${registrationId}/attendance`, data),
   wipeData: (id) => api.delete(`/events/${id}/wipe-data`),
@@ -70,6 +72,8 @@ export const eventService = {
 export const registrationService = {
   getMyRegistrations: () => api.get('/registrations/my-registrations'),
   cancel: (id) => api.delete(`/registrations/${id}`),
+  requestJoin: (id, data) => api.post(`/registrations/${id}/request-join`, data),
+  respondJoin: (id, data) => api.post(`/registrations/${id}/respond-join`, data),
 };
 
 export const teamService = {

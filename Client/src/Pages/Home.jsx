@@ -74,7 +74,7 @@ const Home = () => {
           }
         });
       }
-    }, { cacheDuration: 2 * 60 * 60 * 1000 });
+    }, { cacheDuration: 0 });
   }, []);
 
   useLayoutEffect(() => {
