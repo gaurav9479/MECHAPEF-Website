@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { MagazineTransitionProvider } from './context/MagazineTransitionContext';
+import { useEffect } from 'react';
+import { apiGetCached } from './utils/apiCache';
 import './App.css';
 
 import Home from './Pages/Home';
@@ -347,6 +349,24 @@ const AnimatedRoutes = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // 1. High Priority Pre-fetching (Home Page Data)
+    // Instantly triggers background network requests so they are in cache by the time components mount
+    apiGetCached('/upload/sections?device=desktop', () => {});
+    apiGetCached('/events', () => {});
+    apiGetCached('/announcements', () => {});
+    apiGetCached('/sponsors/special', () => {});
+
+    // 2. Low Priority Pre-fetching (Other Heavy Pages)
+    // Delayed by 2 seconds so they don't compete with the initial Home page load
+    setTimeout(() => {
+      apiGetCached('/sponsors', () => {});
+      apiGetCached('/team', () => {});
+      apiGetCached('/past-events', () => {});
+      apiGetCached('/gallery/albums', () => {});
+    }, 2000);
+  }, []);
+
   return (
     <AuthProvider>
       <MagazineTransitionProvider>
