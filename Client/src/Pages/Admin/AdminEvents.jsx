@@ -22,7 +22,7 @@ const BRANCHES = [
 const emptyForm = {
   title: '', description: '', category: 'Mechapef-Event',
   startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
-  maxTeamSize: 1, registrationMode: 'Standard', registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
+  maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
   customFormFields: [], eligibleBranches: [], eligibleYears: [],
   ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
   bannerURL: ''
@@ -171,7 +171,7 @@ const AdminEvents = () => {
       endTime: formatLocal(ev.endTime),
       registrationStartDate: formatLocal(ev.registrationStartDate),
       registrationDeadline: formatLocal(ev.registrationDeadline),
-      maxTeamSize: ev.maxTeamSize, registrationMode: ev.registrationMode || 'Standard',
+      maxTeamSize: ev.maxTeamSize,
       registrationFee: ev.registrationFee,
       featured: ev.featured, isTBD: ev.isTBD || false,
       rules: Array.isArray(ev.rules) ? ev.rules.join('\n') : '',
@@ -227,7 +227,6 @@ const AdminEvents = () => {
       registrationDeadline: form.isTBD && !form.registrationDeadline ? '2099-12-30T23:59' : form.registrationDeadline,
       rules: form.rules ? (typeof form.rules === 'string' ? form.rules.split('\n').filter(Boolean) : form.rules) : [],
       maxTeamSize: Number(form.maxTeamSize),
-      registrationMode: form.registrationMode,
       registrationFee: Number(form.registrationFee),
     };
     try {
@@ -469,15 +468,6 @@ const AdminEvents = () => {
                   <label>Max Team Size</label>
                   <input type="number" min="1" value={form.maxTeamSize} onChange={e => f('maxTeamSize', e.target.value)} />
                 </div>
-                {form.maxTeamSize > 1 && (
-                   <div className="form-group">
-                     <label>Registration Mode</label>
-                     <select value={form.registrationMode} onChange={e => f('registrationMode', e.target.value)}>
-                       <option value="Standard">Type 1 (Leader registers all)</option>
-                       <option value="JoinRequests">Type 2 (Members search and join)</option>
-                     </select>
-                   </div>
-                )}
                 <div className="form-group">
                   <label>Registration Fee (₹)</label>
                   <input type="number" min="0" value={form.registrationFee} onChange={e => f('registrationFee', e.target.value)} />
