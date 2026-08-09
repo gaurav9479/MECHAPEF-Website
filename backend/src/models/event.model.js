@@ -181,6 +181,13 @@ const eventSchema = new mongoose.Schema(
             default: ['Stage 1: Check-in']
         },
 
+        // Standard = leader adds members. JoinRequests = members search and send join requests
+        registrationMode: {
+            type: String,
+            enum: ['Standard', 'JoinRequests'],
+            default: 'Standard'
+        },
+
         isActive: {
             type: Boolean,
             default: true
