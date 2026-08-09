@@ -11,21 +11,21 @@ router.get('/', announcementController.getAnnouncements);
 router.post(
     '/',
     authenticate,
-    checkRole(['super-admin', 'content-lead', 'media-lead']),
+    checkRole(['super-admin', 'content-lead']),
     announcementController.createAnnouncement
 );
 
 router.put(
     '/:id',
     authenticate,
-    checkRole(['super-admin', 'content-lead', 'media-lead']),
+    checkRole(['super-admin', 'content-lead']),
     announcementController.updateAnnouncement
 );
 
 router.delete(
     '/:id',
     authenticate,
-    checkRole(['super-admin', 'content-lead', 'media-lead']),
+    checkRole(['super-admin', 'content-lead']),
     announcementController.deleteAnnouncement
 );
 

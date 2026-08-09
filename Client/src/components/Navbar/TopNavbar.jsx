@@ -132,41 +132,27 @@ const TopNavbar = () => {
 
       setIsScrolled(y > vh * 0.8);
 
-      if (location.pathname !== "/") return;
+      let index = 0;
+      const teamEl = document.getElementById("our-team");
+      const teamTop = teamEl ? teamEl.getBoundingClientRect().top : Infinity;
+      const sponsorsEl = document.querySelector(".past-sponsors-home-section");
+      const sponsorsTop = sponsorsEl ? sponsorsEl.getBoundingClientRect().top : Infinity;
 
-      const getTop = (selectors) => {
-        for (const selector of selectors) {
-          const el = document.querySelector(selector);
-          if (el) return el.getBoundingClientRect().top;
-        }
-        return Infinity;
-      };
+      if (sponsorsTop <= vh * 0.5) {
+        index = 4; // Sponsors
+      } else if (teamTop <= vh * 0.5) {
+        index = 5; // Our Team
+      } else if (y < vh * 1.5) {
+        index = 0; // Home
+      } else if (y < vh * 5.5) {
+        index = 1; // About
+      } else if (y < vh * 10.5) {
+        index = 2; // Events
+      } else {
+        index = 3; // Gallery
+      }
 
-      const aboutTop = getTop(["#about-us", ".mobile-about"]);
-      const eventsTop = getTop(["#live-events", "#past-events", ".mh-events-section", ".mobile-live-events"]);
-      const sponsorsTop = getTop(["#sponsors", ".past-sponsors-home-section", ".mh-sponsors"]);
-      const teamTop = getTop(["#our-team", ".mh-team"]);
-
-      const threshold = vh * 0.4;
-
-      const sections = [
-        { index: 1, top: aboutTop },
-        { index: 2, top: eventsTop },
-        { index: 4, top: sponsorsTop },
-        { index: 5, top: teamTop }
-      ];
-
-      let activeIdx = 0; // Default to Home
-      let maxTop = -Infinity;
-
-      sections.forEach(sec => {
-        if (sec.top <= threshold && sec.top > maxTop && sec.top !== Infinity) {
-          maxTop = sec.top;
-          activeIdx = sec.index;
-        }
-      });
-
-      setActiveIndex(activeIdx);
+      setActiveIndex(index);
     };
 
     window.addEventListener("scroll", handleScroll);

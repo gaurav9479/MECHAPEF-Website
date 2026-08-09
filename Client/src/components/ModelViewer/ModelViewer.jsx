@@ -1,35 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import './ModelViewer.css';
 
 const ModelViewer = ({ src, alt = '3D Model', autoRotate = true, cameraControls = true, shadowIntensity = 1 }) => {
   const [loading, setLoading] = useState(true);
-  const viewerRef = useRef(null);
 
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer) return;
+  const handleLoad = () => {
+    setLoading(false);
+  };
 
-    const handleLoad = () => {
-      setLoading(false);
-    };
-
-    const handleError = () => {
-      setLoading(false);
-    };
-
-    viewer.addEventListener('load', handleLoad);
-    viewer.addEventListener('error', handleError);
-
-    // Safety fallback: check if already loaded (e.g. from browser cache)
-    if (viewer.loaded) {
-      setLoading(false);
-    }
-
-    return () => {
-      viewer.removeEventListener('load', handleLoad);
-      viewer.removeEventListener('error', handleError);
-    };
-  }, [src]);
+  const handleError = () => {
+    setLoading(false);
+  };
 
   return (
     <div className="model-viewer-container">
@@ -40,8 +21,11 @@ const ModelViewer = ({ src, alt = '3D Model', autoRotate = true, cameraControls 
         </div>
       )}
       
+      {/* 
+        Using standard HTML elements since model-viewer is a web component registered globally.
+        We must ignore React's warnings about non-standard attributes if any, or just use lowercase.
+      */}
       <model-viewer
-        ref={viewerRef}
         src={src}
         alt={alt}
         auto-rotate={autoRotate ? 'true' : undefined}
@@ -49,6 +33,8 @@ const ModelViewer = ({ src, alt = '3D Model', autoRotate = true, cameraControls 
         shadow-intensity={shadowIntensity}
         exposure="1"
         environment-image="neutral"
+        onLoad={handleLoad}
+        onError={handleError}
         style={{ width: '100%', height: '100%', outline: 'none' }}
       >
       </model-viewer>

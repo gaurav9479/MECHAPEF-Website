@@ -7,7 +7,7 @@ import {
 import * as FaIcons from 'react-icons/fa';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
-import { sponsorService, sponsorConfigService } from '../../services/services';
+import { apiGetCached } from '../../utils/apiCache';
 import './Sponsors.css';
 
 const fallbackSponsors = [
@@ -162,23 +162,39 @@ const Sponsors = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
 
-    Promise.all([
-      sponsorService.getAll(),
-      sponsorConfigService.getConfig()
-    ]).then(([sponsorsRes, configRes]) => {
-      const data = sponsorsRes.data.data?.sponsors || sponsorsRes.data.data || [];
-      const activeSponsors = data
+    let sponsorsLoaded = false;
+    let configLoaded = false;
+
+    const checkLoading = () => {
+      if (sponsorsLoaded && configLoaded) setLoading(false);
+    };
+
+    apiGetCached('/sponsors', (data) => {
+      const spData = data.data?.sponsors || data.data || [];
+      const activeSponsors = spData
         .filter(sponsor => sponsor.isActive !== false || sponsor.isPastSponsor)
         .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setSponsors(activeSponsors);
+      sponsorsLoaded = true;
+      checkLoading();
+    }, { cacheDuration: 0 }).catch(() => {
+      setSponsors([]);
+      sponsorsLoaded = true;
+      checkLoading();
+    });
 
-      const configData = configRes.data.data || { tiers: [], deliverables: [] };
+    apiGetCached('/sponsor-config', (data) => {
+      const configData = data.data || { tiers: [], deliverables: [] };
       configData.tiers.sort((a, b) => a.order - b.order);
       configData.deliverables.sort((a, b) => a.order - b.order);
       setConfig(configData);
-    })
-      .catch(() => setSponsors([]))
-      .finally(() => setLoading(false));
+      configLoaded = true;
+      checkLoading();
+    }, { cacheDuration: 0 }).catch(() => {
+      configLoaded = true;
+      checkLoading();
+    });
+
   }, []);
 
   const visibleSponsors = sponsors.length > 0 ? sponsors : fallbackSponsors;

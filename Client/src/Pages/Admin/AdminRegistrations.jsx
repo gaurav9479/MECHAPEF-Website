@@ -4,7 +4,7 @@ import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import { eventService } from '../../services/services';
 import api from '../../services/api';
 import './AdminDashboard.css';
-import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaDownload, FaEye } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaDownload, FaEye, FaTrash } from 'react-icons/fa';
 
 const AdminRegistrations = () => {
   const { eventId } = useParams();
@@ -48,6 +48,18 @@ const AdminRegistrations = () => {
       setRegistrations(prev => prev.map(r => r._id === regId ? { ...r, isVerified: !currentStatus } : r));
     } catch (err) {
       showToast('Failed to verify', 'error');
+    }
+  };
+
+  const handleKickTeam = async (regId) => {
+    if (window.confirm("Are you sure you want to completely remove this registration? This action cannot be undone.")) {
+      try {
+        await api.delete(`/registrations/${regId}`);
+        showToast('Registration deleted successfully!');
+        setRegistrations(prev => prev.filter(r => r._id !== regId));
+      } catch (err) {
+        showToast('Failed to delete registration', 'error');
+      }
     }
   };
 
@@ -134,6 +146,14 @@ const AdminRegistrations = () => {
                         onClick={() => handleVerify(reg._id, reg.isVerified)}
                       >
                         {reg.isVerified ? 'Unverify' : 'Verify'}
+                      </button>
+                      <button
+                        className="btn-danger"
+                        style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                        onClick={() => handleKickTeam(reg._id)}
+                        title="Delete Registration"
+                      >
+                        <FaTrash /> Kick
                       </button>
                     </td>
                   </tr>

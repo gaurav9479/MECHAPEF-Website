@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
-import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle, FaLink } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages, FaImage, FaCheckCircle, FaLink } from 'react-icons/fa';
 import api from '../../services/api';
 import { eventService } from '../../services/services';
 import './AdminDashboard.css';
@@ -22,7 +22,7 @@ const BRANCHES = [
 const emptyForm = {
   title: '', description: '', category: 'Mechapef-Event',
   startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
-  maxTeamSize: 1, registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
+  maxTeamSize: 1, registrationMode: 'Standard', registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
   customFormFields: [], eligibleBranches: [], eligibleYears: [],
   ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
   bannerURL: ''
@@ -56,13 +56,6 @@ const AdminEvents = () => {
       showToast(res.data?.message || 'Event deletion initiated. Awaiting approval from 2 more SuperAdmins.');
       fetchEvents();
     } catch (err) { showToast(err.response?.data?.message || 'Failed to initiate deletion', 'error'); }
-  };
-
-  const copyEventLink = (id) => {
-    const url = `${window.location.origin}/events/${id}`;
-    navigator.clipboard.writeText(url)
-      .then(() => showToast('Event link copied to clipboard!'))
-      .catch(() => showToast('Failed to copy link', 'error'));
   };
 
   const handleApproveDelete = async (id) => {
@@ -162,16 +155,24 @@ const AdminEvents = () => {
     }
     setShowModal(true);
   };
+  const formatLocal = (isoString) => {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '';
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  };
+
   const openEdit = (ev) => {
     setEditingEvent(ev);
     setForm({
       title: ev.title, description: ev.description,
       category: ev.category, venue: ev.venue,
-      startTime: ev.startTime?.slice(0, 16),
-      endTime: ev.endTime?.slice(0, 16),
-      registrationStartDate: ev.registrationStartDate?.slice(0, 16) || '',
-      registrationDeadline: ev.registrationDeadline?.slice(0, 16),
-      maxTeamSize: ev.maxTeamSize, registrationFee: ev.registrationFee,
+      startTime: formatLocal(ev.startTime),
+      endTime: formatLocal(ev.endTime),
+      registrationStartDate: formatLocal(ev.registrationStartDate),
+      registrationDeadline: formatLocal(ev.registrationDeadline),
+      maxTeamSize: ev.maxTeamSize, registrationMode: ev.registrationMode || 'Standard',
+      registrationFee: ev.registrationFee,
       featured: ev.featured, isTBD: ev.isTBD || false,
       rules: Array.isArray(ev.rules) ? ev.rules.join('\n') : '',
       prizes: ev.prizes || '',
@@ -226,6 +227,7 @@ const AdminEvents = () => {
       registrationDeadline: form.isTBD && !form.registrationDeadline ? '2099-12-30T23:59' : form.registrationDeadline,
       rules: form.rules ? (typeof form.rules === 'string' ? form.rules.split('\n').filter(Boolean) : form.rules) : [],
       maxTeamSize: Number(form.maxTeamSize),
+      registrationMode: form.registrationMode,
       registrationFee: Number(form.registrationFee),
     };
     try {
@@ -328,67 +330,76 @@ const AdminEvents = () => {
                       </span>
                     )}
                   </td>
-                  <td style={{display:'flex', gap:'8px', alignItems: 'center', flexWrap: 'wrap'}}>
-                    {/* Multi-Sig Approval & Deletion Action Controls */}
-                    {ev.deletionState?.status === 'PENDING_APPROVAL' && user?.role === 'super-admin' && (
-                      <>
-                        <button
-                          className="btn-primary"
-                          title="Cast SuperAdmin Vote to Approve Deletion"
-                          onClick={() => handleApproveDelete(ev._id)}
-                          style={{ padding: '4px 10px', fontSize: '0.78rem', background: '#00c864', color: '#000', fontWeight: 'bold' }}
-                        >
-                          ✓ Approve Deletion
-                        </button>
-                        <button
-                          className="btn-secondary"
-                          title="Cancel Deletion Request"
-                          onClick={() => handleCancelDelete(ev._id)}
-                          style={{ padding: '4px 8px', fontSize: '0.78rem' }}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    )}
-
-                    {ev.deletionState?.status === 'APPROVED_RETENTION' && user?.role === 'super-admin' && (
-                      <button
-                        className="btn-secondary"
-                        title="Restore Event before 7-day purge"
-                        onClick={() => handleCancelDelete(ev._id)}
-                        style={{ padding: '4px 10px', fontSize: '0.78rem', color: '#00e5ff', borderColor: '#00e5ff' }}
-                      >
-                        🔄 Restore Event
-                      </button>
-                    )}
-
-                    {ev.status !== 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
-                      <button className="btn-secondary" title="End Event" onClick={() => handleEndEvent(ev._id)} style={{padding:'6px 10px'}}>
-                        <FaCheckCircle style={{color: '#ffaa00'}} />
-                      </button>
-                    )}
-                    {ev.status === 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
-                      <button className="btn-danger" title="Wipe Form Data & Files" onClick={() => handleWipeData(ev._id)} style={{padding:'6px 10px'}}>
-                        🧹
-                      </button>
-                    )}
-                    <button 
-                      className="btn-secondary" 
-                      title="Copy Public Link" 
-                      onClick={() => copyEventLink(ev._id)} 
-                      style={{padding:'6px 10px', color: '#00e5ff', borderColor: '#00e5ff'}}
-                    >
-                      <FaLink />
-                    </button>
-                    <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{padding:'6px 10px'}}><FaUsers /></Link>
-                    <button className="btn-secondary" style={{padding:'6px 10px'}} onClick={() => openEdit(ev)}><FaEdit /></button>
+                  <td style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
                     
-                    {/* ONLY SuperAdmin can see/trigger event deletion */}
-                    {user?.role === 'super-admin' && ev.deletionState?.status === 'ACTIVE' && (
-                      <button className="btn-danger" title="List Event for Multi-Sig Deletion" style={{padding:'6px 10px'}} onClick={() => handleDelete(ev._id)}>
-                        <FaTrash />
-                      </button>
+                    {/* Deletion Actions Row */}
+                    {(ev.deletionState?.status === 'PENDING_APPROVAL' || ev.deletionState?.status === 'APPROVED_RETENTION') && user?.role === 'super-admin' && (
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {ev.deletionState?.status === 'PENDING_APPROVAL' && (
+                          <>
+                            {ev.deletionState.approvals?.some(a => (a.approvedBy?._id || a.approvedBy) === user?._id) ? (
+                              <button
+                                className="btn-primary"
+                                disabled
+                                style={{ padding: '4px 10px', fontSize: '0.78rem', background: '#333', color: '#888', fontWeight: 'bold', cursor: 'not-allowed', border: '1px solid #555' }}
+                              >
+                                ✓ Vote Cast (Waiting on others)
+                              </button>
+                            ) : (
+                              <button
+                                className="btn-primary"
+                                title="Cast SuperAdmin Vote to Approve Deletion"
+                                onClick={() => handleApproveDelete(ev._id)}
+                                style={{ padding: '4px 10px', fontSize: '0.78rem', background: '#00c864', color: '#000', fontWeight: 'bold' }}
+                              >
+                                ✓ Approve Deletion
+                              </button>
+                            )}
+                            <button
+                              className="btn-secondary"
+                              title="Cancel Deletion Request"
+                              onClick={() => handleCancelDelete(ev._id)}
+                              style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                        {ev.deletionState?.status === 'APPROVED_RETENTION' && (
+                          <button
+                            className="btn-secondary"
+                            title="Restore Event before 7-day purge"
+                            onClick={() => handleCancelDelete(ev._id)}
+                            style={{ padding: '4px 10px', fontSize: '0.78rem', color: '#00e5ff', borderColor: '#00e5ff' }}
+                          >
+                            🔄 Restore Event
+                          </button>
+                        )}
+                      </div>
                     )}
+
+                    {/* Standard Actions Row */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {ev.status !== 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
+                        <button className="btn-secondary" title="End Event" onClick={() => handleEndEvent(ev._id)} style={{padding:'6px 10px'}}>
+                          <FaCheckCircle style={{color: '#ffaa00'}} />
+                        </button>
+                      )}
+                      {ev.status === 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
+                        <button className="btn-danger" title="Wipe Form Data & Files" onClick={() => handleWipeData(ev._id)} style={{padding:'6px 10px'}}>
+                          🧹
+                        </button>
+                      )}
+                      <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{padding:'6px 10px'}}><FaUsers /></Link>
+                      <button className="btn-secondary" style={{padding:'6px 10px'}} onClick={() => openEdit(ev)}><FaEdit /></button>
+                      
+                      {/* ONLY SuperAdmin can see/trigger event deletion */}
+                      {user?.role === 'super-admin' && ev.deletionState?.status === 'ACTIVE' && (
+                        <button className="btn-secondary" title="Initiate Multi-Sig Deletion" onClick={() => handleDelete(ev._id)} style={{padding:'6px 10px', color:'#ff1f01', borderColor:'#ff1f01'}}>
+                          <FaTrash />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -458,6 +469,15 @@ const AdminEvents = () => {
                   <label>Max Team Size</label>
                   <input type="number" min="1" value={form.maxTeamSize} onChange={e => f('maxTeamSize', e.target.value)} />
                 </div>
+                {form.maxTeamSize > 1 && (
+                   <div className="form-group">
+                     <label>Registration Mode</label>
+                     <select value={form.registrationMode} onChange={e => f('registrationMode', e.target.value)}>
+                       <option value="Standard">Type 1 (Leader registers all)</option>
+                       <option value="JoinRequests">Type 2 (Members search and join)</option>
+                     </select>
+                   </div>
+                )}
                 <div className="form-group">
                   <label>Registration Fee (₹)</label>
                   <input type="number" min="0" value={form.registrationFee} onChange={e => f('registrationFee', e.target.value)} />

@@ -22,7 +22,7 @@ const OurDepartment = () => {
         });
       }
       setImagesMap(imgMap);
-    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(error => {
+    }, { cacheDuration: 0 }).catch(error => {
       console.error("Failed to load section images:", error);
     });
   };

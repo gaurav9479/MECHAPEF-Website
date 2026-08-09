@@ -87,7 +87,7 @@ const MobileHome = () => {
         .map(k => map[k].imageURL);
         
       setDeptImages(dImgs);
-    }, { cacheDuration: 2 * 60 * 60 * 1000 }).catch(() => {});
+    }, { cacheDuration: 0 }).catch(() => {});
   }, []);
 
   return (
