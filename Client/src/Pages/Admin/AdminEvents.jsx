@@ -308,20 +308,20 @@ const AdminEvents = () => {
                   <td>{ev.isTBD && ev.venue === 'TBD' ? 'TBD' : ev.venue}</td>
                   <td>
                     {ev.deletionState?.status === 'PENDING_APPROVAL' ? (
-                      <span className="tag" style={{ background: 'rgba(255, 170, 0, 0.2)', color: '#ffaa00', border: '1px solid #ffaa00' }}>
+                      <span className="tag" style={{ background: 'rgba(255, 170, 0, 0.2)', color: '#ffaa00', border: '1px solid #ffaa00', whiteSpace: 'nowrap' }}>
                         ⚠️ DELETION PENDING ({ev.deletionState.approvals?.length || 1}/3 Votes)
                       </span>
                     ) : ev.deletionState?.status === 'APPROVED_RETENTION' ? (
-                      <span className="tag" style={{ background: 'rgba(255, 31, 1, 0.2)', color: '#ff4444', border: '1px solid #ff4444' }}>
+                      <span className="tag" style={{ background: 'rgba(255, 31, 1, 0.2)', color: '#ff4444', border: '1px solid #ff4444', whiteSpace: 'nowrap' }}>
                         ⏳ VANISHES IN 7 DAYS ({ev.deletionState.vanishAt ? new Date(ev.deletionState.vanishAt).toLocaleDateString() : 'Queued'})
                       </span>
                     ) : (
-                      <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`}>
+                      <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`} style={{ whiteSpace: 'nowrap' }}>
                         {ev.status || 'Upcoming'}
                       </span>
                     )}
                   </td>
-                  <td style={{display:'flex', gap:'8px', alignItems: 'center', flexWrap: 'wrap'}}>
+                  <td style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end', whiteSpace: 'nowrap', flexWrap: 'nowrap' }}>
                     {/* Multi-Sig Approval & Deletion Action Controls */}
                     {ev.deletionState?.status === 'PENDING_APPROVAL' && user?.role === 'super-admin' && (
                       <>
@@ -329,7 +329,7 @@ const AdminEvents = () => {
                           className="btn-primary"
                           title="Cast SuperAdmin Vote to Approve Deletion"
                           onClick={() => handleApproveDelete(ev._id)}
-                          style={{ padding: '4px 10px', fontSize: '0.78rem', background: '#00c864', color: '#000', fontWeight: 'bold' }}
+                          style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#00c864', color: '#000', fontWeight: 'bold', whiteSpace: 'nowrap' }}
                         >
                           ✓ Approve Deletion
                         </button>
@@ -337,7 +337,7 @@ const AdminEvents = () => {
                           className="btn-secondary"
                           title="Cancel Deletion Request"
                           onClick={() => handleCancelDelete(ev._id)}
-                          style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                          style={{ padding: '6px 12px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}
                         >
                           Cancel
                         </button>
