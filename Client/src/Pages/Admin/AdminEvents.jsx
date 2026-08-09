@@ -317,15 +317,15 @@ const AdminEvents = () => {
                   <td>{ev.isTBD && ev.venue === 'TBD' ? 'TBD' : ev.venue}</td>
                   <td>
                     {ev.deletionState?.status === 'PENDING_APPROVAL' ? (
-                      <span className="tag" style={{ background: 'rgba(255, 170, 0, 0.2)', color: '#ffaa00', border: '1px solid #ffaa00' }}>
+                      <span className="tag" style={{ background: 'rgba(255, 170, 0, 0.2)', color: '#ffaa00', border: '1px solid #ffaa00', whiteSpace: 'nowrap' }}>
                         ⚠️ DELETION PENDING ({ev.deletionState.approvals?.length || 1}/3 Votes)
                       </span>
                     ) : ev.deletionState?.status === 'APPROVED_RETENTION' ? (
-                      <span className="tag" style={{ background: 'rgba(255, 31, 1, 0.2)', color: '#ff4444', border: '1px solid #ff4444' }}>
+                      <span className="tag" style={{ background: 'rgba(255, 31, 1, 0.2)', color: '#ff4444', border: '1px solid #ff4444', whiteSpace: 'nowrap' }}>
                         ⏳ VANISHES IN 7 DAYS ({ev.deletionState.vanishAt ? new Date(ev.deletionState.vanishAt).toLocaleDateString() : 'Queued'})
                       </span>
                     ) : (
-                      <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`}>
+                      <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`} style={{ whiteSpace: 'nowrap' }}>
                         {ev.status || 'Upcoming'}
                       </span>
                     )}

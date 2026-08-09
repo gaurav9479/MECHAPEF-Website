@@ -225,6 +225,8 @@
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 0.8rem;
+  white-space: nowrap;
+  display: inline-block;
 }
 .table-action-btn {
   color: #ff0000;
