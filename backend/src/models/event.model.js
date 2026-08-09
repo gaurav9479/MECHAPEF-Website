@@ -69,6 +69,12 @@ const eventSchema = new mongoose.Schema(
 
         description_detailed: String,
 
+        minTeamSize: {
+            type: Number,
+            default: 1,
+            min: [1, 'Min team size must be at least 1']
+        },
+
         maxTeamSize: {
             type: Number,
             default: 1,

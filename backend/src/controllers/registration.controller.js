@@ -54,8 +54,8 @@ export const getMyRegistrationForEvent = asyncHandler(async (req, res) => {
     }).select('_id registrationType teamName attended paymentStatus createdAt');
 
     if (!registration) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json(
-            new APIResponse(HTTP_STATUS.NOT_FOUND, null, 'Not registered for this event')
+        return res.status(HTTP_STATUS.OK).json(
+            new APIResponse(HTTP_STATUS.OK, { isRegistered: false }, 'Not registered for this event')
         );
     }
 
@@ -847,6 +847,210 @@ export const respondToJoinRequest = asyncHandler(async (req, res) => {
 
 
 /**
+ * POST /registrations/:teamRegId/add-member
+ * Leader directly endorses/adds a team member by entering their 8-digit College Reg No.
+ * Body: { collegeRegNo: "20249013" }
+ */
+export const addMemberByRegNo = asyncHandler(async (req, res) => {
+    const { teamRegId } = req.params;
+    const { collegeRegNo } = req.body;
+    const userId = req.user.userId;
+
+    if (!collegeRegNo || collegeRegNo.trim().length !== 8) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Valid 8-digit Registration Number is required');
+    }
+
+    const registration = await Registration.findById(teamRegId);
+    if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
+
+    // Only leader can add members
+    if (registration.registeredBy.toString() !== userId.toString()) {
+        throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Only the team leader can add team members');
+    }
+
+    if (registration.registrationStatus !== 'Draft') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'This team is already finalized');
+    }
+
+    const event = await Event.findById(registration.eventId);
+    if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
+
+    // Check team capacity
+    const confirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1; // +1 leader
+    if (confirmedCount >= event.maxTeamSize) {
+        throw new ApiError(HTTP_STATUS.CONFLICT, `Team capacity reached (${event.maxTeamSize} max)`);
+    }
+
+    // Find target user by Reg No
+    const targetUser = await User.findOne({ collegeRegNo: collegeRegNo.trim() });
+    if (!targetUser) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'No user found with that Registration Number');
+    }
+
+    // Leader cannot add themselves
+    if (targetUser._id.toString() === userId.toString()) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You are already the leader of this team');
+    }
+
+    // Check branch eligibility
+    if (event.eligibleBranches?.length > 0 && targetUser.branch) {
+        const eligible = event.eligibleBranches.some(b => b.toLowerCase().trim() === targetUser.branch.toLowerCase().trim());
+        if (!eligible) {
+            throw new ApiError(HTTP_STATUS.FORBIDDEN, `${targetUser.name}'s branch (${targetUser.branch}) is not eligible for this event`);
+        }
+    }
+
+    // Check year eligibility
+    if (event.eligibleYears?.length > 0 && targetUser.yearOfStudy) {
+        if (!event.eligibleYears.includes(targetUser.yearOfStudy)) {
+            throw new ApiError(HTTP_STATUS.FORBIDDEN, `${targetUser.name}'s year (${targetUser.yearOfStudy}) is not eligible for this event`);
+        }
+    }
+
+    // Check if already in this team
+    const alreadyInTeam = registration.teamMembers.some(
+        m => m.userId?.toString() === targetUser._id.toString() && m.status === 'Confirmed'
+    );
+    if (alreadyInTeam) {
+        throw new ApiError(HTTP_STATUS.CONFLICT, `${targetUser.name} is already in your team`);
+    }
+
+    // Check if user is registered elsewhere for this event
+    const existingReg = await Registration.findOne({
+        eventId: registration.eventId,
+        $or: [
+            { registeredBy: targetUser._id },
+            { 'teamMembers.userId': targetUser._id, 'teamMembers.status': 'Confirmed' }
+        ],
+        deletedAt: null
+    });
+    if (existingReg) {
+        throw new ApiError(HTTP_STATUS.CONFLICT, `${targetUser.name} is already registered for this event`);
+    }
+
+    // Add user as Confirmed team member
+    registration.teamMembers.push({
+        userId: targetUser._id,
+        name: targetUser.name,
+        email: targetUser.email,
+        collegeRegNo: targetUser.collegeRegNo,
+        status: 'Confirmed'
+    });
+
+    // If user had a pending join request to this team, mark it accepted
+    const pendingReqIdx = registration.joinRequests.findIndex(
+        r => r.userId?.toString() === targetUser._id.toString() && r.status === 'Pending'
+    );
+    if (pendingReqIdx !== -1) {
+        registration.joinRequests[pendingReqIdx].status = 'Accepted';
+    }
+
+    await registration.save();
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { member: targetUser }, `🎉 ${targetUser.name} added to your team!`)
+    );
+});
+
+
+/**
+ * POST /registrations/:teamRegId/leave
+ * A confirmed team member leaves a Draft team, OR withdraws their pending join request.
+ */
+export const leaveTeam = asyncHandler(async (req, res) => {
+    const { teamRegId } = req.params;
+    const userId = req.user.userId;
+
+    const registration = await Registration.findById(teamRegId);
+    if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
+
+    if (registration.registrationStatus !== 'Draft') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cannot leave a team after registration is finalized');
+    }
+
+    // Leader cannot "leave" via this route (they must cancel/delete the team)
+    if (registration.registeredBy.toString() === userId.toString()) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Team leader cannot leave the team. You can disband the team if needed.');
+    }
+
+    // 1. Remove from teamMembers if confirmed
+    const memberIdx = registration.teamMembers.findIndex(
+        m => m.userId?.toString() === userId.toString()
+    );
+    let removedMember = false;
+    if (memberIdx !== -1) {
+        registration.teamMembers.splice(memberIdx, 1);
+        removedMember = true;
+    }
+
+    // 2. Remove/Cancel from joinRequests if pending/accepted
+    const reqIdx = registration.joinRequests.findIndex(
+        r => r.userId?.toString() === userId.toString()
+    );
+    if (reqIdx !== -1) {
+        registration.joinRequests.splice(reqIdx, 1);
+    }
+
+    if (!removedMember && reqIdx === -1) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You are not part of this team or have no active request');
+    }
+
+    await registration.save();
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, null, removedMember ? 'You have left the team' : 'Your join request was withdrawn')
+    );
+});
+
+
+/**
+ * POST /registrations/:teamRegId/remove-member
+ * Leader removes a confirmed team member from a Draft team.
+ * Body: { memberUserId: "userId" }
+ */
+export const removeTeamMember = asyncHandler(async (req, res) => {
+    const { teamRegId } = req.params;
+    const { memberUserId } = req.body;
+    const userId = req.user.userId;
+
+    const registration = await Registration.findById(teamRegId);
+    if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
+
+    // Only leader can remove members
+    if (registration.registeredBy.toString() !== userId.toString()) {
+        throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Only the team leader can remove team members');
+    }
+
+    if (registration.registrationStatus !== 'Draft') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cannot remove members after registration is finalized');
+    }
+
+    // Cannot remove leader
+    if (memberUserId === userId.toString()) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Leader cannot remove themselves');
+    }
+
+    const memberIdx = registration.teamMembers.findIndex(
+        m => m.userId?.toString() === memberUserId
+    );
+    if (memberIdx === -1) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Member not found in this team');
+    }
+
+    const memberName = registration.teamMembers[memberIdx].name;
+    registration.teamMembers.splice(memberIdx, 1);
+
+    await registration.save();
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, null, `${memberName} removed from the team`)
+    );
+});
+
+
+
+
+/**
  * POST /registrations/:teamRegId/finalize
  * Team leader finalizes the Draft registration → status becomes Confirmed.
  * Body: { customData: {} } — any custom form fields from the event
@@ -874,6 +1078,16 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
 
     const event = await Event.findById(registration.eventId);
     if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
+
+    // Check minTeamSize constraint (e.g. 2-3 members means minimum 2 members including leader)
+    const minSize = event.minTeamSize || 2;
+    const currentConfirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1; // +1 leader
+    if (currentConfirmedCount < minSize) {
+        throw new ApiError(
+            HTTP_STATUS.BAD_REQUEST,
+            `Team must have at least ${minSize} member${minSize > 1 ? 's' : ''} to finalize (currently ${currentConfirmedCount})`
+        );
+    }
 
     // Validate required custom fields
     if (event.customFormFields?.length > 0) {
@@ -938,6 +1152,37 @@ export const getMyTeamRegistration = asyncHandler(async (req, res) => {
         new APIResponse(HTTP_STATUS.OK, registration, 'Team registration found')
     );
 });
+
+
+/**
+ * DELETE /registrations/:teamRegId/draft
+ * Leader disbands/deletes a Draft team before finalization.
+ * Instantly lands the user back to the Join / Create Team view.
+ */
+export const deleteDraftTeam = asyncHandler(async (req, res) => {
+    const { teamRegId } = req.params;
+    const userId = req.user.userId;
+
+    const registration = await Registration.findById(teamRegId);
+    if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
+
+    if (registration.registeredBy.toString() !== userId.toString()) {
+        throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Only the team leader can delete/disband the team');
+    }
+
+    if (registration.registrationStatus !== 'Draft') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cannot delete a team after registration is finalized');
+    }
+
+    // Soft delete draft registration
+    registration.deletedAt = new Date();
+    await registration.save();
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, null, 'Draft team deleted successfully')
+    );
+});
+
 
 
 /**
@@ -1007,7 +1252,7 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
         );
     }
 
-    return res.status(HTTP_STATUS.NOT_FOUND).json(
-        new APIResponse(HTTP_STATUS.NOT_FOUND, null, 'No join activity found for this event')
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { role: 'none' }, 'No join activity found for this event')
     );
 });

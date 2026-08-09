@@ -43,11 +43,39 @@ router.post(
     registrationController.respondToJoinRequest
 );
 
+// Leader directly endorses/adds member by 8-digit Reg No
+router.post(
+    '/:teamRegId/add-member',
+    authenticate,
+    registrationController.addMemberByRegNo
+);
+
+// Member leaves a draft team or withdraws join request
+router.post(
+    '/:teamRegId/leave',
+    authenticate,
+    registrationController.leaveTeam
+);
+
+// Leader removes a confirmed member from draft team
+router.post(
+    '/:teamRegId/remove-member',
+    authenticate,
+    registrationController.removeTeamMember
+);
+
 // Leader (or confirmed member) finalizes Draft → Confirmed
 router.post(
     '/:teamRegId/finalize',
     authenticate,
     registrationController.finalizeTeamRegistration
+);
+
+// Leader deletes/disbands a draft team before finalization
+router.delete(
+    '/:teamRegId/draft',
+    authenticate,
+    registrationController.deleteDraftTeam
 );
 
 export default router;
