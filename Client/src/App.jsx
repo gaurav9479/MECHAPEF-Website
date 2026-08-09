@@ -355,7 +355,7 @@ function App() {
     apiGetCached('/upload/sections?device=desktop', () => {});
     apiGetCached('/events', () => {});
     apiGetCached('/announcements', () => {});
-    apiGetCached('/sponsors/special', () => {});
+    apiGetCached('/special-sponsor', () => {});
 
     // 2. Low Priority Pre-fetching (Other Heavy Pages)
     // Delayed by 2 seconds so they don't compete with the initial Home page load
@@ -363,7 +363,7 @@ function App() {
       apiGetCached('/sponsors', () => {});
       apiGetCached('/team', () => {});
       apiGetCached('/past-events', () => {});
-      apiGetCached('/gallery/albums', () => {});
+      apiGetCached('/gallery', () => {});
     }, 2000);
   }, []);
 
