@@ -16,39 +16,39 @@ const AboutWheel = () => {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [1, 1, 1, 1]);
   const bgX = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], ["-20vw", "0vw", "0vw", "-20vw"]); 
 
-  // Text & Card Animations (fade in earlier at start of section)
-  const titlePart1X = useTransform(scrollYProgress, [0.02, 0.15, 0.85, 0.98], ["-50vw", "0vw", "0vw", "-50vw"]);
-  const titlePart1Op = useTransform(scrollYProgress, [0.02, 0.15, 0.85, 0.98], [0, 1, 1, 0]);
+  // 1 Scroll Arrival [0.0 -> 0.33], 1 Scroll Static [0.33 -> 0.66], 1 Scroll Departure [0.66 -> 1.0]
+  const titlePart1X = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["-35vw", "0vw", "0vw", "-35vw"]);
+  const titlePart1Op = useTransform(scrollYProgress, [0.0, 0.28, 0.72, 1.0], [0, 1, 1, 0]);
 
-  const titlePart2Y = useTransform(scrollYProgress, [0.05, 0.18, 0.82, 0.95], ["-50vh", "0vh", "0vh", "50vh"]);
-  const titlePart2Scale = useTransform(scrollYProgress, [0.05, 0.18, 0.82, 0.95], [3, 1, 1, 0]);
-  const titlePart2Op = useTransform(scrollYProgress, [0.05, 0.18, 0.82, 0.95], [0, 1, 1, 0]);
+  const titlePart2Y = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["-30vh", "0vh", "0vh", "30vh"]);
+  const titlePart2Scale = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], [1.8, 1, 1, 0.6]);
+  const titlePart2Op = useTransform(scrollYProgress, [0.0, 0.28, 0.72, 1.0], [0, 1, 1, 0]);
 
-  const titlePart3X = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["50vw", "0vw", "0vw", "50vw"]);
-  const titlePart3Rotate = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], [180, 0, 0, -180]);
-  const titlePart3Op = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], [0, 1, 1, 0]);
+  const titlePart3X = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["35vw", "0vw", "0vw", "35vw"]);
+  const titlePart3Rotate = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], [45, 0, 0, -45]);
+  const titlePart3Op = useTransform(scrollYProgress, [0.0, 0.28, 0.72, 1.0], [0, 1, 1, 0]);
 
-  const pY = useTransform(scrollYProgress, [0.1, 0.22, 0.78, 0.9], ["50vh", "0vh", "0vh", "50vh"]);
-  const pOp = useTransform(scrollYProgress, [0.1, 0.22, 0.78, 0.9], [0, 1, 1, 0]);
+  const pY = useTransform(scrollYProgress, [0.02, 0.33, 0.66, 1.0], ["30vh", "0vh", "0vh", "30vh"]);
+  const pOp = useTransform(scrollYProgress, [0.02, 0.30, 0.70, 1.0], [0, 1, 1, 0]);
 
-  const textOpacity = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], [0, 1, 1, 0]);
+  const textOpacity = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], [0, 1, 1, 0]);
   
-  const card1Y = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["-50vh", "0vh", "0vh", "0vh"]);
-  const card1X = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["0vw", "0vw", "0vw", "-50vw"]);
+  const card1Y = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["-30vh", "0vh", "0vh", "-30vh"]);
+  const card1X = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["0vw", "0vw", "0vw", "-20vw"]);
 
-  const card2X = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["50vw", "0vw", "0vw", "0vw"]);
-  const card2Y = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["0vh", "0vh", "0vh", "-50vh"]);
+  const card2X = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["30vw", "0vw", "0vw", "20vw"]);
+  const card2Y = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["0vh", "0vh", "0vh", "-30vh"]);
 
-  const card3X = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["-50vw", "0vw", "0vw", "0vw"]);
-  const card3Y = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["0vh", "0vh", "0vh", "50vh"]);
+  const card3X = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["-30vw", "0vw", "0vw", "-20vw"]);
+  const card3Y = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["0vh", "0vh", "0vh", "30vh"]);
 
-  const card4Y = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["50vh", "0vh", "0vh", "0vh"]);
-  const card4X = useTransform(scrollYProgress, [0.08, 0.2, 0.8, 0.92], ["0vw", "0vw", "0vw", "50vw"]);
+  const card4Y = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["30vh", "0vh", "0vh", "30vh"]);
+  const card4X = useTransform(scrollYProgress, [0.0, 0.33, 0.66, 1.0], ["0vw", "0vw", "0vw", "20vw"]);
 
   const pointerEvents = useTransform(scrollYProgress, (val) => (val >= 0.05 && val <= 0.95) ? "auto" : "none");
 
   return (
-    <div id="about-us" ref={containerRef} className="cinematic-wrapper" style={{ height: "550vh" }}>
+    <div id="about-us" ref={containerRef} className="cinematic-wrapper" style={{ height: "300vh" }}>
       <div className="cinematic-camera">
         
         <motion.div className="cinematic-bg-layer" style={{ opacity: bgOpacity, x: bgX }}>

@@ -93,28 +93,56 @@ const LiveEventsSlider = () => {
           >
             
             <div className="slide-overlay">
-              {/* Co-Branding Special Sponsor Badge on Slider */}
-              {specialSponsor && specialSponsor.showAnnouncementSliderLogo !== false && (specialSponsor.sliderLogoURL || specialSponsor.logoURL) && (
-                <div className="slider-sponsor-badge" style={{ position: 'absolute', top: '20px', right: '25px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.15)', zIndex: 10 }}>
-                  <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', color: '#aaa', fontWeight: 600 }}>Powered By</span>
-                  <img 
-                    src={specialSponsor.sliderLogoURL || specialSponsor.logoURL} 
-                    alt={specialSponsor.name} 
-                    style={{ height: '24px', maxWidth: '100px', objectFit: 'contain' }} 
-                  />
-                </div>
-              )}
-
+              {/* Ultra-Sexy Co-Branding Glass Badge Container */}
               <div className="slide-content-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '20px' }}>
                 <div className="slide-content" style={{ flex: 1 }}>
-                  <h2>{slide.title}</h2>
-                  <p>{slide.description}</p>
+
+                  {specialSponsor && specialSponsor.showAnnouncementSliderLogo !== false ? (
+                    <div className="sexy-cobrand-hero-card">
+                      <div className="cobrand-badge-top">
+                        <span className="cobrand-dot" style={{ backgroundColor: specialSponsor.brandColor || '#ff1f01' }}></span>
+                        <span className="cobrand-label">OFFICIAL CO-BRANDED EVENT</span>
+                      </div>
+
+                      <div className="slide-cobranding-header">
+                        <h2 className="cobranded-slide-title">
+                          {specialSponsor.sliderCustomName || slide.title}
+                        </h2>
+                        
+                        <div className="cobrand-x-divider">
+                          <span className="x-line"></span>
+                          <span className="cobranding-cross" style={{ color: specialSponsor.brandColor || '#ff1f01' }}>×</span>
+                          <span className="x-line"></span>
+                        </div>
+
+                        { (specialSponsor.sliderLogoURL || specialSponsor.logoURL) ? (
+                          <div className="cobrand-logo-glow-wrapper">
+                            <img 
+                              src={specialSponsor.sliderLogoURL || specialSponsor.logoURL} 
+                              alt={specialSponsor.name} 
+                              className="cobranding-slide-logo"
+                            />
+                          </div>
+                        ) : (
+                          <span className="cobranding-brand-text" style={{ color: specialSponsor.brandColor || '#ff1f01' }}>
+                            {specialSponsor.name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <h2 className="standard-slide-title">{slide.title}</h2>
+                  )}
+
+                  <p className="slide-description">{slide.description}</p>
+
                   {slide.targetLink && (
                     <button 
-                      className="explore-btn" 
+                      className="explore-btn sexy-glow-btn" 
                       onClick={() => handleExplore(slide.targetLink)}
                     >
-                      EVENT <FaArrowRight style={{marginLeft: '10px'}} />
+                      <span>EXPLORE EVENT</span>
+                      <FaArrowRight className="btn-arrow-icon" style={{ marginLeft: '12px' }} />
                     </button>
                   )}
                 </div>

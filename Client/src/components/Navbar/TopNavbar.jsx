@@ -259,7 +259,7 @@ const TopNavbar = () => {
         if (el) {
           if (id === "about-us" && window.innerWidth > 768) {
             const elTop = el.getBoundingClientRect().top + window.scrollY;
-            const targetY = elTop + window.innerHeight * 5.5 * 0.35;
+            const targetY = elTop + window.innerHeight * 3.0 * 0.35;
             gsap.to(window, { duration: 0.9, scrollTo: { y: targetY, autoKill: false }, ease: "power2.out" });
           } else {
             el.scrollIntoView({ behavior: "smooth" });
