@@ -1135,13 +1135,22 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
     const event = await Event.findById(registration.eventId);
     if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
 
-    // Check minTeamSize constraint (e.g. 2-3 members means minimum 2 members including leader)
+    // Check team size range constraints [minTeamSize, maxTeamSize] (e.g., [2, 5] inclusive)
     const minSize = event.minTeamSize || 2;
+    const maxSize = event.maxTeamSize || 5;
     const currentConfirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1; // +1 leader
+
     if (currentConfirmedCount < minSize) {
         throw new ApiError(
             HTTP_STATUS.BAD_REQUEST,
             `Team must have at least ${minSize} member${minSize > 1 ? 's' : ''} to finalize (currently ${currentConfirmedCount})`
+        );
+    }
+
+    if (currentConfirmedCount > maxSize) {
+        throw new ApiError(
+            HTTP_STATUS.BAD_REQUEST,
+            `Team cannot exceed ${maxSize} members (currently ${currentConfirmedCount})`
         );
     }
 

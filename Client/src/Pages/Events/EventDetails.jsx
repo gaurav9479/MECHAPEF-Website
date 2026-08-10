@@ -1042,9 +1042,17 @@ const EventDetails = () => {
               <button
                 type="button"
                 className="btn-primary"
-                disabled={submitting || (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2)}
+                disabled={
+                  submitting || 
+                  (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2) ||
+                  (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) > event.maxTeamSize
+                }
                 onClick={handleFinalizeRegistration}
-                title={`You need at least ${event.minTeamSize || 2} members (including yourself) to finalize`}
+                title={
+                  (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2)
+                    ? `Team must have at least ${event.minTeamSize || 2} members to finalize`
+                    : `Finalize Team Registration`
+                }
                 style={{minWidth: '200px'}}
               >
                 {submitting ? 'Finalizing...' : 'Finalize Registration'}
