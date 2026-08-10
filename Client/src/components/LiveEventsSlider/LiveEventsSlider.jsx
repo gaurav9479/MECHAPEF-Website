@@ -12,7 +12,13 @@ const LiveEventsSlider = () => {
   const [slides, setSlides] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [specialSponsor, setSpecialSponsor] = useState(null);
+
+  useEffect(() => {
+    apiGetCached('/special-sponsor/active', (res) => {
+      if (res.data) setSpecialSponsor(res.data);
+    }, { cacheDuration: 5 * 60 * 1000 }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     apiGetCached('/announcements', (data) => {
@@ -87,6 +93,18 @@ const LiveEventsSlider = () => {
           >
             
             <div className="slide-overlay">
+              {/* Co-Branding Special Sponsor Badge on Slider */}
+              {specialSponsor && specialSponsor.showAnnouncementSliderLogo !== false && (specialSponsor.sliderLogoURL || specialSponsor.logoURL) && (
+                <div className="slider-sponsor-badge" style={{ position: 'absolute', top: '20px', right: '25px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.15)', zIndex: 10 }}>
+                  <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', color: '#aaa', fontWeight: 600 }}>Powered By</span>
+                  <img 
+                    src={specialSponsor.sliderLogoURL || specialSponsor.logoURL} 
+                    alt={specialSponsor.name} 
+                    style={{ height: '24px', maxWidth: '100px', objectFit: 'contain' }} 
+                  />
+                </div>
+              )}
+
               <div className="slide-content-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '20px' }}>
                 <div className="slide-content" style={{ flex: 1 }}>
                   <h2>{slide.title}</h2>
@@ -100,8 +118,6 @@ const LiveEventsSlider = () => {
                     </button>
                   )}
                 </div>
-                
-                {/* Removed PremiumSponsorPanel from inside the slide */}
               </div>
             </div>
           </div>

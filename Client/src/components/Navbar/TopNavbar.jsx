@@ -285,7 +285,7 @@ const TopNavbar = () => {
             <div className="cobranding-sponsor" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: '10px', borderLeft: '2px solid rgba(255, 255, 255, 0.2)', paddingLeft: '14px', height: '42px' }}>
               <span style={{ color: specialSponsor?.brandColor || '#ff1f01', fontWeight: '900', fontSize: '1.4rem', fontFamily: 'sans-serif', lineHeight: 1 }}>×</span>
               <img 
-                src={specialSponsor.logoURL} 
+                src={specialSponsor.navbarLogoURL || specialSponsor.logoURL} 
                 alt={specialSponsor.name} 
                 style={{ height: '42px', maxWidth: '160px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.25))' }} 
               />
