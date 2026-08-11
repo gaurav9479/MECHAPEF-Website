@@ -10,11 +10,26 @@ let redisConnection2 = null;
 let registrationQueue1 = null;
 let registrationQueue2 = null;
 let isDualMode = false;
+let isDraining = false;
+let drainTimer = null;
 
 const QUEUE_NAME_1 = 'RegistrationQueue_1';
 const QUEUE_NAME_2 = 'RegistrationQueue_2';
 
-export const isRegistrationQueueEnabled = () => Boolean(registrationQueue1);
+// Returns false if queue is null OR if queue is in 15-minute draining mode (so new registrations bypass queue and write directly to DB)
+export const isRegistrationQueueEnabled = () => Boolean(registrationQueue1) && !isDraining;
+
+const executeGracefulShutdown = async (modeType, currentIstHour) => {
+    console.log(`[RedisManager] Executing graceful shutdown (Disconnecting Redis after drain timeout)...`);
+    await stopRegistrationWorker();
+    if (registrationQueue1) { await registrationQueue1.close(); registrationQueue1 = null; }
+    if (registrationQueue2) { await registrationQueue2.close(); registrationQueue2 = null; }
+    if (redisConnection1) { redisConnection1.disconnect(); redisConnection1 = null; }
+    if (redisConnection2) { redisConnection2.disconnect(); redisConnection2 = null; }
+    isDraining = false;
+    drainTimer = null;
+    console.log(`[RedisManager] Redis connections & workers successfully closed.`);
+};
 
 export const checkAndToggleRedis = async (overrideMode = null) => {
     try {
@@ -35,18 +50,27 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
         const modeType = overrideMode || sysConfig?.redisModeType || 'AUTO';
         isDualMode = Boolean(sysConfig?.enableDualRedis);
         
-        // Calculate current hour in IST (Asia/Kolkata timezone)
-        const istFormatter = new Intl.DateTimeFormat('en-US', {
+        // Calculate current IST time details (hour & minute)
+        const istHourFormatter = new Intl.DateTimeFormat('en-US', {
             timeZone: 'Asia/Kolkata',
             hour: 'numeric',
             hour12: false
         });
-        const currentIstHour = parseInt(istFormatter.format(now), 10);
+        const istMinuteFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Kolkata',
+            minute: 'numeric'
+        });
+
+        const currentIstHour = parseInt(istHourFormatter.format(now), 10);
+        const currentIstMinute = parseInt(istMinuteFormatter.format(now), 10);
 
         const startHour = sysConfig?.startHour ?? 10;
         const endHour = sysConfig?.endHour ?? 23;
 
-        const isTimeInWindow = currentIstHour >= startHour && currentIstHour < endHour;
+        // AUTO Schedule 15-Minute Pre-Warm: Turns ON at 9:45 AM if startHour = 10 AM
+        const isExactWindow = currentIstHour >= startHour && currentIstHour < endHour;
+        const isPreWarmWindow = (currentIstHour === startHour - 1) && (currentIstMinute >= 45);
+        const isTimeInWindow = isExactWindow || isPreWarmWindow;
 
         let shouldEnableRedis = false;
         if (modeType === 'ALWAYS_ON') {
@@ -54,6 +78,7 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
         } else if (modeType === 'ALWAYS_OFF') {
             shouldEnableRedis = false;
         } else {
+            // AUTO Mode: Active during 10 AM - 11 PM window (pre-warms starting 9:45 AM)
             shouldEnableRedis = Boolean(hasActiveEvent && isTimeInWindow);
         }
 
@@ -62,14 +87,30 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
 
         if (!shouldEnableRedis) {
             if (redisConnection1 || redisConnection2) {
-                console.log(`[RedisManager] Disconnecting Redis (Mode: ${modeType}, IST Hour: ${currentIstHour}:00, Dual: ${isDualMode})...`);
-                await stopRegistrationWorker();
-                if (registrationQueue1) { await registrationQueue1.close(); registrationQueue1 = null; }
-                if (registrationQueue2) { await registrationQueue2.close(); registrationQueue2 = null; }
-                if (redisConnection1) { redisConnection1.disconnect(); redisConnection1 = null; }
-                if (redisConnection2) { redisConnection2.disconnect(); redisConnection2 = null; }
+                if (!isDraining) {
+                    isDraining = true;
+                    console.log(`[RedisManager] ⏳ Toggle OFF detected! Initiating 15-minute Draining Grace Period (Mode: ${modeType})...`);
+                    console.log(`[RedisManager] New incoming registrations will bypass BullMQ and write directly to Database. Worker is keeping Redis open for 15 mins to drain all queued jobs.`);
+                    
+                    if (drainTimer) clearTimeout(drainTimer);
+                    
+                    const DRAIN_TIMEOUT_MS = 15 * 60 * 1000; // 15 Minutes
+                    drainTimer = setTimeout(async () => {
+                        await executeGracefulShutdown(modeType, currentIstHour);
+                    }, DRAIN_TIMEOUT_MS);
+                }
             }
             return;
+        }
+
+        // If Redis is re-enabled while draining, cancel the shutdown timer
+        if (shouldEnableRedis && isDraining) {
+            console.log(`[RedisManager] 🔄 Redis re-enabled during drain period! Resuming normal BullMQ queueing.`);
+            isDraining = false;
+            if (drainTimer) {
+                clearTimeout(drainTimer);
+                drainTimer = null;
+            }
         }
 
         if (shouldEnableRedis && !redisConnection1) {
@@ -112,13 +153,6 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
             }
 
             startRegistrationWorker(redisConnection1, isDualMode ? redisConnection2 : null, QUEUE_NAME_1, QUEUE_NAME_2);
-        } else if (!hasActiveEvent && redisConnection1) {
-            console.log('[RedisManager] No active events, shutting down Redis to save commands...');
-            await stopRegistrationWorker();
-            if (registrationQueue1) { await registrationQueue1.close(); registrationQueue1 = null; }
-            if (registrationQueue2) { await registrationQueue2.close(); registrationQueue2 = null; }
-            if (redisConnection1) { redisConnection1.disconnect(); redisConnection1 = null; }
-            if (redisConnection2) { redisConnection2.disconnect(); redisConnection2 = null; }
         }
     } catch (error) {
         console.error('[RedisManager] Error in checkAndToggleRedis:', error);
@@ -126,8 +160,8 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
 };
 
 export const enqueueRegistration = async (payload) => {
-    if (!registrationQueue1) {
-        throw new Error('Registration queue is not initialized');
+    if (!registrationQueue1 || isDraining) {
+        throw new Error('Registration queue is disabled or draining');
     }
 
     const uniqueJobId = `reg-${payload.eventId}-${payload.registeredBy}`;
