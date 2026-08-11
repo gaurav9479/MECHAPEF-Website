@@ -19,6 +19,14 @@ export const startDbEmailWorker = () => {
 
         try {
             const now = new Date();
+            const TWO_MINS_AGO = new Date(now.getTime() - 2 * 60 * 1000);
+
+            // Auto-reset stuck 'processing' emails older than 2 minutes back to 'pending'
+            await PendingEmail.updateMany(
+                { status: 'processing', updatedAt: { $lt: TWO_MINS_AGO } },
+                { $set: { status: 'pending' } }
+            );
+
             // Find up to 10 pending emails that are due for execution
             const pendingEmails = await PendingEmail.find({ 
                 status: { $in: ['pending', 'failed'] }, 
@@ -39,16 +47,24 @@ export const startDbEmailWorker = () => {
             const emailIds = pendingEmails.map(email => email._id);
             await PendingEmail.updateMany({ _id: { $in: emailIds } }, { status: 'processing' });
 
-            // Send batch concurrently using Promise.allSettled
+            // Send batch concurrently with 15s per-email timeout safety
             const results = await Promise.allSettled(
                 pendingEmails.map(async (email) => {
                     try {
-                        await sendEmail({
+                        // 15s timeout promise race
+                        const sendPromise = sendEmail({
                             to: email.to,
                             subject: email.subject,
                             text: email.text,
                             html: email.html
                         });
+
+                        const timeoutPromise = new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('Email dispatch timed out after 15s')), 15000)
+                        );
+
+                        await Promise.race([sendPromise, timeoutPromise]);
+
                         // Delete successfully sent emails to clean up db storage
                         await PendingEmail.findByIdAndDelete(email._id);
                         return { id: email._id, success: true };
@@ -74,7 +90,7 @@ export const startDbEmailWorker = () => {
         } finally {
             isProcessing = false;
         }
-    }, 15000); // 15 seconds interval
+    }, 3000); // 3 seconds interval for instant email dispatch
 };
 
 export const stopDbEmailWorker = () => {
