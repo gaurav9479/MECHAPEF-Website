@@ -2,6 +2,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import APIResponse from '../utils/APIResponse.js';
 import User from '../models/user.model.js';
+import Team from '../models/team.model.js';
 import Announcement from '../models/announcement.model.js';
 import Event from '../models/event.model.js';
 import PendingEmail from '../models/pendingEmail.model.js';
@@ -109,21 +110,35 @@ export const sendMail = asyncHandler(async (req, res) => {
             }
         }
     } else {
-        // Fetch users based on target role
+        // Fetch users based on target role from User model
         let query = { deletedAt: null, isActive: true, email: { $exists: true, $type: 'string', $ne: '' } };
         
         if (targetRole === 'super-admin') query.role = USER_ROLES.SUPER_ADMIN;
         else if (targetRole === 'content-lead') query.role = USER_ROLES.CONTENT_LEAD;
-        else if (targetRole === 'media-lead' || targetRole === 'event-lead') query.role = USER_ROLES.MEDIA_LEAD; 
+        else if (targetRole === 'media-lead') query.role = USER_ROLES.MEDIA_LEAD;
         else if (targetRole === 'member') query.role = USER_ROLES.MEMBER;
         // if 'all', don't add role filter
 
-        const users = await User.find(query).select('email').lean();
+        const users = await User.find(query).select('email name').lean();
         
         for (const user of users || []) {
             const email = user?.email?.trim().toLowerCase();
             if (email && validator.isEmail(email)) {
-                uniqueUsersByEmail.set(email, { email });
+                uniqueUsersByEmail.set(email, { email, name: user.name || '' });
+            }
+        }
+
+        // Also search Team collection for matching subTeams (e.g. Media/PR team)
+        let teamQuery = { deletedAt: null, isActive: true, email: { $exists: true, $type: 'string', $ne: '' } };
+        if (targetRole === 'media-lead') teamQuery.subTeam = { $in: ['PR', 'Media', 'Graphics'] };
+
+        if (targetRole === 'media-lead' || targetRole === 'all') {
+            const teamMembers = await Team.find(teamQuery).select('email name').lean();
+            for (const member of teamMembers || []) {
+                const email = member?.email?.trim().toLowerCase();
+                if (email && validator.isEmail(email) && !uniqueUsersByEmail.has(email)) {
+                    uniqueUsersByEmail.set(email, { email, name: member.name || '' });
+                }
             }
         }
     }

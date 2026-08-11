@@ -18,12 +18,14 @@ export const startDbEmailWorker = () => {
         isProcessing = true;
 
         try {
-            // Find up to 10 pending emails
+            const now = new Date();
+            // Find up to 10 pending emails that are due for execution
             const pendingEmails = await PendingEmail.find({ 
                 status: { $in: ['pending', 'failed'] }, 
-                attempts: { $lt: 3 } 
+                attempts: { $lt: 3 },
+                executeAt: { $lte: now }
             })
-            .sort({ createdAt: 1 })
+            .sort({ executeAt: 1, createdAt: 1 })
             .limit(10);
 
             if (pendingEmails.length === 0) {
