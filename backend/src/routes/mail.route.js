@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { sendMail, getMailStats } from '../controllers/mail.controller.js';
+import { sendMail, getMailStats, retryFailedMails } from '../controllers/mail.controller.js';
 import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 import { USER_ROLES } from '../constants/index.js';
 
@@ -8,5 +8,6 @@ const router = Router();
 // Only super admins can use the mail portal
 router.post('/send', authenticate, checkRole([USER_ROLES.SUPER_ADMIN]), sendMail);
 router.get('/stats', authenticate, checkRole([USER_ROLES.SUPER_ADMIN]), getMailStats);
+router.post('/retry-failed', authenticate, checkRole([USER_ROLES.SUPER_ADMIN]), retryFailedMails);
 
 export default router;

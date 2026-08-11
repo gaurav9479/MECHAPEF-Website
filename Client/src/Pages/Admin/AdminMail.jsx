@@ -267,6 +267,58 @@ const AdminMail = () => {
           </form>
         </div>
 
+        {/* Failed Emails Breakdown Section */}
+        {mailStats.failedEmails && mailStats.failedEmails.length > 0 && (
+          <div className="admin-section card-style" style={{ marginTop: '28px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <h2 style={{ fontSize: '1.2rem', margin: 0, color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                ⚠️ Failed Email Deliveries ({mailStats.failedEmails.length})
+              </h2>
+              <button 
+                onClick={async () => {
+                  try {
+                    const res = await api.post('/mail/retry-failed');
+                    showToast(res.data.message || 'Retry initiated!');
+                    fetchMailStats();
+                  } catch (err) {
+                    showToast('Failed to trigger retry', 'error');
+                  }
+                }}
+                style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+              >
+                🔄 Retry All Failed Mails
+              </button>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#888' }}>
+                    <th style={{ padding: '10px' }}>Recipient Email</th>
+                    <th style={{ padding: '10px' }}>Subject</th>
+                    <th style={{ padding: '10px' }}>Failure Reason / Error Log</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Attempts</th>
+                    <th style={{ padding: '10px', textAlign: 'right' }}>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mailStats.failedEmails.map((failed) => (
+                    <tr key={failed.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '10px', color: '#fff', fontWeight: 600 }}>{failed.to}</td>
+                      <td style={{ padding: '10px', color: '#ccc' }}>{failed.subject}</td>
+                      <td style={{ padding: '10px', color: '#ef4444', fontFamily: 'monospace', fontSize: '0.8rem' }}>{failed.error}</td>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#f59e0b' }}>{failed.attempts}</td>
+                      <td style={{ padding: '10px', color: '#888', textAlign: 'right', fontSize: '0.78rem' }}>
+                        {new Date(failed.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Dispatch Footprint Logs Section */}
         <div className="admin-section card-style" style={{ marginTop: '28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>

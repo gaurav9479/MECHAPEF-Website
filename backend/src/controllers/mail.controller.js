@@ -200,15 +200,20 @@ export const sendMail = asyncHandler(async (req, res) => {
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { targeted: validUsers.length }, 'Email dispatch initiated successfully'));
 });
 
-// Fetch Mail Dispatch Logs & Statistics (Admin Only)
+// Fetch Mail Dispatch Logs, Failed Emails & Statistics (Admin Only)
 export const getMailStats = asyncHandler(async (req, res) => {
     const PendingEmail = (await import('../models/pendingEmail.model.js')).default;
     const Footprint = (await import('../models/footprint.model.js')).default;
 
-    const [pendingCount, processingCount, failedCount, recentLogs] = await Promise.all([
+    const [pendingCount, processingCount, failedCount, failedEmails, recentLogs] = await Promise.all([
         PendingEmail.countDocuments({ status: 'pending' }),
         PendingEmail.countDocuments({ status: 'processing' }),
         PendingEmail.countDocuments({ status: 'failed' }),
+        PendingEmail.find({ status: 'failed' })
+            .select('to subject lastError attempts createdAt')
+            .sort({ updatedAt: -1 })
+            .limit(20)
+            .lean(),
         Footprint.find({ action: 'MAIL_SENT' })
             .sort({ createdAt: -1 })
             .limit(10)
@@ -222,6 +227,14 @@ export const getMailStats = asyncHandler(async (req, res) => {
                 processing: processingCount,
                 failed: failedCount
             },
+            failedEmails: failedEmails.map(f => ({
+                id: f._id,
+                to: f.to,
+                subject: f.subject,
+                error: f.lastError || 'Unknown Error',
+                attempts: f.attempts,
+                createdAt: f.createdAt
+            })),
             recentLogs: recentLogs.map(log => ({
                 id: log._id,
                 userName: log.userName,
@@ -229,5 +242,20 @@ export const getMailStats = asyncHandler(async (req, res) => {
                 createdAt: log.createdAt
             }))
         }, 'Mail statistics fetched successfully')
+    );
+});
+
+// Retry Failed Emails (Admin Only)
+export const retryFailedMails = asyncHandler(async (req, res) => {
+    const PendingEmail = (await import('../models/pendingEmail.model.js')).default;
+    
+    // Reset failed emails back to pending & reset attempts to 0
+    const result = await PendingEmail.updateMany(
+        { status: 'failed' },
+        { $set: { status: 'pending', attempts: 0, executeAt: new Date() } }
+    );
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { retriedCount: result.modifiedCount }, `${result.modifiedCount} failed email(s) queued for retry!`)
     );
 });
