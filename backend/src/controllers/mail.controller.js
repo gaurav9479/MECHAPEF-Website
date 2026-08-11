@@ -199,3 +199,35 @@ export const sendMail = asyncHandler(async (req, res) => {
 
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { targeted: validUsers.length }, 'Email dispatch initiated successfully'));
 });
+
+// Fetch Mail Dispatch Logs & Statistics (Admin Only)
+export const getMailStats = asyncHandler(async (req, res) => {
+    const PendingEmail = (await import('../models/pendingEmail.model.js')).default;
+    const Footprint = (await import('../models/footprint.model.js')).default;
+
+    const [pendingCount, processingCount, failedCount, recentLogs] = await Promise.all([
+        PendingEmail.countDocuments({ status: 'pending' }),
+        PendingEmail.countDocuments({ status: 'processing' }),
+        PendingEmail.countDocuments({ status: 'failed' }),
+        Footprint.find({ action: 'MAIL_SENT' })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean()
+    ]);
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, {
+            stats: {
+                pending: pendingCount,
+                processing: processingCount,
+                failed: failedCount
+            },
+            recentLogs: recentLogs.map(log => ({
+                id: log._id,
+                userName: log.userName,
+                details: log.details,
+                createdAt: log.createdAt
+            }))
+        }, 'Mail statistics fetched successfully')
+    );
+});
