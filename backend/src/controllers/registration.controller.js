@@ -233,25 +233,6 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         }
         throw error;
     }
-
-    const registration = new Registration(payload);
-    await registration.save();
-
-    await Promise.all([
-        registration.populate('eventId', 'title'),
-        registration.populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy'),
-        Event.findByIdAndUpdate(eventId, { $inc: { totalRegistrations: 1 } }),
-        User.findByIdAndUpdate(
-            req.user.userId,
-            { $addToSet: { participatedEventNames: event.title } }
-        )
-    ]);
-
-    return res
-        .status(HTTP_STATUS.CREATED)
-        .json(
-            new APIResponse(HTTP_STATUS.CREATED, { registration }, SUCCESS_MESSAGES.REGISTRATION_SUCCESS)
-        );
 });
 
 

@@ -172,6 +172,7 @@ const registrationSchema = new mongoose.Schema(
 );
 
 registrationSchema.index({ eventId: 1, registeredBy: 1, deletedAt: 1 }, { unique: true, sparse: true });
+registrationSchema.index({ eventId: 1, 'teamMembers.userId': 1, deletedAt: 1 });
 
 registrationSchema.index({ paymentStatus: 1, registeredAt: -1 });
 registrationSchema.index({ attendanceMarked: 1, eventId: 1 });
