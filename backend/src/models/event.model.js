@@ -187,6 +187,13 @@ const eventSchema = new mongoose.Schema(
             default: ['Stage 1: Check-in']
         },
 
+        // If true — QR ticket scanning is active for this event.
+        // If false — attendance is marked manually by admin only (no QR scan UI).
+        enableQRScanning: {
+            type: Boolean,
+            default: true
+        },
+
         // Standard = leader adds members. JoinRequests = members search and send join requests
         registrationMode: {
             type: String,

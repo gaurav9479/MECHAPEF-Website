@@ -257,7 +257,7 @@ export const getUserRegistrations = asyncHandler(async (req, res) => {
             .sort({ registeredAt: -1 })
             .limit(limit)
             .skip((page - 1) * limit)
-            .populate('eventId', 'title startTime venue category'),
+            .populate('eventId', 'title startTime venue category enableQRScanning ticketStages'),
         Registration.countDocuments({ registeredBy: req.user.userId, deletedAt: null })
     ]);
 
@@ -277,17 +277,22 @@ export const getUserRegistrations = asyncHandler(async (req, res) => {
 });
 
 export const markAttendance = asyncHandler(async (req, res) => {
-    const { attended, stageName } = req.body;
+    const { attended, stageName, isManualOverride } = req.body;
 
     if (attended === undefined) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Attended status is required');
     }
 
     // Load registration first to detect previous attendance state
-    const registration = await Registration.findById(req.params.id).populate('eventId', 'title ticketStages');
+    const registration = await Registration.findById(req.params.id).populate('eventId', 'title ticketStages enableQRScanning');
 
     if (!registration) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
+    }
+
+    // Block QR scans if event has QR scanning disabled — only manual admin override allowed
+    if (!isManualOverride && registration.eventId?.enableQRScanning === false) {
+        throw new ApiError(HTTP_STATUS.FORBIDDEN, 'QR ticket scanning is disabled for this event. Use manual attendance marking.');
     }
 
     const eventStages = registration.eventId?.ticketStages || ['Stage 1: Check-in'];

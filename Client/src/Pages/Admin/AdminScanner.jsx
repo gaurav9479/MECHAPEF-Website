@@ -14,6 +14,7 @@ const AdminScanner = () => {
   const [availableStages, setAvailableStages] = useState(['Stage 1: Check-in']);
   const [selectedStage, setSelectedStage] = useState('Stage 1: Check-in');
   const [isEndorsed, setIsEndorsed] = useState(false);
+  const [qrEnabled, setQrEnabled] = useState(true);
 
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
@@ -47,6 +48,7 @@ const AdminScanner = () => {
           const targetStg = user.assignedStage || stages[0];
           setSelectedStage(targetStg);
           setIsEndorsed(true);
+          setQrEnabled(matchedEv.enableQRScanning !== false);
           return;
         }
       }
@@ -56,6 +58,7 @@ const AdminScanner = () => {
         const stages = evList[0].ticketStages && evList[0].ticketStages.length > 0 ? evList[0].ticketStages : ['Stage 1: Check-in'];
         setAvailableStages(stages);
         setSelectedStage(stages[0]);
+        setQrEnabled(evList[0].enableQRScanning !== false);
       }
     }).catch(() => {});
   }, [user]);
@@ -66,6 +69,7 @@ const AdminScanner = () => {
     const stages = ev?.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Check-in'];
     setAvailableStages(stages);
     setSelectedStage(stages[0]);
+    setQrEnabled(ev?.enableQRScanning !== false);
   };
 
   const verifyAndMarkAttendance = async (eventId, regId) => {
@@ -233,8 +237,22 @@ const AdminScanner = () => {
         </div>
 
         <div className="scanner-grid">
-          <div id="reader" className="qr-reader-box"></div>
-
+          {qrEnabled ? (
+            <div id="reader" className="qr-reader-box"></div>
+          ) : (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              minHeight: '280px', background: '#1a1010', border: '2px dashed #ff1f01',
+              borderRadius: '16px', padding: '32px', textAlign: 'center', gap: '16px'
+            }}>
+              <span style={{ fontSize: '3rem' }}>🚫</span>
+              <h2 style={{ color: '#ff1f01', margin: 0, fontSize: '1.3rem' }}>QR Scanning Disabled</h2>
+              <p style={{ color: '#aaa', margin: 0, fontSize: '0.9rem', maxWidth: '280px' }}>
+                QR ticket scanning is <strong style={{ color: '#ff1f01' }}>turned off</strong> for this event.
+                Mark attendance manually from the <strong>Registrations</strong> panel.
+              </p>
+            </div>
+          )}
           <div className="scanner-status-panel">
             {loading ? (
               <div className="scanner-status-card loading-card">

@@ -25,6 +25,7 @@ const emptyForm = {
   maxTeamSize: 1, registrationMode: 'Standard', registrationFee: 0, featured: false, isTBD: false, rules: '', prizes: '',
   customFormFields: [], eligibleBranches: [], eligibleYears: [],
   ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
+  enableQRScanning: true,
   bannerURL: ''
 };
 const AdminEvents = () => {
@@ -180,7 +181,8 @@ const AdminEvents = () => {
       customFormFields: ev.customFormFields || [],
       eligibleBranches: ev.eligibleBranches || [],
       eligibleYears: ev.eligibleYears || [],
-      ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']
+      ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
+      enableQRScanning: ev.enableQRScanning !== undefined ? ev.enableQRScanning : true
     });
     setShowModal(true);
   };
@@ -711,6 +713,38 @@ const AdminEvents = () => {
                   ))}
                 </div>
               </div>
+
+              {/* QR Scanning Toggle */}
+              <div className="form-group" style={{ marginTop: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div
+                    onClick={() => f('enableQRScanning', !form.enableQRScanning)}
+                    style={{
+                      width: '46px', height: '26px', borderRadius: '13px', flexShrink: 0,
+                      background: form.enableQRScanning ? '#00e5ff' : '#444',
+                      position: 'relative', transition: 'background 0.25s', cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{
+                      position: 'absolute', top: '3px',
+                      left: form.enableQRScanning ? '23px' : '3px',
+                      width: '20px', height: '20px', borderRadius: '50%',
+                      background: '#fff', transition: 'left 0.25s'
+                    }} />
+                  </div>
+                  <span style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                    <strong style={{ color: form.enableQRScanning ? '#00e5ff' : '#888' }}>
+                      QR Ticket Scanning {form.enableQRScanning ? 'Enabled' : 'Disabled'}
+                    </strong>
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>
+                      {form.enableQRScanning
+                        ? 'Attendees will have scannable QR tickets. Scanner will be active at the event.'
+                        : 'No QR tickets — admin marks attendance manually from the registrations list.'}
+                    </span>
+                  </span>
+                </label>
+              </div>
+
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                 <button type="submit" className="btn-primary" disabled={submitting}>

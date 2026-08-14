@@ -55,6 +55,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         eligibleBranches: eligibleBranches || [],
         eligibleYears: eligibleYears || [1, 2, 3, 4],
         ticketStages: req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in'],
+        enableQRScanning: req.body.enableQRScanning !== undefined ? req.body.enableQRScanning : true,
         registrationMode: registrationMode || 'Standard',
         isTBD: isTBD || false,
         createdBy: req.user.userId
@@ -157,6 +158,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'eligibleBranches',
         'eligibleYears',
         'ticketStages',
+        'enableQRScanning',
         'registrationMode',
         'isTBD'
     ];
