@@ -108,7 +108,7 @@ export const register = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 14 * 24 * 60 * 60 * 1000
     });
 
     return res.status(HTTP_STATUS.CREATED).json(
@@ -157,7 +157,7 @@ export const login = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 14 * 24 * 60 * 60 * 1000
     });
 
     return res.status(HTTP_STATUS.OK).json(
@@ -515,7 +515,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 14 * 24 * 60 * 60 * 1000
     });
 
     return {

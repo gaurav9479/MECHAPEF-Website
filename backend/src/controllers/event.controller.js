@@ -27,6 +27,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         customFormFields,
         eligibleBranches,
         eligibleYears,
+        registrationMode,
         isTBD
     } = req.body;
     if (!title || !description || !category || !startTime || !endTime || !venue || !registrationDeadline) {
@@ -54,6 +55,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         eligibleBranches: eligibleBranches || [],
         eligibleYears: eligibleYears || [1, 2, 3, 4],
         ticketStages: req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in'],
+        registrationMode: registrationMode || 'Standard',
         isTBD: isTBD || false,
         createdBy: req.user.userId
     });
@@ -155,6 +157,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'eligibleBranches',
         'eligibleYears',
         'ticketStages',
+        'registrationMode',
         'isTBD'
     ];
 

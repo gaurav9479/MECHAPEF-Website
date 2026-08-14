@@ -69,6 +69,12 @@ const eventSchema = new mongoose.Schema(
 
         description_detailed: String,
 
+        minTeamSize: {
+            type: Number,
+            default: 1,
+            min: [1, 'Min team size must be at least 1']
+        },
+
         maxTeamSize: {
             type: Number,
             default: 1,
@@ -179,6 +185,13 @@ const eventSchema = new mongoose.Schema(
         ticketStages: {
             type: [String],
             default: ['Stage 1: Check-in']
+        },
+
+        // Standard = leader adds members. JoinRequests = members search and send join requests
+        registrationMode: {
+            type: String,
+            enum: ['Standard', 'JoinRequests'],
+            default: 'Standard'
         },
 
         isActive: {

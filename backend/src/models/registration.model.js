@@ -49,22 +49,41 @@ const registrationSchema = new mongoose.Schema(
                     },
                     name: String,
                     email: String,
+                    collegeRegNo: String,
+                    status: {
+                        type: String,
+                        enum: ['Confirmed', 'Invited', 'Pending'], // Confirmed=joined, Invited=leader invited, Pending=member requested
+                        default: 'Confirmed'
+                    },
                     joined: {
                         type: Date,
                         default: Date.now
                     }
                 }
             ],
-            validate: {
-                validator: function (value) {
-                    if (this.registrationType === 'Solo') {
-                        return value.length === 0;
-                    }
-                    // Team size will be validated by event max team size
-                    return value.length > 0;
-                },
-                message: 'Invalid team members for registration type'
-            }
+            default: []
+        },
+
+        // For Type 2 (JoinRequests mode) - pending join requests from users who want to join this team
+        joinRequests: {
+            type: [
+                {
+                    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+                    name: String,
+                    email: String,
+                    collegeRegNo: String,
+                    status: { type: String, enum: ['Pending', 'Accepted', 'Rejected'], default: 'Pending' },
+                    requestedAt: { type: Date, default: Date.now }
+                }
+            ],
+            default: []
+        },
+
+        // Draft = team still forming (Type 2), Confirmed = submitted/finalized
+        registrationStatus: {
+            type: String,
+            enum: ['Draft', 'Confirmed'],
+            default: 'Confirmed' // Standard events stay Confirmed; Type 2 starts as Draft
         },
 
         paymentStatus: {
@@ -178,7 +197,8 @@ registrationSchema.pre('save', async function (next) {
                 throw new Error('User is already registered for this event');
             }
         }
-        if (this.registrationType === 'Team' && this.teamMembers.length === 0) {
+        // Draft registrations (Type 2) can have empty teamMembers at creation
+        if (this.registrationType === 'Team' && this.registrationStatus === 'Confirmed' && this.teamMembers.length === 0) {
             throw new Error('Team registration must have at least one team member');
         }
 

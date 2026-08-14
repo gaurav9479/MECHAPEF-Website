@@ -104,4 +104,44 @@ router.put(
     registrationController.markAttendance
 );
 
+// ─────────────────────────────────────────────────────────────
+// TYPE 2: JoinRequests Mode Event-level Routes
+// ─────────────────────────────────────────────────────────────
+
+// Leader creates a Draft team (Type 2 events only)
+router.post(
+    '/:eventId/register-draft',
+    authenticate,
+    registrationController.createDraftTeamRegistration
+);
+
+// Search draft teams in this event by leader regNo
+router.get(
+    '/:eventId/teams',
+    authenticate,
+    registrationController.searchTeamsForEvent
+);
+
+// Check a user's eligibility by their college reg no (used by both Standard invite & Type 2)
+router.get(
+    '/:eventId/check-user/:regNo',
+    authenticate,
+    registrationController.checkUserEligibilityForEvent
+);
+
+// Get current user's team registration for this event (Draft or Confirmed)
+router.get(
+    '/:eventId/my-team-registration',
+    authenticate,
+    registrationController.getMyTeamRegistration
+);
+
+// Get full join status for current user in a JoinRequests event
+// (covers leader, confirmed member, and outgoing join requester)
+router.get(
+    '/:eventId/my-join-status',
+    authenticate,
+    registrationController.getMyJoinStatus
+);
+
 export default router;
