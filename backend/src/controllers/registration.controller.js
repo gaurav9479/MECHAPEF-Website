@@ -13,11 +13,17 @@ import path from 'path';
 // Absolute path to backup file
 const backupFilePath = path.join(process.cwd(), 'registrations_backup.log');
 
-const appendBackupLog = (payload) => {
-    const logEntry = JSON.stringify({ timestamp: new Date().toISOString(), payload }) + '\n';
-    fs.appendFile(backupFilePath, logEntry, (err) => {
-        if (err) console.error('[Backup Log] Failed to write registration backup:', err.message);
-    });
+export const appendBackupLog = (action, payload) => {
+    try {
+        const logEntry = JSON.stringify({ 
+            timestamp: new Date().toISOString(), 
+            action,
+            payload 
+        }) + '\n';
+        fs.appendFileSync(backupFilePath, logEntry);
+    } catch (err) {
+        console.error('[Backup Log] CRITICAL: Failed to write registration backup to disk:', err.message);
+    }
 };
 
 // Shared helper — used by both direct write and Redis fallback path
@@ -38,6 +44,9 @@ const saveRegistrationDirectly = async (payload, eventTitle) => {
     // Send to Google Sheets webhook (fire and forget)
     // The user data is available inside registration.registeredBy because it was populated above
     syncWithGoogleSheet(registration.registeredBy, eventTitle, payload);
+
+    // Backup Log: Save COMPLETED registration directly to disk log file
+    appendBackupLog('COMPLETED_REGISTRATION', registration.toObject());
 
     return registration;
 };
@@ -191,8 +200,10 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         customData: customData || {}
     };
 
-    // Fail-safe backup: write to local file BEFORE any external system interaction
-    appendBackupLog(payload);
+    // 🛡️ PEAK HOUR FAIL-SAFE DISK BACKUP:
+    // Write raw incoming payload synchronously to server disk BEFORE touching Redis/Mongo.
+    // If Redis crashes, free tier expires, or Mongo hangs — THIS FILE HAS 100% OF REGISTRATION DATA!
+    appendBackupLog('RAW_PEAK_HOUR_PAYLOAD', payload);
 
     // Try queue first — if Redis is up, enqueue and return early
     if (isRegistrationQueueEnabled()) {
@@ -1151,10 +1162,19 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
 
     await registration.save();
 
-    await User.findByIdAndUpdate(
-        registration.registeredBy,
-        { $addToSet: { participatedEventNames: event.title } }
-    );
+    await Promise.all([
+        registration.populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy'),
+        User.findByIdAndUpdate(
+            registration.registeredBy,
+            { $addToSet: { participatedEventNames: event.title } }
+        )
+    ]);
+
+    // Send finalized Type 2 team data (Leader + all Endorsed Members + Custom Data) to Google Sheets
+    syncWithGoogleSheet(registration.registeredBy, event.title, registration.toObject());
+
+    // Fail-safe backup: write finalized Type 2 team payload synchronously to disk
+    appendBackupLog('TYPE2_TEAM_FINALIZED', registration.toObject());
 
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, { registration }, 'Registration finalized! Your team is officially registered.')

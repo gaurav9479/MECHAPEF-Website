@@ -3,6 +3,7 @@ import Registration from '../models/registration.model.js';
 import Event from '../models/event.model.js';
 import User from '../models/user.model.js';
 import { syncWithGoogleSheet } from '../utils/googleSheetsWebhook.js';
+import { appendBackupLog } from '../controllers/registration.controller.js';
 
 let worker1 = null;
 let worker2 = null;
@@ -107,6 +108,9 @@ const createWorker = (queueName, redisConnection) => {
         if (registererObj) {
             syncWithGoogleSheet(registererObj, event.title, job.data);
         }
+
+        // Backup Log: Log COMPLETED registration to disk file when saved by worker
+        appendBackupLog('COMPLETED_REGISTRATION', newRegistration.toObject());
 
         // Atomic increment + addToSet in parallel
         await Promise.all([

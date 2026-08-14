@@ -8,21 +8,24 @@ const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzPRCwHaYSh98X2Nin6
 export const syncWithGoogleSheet = async (user, eventTitle, registrationPayload) => {
     try {
         const teamMembersFormatted = Array.isArray(registrationPayload.teamMembers) 
-            ? registrationPayload.teamMembers.map(m => `${m.name} (${m.email || 'N/A'})`).join(', ')
+            ? registrationPayload.teamMembers
+                .filter(m => m.status === 'Confirmed' || !m.status)
+                .map(m => `${m.name} [RegNo: ${m.collegeRegNo || 'N/A'}, Email: ${m.email || 'N/A'}]`)
+                .join(' | ')
             : '';
 
         const data = {
             timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
             eventName: eventTitle || 'N/A',
-            name: user?.name || 'N/A',
-            email: user?.email || 'N/A',
-            regNo: user?.collegeRegNo || 'N/A',
+            leaderName: user?.name || 'N/A',
+            leaderEmail: user?.email || 'N/A',
+            leaderRegNo: user?.collegeRegNo || 'N/A',
             branch: user?.branch || 'N/A',
             yearOfStudy: user?.yearOfStudy || 'N/A',
             phoneNumber: user?.phoneNumber || 'N/A',
             registrationType: registrationPayload.registrationType || 'Solo',
             teamName: registrationPayload.teamName || 'N/A',
-            teamMembers: teamMembersFormatted || 'N/A',
+            endorsedMembers: teamMembersFormatted || 'None',
             customData: registrationPayload.customData || {}
         };
 
