@@ -186,7 +186,8 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         teamMembers = members.map(member => ({
             userId: member._id,
             name: member.name,
-            email: member.email
+            email: member.email,
+            collegeRegNo: member.collegeRegNo || 'N/A'
         }));
     }
 

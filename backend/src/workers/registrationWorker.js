@@ -103,10 +103,11 @@ const createWorker = (queueName, redisConnection) => {
             throw error;
         }
 
-        // Fetch User to send to webhook
+        // Fetch User to send to webhook — use saved registration (not raw job.data)
+        // so teamMembers.collegeRegNo is always present for Google Sheets sync
         const registererObj = await User.findById(registeredBy);
         if (registererObj) {
-            syncWithGoogleSheet(registererObj, event.title, job.data);
+            syncWithGoogleSheet(registererObj, event.title, newRegistration.toObject());
         }
 
         // Backup Log: Log COMPLETED registration to disk file when saved by worker
