@@ -179,14 +179,45 @@ const PastEventsStack = ({ onLoaded }) => {
               style={{ zIndex: index + 1 }}
             >
               {event.isSkeleton ? (
-                <div className="pe-skeleton-content">
-                   <div className="pe-skeleton-img shimmer"></div>
-                   <div className="pe-skeleton-body">
-                      <div className="pe-skeleton-date shimmer"></div>
-                      <div className="pe-skeleton-title shimmer"></div>
-                      <div className="pe-skeleton-desc shimmer"></div>
-                      <div className="pe-skeleton-desc shimmer short"></div>
-                   </div>
+                <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0a0a0d', color: '#ff1f01', padding: '20px', boxSizing: 'border-box', textAlign: 'center', minHeight: '300px' }}>
+                  <style>{`
+                    @keyframes spin-gear {
+                      0% { transform: rotate(0deg); }
+                      100% { transform: rotate(360deg); }
+                    }
+                    @keyframes text-pulse {
+                      0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 2px rgba(255,31,1,0.3)); }
+                      50% { opacity: 1; filter: drop-shadow(0 0 10px rgba(255,31,1,0.8)); }
+                    }
+                  `}</style>
+                  <div style={{ animation: 'spin-gear 6s linear infinite', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '15px' }}>
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#ff1f01" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                  </div>
+                  <h3 style={{
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    letterSpacing: '2.5px',
+                    margin: '0 0 8px 0',
+                    color: '#ff1f01',
+                    animation: 'text-pulse 2s infinite ease-in-out',
+                    textTransform: 'uppercase'
+                  }}>
+                    LET THE IC ENGINE START...
+                  </h3>
+                  <p style={{
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontSize: '0.75rem',
+                    color: '#666',
+                    letterSpacing: '1px',
+                    margin: 0,
+                    textTransform: 'uppercase'
+                  }}>
+                    Legacy loading in progress
+                  </p>
                 </div>
               ) : (
                 <>

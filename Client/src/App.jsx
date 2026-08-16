@@ -356,13 +356,13 @@ function App() {
     apiGetCached('/events', () => {});
     apiGetCached('/announcements', () => {});
     apiGetCached('/special-sponsor/active', () => {});
+    apiGetCached('/past-events', () => {});
 
     // 2. Low Priority Pre-fetching (Other Heavy Pages)
     // Delayed by 2 seconds so they don't compete with the initial Home page load
     setTimeout(() => {
       apiGetCached('/sponsors', () => {});
       apiGetCached('/team', () => {});
-      apiGetCached('/past-events', () => {});
       apiGetCached('/gallery', () => {});
     }, 2000);
   }, []);
