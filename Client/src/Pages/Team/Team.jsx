@@ -209,7 +209,7 @@ const Team = () => {
             <FaSearch className="search-icon" />
             <input
               type="text"
-              placeholder="Search member by name, role or reg no..."
+              placeholder="Search member by name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
