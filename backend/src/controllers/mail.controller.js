@@ -12,7 +12,6 @@ import { HTTP_STATUS, USER_ROLES } from '../constants/index.js';
 import validator from 'validator';
 
 const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 1500);
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const escapeHtml = (value = '') => String(value)
     .replace(/&/g, '&amp;')
@@ -67,7 +66,8 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType) =
     };
 };
 export const sendMail = asyncHandler(async (req, res) => {
-    const { targetRole, endorsementType, endorsementId, customSubject, customBody, customEmails, scheduleType } = req.body;
+    const { targetRole, endorsementType, endorsementId, customSubject, customBody, customEmails } = req.body;
+    const scheduleType = 'smart_batch';
 
     if (!targetRole) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'targetRole is required');
@@ -155,8 +155,8 @@ export const sendMail = asyncHandler(async (req, res) => {
     const jobs = validUsers.map((user, index) => {
         let jobDelay = 0;
         if (scheduleType === 'smart_batch') {
-            // 100 emails per hour = 1 email every 36 seconds (36000 ms)
-            jobDelay = index * 36000;
+            // 1 email every 20 seconds = 3/min — matches worker poll interval (safe anti-spam rate)
+            jobDelay = index * 20000;
         }
 
         return {

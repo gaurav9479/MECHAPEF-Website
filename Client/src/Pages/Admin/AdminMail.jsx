@@ -11,7 +11,7 @@ const AdminMail = () => {
   const [customSubject, setCustomSubject] = useState('');
   const [customBody, setCustomBody] = useState('');
   const [customEmails, setCustomEmails] = useState([]);
-  const [scheduleType, setScheduleType] = useState('immediate');
+  const [scheduleType, setScheduleType] = useState('smart_batch');
   const [csvFileName, setCsvFileName] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -190,14 +190,9 @@ const AdminMail = () => {
 
             <div className="form-group">
               <label>Delivery Schedule</label>
-              <select 
-                value={scheduleType} 
-                onChange={(e) => setScheduleType(e.target.value)}
-                className="form-control"
-              >
-                <option value="immediate">Immediate Burst Dispatch</option>
-                <option value="smart_batch">Smart Rate-Limited Batch (100 emails/hr)</option>
-              </select>
+              <div style={{ background: '#1c1c20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '12px 16px', color: '#ff1f01', fontSize: '0.9rem', fontWeight: 600 }}>
+                🛡️ Smart Rate-Limited Batch Enforced (1 email per minute)
+              </div>
             </div>
 
             <div className="form-group">

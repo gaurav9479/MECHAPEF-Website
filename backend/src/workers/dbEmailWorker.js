@@ -12,7 +12,7 @@ export const startDbEmailWorker = () => {
 
     console.log('[DB-EmailWorker] Database-backed email worker started.');
 
-    // Check for pending emails in MongoDB every 15 seconds
+    // Send 1 email every 20 seconds (3 emails/min) — safe anti-spam pacing
     intervalId = setInterval(async () => {
         if (isProcessing) return;
         isProcessing = true;
@@ -27,70 +27,72 @@ export const startDbEmailWorker = () => {
                 { $set: { status: 'pending' } }
             );
 
-            // Find up to 10 pending emails that are due for execution
+            // Fetch exactly 1 email per cycle — hard rate limit: 1 email / 20s = 3 emails/min
+            // This prevents burst-sending when many emails become due simultaneously.
             const pendingEmails = await PendingEmail.find({ 
                 status: { $in: ['pending', 'failed'] }, 
                 attempts: { $lt: 3 },
                 executeAt: { $lte: now }
             })
             .sort({ executeAt: 1, createdAt: 1 })
-            .limit(10);
+            .limit(1);
 
             if (pendingEmails.length === 0) {
                 isProcessing = false;
                 return;
             }
 
-            console.log(`[DB-EmailWorker] Found ${pendingEmails.length} pending emails in MongoDB. Processing batch of 10...`);
+            console.log(`[DB-EmailWorker] Found ${pendingEmails.length} pending emails in MongoDB. Processing batch sequentially to avoid SMTP spam filters...`);
 
             // Mark them as processing to avoid double picking
             const emailIds = pendingEmails.map(email => email._id);
             await PendingEmail.updateMany({ _id: { $in: emailIds } }, { status: 'processing' });
 
-            // Send batch concurrently with 15s per-email timeout safety
-            const results = await Promise.allSettled(
-                pendingEmails.map(async (email) => {
-                    try {
-                        // 15s timeout promise race
-                        const sendPromise = sendEmail({
-                            to: email.to,
-                            subject: email.subject,
-                            text: email.text,
-                            html: email.html
-                        });
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            let sentCount = 0;
 
-                        const timeoutPromise = new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Email dispatch timed out after 15s')), 15000)
-                        );
+            // Process sequentially with staggering delay to prevent concurrent blasts
+            for (const email of pendingEmails) {
+                try {
+                    // 15s timeout promise race
+                    const sendPromise = sendEmail({
+                        to: email.to,
+                        subject: email.subject,
+                        text: email.text,
+                        html: email.html
+                    });
 
-                        await Promise.race([sendPromise, timeoutPromise]);
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Email dispatch timed out after 15s')), 15000)
+                    );
 
-                        // Delete successfully sent emails to clean up db storage
-                        await PendingEmail.findByIdAndDelete(email._id);
-                        return { id: email._id, success: true };
-                    } catch (err) {
-                        console.error(`[DB-EmailWorker] Failed to send email to ${email.to}:`, err.message);
-                        // Increment attempts, set status to failed for retry
-                        await PendingEmail.findByIdAndUpdate(email._id, {
-                            $inc: { attempts: 1 },
-                            status: 'failed',
-                            lastError: err.message
-                        });
-                        return { id: email._id, success: false, error: err.message };
-                    }
-                })
-            );
+                    await Promise.race([sendPromise, timeoutPromise]);
 
-            const sentCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+                    // Delete successfully sent emails to clean up db storage
+                    await PendingEmail.findByIdAndDelete(email._id);
+                    sentCount++;
+                } catch (err) {
+                    console.error(`[DB-EmailWorker] Failed to send email to ${email.to}:`, err.message);
+                    // Increment attempts, set status to failed for retry
+                    await PendingEmail.findByIdAndUpdate(email._id, {
+                        $inc: { attempts: 1 },
+                        status: 'failed',
+                        lastError: err.message
+                    });
+                }
+                
+                // No additional sleep needed — the 20s poll interval is the rate limiter.
+            }
+
             const failedCount = pendingEmails.length - sentCount;
-            console.log(`[DB-EmailWorker] Batch processed: ${sentCount} sent, ${failedCount} failed.`);
+            console.log(`[DB-EmailWorker] Batch processed sequentially: ${sentCount} sent, ${failedCount} failed.`);
 
         } catch (error) {
             console.error('[DB-EmailWorker] Error in database email worker loop:', error.message);
         } finally {
             isProcessing = false;
         }
-    }, 3000); // 3 seconds interval for instant email dispatch
+    }, 20000); // 20 seconds interval → 1 email per 20s = 3 emails/min (anti-spam safe rate)
 };
 
 export const stopDbEmailWorker = () => {
