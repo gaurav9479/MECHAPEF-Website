@@ -75,7 +75,7 @@ const AboutWheel = () => {
               <div className="dash-col col-left">
                 <motion.div className="dash-card card-tall dash-card-glow" style={{ y: card1Y, x: card1X }}>
                   <div className="dash-icon-bg"><FaProjectDiagram /></div>
-                  <h3 className="dash-num">45+</h3>
+                  <h3 className="dash-num">20+</h3>
                   <h4 className="dash-title">Projects Completed</h4>
                   <p className="dash-sub text-red">collaborative and individuals</p>
                 </motion.div>
