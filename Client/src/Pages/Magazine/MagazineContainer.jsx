@@ -10,13 +10,13 @@ const MagazineContainer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { transitionState, setTransitionState, isDesktop } = useMagazineTransition();
-  const [hasMagazine, setHasMagazine] = useState(false);
+  const [hasMagazine, setHasMagazine] = useState(true);
 
   useEffect(() => {
     api.get('/magazine')
       .then((res) => {
         if (res.data?.data?.magazine?.pdfUrl) {
-          setHasMagazine(true);
+
         }
       })
       .catch((err) => {
@@ -30,8 +30,7 @@ const MagazineContainer = () => {
   const isRollingUp = transitionState === 'rollingUp';
 
   if (!isDesktop || isAdminRoute) {
-      // Mobile behavior: Magazine is just rendered normally without the shutter.
-      // Admin behavior: Hide the overlay entirely from the admin portal.
+
       if (isMagazineRoute && !isAdminRoute) return <Magazine />;
       return null;
   }
@@ -40,17 +39,16 @@ const MagazineContainer = () => {
     if (transitionState !== 'idle') return;
     
     if (isMagazineRoute) {
-      // Roll the shutter UP and return to Home page
+
       setTransitionState('rollingUp');
       
-      // Navigate instantly so the background route changes to Home
+
       navigate('/');
 
       setTimeout(() => {
         setTransitionState('idle');
       }, 1000);
     } else {
-      // Drop the shutter DOWN
       setTransitionState('pullingDown');
       
       setTimeout(() => {
@@ -109,7 +107,7 @@ const MagazineContainer = () => {
         </motion.div>
       )}
 
-      {/* The Rolling Shutter (Magazine) */}
+
       <AnimatePresence>
         {(isOpen || isRollingUp) && (
           <motion.div

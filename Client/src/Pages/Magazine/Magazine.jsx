@@ -25,7 +25,7 @@ const Magazine = () => {
 
   return (
     <div className="magazine-container">
-      {/* Show loader if backend is loading, OR if PDF is not yet rendered */}
+
       {(loading || (pdfUrl && !iframeLoaded)) && (
         <div className="magazine-loading">
           <div className="spinner"></div>

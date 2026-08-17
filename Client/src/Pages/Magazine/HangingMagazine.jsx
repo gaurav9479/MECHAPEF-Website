@@ -4,29 +4,29 @@ import { useNavigate } from 'react-router-dom';
 import magazineScrollImg from '../../assets/mehapefscroll.png';
 
 const HangingMagazine = () => {
-  const [status, setStatus] = useState('hanging'); // 'hanging', 'detached', 'falling', 'fullscreen'
+  const [status, setStatus] = useState('hanging'); 
   const navigate = useNavigate();
 
   const handleClick = () => {
     if (status !== 'hanging') return;
     
-    // Step 1: Stop swinging & settle (detached state)
+
     setStatus('detached');
     
-    // Step 2 & 3: Fall and expand after a tiny delay
+
     setTimeout(() => {
       setStatus('falling');
       
-      // Step 4 & 5: Fullscreen & route change
+
       setTimeout(() => {
         setStatus('fullscreen');
         setTimeout(() => {
             navigate('/magazine');
-            // reset state after navigation in case they go back
+
             setTimeout(() => setStatus('hanging'), 500);
-        }, 400); // Wait for fullscreen whiteout
-      }, 1200); // Fall duration
-    }, 400); // Settle duration
+        }, 400); 
+      }, 1200); 
+    }, 400); 
   };
 
   return (
@@ -52,10 +52,10 @@ const HangingMagazine = () => {
                 scale: 1.1
               } : {
                 // Falling state
-                y: [-35, 1200], // Fall straight down
+                y: [-35, 1200], 
                 x: "-50%",
                 scale: [1.1, 4], 
-                rotate: [0, 0], // No rotation, fall straight
+                rotate: [0, 0],
                 opacity: [1, 1, 0]
               }
             }
