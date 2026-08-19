@@ -73,7 +73,7 @@ const JoinUsBot = () => {
               <motion.div className="s5-buttons" style={{ y: s5Line4Y, opacity: s5Line4Op }}>
                 <div className="ch-join-actions">
                   <MagneticButton className="btn-contact-us" onClick={() => navigate('/login')}>JOIN NOW &rarr;</MagneticButton>
-                  <MagneticButton className="btn-learn-more" onClick={() => scrollToId('about-us')}>LEARN MORE</MagneticButton>
+                  {/* <MagneticButton className="btn-learn-more" onClick={() => scrollToId('about-us')}>LEARN MORE</MagneticButton> */}
                 </div>
               </motion.div>
 
