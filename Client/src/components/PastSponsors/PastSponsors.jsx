@@ -27,6 +27,24 @@ const PastSponsors = ({ showCurrentSponsors = true }) => {
     });
   }, []);
 
+  // Helper function to ensure URL has a valid protocol
+ // Helper function to handle sponsor click
+  const handleSponsorClick = (websiteURL) => {
+    if (!websiteURL) {
+      // If there is no URL, stay on the page (do nothing)
+      return;
+    }
+
+    let formattedUrl = websiteURL.trim();
+    
+    // Check if the URL starts with http:// or https://, if not, prepend https://
+    if (!/^https?:\/\//i.test(formattedUrl)) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+
+    window.open(formattedUrl, '_blank', 'noopener,noreferrer');
+  };
+
   if (loading) return null;
 
   return (
@@ -53,7 +71,7 @@ const PastSponsors = ({ showCurrentSponsors = true }) => {
                   key={sponsor._id}
                   className="past-sponsor-logo-box"
                   style={{ background: '#ffffff', borderRadius: '12px', border: '2px solid #ff1f01', padding: '15px 25px', minWidth: '160px', height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s' }}
-                  onClick={() => sponsor.websiteURL ? window.open(sponsor.websiteURL, '_blank') : navigate('/sponsors')}
+                  onClick={() => handleSponsorClick(sponsor.websiteURL)}
                   title={sponsor.companyName}
                 >
                   {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (
@@ -124,7 +142,7 @@ const PastSponsors = ({ showCurrentSponsors = true }) => {
                         <div 
                           key={sponsor._id} 
                           className="past-sponsor-logo-box"
-                          onClick={() => sponsor.websiteURL ? window.open(sponsor.websiteURL, '_blank') : navigate('/sponsors')}
+                          onClick={() => handleSponsorClick(sponsor.websiteURL)}
                           title={sponsor.type || 'Sponsor'}
                         >
                           {sponsor.logoURL && !sponsor.logoURL.includes('placeholder.com') ? (

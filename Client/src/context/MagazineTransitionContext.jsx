@@ -7,7 +7,7 @@ export const useMagazineTransition = () => {
 };
 
 export const MagazineTransitionProvider = ({ children }) => {
-  // 'idle' | 'pullingDown' | 'rollingUp'
+
   const [transitionState, setTransitionState] = useState('idle');
   const [targetRoute, setTargetRoute] = useState(null);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
@@ -22,7 +22,7 @@ export const MagazineTransitionProvider = ({ children }) => {
     if (!isDesktop) return false;
     setTargetRoute(route);
     setTransitionState('rollingUp');
-    return true; // Indicates transition was triggered
+    return true; 
   };
 
   return (
