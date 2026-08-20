@@ -12,7 +12,7 @@ export const startDbEmailWorker = () => {
 
     console.log('[DB-EmailWorker] Database-backed email worker started.');
 
-    // Send 1 email every 4 minutes (safe anti-spam pacing)
+    // Send 1 email every 1 minute (60s) — safe anti-spam pacing
     intervalId = setInterval(async () => {
         if (isProcessing) return;
         isProcessing = true;
@@ -27,7 +27,7 @@ export const startDbEmailWorker = () => {
                 { $set: { status: 'pending' } }
             );
 
-            // Fetch exactly 1 email per cycle — hard rate limit: 1 email / 4m
+            // Fetch exactly 1 email per cycle — hard rate limit: 1 email / 1 min (60s)
             // This prevents burst-sending when many emails become due simultaneously.
             const pendingEmails = await PendingEmail.find({ 
                 status: { $in: ['pending', 'failed'] }, 
@@ -81,7 +81,7 @@ export const startDbEmailWorker = () => {
                     });
                 }
                 
-                // No additional sleep needed — the 4m poll interval is the rate limiter.
+                // No additional sleep needed — the 1 min poll interval is the rate limiter.
             }
 
             const failedCount = pendingEmails.length - sentCount;
@@ -92,7 +92,7 @@ export const startDbEmailWorker = () => {
         } finally {
             isProcessing = false;
         }
-    }, 240000); // 4 minutes interval (anti-spam safe rate)
+    }, 60000); // 1 minute interval (60s) (anti-spam safe rate)
 };
 
 export const stopDbEmailWorker = () => {
