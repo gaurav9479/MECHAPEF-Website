@@ -1,33 +1,39 @@
 import nodemailer from 'nodemailer';
 import { SpecialSponsor } from '../models/specialSponsor.model.js';
 import dns from 'dns';
+import { promisify } from 'util';
 
-// Force Node.js (v17+) to resolve IPv4 addresses first.
-// This completely stops Node from trying to connect to Gmail's IPv6 (2404:6800...)
-// which causes ENETUNREACH on networks without active IPv6 routing.
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
-
+const resolve4 = promisify(dns.resolve4);
 const defaultFrom = process.env.FROM_EMAIL || process.env.SMTP_USER;
 
-const getTransporter = () => {
+const getTransporter = async () => {
     if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
         throw new Error('SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS must be configured');
     }
 
+    // Force IPv4 resolution to strictly prevent IPv6 ENETUNREACH
+    let ipv4Host = process.env.SMTP_HOST;
+    try {
+        const addresses = await resolve4(process.env.SMTP_HOST);
+        if (addresses && addresses.length > 0) {
+            ipv4Host = addresses[0]; // Pick the first IPv4 address
+        }
+    } catch (err) {
+        console.error('IPv4 resolution failed, falling back to hostname', err.message);
+    }
+
     const port = Number(process.env.SMTP_PORT || 465);
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
+        host: ipv4Host, // Use the resolved IPv4 address explicitly
         port: port,
-        secure: port === 465, // Direct SSL/TLS for 465 (bypasses STARTTLS timeouts)
-        family: 4, // Force IPv4 to avoid IPv6 (ENETUNREACH) network routing issues
-        pool: false, // Disabled pooling: fresh connection per email avoids stale socket timeouts
-        connectionTimeout: 20000, // 20s connection timeout
-        greetingTimeout: 15000,   // 15s greeting timeout
-        socketTimeout: 30000,     // 30s socket timeout
+        secure: port === 465, // Direct SSL/TLS
+        pool: false, // Fresh connection per email
+        connectionTimeout: 20000, 
+        greetingTimeout: 15000,   
+        socketTimeout: 30000,     
         tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
+            servername: process.env.SMTP_HOST // Essential for TLS handshake when connecting via raw IP
         },
         auth: {
             user: process.env.SMTP_USER,
@@ -40,6 +46,8 @@ const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
     if (!from) {
         throw new Error('FROM_EMAIL or SMTP_USER must be configured');
     }
+
+    const transporter = await getTransporter();
 
     let finalHtml = html;
     try {
@@ -66,7 +74,7 @@ const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
         console.error('Error injecting special sponsor into email:', err);
     }
 
-    return getTransporter().sendMail({
+    return transporter.sendMail({
         from,
         to,
         subject,
