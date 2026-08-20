@@ -16,6 +16,7 @@ const getTransporter = () => {
             host: process.env.SMTP_HOST,
             port: port,
             secure: port === 465, // true for 465, false for 587
+            family: 4, // Force IPv4 to avoid IPv6 (ENETUNREACH) network routing issues
             pool: false, // Disabled pooling: emails are throttled with time gaps, so fresh connection per email avoids stale socket timeouts
             connectionTimeout: 20000, // 20s connection timeout
             greetingTimeout: 15000,   // 15s greeting timeout
