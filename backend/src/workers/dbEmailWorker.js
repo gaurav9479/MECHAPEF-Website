@@ -54,7 +54,7 @@ export const startDbEmailWorker = () => {
             // Process sequentially with staggering delay to prevent concurrent blasts
             for (const email of pendingEmails) {
                 try {
-                    // 15s timeout promise race
+                    // 45s timeout promise race
                     const sendPromise = sendEmail({
                         to: email.to,
                         subject: email.subject,
@@ -63,7 +63,7 @@ export const startDbEmailWorker = () => {
                     });
 
                     const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Email dispatch timed out after 15s')), 15000)
+                        setTimeout(() => reject(new Error('Email dispatch timed out after 45s')), 45000)
                     );
 
                     await Promise.race([sendPromise, timeoutPromise]);
