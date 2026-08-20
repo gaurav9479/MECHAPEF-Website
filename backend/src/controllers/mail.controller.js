@@ -155,8 +155,8 @@ export const sendMail = asyncHandler(async (req, res) => {
     const jobs = validUsers.map((user, index) => {
         let jobDelay = 0;
         if (scheduleType === 'smart_batch') {
-            // 1 email every 20 seconds = 3/min — matches worker poll interval (safe anti-spam rate)
-            jobDelay = index * 20000;
+            // 1 email every 4 minutes — matches worker poll interval (safe anti-spam rate)
+            jobDelay = index * 240000;
         }
 
         return {
