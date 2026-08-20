@@ -1,5 +1,13 @@
 import nodemailer from 'nodemailer';
 import { SpecialSponsor } from '../models/specialSponsor.model.js';
+import dns from 'dns';
+
+// Force Node.js (v17+) to resolve IPv4 addresses first.
+// This completely stops Node from trying to connect to Gmail's IPv6 (2404:6800...)
+// which causes ENETUNREACH on networks without active IPv6 routing.
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 const defaultFrom = process.env.FROM_EMAIL || process.env.SMTP_USER;
 
