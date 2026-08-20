@@ -3,35 +3,29 @@ import { SpecialSponsor } from '../models/specialSponsor.model.js';
 
 const defaultFrom = process.env.FROM_EMAIL || process.env.SMTP_USER;
 
-let transporter;
-
 const getTransporter = () => {
     if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
         throw new Error('SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS must be configured');
     }
 
-    if (!transporter) {
-        const port = Number(process.env.SMTP_PORT);
-        transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: port,
-            secure: port === 465, // true for 465, false for 587
-            family: 4, // Force IPv4 to avoid IPv6 (ENETUNREACH) network routing issues
-            pool: false, // Disabled pooling: emails are throttled with time gaps, so fresh connection per email avoids stale socket timeouts
-            connectionTimeout: 20000, // 20s connection timeout
-            greetingTimeout: 15000,   // 15s greeting timeout
-            socketTimeout: 30000,     // 30s socket timeout
-            tls: {
-                rejectUnauthorized: false
-            },
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
-            }
-        });
-    }
-
-    return transporter;
+    const port = Number(process.env.SMTP_PORT || 465);
+    return nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: port,
+        secure: port === 465, // Direct SSL/TLS for 465 (bypasses STARTTLS timeouts)
+        family: 4, // Force IPv4 to avoid IPv6 (ENETUNREACH) network routing issues
+        pool: false, // Disabled pooling: fresh connection per email avoids stale socket timeouts
+        connectionTimeout: 20000, // 20s connection timeout
+        greetingTimeout: 15000,   // 15s greeting timeout
+        socketTimeout: 30000,     // 30s socket timeout
+        tls: {
+            rejectUnauthorized: false
+        },
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        }
+    });
 };
 
 const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
