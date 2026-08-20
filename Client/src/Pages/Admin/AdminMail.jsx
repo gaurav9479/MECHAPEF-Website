@@ -191,7 +191,7 @@ const AdminMail = () => {
             <div className="form-group">
               <label>Delivery Schedule</label>
               <div style={{ background: '#1c1c20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '12px 16px', color: '#ff1f01', fontSize: '0.9rem', fontWeight: 600 }}>
-                🛡️ Smart Rate-Limited Batch Enforced (1 email per minute)
+                🛡️ Smart Rate-Limited Batch Enforced (4 email per minute)
               </div>
             </div>
 
