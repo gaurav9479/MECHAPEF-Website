@@ -212,6 +212,23 @@ const AdminMail = () => {
         </div>
 
         <div className="admin-section card-style">
+          {/* Localhost Environment Notice */}
+          <div style={{ 
+            background: 'rgba(234, 179, 8, 0.1)', 
+            border: '1px solid rgba(234, 179, 8, 0.3)', 
+            borderRadius: '8px', 
+            padding: '12px 16px', 
+            color: '#facc15', 
+            fontSize: '0.88rem', 
+            fontWeight: 600, 
+            marginBottom: '20px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px' 
+          }}>
+            <span>⚠️ <strong>Notice:</strong> Mail dispatch feature works exclusively on <strong>Localhost</strong> environment. Please communicate with your developer for bulk email dispatches.</span>
+          </div>
+
           <form onSubmit={handleSendMail} className="mail-form">
             
             <div className="form-group">
