@@ -10,6 +10,7 @@ import sendEmail from '../utils/sendEmail.js';
 import logFootprint from '../utils/logFootprint.js';
 import { HTTP_STATUS, USER_ROLES } from '../constants/index.js';
 import validator from 'validator';
+import { getPublicAppUrl, toPublicEmailUrl } from '../utils/publicAppUrl.js';
 
 const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 1500);
 
@@ -21,8 +22,7 @@ const escapeHtml = (value = '') => String(value)
     .replace(/'/g, '&#39;');
 
 const getDashboardUrl = () => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    return `${frontendUrl.replace(/\/$/, '')}/`;
+    return `${getPublicAppUrl()}/`;
 };
 
 const buildEmailContent = (title, description, isEndorsement, endorsementType, customLink = '') => {
@@ -31,7 +31,7 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType, c
     const escapedDescription = escapeHtml(description).replace(/\n/g, '<br>');
     
     // Use custom link if provided (e.g. Vercel link), else fall back to dashboard
-    const buttonUrl = customLink?.trim() ? customLink.trim() : dashboardUrl;
+    const buttonUrl = customLink?.trim() ? toPublicEmailUrl(customLink.trim()) : dashboardUrl;
     const buttonLabel = customLink?.trim() ? '🚀 Register Now' : 'Open Dashboard';
     const escapedButtonUrl = escapeHtml(buttonUrl);
 
