@@ -25,12 +25,16 @@ const getDashboardUrl = () => {
     return `${frontendUrl.replace(/\/$/, '')}/`;
 };
 
-const buildEmailContent = (title, description, isEndorsement, endorsementType) => {
+const buildEmailContent = (title, description, isEndorsement, endorsementType, customLink = '') => {
     const dashboardUrl = getDashboardUrl();
     const escapedTitle = escapeHtml(title);
     const escapedDescription = escapeHtml(description).replace(/\n/g, '<br>');
-    const escapedDashboardUrl = escapeHtml(dashboardUrl);
     
+    // Use custom link if provided (e.g. Vercel link), else fall back to dashboard
+    const buttonUrl = customLink?.trim() ? customLink.trim() : dashboardUrl;
+    const buttonLabel = customLink?.trim() ? '🚀 Register Now' : 'Open Dashboard';
+    const escapedButtonUrl = escapeHtml(buttonUrl);
+
     let typeLabel = "Message";
     if (isEndorsement) {
         typeLabel = endorsementType === 'event' ? 'Event Endorsement' : 'Announcement Endorsement';
@@ -43,7 +47,7 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType) =
             '',
             description,
             '',
-            `Dashboard: ${dashboardUrl}`
+            customLink?.trim() ? `Register here: ${buttonUrl}` : `Dashboard: ${dashboardUrl}`
         ].join('\n'),
         html: `
             <div style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;color:#111827;">
@@ -53,8 +57,8 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType) =
                         <h1 style="margin:0 0 16px;font-size:24px;line-height:1.3;color:#111827;">${escapedTitle}</h1>
                         <p style="margin:0 0 18px;font-size:16px;line-height:1.6;color:#374151;">${escapedDescription}</p>
                         <br/>
-                        <a href="${escapedDashboardUrl}" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700;">
-                            Open Dashboard
+                        <a href="${escapedButtonUrl}" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:700;font-size:16px;">
+                            ${buttonLabel}
                         </a>
                         <p style="margin:22px 0 0;font-size:12px;line-height:1.5;color:#6b7280;">
                             You are receiving this email because you are registered with MechaPEF.
@@ -66,7 +70,7 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType) =
     };
 };
 export const sendMail = asyncHandler(async (req, res) => {
-    const { targetRole, endorsementType, endorsementId, customSubject, customBody, customEmails } = req.body;
+    const { targetRole, endorsementType, endorsementId, customSubject, customBody, customLink, customEmails } = req.body;
     const scheduleType = 'smart_batch';
 
     if (!targetRole) {
@@ -149,7 +153,7 @@ export const sendMail = asyncHandler(async (req, res) => {
         return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { sent: 0, failed: 0 }, 'No users found for this role'));
     }
 
-    const emailContent = buildEmailContent(title, description, isEndorsement, endorsementType);
+    const emailContent = buildEmailContent(title, description, isEndorsement, endorsementType, customLink);
     
     // Process sending in background using BullMQ
     const jobs = validUsers.map((user, index) => {

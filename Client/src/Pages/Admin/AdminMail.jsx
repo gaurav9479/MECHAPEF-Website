@@ -10,6 +10,7 @@ const AdminMail = () => {
   const [endorsementId, setEndorsementId] = useState('');
   const [customSubject, setCustomSubject] = useState('');
   const [customBody, setCustomBody] = useState('');
+  const [customLink, setCustomLink] = useState('');
   const [customEmails, setCustomEmails] = useState([]);
   const [scheduleType, setScheduleType] = useState('smart_batch');
   const [csvFileName, setCsvFileName] = useState('');
@@ -83,6 +84,7 @@ const AdminMail = () => {
         endorsementId: endorsementType === 'custom' ? null : endorsementId,
         customSubject,
         customBody,
+        customLink,
         customEmails,
         scheduleType
       };
@@ -93,6 +95,7 @@ const AdminMail = () => {
       // Reset form on success
       setCustomSubject('');
       setCustomBody('');
+      setCustomLink('');
       setEndorsementId('');
       setCustomEmails([]);
       setCsvFileName('');
@@ -209,25 +212,40 @@ const AdminMail = () => {
             </div>
 
             {endorsementType !== 'custom' && (
-              <div className="form-group">
-                <label>Select {endorsementType === 'announcement' ? 'Announcement' : 'Event'} to Endorse</label>
-                <select 
-                  value={endorsementId} 
-                  onChange={(e) => setEndorsementId(e.target.value)}
-                  className="form-control"
-                >
-                  <option value="">-- Select Item --</option>
-                  {endorsementType === 'announcement' ? (
-                    announcements.map(a => (
-                      <option key={a._id} value={a._id}>{a.title}</option>
-                    ))
-                  ) : (
-                    events.map(e => (
-                      <option key={e._id} value={e._id}>{e.title}</option>
-                    ))
-                  )}
-                </select>
-              </div>
+              <>
+                <div className="form-group">
+                  <label>Select {endorsementType === 'announcement' ? 'Announcement' : 'Event'} to Endorse</label>
+                  <select 
+                    value={endorsementId} 
+                    onChange={(e) => setEndorsementId(e.target.value)}
+                    className="form-control"
+                  >
+                    <option value="">-- Select Item --</option>
+                    {endorsementType === 'announcement' ? (
+                      announcements.map(a => (
+                        <option key={a._id} value={a._id}>{a.title}</option>
+                      ))
+                    ) : (
+                      events.map(e => (
+                        <option key={e._id} value={e._id}>{e.title}</option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
+                {endorsementType === 'event' && (
+                  <div className="form-group">
+                    <label>Registration / Custom Link (Vercel Link, etc. - Optional)</label>
+                    <input 
+                      type="text" 
+                      value={customLink} 
+                      onChange={(e) => setCustomLink(e.target.value)}
+                      className="form-control"
+                      placeholder="e.g. https://your-project.vercel.app/register"
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {endorsementType === 'custom' && (

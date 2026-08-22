@@ -1,18 +1,48 @@
+import nodemailer from 'nodemailer';
 import { SpecialSponsor } from '../models/specialSponsor.model.js';
+import dns from 'dns';
+import { promisify } from 'util';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_ieERaSrs_5inv5BYGtNvfW1asWRKSAZjn';
-const defaultFrom = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+const resolve4 = promisify(dns.resolve4);
+const defaultFrom = process.env.SMTP_USER || process.env.FROM_EMAIL;
 
 const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
-    // If the sender is still using a custom domain but hasn't verified it on Resend,
-    // Resend's free tier restricts sending to verified domains only. 
-    // If they use onboarding@resend.dev, it must only send to the owner's email address.
-    let finalFrom = from;
-    if (finalFrom.includes('@mnnit.ac.in') && !process.env.RESEND_DOMAIN_VERIFIED) {
-        // Fallback to onboarding domain if domain verification is not complete on Resend dashboard
-        finalFrom = 'MechaPEF <onboarding@resend.dev>';
+    if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        throw new Error('SMTP credentials (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS) must be configured');
     }
 
+    // Force IPv4 resolution — prevents IPv6 ENETUNREACH on restricted networks
+    let ipv4Host = process.env.SMTP_HOST;
+    try {
+        const addresses = await resolve4(process.env.SMTP_HOST);
+        if (addresses && addresses.length > 0) {
+            ipv4Host = addresses[0];
+        }
+    } catch (err) {
+        console.error('[Email] IPv4 resolution failed, using hostname:', err.message);
+    }
+
+    const port = Number(process.env.SMTP_PORT || 465);
+    const transporter = nodemailer.createTransport({
+        host: ipv4Host,
+        port: port,
+        secure: port === 465,
+        family: 4,
+        pool: false,
+        connectionTimeout: 20000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000,
+        tls: {
+            rejectUnauthorized: false,
+            servername: process.env.SMTP_HOST
+        },
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        }
+    });
+
+    // Inject special sponsor banner if active
     let finalHtml = html;
     try {
         const sponsor = await SpecialSponsor.findOne({ isActive: true });
@@ -26,8 +56,6 @@ const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
                 </div>
                 ${sponsor.tagline ? `<p style="margin-top: 15px; font-size: 14px; color: #555; font-weight: 500;">${sponsor.tagline}</p>` : ''}
             </div>`;
-            
-            // Inject before closing body tag if it exists, else append
             if (finalHtml.includes('</body>')) {
                 finalHtml = finalHtml.replace('</body>', `${sponsorHtml}</body>`);
             } else {
@@ -35,34 +63,23 @@ const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
             }
         }
     } catch (err) {
-        console.error('Error injecting special sponsor into email:', err);
+        console.error('[Email] Error injecting sponsor banner:', err.message);
     }
 
-    console.log(`[Resend-Email] Dispatching email to ${to} via Resend HTTP API...`);
+    const finalFrom = from || process.env.SMTP_USER;
+    console.log(`[Email] Sending to: ${to} via SMTP (${process.env.SMTP_HOST}:${port})`);
 
-    const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${RESEND_API_KEY}`
-        },
-        body: JSON.stringify({
-            from: finalFrom,
-            to: [to],
-            subject: subject,
-            html: finalHtml,
-            text: text
-        })
+    const info = await transporter.sendMail({
+        from: `MechaPEF <${finalFrom}>`,
+        to,
+        subject,
+        html: finalHtml,
+        text,
+        replyTo: process.env.SMTP_USER
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(`Resend API Error: ${data.message || response.statusText} (Code: ${response.status})`);
-    }
-
-    console.log(`[Resend-Email] Email successfully sent! Message ID: ${data.id}`);
-    return data;
+    console.log(`[Email] Successfully sent! MessageId: ${info.messageId}`);
+    return info;
 };
 
 export default sendEmail;
