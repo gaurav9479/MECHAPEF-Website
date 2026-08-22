@@ -1,53 +1,17 @@
-import nodemailer from 'nodemailer';
 import { SpecialSponsor } from '../models/specialSponsor.model.js';
-import dns from 'dns';
-import { promisify } from 'util';
 
-const resolve4 = promisify(dns.resolve4);
-const defaultFrom = process.env.FROM_EMAIL || process.env.SMTP_USER;
-
-const getTransporter = async () => {
-    if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        throw new Error('SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS must be configured');
-    }
-
-    // Force IPv4 resolution to strictly prevent IPv6 ENETUNREACH
-    let ipv4Host = process.env.SMTP_HOST;
-    try {
-        const addresses = await resolve4(process.env.SMTP_HOST);
-        if (addresses && addresses.length > 0) {
-            ipv4Host = addresses[0]; // Pick the first IPv4 address
-        }
-    } catch (err) {
-        console.error('IPv4 resolution failed, falling back to hostname', err.message);
-    }
-
-    const port = Number(process.env.SMTP_PORT || 465);
-    return nodemailer.createTransport({
-        host: ipv4Host, // Use the resolved IPv4 address explicitly
-        port: port,
-        secure: port === 465, // Direct SSL/TLS
-        pool: false, // Fresh connection per email
-        connectionTimeout: 20000, 
-        greetingTimeout: 15000,   
-        socketTimeout: 30000,     
-        tls: {
-            rejectUnauthorized: false,
-            servername: process.env.SMTP_HOST // Essential for TLS handshake when connecting via raw IP
-        },
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
-        }
-    });
-};
+const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_ieERaSrs_5inv5BYGtNvfW1asWRKSAZjn';
+const defaultFrom = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 
 const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
-    if (!from) {
-        throw new Error('FROM_EMAIL or SMTP_USER must be configured');
+    // If the sender is still using a custom domain but hasn't verified it on Resend,
+    // Resend's free tier restricts sending to verified domains only. 
+    // If they use onboarding@resend.dev, it must only send to the owner's email address.
+    let finalFrom = from;
+    if (finalFrom.includes('@mnnit.ac.in') && !process.env.RESEND_DOMAIN_VERIFIED) {
+        // Fallback to onboarding domain if domain verification is not complete on Resend dashboard
+        finalFrom = 'MechaPEF <onboarding@resend.dev>';
     }
-
-    const transporter = await getTransporter();
 
     let finalHtml = html;
     try {
@@ -74,14 +38,31 @@ const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
         console.error('Error injecting special sponsor into email:', err);
     }
 
-    return transporter.sendMail({
-        from,
-        to,
-        subject,
-        html: finalHtml,
-        text,
-        replyTo: process.env.SMTP_USER
+    console.log(`[Resend-Email] Dispatching email to ${to} via Resend HTTP API...`);
+
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+            from: finalFrom,
+            to: [to],
+            subject: subject,
+            html: finalHtml,
+            text: text
+        })
     });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(`Resend API Error: ${data.message || response.statusText} (Code: ${response.status})`);
+    }
+
+    console.log(`[Resend-Email] Email successfully sent! Message ID: ${data.id}`);
+    return data;
 };
 
 export default sendEmail;
