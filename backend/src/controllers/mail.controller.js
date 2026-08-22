@@ -30,9 +30,19 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType, c
     const escapedTitle = escapeHtml(title);
     const escapedDescription = escapeHtml(description).replace(/\n/g, '<br>');
     
-    // Use custom link if provided (e.g. Vercel link), else fall back to dashboard
-    const buttonUrl = customLink?.trim() ? toPublicEmailUrl(customLink.trim()) : dashboardUrl;
-    const buttonLabel = customLink?.trim() ? '🚀 Register Now' : 'Open Dashboard';
+    // Determine button link & label
+    let buttonUrl = dashboardUrl;
+    let buttonLabel = 'Open Dashboard';
+
+    if (customLink?.trim()) {
+        buttonUrl = toPublicEmailUrl(customLink.trim());
+        buttonLabel = endorsementType === 'event' ? '🚀 Register Now' : '🔗 Open Link';
+    } else if (isEndorsement && endorsementType === 'event') {
+        buttonLabel = '🚀 View Event';
+    } else if (isEndorsement && endorsementType === 'announcement') {
+        buttonLabel = '📢 Read Announcement';
+    }
+    
     const escapedButtonUrl = escapeHtml(buttonUrl);
 
     let typeLabel = "Message";
@@ -47,7 +57,7 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType, c
             '',
             description,
             '',
-            customLink?.trim() ? `Register here: ${buttonUrl}` : `Dashboard: ${dashboardUrl}`
+            `Link: ${buttonUrl}`
         ].join('\n'),
         html: `
             <div style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;color:#111827;">
@@ -70,7 +80,7 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType, c
     };
 };
 export const sendMail = asyncHandler(async (req, res) => {
-    const { targetRole, endorsementType, endorsementId, customSubject, customBody, customLink, customEmails } = req.body;
+    let { targetRole, endorsementType, endorsementId, customSubject, customBody, customLink, customEmails } = req.body;
     const scheduleType = 'smart_batch';
 
     if (!targetRole) {
@@ -94,6 +104,9 @@ export const sendMail = asyncHandler(async (req, res) => {
             if (!evt) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
             title = evt.title;
             description = evt.description;
+            if (!customLink) {
+                customLink = `${getPublicAppUrl()}/events/${evt._id}`;
+            }
         }
     }
 
@@ -159,7 +172,7 @@ export const sendMail = asyncHandler(async (req, res) => {
     const jobs = validUsers.map((user, index) => {
         let jobDelay = 0;
         if (scheduleType === 'smart_batch') {
-            // 1 email every 1 minute (60,000 ms) — matches worker poll interval (safe anti-spam rate)
+            // 1 email every 1 minute (60,000 ms) — safe anti-spam rate
             jobDelay = index * 60000;
         }
 
@@ -249,13 +262,19 @@ export const getMailStats = asyncHandler(async (req, res) => {
     );
 });
 
-// Retry Failed Emails (Admin Only)
+// Retry Failed Emails (Admin Only - Supports specific IDs or All)
 export const retryFailedMails = asyncHandler(async (req, res) => {
     const PendingEmail = (await import('../models/pendingEmail.model.js')).default;
+    const { ids } = req.body || {};
+
+    let query = { status: 'failed' };
+    if (ids && Array.isArray(ids) && ids.length > 0) {
+        query._id = { $in: ids };
+    }
     
     // Reset failed emails back to pending & reset attempts to 0
     const result = await PendingEmail.updateMany(
-        { status: 'failed' },
+        query,
         { $set: { status: 'pending', attempts: 0, executeAt: new Date() } }
     );
 
@@ -263,3 +282,23 @@ export const retryFailedMails = asyncHandler(async (req, res) => {
         new APIResponse(HTTP_STATUS.OK, { retriedCount: result.modifiedCount }, `${result.modifiedCount} failed email(s) queued for retry!`)
     );
 });
+
+// Delete Failed Emails (Admin Only - Supports specific IDs or All)
+export const deleteFailedMails = asyncHandler(async (req, res) => {
+    const PendingEmail = (await import('../models/pendingEmail.model.js')).default;
+    const { ids, all } = req.body || {};
+
+    let query = { status: 'failed' };
+    if (!all && ids && Array.isArray(ids) && ids.length > 0) {
+        query._id = { $in: ids };
+    } else if (!all && (!ids || ids.length === 0)) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please select items to delete or specify all: true');
+    }
+
+    const result = await PendingEmail.deleteMany(query);
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { deletedCount: result.deletedCount }, `${result.deletedCount} failed email log(s) deleted successfully!`)
+    );
+});
+

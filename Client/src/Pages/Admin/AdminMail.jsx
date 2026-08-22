@@ -11,6 +11,7 @@ const AdminMail = () => {
   const [customSubject, setCustomSubject] = useState('');
   const [customBody, setCustomBody] = useState('');
   const [customLink, setCustomLink] = useState('');
+  const [selectedFailedIds, setSelectedFailedIds] = useState([]);
   const [customEmails, setCustomEmails] = useState([]);
   const [scheduleType, setScheduleType] = useState('smart_batch');
   const [csvFileName, setCsvFileName] = useState('');
@@ -128,6 +129,57 @@ const AdminMail = () => {
         }
       };
       reader.readAsText(file);
+    }
+  };
+
+  const handleToggleSelectFailed = (id) => {
+    setSelectedFailedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAllFailed = () => {
+    if (!mailStats.failedEmails) return;
+    if (selectedFailedIds.length === mailStats.failedEmails.length) {
+      setSelectedFailedIds([]);
+    } else {
+      setSelectedFailedIds(mailStats.failedEmails.map(f => f.id));
+    }
+  };
+
+  const handleRetryFailed = async (ids = null) => {
+    try {
+      const payload = ids ? { ids: Array.isArray(ids) ? ids : [ids] } : (selectedFailedIds.length > 0 ? { ids: selectedFailedIds } : {});
+      const res = await api.post('/mail/retry-failed', payload);
+      showToast(res.data.message || 'Retry initiated!');
+      setSelectedFailedIds([]);
+      fetchMailStats();
+    } catch (err) {
+      showToast('Failed to trigger retry', 'error');
+    }
+  };
+
+  const handleDeleteFailed = async (ids = null, all = false) => {
+    try {
+      let payload = {};
+      if (all) {
+        payload = { all: true };
+      } else if (ids) {
+        payload = { ids: Array.isArray(ids) ? ids : [ids] };
+      } else {
+        if (selectedFailedIds.length === 0) {
+          showToast('Please select items to delete', 'error');
+          return;
+        }
+        payload = { ids: selectedFailedIds };
+      }
+
+      const res = await api.post('/mail/delete-failed', payload);
+      showToast(res.data.message || 'Deleted successfully!');
+      setSelectedFailedIds([]);
+      fetchMailStats();
+    } catch (err) {
+      showToast('Failed to delete logs', 'error');
     }
   };
 
@@ -287,42 +339,99 @@ const AdminMail = () => {
               <h2 style={{ fontSize: '1.2rem', margin: 0, color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 ⚠️ Failed Email Deliveries ({mailStats.failedEmails.length})
               </h2>
-              <button 
-                onClick={async () => {
-                  try {
-                    const res = await api.post('/mail/retry-failed');
-                    showToast(res.data.message || 'Retry initiated!');
-                    fetchMailStats();
-                  } catch (err) {
-                    showToast('Failed to trigger retry', 'error');
-                  }
-                }}
-                style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
-              >
-                🔄 Retry All Failed Mails
-              </button>
+
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {selectedFailedIds.length > 0 && (
+                  <>
+                    <button 
+                      onClick={() => handleRetryFailed(selectedFailedIds)}
+                      style={{ background: '#3b82f6', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                    >
+                      🔄 Retry Selected ({selectedFailedIds.length})
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteFailed(selectedFailedIds)}
+                      style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                    >
+                      🗑️ Delete Selected ({selectedFailedIds.length})
+                    </button>
+                  </>
+                )}
+
+                <button 
+                  onClick={() => handleRetryFailed(null)}
+                  style={{ background: '#22c55e', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                >
+                  🔄 Retry All
+                </button>
+                <button 
+                  onClick={() => handleDeleteFailed(null, true)}
+                  style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#f87171', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                >
+                  🗑️ Clear All Failed
+                </button>
+              </div>
             </div>
 
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#888' }}>
+                    <th style={{ padding: '10px', width: '38px', textAlign: 'center' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={mailStats.failedEmails.length > 0 && selectedFailedIds.length === mailStats.failedEmails.length}
+                        onChange={handleToggleSelectAllFailed}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </th>
                     <th style={{ padding: '10px' }}>Recipient Email</th>
                     <th style={{ padding: '10px' }}>Subject</th>
                     <th style={{ padding: '10px' }}>Failure Reason / Error Log</th>
                     <th style={{ padding: '10px', textAlign: 'center' }}>Attempts</th>
-                    <th style={{ padding: '10px', textAlign: 'right' }}>Time</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Time</th>
+                    <th style={{ padding: '10px', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {mailStats.failedEmails.map((failed) => (
-                    <tr key={failed.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <tr 
+                      key={failed.id} 
+                      style={{ 
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        background: selectedFailedIds.includes(failed.id) ? 'rgba(239, 68, 68, 0.1)' : 'transparent'
+                      }}
+                    >
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedFailedIds.includes(failed.id)}
+                          onChange={() => handleToggleSelectFailed(failed.id)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </td>
                       <td style={{ padding: '10px', color: '#fff', fontWeight: 600 }}>{failed.to}</td>
                       <td style={{ padding: '10px', color: '#ccc' }}>{failed.subject}</td>
-                      <td style={{ padding: '10px', color: '#ef4444', fontFamily: 'monospace', fontSize: '0.8rem' }}>{failed.error}</td>
+                      <td style={{ padding: '10px', color: '#ef4444', fontFamily: 'monospace', fontSize: '0.8rem', maxWidth: '300px', wordBreak: 'break-word' }}>{failed.error}</td>
                       <td style={{ padding: '10px', textAlign: 'center', color: '#f59e0b' }}>{failed.attempts}</td>
-                      <td style={{ padding: '10px', color: '#888', textAlign: 'right', fontSize: '0.78rem' }}>
+                      <td style={{ padding: '10px', color: '#888', textAlign: 'center', fontSize: '0.78rem' }}>
                         {new Date(failed.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button
+                          onClick={() => handleRetryFailed(failed.id)}
+                          title="Retry this email"
+                          style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6', color: '#60a5fa', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', marginRight: '6px' }}
+                        >
+                          🔄 Retry
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFailed(failed.id)}
+                          title="Delete this log"
+                          style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#f87171', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                        >
+                          🗑️ Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
