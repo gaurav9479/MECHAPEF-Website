@@ -9,7 +9,6 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
 });
 
-// Get the active special sponsor (public)
 export const getActiveSpecialSponsor = async (req, res) => {
   try {
     const sponsor = await SpecialSponsor.findOne({ isActive: true });
@@ -19,7 +18,6 @@ export const getActiveSpecialSponsor = async (req, res) => {
   }
 };
 
-// Create or update special sponsor (Admin only)
 export const upsertSpecialSponsor = async (req, res) => {
   try {
     const { 
@@ -115,7 +113,6 @@ export const upsertSpecialSponsor = async (req, res) => {
   }
 };
 
-// Delete special sponsor (Admin only)
 export const deleteSpecialSponsor = async (req, res) => {
   try {
     const sponsor = await SpecialSponsor.findOne();

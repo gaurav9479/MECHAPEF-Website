@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             validate: {
                 validator: function (value) {
-                    // Only allow MNNIT format: firstname.regno@mnnit.ac.in
+
                     return /^[a-z]+\.[0-9]+@mnnit\.ac\.in$/.test(value);
                 },
                 message: 'Only MNNIT emails are allowed. Format: firstname.regno@mnnit.ac.in'
@@ -34,19 +34,18 @@ const userSchema = new mongoose.Schema(
             select: false
         },
 
-        // College Registration Number — required for GeneralUser self-registration
-        // SuperAdmin/EventHead/PRTeam/Alumni are pre-seeded so not strictly required for them
+
         collegeRegNo: {
             type: String,
             trim: true,
             uppercase: true,
             unique: true,
-            sparse: true, // allows null/undefined for pre-seeded admins
+            sparse: true,
             validate: {
                 validator: function (value) {
-                    // Only validate format if value is provided
+
                     if (!value) return true;
-                    // MNNIT Allahabad reg no format: e.g. 22114048, MCA2024001 etc.
+
                     return /^[A-Z0-9]{4,20}$/.test(value);
                 },
                 message: 'College registration number must be 4-20 alphanumeric characters'
@@ -71,15 +70,11 @@ const userSchema = new mongoose.Schema(
             default: null
         },
 
-        // isVerified = true means admin has verified the user's college reg no
-        // Pre-seeded admin accounts are verified by default
-        // Self-registered GeneralUsers start as unverified
         isVerified: {
             type: Boolean,
             default: false
         },
 
-        // Request life of 7 days if unverified. Handled via TTL index.
         unverifiedRequestExpiresAt: {
             type: Date
         },
@@ -198,7 +193,6 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ role: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ isActive: 1, deletedAt: 1 });
-// TTL index: auto delete document when current time > unverifiedRequestExpiresAt
 userSchema.index({ unverifiedRequestExpiresAt: 1 }, { expireAfterSeconds: 0 });
 
 userSchema.virtual('initials').get(function () {
@@ -206,7 +200,6 @@ userSchema.virtual('initials').get(function () {
     return names.map(n => n[0]).join('').toUpperCase();
 });
 
-// Hash password before save
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     try {
@@ -218,7 +211,6 @@ userSchema.pre('save', async function (next) {
     }
 });
 
-// Auto-update updatedAt
 userSchema.pre('save', function (next) {
     if (this.isModified()) {
         this.updatedAt = Date.now();

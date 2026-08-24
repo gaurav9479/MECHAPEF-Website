@@ -13,10 +13,10 @@ const projectSchema = new mongoose.Schema({
     modelUrl: {
         type: String,
         required: true,
-        default: '/models/placeholder.glb' // Path to public folder glb file
+        default: '/models/placeholder.glb' 
     },
     credits: {
-        type: String, // E.g., "Designed by John Doe | Supervised by Dr. Smith"
+        type: String, 
         default: ''
     },
     isActive: {

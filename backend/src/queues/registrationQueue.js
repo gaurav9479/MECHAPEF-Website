@@ -16,7 +16,6 @@ let drainTimer = null;
 const QUEUE_NAME_1 = 'RegistrationQueue_1';
 const QUEUE_NAME_2 = 'RegistrationQueue_2';
 
-// Returns false if queue is null OR if queue is in 15-minute draining mode (so new registrations bypass queue and write directly to DB)
 export const isRegistrationQueueEnabled = () => Boolean(registrationQueue1) && !isDraining;
 
 const executeGracefulShutdown = async (modeType, currentIstHour) => {
@@ -50,7 +49,7 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
         const modeType = overrideMode || sysConfig?.redisModeType || 'AUTO';
         isDualMode = Boolean(sysConfig?.enableDualRedis);
         
-        // Calculate current IST time details (hour & minute)
+
         const istHourFormatter = new Intl.DateTimeFormat('en-US', {
             timeZone: 'Asia/Kolkata',
             hour: 'numeric',
@@ -67,7 +66,7 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
         const startHour = sysConfig?.startHour ?? 10;
         const endHour = sysConfig?.endHour ?? 23;
 
-        // AUTO Schedule 15-Minute Pre-Warm: Turns ON at 9:45 AM if startHour = 10 AM
+
         const isExactWindow = currentIstHour >= startHour && currentIstHour < endHour;
         const isPreWarmWindow = (currentIstHour === startHour - 1) && (currentIstMinute >= 45);
         const isTimeInWindow = isExactWindow || isPreWarmWindow;
@@ -78,7 +77,7 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
         } else if (modeType === 'ALWAYS_OFF') {
             shouldEnableRedis = false;
         } else {
-            // AUTO Mode: Active during 10 AM - 11 PM window (pre-warms starting 9:45 AM)
+
             shouldEnableRedis = Boolean(hasActiveEvent && isTimeInWindow);
         }
 
@@ -103,7 +102,7 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
             return;
         }
 
-        // If Redis is re-enabled while draining, cancel the shutdown timer
+
         if (shouldEnableRedis && isDraining) {
             console.log(`[RedisManager] 🔄 Redis re-enabled during drain period! Resuming normal BullMQ queueing.`);
             isDraining = false;
@@ -166,7 +165,7 @@ export const enqueueRegistration = async (payload) => {
 
     const uniqueJobId = `reg-${payload.eventId}-${payload.registeredBy}`;
 
-    // Hash user ID to route to Q1 or Q2
+
     let targetQueue = registrationQueue1;
     
     if (isDualMode && registrationQueue2) {

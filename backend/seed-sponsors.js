@@ -63,14 +63,14 @@ const seed = async () => {
         await mongoose.connect(MONGO_URI);
         console.log('Connected to DB');
         
-        // Remove existing test sponsors to avoid uniqueness errors
+
         await Sponsor.deleteMany({ companyName: { $in: dummySponsors.map(s => s.companyName) } });
         
-        // Insert sponsors
+
         const insertedSponsors = await Sponsor.insertMany(dummySponsors);
         console.log(`Dummy sponsors added! Count: ${insertedSponsors.length}`);
         
-        // Update the NEW WEBSITE event (from the screenshot) to include sponsors so it renders instantly
+
         const result = await Announcement.updateMany(
             { title: /new website/i },
             { $set: { 

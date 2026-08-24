@@ -147,7 +147,7 @@ async function seed() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to DB");
     
-    // Clear and insert
+
     await Magazine.deleteMany({});
     await Magazine.create(seedData);
     

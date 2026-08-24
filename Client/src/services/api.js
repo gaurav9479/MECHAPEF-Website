@@ -43,14 +43,14 @@ api.interceptors.response.use(
       error.response?.status === 503 ||
       error.response?.status === 504
     ) {
-      // Handle Render cold start or severe server overload gracefully
+
       const queueMessage = 'Heavy traffic right now, you are in a queue. Please wait 30 seconds.';
 
-      // If error.response exists, modify its message payload
+
       if (error.response && error.response.data) {
         error.response.data.message = queueMessage;
       } else {
-        // If it's a network error (!error.response), create a mock response
+
         error.response = {
           data: {
             message: queueMessage
@@ -62,6 +62,5 @@ api.interceptors.response.use(
   }
 );
 
-// -------------------------------------------------------------
 export default api;
 

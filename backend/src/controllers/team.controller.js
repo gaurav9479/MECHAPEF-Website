@@ -7,7 +7,7 @@ import { HTTP_STATUS } from '../constants/index.js';
 import logFootprint from '../utils/logFootprint.js';
 
 export const getAllTeam = asyncHandler(async (req, res) => {
-    // Fetch all verified users who have a role other than general-user
+
     const members = await User.find({
         role: { $ne: 'general-user' },
         isVerified: true,

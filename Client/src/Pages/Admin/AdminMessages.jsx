@@ -45,7 +45,7 @@ const AdminMessages = () => {
     setSelectedMessage(msg);
     setShowModal(true);
 
-    // If message is unread, automatically mark it as read when opened
+
     if (!msg.isRead) {
       try {
         const res = await api.patch(`/contact/messages/${msg._id}/read`, { isRead: true });

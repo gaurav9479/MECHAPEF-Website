@@ -74,7 +74,7 @@ const AdminManagement = () => {
       setActiveTab('images');
     }
   }, [user]);
-  // ── Users Tab State ──
+
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -84,7 +84,7 @@ const AdminManagement = () => {
   const [toast, setToast] = useState(null);
 
   const fetchSystemConfig = async () => {
-    // keeping empty to avoid changing useEffect
+
   };
 
   useEffect(() => {
@@ -92,10 +92,10 @@ const AdminManagement = () => {
   }, []);
 
   const updateSystemConfig = async () => {
-    // Removed
+
   };
 
-  // ── Volunteer Endorsement Modal State ──
+
   const [endorseModalUser, setEndorseModalUser] = useState(null);
   const [endorseEvents, setEndorseEvents] = useState([]);
   const [endorseEventId, setEndorseEventId] = useState('');
@@ -103,13 +103,13 @@ const AdminManagement = () => {
   const [endorseStage, setEndorseStage] = useState('Stage 1: Check-in');
   const [endorseSubmitting, setEndorseSubmitting] = useState(false);
 
-  // ── Notices Tab State ──
+
   const [notices, setNotices] = useState([]);
   const [noticeForm, setNoticeForm] = useState({ title: '', description: '', priority: 'Medium', targetType: 'None', isActive: true, eventSponsors: [] });
   const [noticeSubmitting, setNoticeSubmitting] = useState(false);
   const [editingNotice, setEditingNotice] = useState(null);
   const [allSponsors, setAllSponsors] = useState([]);
-  // ── Image Manager Tab State ──
+
   const [sectionImages, setSectionImages] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('Our Department');
   const [selectedSection, setSelectedSection] = useState('hero_bot');
@@ -129,7 +129,7 @@ const AdminManagement = () => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
-  // ── Fetch Users (Cached) ──────────────────────────────────────────────────
+
   const clearUsersCache = () => {
     localStorage.removeItem('api_cache_/auth/users?limit=5000');
   };
@@ -242,7 +242,7 @@ const AdminManagement = () => {
 
     return matchesSearch && matchesRole && matchesVerified;
   });
-  // ── Fetch Notices ────────────────────────────────────────────────────────
+
   const fetchNotices = async () => {
     const [annRes, sponRes] = await Promise.all([
       api.get('/announcements'),
@@ -282,7 +282,7 @@ const AdminManagement = () => {
     setNoticeForm({ title: n.title, description: n.description, priority: n.priority, targetType: n.targetType || 'None', isActive: n.isActive, eventSponsors: n.eventSponsors || [] });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  // ── Fetch Section Images ──────────────────────────────────────────────────
+
   const fetchSectionImages = async () => {
     const res = await api.get('/upload/sections');
     const map = {};
@@ -352,10 +352,9 @@ const AdminManagement = () => {
     if (!cropper) return;
     setUploading(true);
     try {
-      // Get cropped canvas as blob
       const canvas = cropper.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1080 });
       const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.92));
-      // Upload to backend → ImageKit
+
       const formData = new FormData();
       formData.append('image', blob, 'section_image.jpg');
       formData.append('folder', '/mechapef/sections');
@@ -363,7 +362,7 @@ const AdminManagement = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       const { url, fileId } = uploadRes.data.data;
-      // Save to SectionImage model
+
       const section = dynamicSectionKeys.find(s => s.key === selectedSection);
       await api.post('/upload/sections', {
         sectionKey: selectedSection,

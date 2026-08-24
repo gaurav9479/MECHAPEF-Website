@@ -22,13 +22,13 @@ const ProtectedRoute = ({
     );
   }
 
-  // 1. Check if the user is authenticated
+
   if (!user) {
     const destination = location.pathname.startsWith('/admin') ? '/' : '/login';
     return <Navigate to={destination} state={{ from: location }} replace />;
   }
 
-  // 2. Check if the user has the required permission (if allowedRoles are specified)
+
   if (allowedRoles && allowedRoles.length > 0) {
     if (!isRole(...allowedRoles)) {
       return (

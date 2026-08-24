@@ -27,7 +27,6 @@ const createWorker = (queueName, redisConnection) => {
             throw new Error(`Event ${eventId} not found`);
         }
 
-        // Check branch eligibility for registerer
         if (event.eligibleBranches && event.eligibleBranches.length > 0) {
             const userObj = await User.findById(registeredBy);
             if (!userObj || !userObj.branch) {
@@ -61,7 +60,6 @@ const createWorker = (queueName, redisConnection) => {
         if (registrationType === 'Team' && teamMembers?.length) {
             const memberIds = teamMembers.map((member) => member.userId);
 
-            // Check branch eligibility for team members
             if (event.eligibleBranches && event.eligibleBranches.length > 0) {
                 const membersList = await User.find({ _id: { $in: memberIds } });
                 const ineligibleMember = membersList.find(m => {
@@ -103,17 +101,15 @@ const createWorker = (queueName, redisConnection) => {
             throw error;
         }
 
-        // Fetch User to send to webhook — use saved registration (not raw job.data)
-        // so teamMembers.collegeRegNo is always present for Google Sheets sync
         const registererObj = await User.findById(registeredBy);
         if (registererObj) {
             syncWithGoogleSheet(registererObj, event.title, newRegistration.toObject());
         }
 
-        // Backup Log: Log COMPLETED registration to disk file when saved by worker
+
         appendBackupLog('COMPLETED_REGISTRATION', newRegistration.toObject());
 
-        // Atomic increment + addToSet in parallel
+
         await Promise.all([
             Event.findByIdAndUpdate(eventId, { $inc: { totalRegistrations: 1 } }),
             User.findByIdAndUpdate(

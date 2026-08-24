@@ -33,9 +33,9 @@ const getTransporter = async () => {
             secure: port === 465,
             family: 4,
             pool: true,
-            maxConnections: 1, // Single connection pool to prevent concurrent auth triggers
+            maxConnections: 1, 
             maxMessages: 100,
-            idleTimeout: 300000, // Keep connection alive in background for 5 minutes (prevents reconnect timeouts)
+            idleTimeout: 300000, 
             connectionTimeout: 30000,
             greetingTimeout: 20000,
             socketTimeout: 45000,
@@ -58,11 +58,11 @@ const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
     try {
         transporter = await getTransporter();
     } catch (err) {
-        cachedTransporter = null; // Reset cache on failure
+        cachedTransporter = null; 
         throw err;
     }
 
-    // Inject special sponsor banner if active
+
     let finalHtml = html;
     try {
         const sponsor = await SpecialSponsor.findOne({ isActive: true });

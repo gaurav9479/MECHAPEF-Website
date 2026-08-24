@@ -6,29 +6,27 @@ const getCacheDuration = (url, options) => {
 
   const urlLower = url.toLowerCase();
 
-  // Admin routes should not be cached
+
   if (urlLower.includes('/auth/users') || urlLower.includes('admin')) {
     return 0; 
   }
 
-  // Team section: 2 hours
+
   if (urlLower.includes('/team')) {
     return 2 * 60 * 60 * 1000;
   }
 
-  // Events, Announcements, Banners: 2 minutes
+
   if (urlLower.includes('/events') || urlLower.includes('/announcements') || urlLower.includes('/upload/sections')) {
     return 2 * 60 * 1000;
   }
 
-  // Rest: 4 hours
+
   return 4 * 60 * 60 * 1000;
 };
 
-// Global map to store ongoing requests and prevent duplicate concurrent API calls
 const pendingRequests = {};
 
-// Automatically warm up browser image cache when payload contains image URLs
 const extractAndPreloadImages = (payload) => {
   if (!payload) return;
   const target = payload.data || payload;
@@ -54,7 +52,7 @@ const extractAndPreloadImages = (payload) => {
 export const apiGetCached = async (url, callback, options = {}) => {
   const cacheKey = `api_cache_${url}`;
   
-  // 1. Check localStorage for cached response
+
   const cached = localStorage.getItem(cacheKey);
   let hasServedCache = false;
   
@@ -63,11 +61,11 @@ export const apiGetCached = async (url, callback, options = {}) => {
       const parsed = JSON.parse(cached);
       extractAndPreloadImages(parsed.data);
       
-      // Serve cached data instantly (Stale-While-Revalidate)
+
       callback(parsed.data, true);
       hasServedCache = true;
       
-      // If cache is less than the duration old, skip the background fetch to avoid spamming the server on rapid reloads
+
       const duration = getCacheDuration(url, options);
       if (Date.now() - parsed.timestamp < duration) {
         return;
@@ -77,7 +75,7 @@ export const apiGetCached = async (url, callback, options = {}) => {
     }
   }
 
-  // Prevent multiple identical API requests at the same time
+
   if (pendingRequests[url]) {
     try {
       const res = await pendingRequests[url];
@@ -90,21 +88,21 @@ export const apiGetCached = async (url, callback, options = {}) => {
     }
   }
 
-  // 2. Fetch fresh data from API in background (if no cache or expired)
+
   const fetchPromise = api.get(url, options).then(res => {
     const freshData = res.data;
     extractAndPreloadImages(freshData);
     
-    // Save to localStorage
+
     localStorage.setItem(cacheKey, JSON.stringify({
       data: freshData,
       timestamp: Date.now()
     }));
 
-    // Trigger callback with fresh data
+
     callback(freshData, false);
     
-    // Cleanup pending request
+
     delete pendingRequests[url];
     return res;
   }).catch(error => {

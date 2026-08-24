@@ -37,7 +37,7 @@ const AdminScanner = () => {
       const evList = res.data.data?.events || [];
       setEvents(evList);
 
-      // Check if user is an endorsed Scanner Holder
+
       if (user?.assignedEvent) {
         const assignedEvId = typeof user.assignedEvent === 'object' ? user.assignedEvent._id : user.assignedEvent;
         const matchedEv = evList.find(e => e._id === assignedEvId);
@@ -173,7 +173,7 @@ const AdminScanner = () => {
         scannerRef.current = null;
       }
     } catch {
-      // Ignore cleanup error
+
     }
 
     const target = user?.role === 'endorsed-volunteer' ? '/' : (user?.role === 'super-admin' || user?.role === 'event-lead' || user?.role === 'media-lead') ? '/admin' : '/';

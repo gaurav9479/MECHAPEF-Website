@@ -5,7 +5,6 @@ import api from '../../services/api';
 import { apiGetCached } from '../../utils/apiCache';
 import PremiumSponsorPanel from './PremiumSponsorPanel';
 import HeroTicker from '../HeroTicker/HeroTicker';
-// import ICEngine3D from './ICEngine3D'; // User requested to remove from slider but keep the file
 import './LiveEventsSlider.css';
 
 const LiveEventsSlider = () => {

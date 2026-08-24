@@ -66,7 +66,7 @@ const AdminEvents = () => {
       const { isFullyApproved, csvData, csvFileName } = res.data?.data || {};
 
       if (isFullyApproved && csvData) {
-        // Automatic browser CSV file download trigger for the final approving SuperAdmin
+
         const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -133,11 +133,11 @@ const AdminEvents = () => {
   useEffect(() => { fetchEvents(); }, []);
 
   useEffect(() => {
-    // Only cache if we are creating an event (not editing) and the modal is open
+
     if (!editingEvent && showModal) {
       const timer = setTimeout(() => {
         localStorage.setItem('mechapef_adminEventFormDraft', JSON.stringify(form));
-      }, 500); // 500ms debounce to prevent lag on keystrokes/clicks
+      }, 500); 
       return () => clearTimeout(timer);
     }
   }, [form, editingEvent, showModal]);
@@ -335,7 +335,7 @@ const AdminEvents = () => {
                   </td>
                   <td style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
                     
-                    {/* Deletion Actions Row */}
+
                     {(ev.deletionState?.status === 'PENDING_APPROVAL' || ev.deletionState?.status === 'APPROVED_RETENTION') && user?.role === 'super-admin' && (
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {ev.deletionState?.status === 'PENDING_APPROVAL' && (
@@ -346,7 +346,7 @@ const AdminEvents = () => {
                                 disabled
                                 style={{ padding: '4px 10px', fontSize: '0.78rem', background: '#333', color: '#888', fontWeight: 'bold', cursor: 'not-allowed', border: '1px solid #555' }}
                               >
-                                ✓ Vote Cast (Waiting on others)
+                                ✓ Vote Cast
                               </button>
                             ) : (
                               <button
@@ -381,7 +381,7 @@ const AdminEvents = () => {
                       </div>
                     )}
 
-                    {/* Standard Actions Row */}
+
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {ev.status !== 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
                         <button className="btn-secondary" title="End Event" onClick={() => handleEndEvent(ev._id)} style={{padding:'6px 10px'}}>
@@ -396,7 +396,7 @@ const AdminEvents = () => {
                       <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{padding:'6px 10px'}}><FaUsers /></Link>
                       <button className="btn-secondary" style={{padding:'6px 10px'}} onClick={() => openEdit(ev)}><FaEdit /></button>
                       
-                      {/* ONLY SuperAdmin can see/trigger event deletion */}
+
                       {user?.role === 'super-admin' && ev.deletionState?.status === 'ACTIVE' && (
                         <button className="btn-secondary" title="Initiate Multi-Sig Deletion" onClick={() => handleDelete(ev._id)} style={{padding:'6px 10px', color:'#ff1f01', borderColor:'#ff1f01'}}>
                           <FaTrash />

@@ -19,26 +19,27 @@ const EventDetails = () => {
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
-  const [userRegistration, setUserRegistration] = useState(null); // null = not checked, false = not registered, object = registered
+  const [userRegistration, setUserRegistration] = useState(null); 
   const [timeLeft, setTimeLeft] = useState('');
 
-  // Form State
+
+
   const [regType, setRegType] = useState('Solo'); // 'Solo' | 'Team' | 'JoinTeam'
   const [teamName, setTeamName] = useState('');
   const [customData, setCustomData] = useState({});
   const [fileUploading, setFileUploading] = useState({});
 
-  // Type 2 (JoinRequests) specific state
+
   const [joinTeamRegNo, setJoinTeamRegNo] = useState('');
   const [searchTeamStatus, setSearchTeamStatus] = useState(null); // { type: 'loading'|'error'|'success', msg, team }
   const [submittingJoinReq, setSubmittingJoinReq] = useState(false);
-  // For leader's team dashboard in Type 2 (shown after draft created)
+
   const [draftRegistration, setDraftRegistration] = useState(null);
   const [showDraftDashboard, setShowDraftDashboard] = useState(false);
   const [respondingTo, setRespondingTo] = useState(null);
   const [endorseRegNo, setEndorseRegNo] = useState('');
   const [addingMember, setAddingMember] = useState(false);
-  // Full join status — covers both sides (leader seeing incoming, member seeing outgoing)
+
   const [myJoinStatus, setMyJoinStatus] = useState(null); // null=loading, false=none, object=status
 
   const showToast = (msg, type = 'success') => {
@@ -74,7 +75,7 @@ const EventDetails = () => {
         const res = await eventService.getById(id);
         setEvent(res.data.data.event);
         
-        // Initialize customData state based on customFormFields
+
         const initialData = {};
         if (res.data.data.event.customFormFields) {
           res.data.data.event.customFormFields.forEach(field => {
@@ -91,7 +92,7 @@ const EventDetails = () => {
     fetchEvent();
   }, [id]);
 
-  // Check if user is already registered for this event
+
   useEffect(() => {
     if (!user) return;
     const checkRegistration = async () => {
@@ -108,14 +109,14 @@ const EventDetails = () => {
     };
     checkRegistration();
 
-    // Auto open registration modal if user was redirected back after login
+
     if (sessionStorage.getItem('auto_open_reg') === 'true') {
       sessionStorage.removeItem('auto_open_reg');
       setShowModal(true);
     }
   }, [id, user]);
 
-  // Fetch JoinRequests event status (Type 2) — covers both leader and member side
+
   useEffect(() => {
     if (!user || !event || event.registrationMode !== 'JoinRequests') return;
     const fetchJoinStatus = async () => {
@@ -123,7 +124,7 @@ const EventDetails = () => {
         const res = await api.get(`/events/${id}/my-join-status`);
         if (res.status === 200 && res.data.data?.role !== 'none') {
           setMyJoinStatus(res.data.data);
-          // If user is leader, pre-populate the draft registration for the dashboard
+
           if (res.data.data?.role === 'leader') {
             setDraftRegistration(res.data.data.registration);
           }
@@ -170,7 +171,7 @@ const EventDetails = () => {
       const res = await api.post('/upload/file', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      // Store both url and fileId so we can delete the file later
+
       handleCustomFieldChange(fieldName, {
         url: res.data.data.url,
         fileId: res.data.data.fileId
@@ -198,8 +199,7 @@ const EventDetails = () => {
       };
       if (regType === 'Team') {
         payload.teamName = teamName;
-        // Simplified team registration assuming individual login for now or 
-        // passing current user as the only member if teamMemberIds is required
+
         payload.teamMemberIds = [user._id]; 
       }
 
@@ -222,9 +222,6 @@ const EventDetails = () => {
   if (loading) return <div className="loading-page"><Navbar/><div className="loading-text">Loading...</div></div>;
   if (!event) return <div className="loading-page"><Navbar/><div className="loading-text">Event not found</div></div>;
 
-  // ── TYPE 2 helpers ───────────────────────────────────────────
-
-  // Helper to re-fetch overall join status
   const refreshJoinStatus = async () => {
     if (!user || !event || event.registrationMode !== 'JoinRequests') return;
     try {
@@ -244,7 +241,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Leader creates a Draft team (Type 2 only) */
   const handleCreateDraftTeam = async (e) => {
     e.preventDefault();
     if (!teamName.trim()) return showToast('Team name is required', 'error');
@@ -264,7 +260,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Member searches for a team by leader regNo or fetches all open teams for the event */
   const handleFetchOpenTeams = async (regNoOverride) => {
     const regNo = regNoOverride !== undefined ? regNoOverride : joinTeamRegNo;
     setSearchTeamStatus({ type: 'loading' });
@@ -287,7 +282,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Member sends a join request to a found team */
   const handleSendJoinRequest = async (teamRegId) => {
     setSubmittingJoinReq(true);
     try {
@@ -304,7 +298,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Leader loads their draft registration dashboard */
   const handleLoadDraftDashboard = async () => {
     try {
       const res = await api.get(`/events/${id}/my-team-registration`, { bypassCache: true });
@@ -315,7 +308,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Leader directly endorses/adds a member by entering 8-digit Reg No */
   const handleAddMemberByRegNo = async (regNoToAdd) => {
     const regNo = regNoToAdd || endorseRegNo;
     if (!regNo || regNo.trim().length !== 8) {
@@ -337,7 +329,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Confirmed Member leaves team OR Requester withdraws join request */
   const handleLeaveTeam = async (teamRegId) => {
     const targetId = teamRegId || myJoinStatus?.registration?._id || myJoinStatus?.requests?.[0]?.teamId;
     if (!targetId) return;
@@ -351,7 +342,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Leader removes a member from draft team */
   const handleRemoveTeamMember = async (memberUserId) => {
     if (!draftRegistration) return;
     if (!window.confirm('Remove this member from your team?')) return;
@@ -365,7 +355,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Leader deletes/disbands a draft team before finalization */
   const handleDeleteDraftTeam = async () => {
     if (!draftRegistration) return;
     if (!window.confirm('Are you sure you want to delete/disband your team? All members and pending requests will be removed.')) return;
@@ -376,7 +365,6 @@ const EventDetails = () => {
       setShowDraftDashboard(false);
       setDraftRegistration(null);
       await refreshJoinStatus();
-      // Open Join / Create Team dropdown modal
       setRegType('Team');
       setShowModal(true);
     } catch (err) {
@@ -386,15 +374,14 @@ const EventDetails = () => {
     }
   };
 
-  /** Leader responds to a join request */
   const handleRespondJoinRequest = async (requesterId, action) => {
     if (!draftRegistration) return;
     setRespondingTo(requesterId);
     try {
       await api.post(`/registrations/${draftRegistration._id}/respond-join`, { requesterId, action });
       showToast(`Join request ${action}ed!`, 'success');
-      await handleLoadDraftDashboard(); // refresh modal
-      await refreshJoinStatus(); // refresh main page panel
+      await handleLoadDraftDashboard(); 
+      await refreshJoinStatus();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to respond', 'error');
     } finally {
@@ -402,7 +389,6 @@ const EventDetails = () => {
     }
   };
 
-  /** Leader finalizes Draft → Confirmed */
   const handleFinalizeRegistration = async () => {
     if (!draftRegistration) return;
     
@@ -453,7 +439,7 @@ const EventDetails = () => {
             )}
           </div>
 
-          {/* Right Column: Info & Actions */}
+
           <div className="event-info-container">
             <div className="event-header">
               <div className="event-category-tag">{event.category}</div>
@@ -513,7 +499,7 @@ const EventDetails = () => {
               )}
             </div>
 
-            {/* Registration Card merged into Right Column */}
+
             {!event.isTBD && (
               <>
                 <div className="event-card-info">
@@ -611,7 +597,7 @@ const EventDetails = () => {
                       </div>
                     )}
 
-                    {/* CONFIRMED MEMBER: show which team they joined */}
+
                     {myJoinStatus.role === 'member' && myJoinStatus.registration && (
                       <div style={{background: 'rgba(0,200,100,0.07)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '10px', padding: '14px'}}>
                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
@@ -636,7 +622,7 @@ const EventDetails = () => {
                       </div>
                     )}
 
-                    {/* REQUESTER: show outgoing join requests */}
+
                     {myJoinStatus.role === 'requester' && myJoinStatus.requests?.length > 0 && (
                       <div style={{background: 'rgba(255,170,0,0.07)', border: '1px solid rgba(255,170,0,0.25)', borderRadius: '10px', padding: '14px'}}>
                         <h4 style={{color: '#ffaa00', margin: '0 0 10px', fontSize: '0.95rem'}}>Your Join Request{myJoinStatus.requests.length > 1 ? 's' : ''}</h4>
@@ -667,13 +653,13 @@ const EventDetails = () => {
         </div>
       </div>
 
-      {/* Registration Modal */}
+
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className={`modal-box reg-modal ${((event.customFormFields && event.customFormFields.length > 0) || event.maxTeamSize > 1) ? 'reg-modal-wide' : ''}`} onClick={e => e.stopPropagation()}>
             <h2>Register for {event.title}</h2>
 
-            {/* ── TYPE 2 (JoinRequests) MODE ─────────────────────── */}
+
             {event.registrationMode === 'JoinRequests' ? (
               <>
                 {/* Left: user info */}
@@ -687,7 +673,7 @@ const EventDetails = () => {
                     </div>
                   </div>
 
-                  {/* Right: choose Create or Join */}
+
                   <div className="reg-form-right">
                     <div className="form-group" style={{marginTop: '0px'}}>
                       <label>I want to</label>
@@ -704,7 +690,7 @@ const EventDetails = () => {
                       </select>
                     </div>
 
-                    {/* Create draft team */}
+
                     {regType === 'Team' && (
                       <>
                         <div className="form-group">
@@ -717,7 +703,7 @@ const EventDetails = () => {
                       </>
                     )}
 
-                    {/* Join existing team */}
+
                     {regType === 'JoinTeam' && (
                       <>
                         <div className="form-group" style={{marginTop: '0px'}}>
@@ -808,7 +794,7 @@ const EventDetails = () => {
                 </div>
               </>
             ) : (
-              /* ── STANDARD MODE ──────────────────────────────────── */
+
               <form onSubmit={submitRegistration}>
                 <div className={`reg-form-layout ${((event.customFormFields && event.customFormFields.length > 0) || event.maxTeamSize > 1) ? 'reg-form-horizontal' : 'reg-form-vertical'}`}>
                   <div className="reg-form-left">
@@ -897,7 +883,7 @@ const EventDetails = () => {
         </div>
       )}
 
-      {/* ── TYPE 2: Draft Team Dashboard (shown after leader creates draft) ── */}
+
       {showDraftDashboard && draftRegistration && (
         <div className="modal-overlay" onClick={() => setShowDraftDashboard(false)}>
           <div className="modal-box reg-modal reg-modal-extra-wide" onClick={e => e.stopPropagation()}>
@@ -906,7 +892,7 @@ const EventDetails = () => {
               Share your Reg No <strong style={{color: '#00c864'}}>({user?.collegeRegNo})</strong> with others so they can find and join your team.
             </p>
 
-            {/* Current members */}
+
             <div style={{marginBottom: '20px'}}>
               <h4 style={{color: '#ff1f01', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px'}}>
                 Team Members ({draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1} / {event.maxTeamSize})
@@ -928,7 +914,7 @@ const EventDetails = () => {
                 </div>
               ))}
 
-              {/* Leader Endorse/Add Teammate Input by 8-Digit Reg No */}
+
               {(draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < event.maxTeamSize && (
                 <div style={{marginTop: '15px', background: '#111', border: '1px dashed #444', borderRadius: '8px', padding: '12px'}}>
                   <label style={{display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#00c864', marginBottom: '8px'}}>
@@ -943,7 +929,6 @@ const EventDetails = () => {
                         onChange={e => {
                           const val = e.target.value.replace(/\D/g, '');
                           setEndorseRegNo(val);
-                          // Only trigger endorse API call when full 8 digits are entered
                           if (val.length === 8) {
                             handleAddMemberByRegNo(val);
                           }
@@ -976,7 +961,7 @@ const EventDetails = () => {
               )}
             </div>
 
-            {/* Pending join requests (Always visible section) */}
+
             <div style={{marginBottom: '20px', background: '#0a0a0a', border: '1px solid #222', borderRadius: '10px', padding: '14px'}}>
               <h4 style={{color: '#ffaa00', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px', marginTop: 0}}>
                 Incoming Join Requests ({draftRegistration.joinRequests?.filter(r => r.status === 'Pending').length || 0})
@@ -1015,7 +1000,7 @@ const EventDetails = () => {
               )}
             </div>
 
-            {/* Custom fields for finalization */}
+
             {event.customFormFields?.length > 0 && (
               <div style={{marginBottom: '20px'}}>
                 <h4 style={{color: '#ff1f01', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px'}}>Additional Information Required</h4>

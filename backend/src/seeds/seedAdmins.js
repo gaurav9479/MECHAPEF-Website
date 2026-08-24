@@ -14,7 +14,7 @@ import mongoose from 'mongoose';
 import User from '../models/user.model.js';
 
 const SEED_USERS = [
-    // ──── SUPER ADMIN ────
+
     {
         name: 'Gaurav',
         email: 'gaurav.20249013@mnnit.ac.in',
@@ -38,7 +38,7 @@ const SEED_USERS = [
         branch: 'Mechanical Engineering',
     },
 
-    // ──── GENERAL USER ────
+
     {
         name: 'Dhairya',
         email: 'dhairya.20246052@mnnit.ac.in',
@@ -51,7 +51,6 @@ const SEED_USERS = [
     },
 ];
 
-// Also clean up the old placeholder accounts if they exist
 const OLD_EMAILS = [
     'superadmin@mechapef.in',
     'eventhead@mechapef.in',
@@ -64,7 +63,7 @@ const seed = async () => {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('✅ Connected to MongoDB\n');
 
-        // Remove old placeholder accounts
+
         const deleted = await User.deleteMany({ email: { $in: OLD_EMAILS } });
         if (deleted.deletedCount > 0) {
             console.log(`🗑️  Removed ${deleted.deletedCount} old placeholder account(s)\n`);
@@ -82,7 +81,7 @@ const seed = async () => {
                 continue;
             }
 
-            // Create bypassing the MNNIT email validator since we're seeding directly
+
             const user = new User(userData);
             await user.save({ validateBeforeSave: false });
             console.log(`✅ Created: ${userData.email} [${userData.role}]`);

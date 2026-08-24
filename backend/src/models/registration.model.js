@@ -52,7 +52,7 @@ const registrationSchema = new mongoose.Schema(
                     collegeRegNo: String,
                     status: {
                         type: String,
-                        enum: ['Confirmed', 'Invited', 'Pending'], // Confirmed=joined, Invited=leader invited, Pending=member requested
+                        enum: ['Confirmed', 'Invited', 'Pending'],
                         default: 'Confirmed'
                     },
                     joined: {
@@ -64,7 +64,7 @@ const registrationSchema = new mongoose.Schema(
             default: []
         },
 
-        // For Type 2 (JoinRequests mode) - pending join requests from users who want to join this team
+
         joinRequests: {
             type: [
                 {
@@ -79,11 +79,11 @@ const registrationSchema = new mongoose.Schema(
             default: []
         },
 
-        // Draft = team still forming (Type 2), Confirmed = submitted/finalized
+
         registrationStatus: {
             type: String,
             enum: ['Draft', 'Confirmed'],
-            default: 'Confirmed' // Standard events stay Confirmed; Type 2 starts as Draft
+            default: 'Confirmed'
         },
 
         paymentStatus: {
@@ -180,13 +180,12 @@ registrationSchema.index({ attendanceMarked: 1, eventId: 1 });
 
 registrationSchema.virtual('participantCount').get(function () {
     if (this.registrationType === 'Solo') return 1;
-    return this.teamMembers.length + 1; // +1 for registered user
+    return this.teamMembers.length + 1;
 });
 
 
 registrationSchema.pre('save', async function (next) {
     try {
-        // Check for duplicate registration
         if (this.isNew) {
             const existing = await mongoose.model('Registration').findOne({
                 eventId: this.eventId,
@@ -198,7 +197,7 @@ registrationSchema.pre('save', async function (next) {
                 throw new Error('User is already registered for this event');
             }
         }
-        // Draft registrations (Type 2) can have empty teamMembers at creation
+
         if (this.registrationType === 'Team' && this.registrationStatus === 'Confirmed' && this.teamMembers.length === 0) {
             throw new Error('Team registration must have at least one team member');
         }

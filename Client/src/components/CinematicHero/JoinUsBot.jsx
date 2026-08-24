@@ -16,7 +16,7 @@ const JoinUsBot = () => {
     offset: ["start 80%", "end end"],
   });
 
-  // Simplified mapping for 300vh height
+
   const scene5Opacity = useTransform(scrollYProgress, [0, 0.1, 1], [0, 1, 1]);
   const pointerEvents = useTransform(scrollYProgress, (val) => "auto");
   

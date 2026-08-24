@@ -27,7 +27,7 @@ const AdminRedis = () => {
       setStartHour(conf.startHour ?? 10);
       setEndHour(conf.endHour ?? 23);
     } catch {
-      // ignore
+
     }
   };
 

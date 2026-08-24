@@ -88,7 +88,7 @@ export const addImagesToAlbum = asyncHandler(async (req, res) => {
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { album }, 'Images added to album'));
 });
 
-// Removing a single image
+
 export const removeImageFromAlbum = asyncHandler(async (req, res) => {
     const { id, imageId } = req.params;
 

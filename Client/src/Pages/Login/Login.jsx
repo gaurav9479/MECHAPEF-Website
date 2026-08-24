@@ -29,7 +29,7 @@ const Login = () => {
     }
   }, []);
 
-  // Handle Microsoft OAuth Callback
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const code = params.get('code');

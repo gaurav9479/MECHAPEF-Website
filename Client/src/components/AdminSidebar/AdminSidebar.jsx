@@ -34,13 +34,12 @@ const AdminSidebar = () => {
       const res = await api.get('/contact/unseen-count');
       setUnseenCount(res.data?.data?.unseenCount || 0);
     } catch (e) {
-      // Ignore background errors
     }
   };
 
   useEffect(() => {
     fetchUnseenCount();
-    const interval = setInterval(fetchUnseenCount, 30000); // Check every 30s
+    const interval = setInterval(fetchUnseenCount, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -64,12 +63,10 @@ const AdminSidebar = () => {
     }
   };
 
-  // Close sidebar when route changes on mobile
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
 
-  // Add a class to body to hide global gradients while in admin mode
   useEffect(() => {
     document.body.classList.add('admin-mode');
     return () => {
@@ -77,7 +74,6 @@ const AdminSidebar = () => {
     };
   }, []);
 
-  // 15-Minute Idle Auto-Logout Monitor for Admin Portal
   useEffect(() => {
     const IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes
     let timeoutId;
@@ -94,11 +90,9 @@ const AdminSidebar = () => {
       timeoutId = setTimeout(handleAutoLogout, IDLE_TIMEOUT);
     };
 
-    // Events to monitor admin activity
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
     events.forEach(event => window.addEventListener(event, resetTimer));
 
-    // Initialize timer on mount
     resetTimer();
 
     return () => {

@@ -12,11 +12,11 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Public routes
+
 router.get('/', getAllAlbums);
 router.get('/:id', getAlbumById);
 
-// Media Management Routes
+
 router.use(
     authenticate,
     checkRole(['super-admin', 'media-lead'])

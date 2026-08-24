@@ -4,15 +4,11 @@ import APIResponse from '../utils/APIResponse.js';
 import Magazine from '../models/magazine.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
-/**
- * Get Magazine Data
- * Public route
- */
+
 export const getMagazine = asyncHandler(async (req, res) => {
     let magazine = await Magazine.findOne();
     if (!magazine) {
-        // Return an empty/default structure if none exists
-        // --- NEW PDF SCHEMA ---
+
         magazine = await Magazine.create({
             title: "Latest Magazine PDF",
             pdfUrl: null,

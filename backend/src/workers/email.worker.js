@@ -12,14 +12,14 @@ export const emailWorker = new Worker('emailQueue', async job => {
         console.log(`[EmailWorker] Successfully sent email to ${to}`);
     } catch (error) {
         console.error(`[EmailWorker] Failed to send email to ${to}:`, error.message);
-        throw error; // Let BullMQ handle retries
+        throw error; 
     }
 }, { 
     connection,
-    concurrency: 5, // Send up to 5 emails concurrently. Adjust based on email provider rate limits.
+    concurrency: 5, 
     limiter: {
-        max: 10, // Max 10 jobs
-        duration: 1000, // per 1 second
+        max: 10,
+        duration: 1000, 
     }
 });
 

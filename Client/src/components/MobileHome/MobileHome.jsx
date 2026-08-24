@@ -6,7 +6,6 @@ import HeroTicker from '../HeroTicker/HeroTicker';
 import PastEventsStack from '../PastEventsStack/PastEventsStack';
 import './MobileHome.css';
 import LearningLogos from '../LearningLogos/LearningLogos';
-// Extracted Subcomponents
 import MobileHero from './MobileHero';
 import MobileStats from './MobileStats';
 import MobileAbout from './MobileAbout';
@@ -27,10 +26,10 @@ const MobileHome = () => {
   const [sponsors, setSponsors]         = useState([]);
 
   useEffect(() => {
-    // 1. Past events prefetch
+
     apiGetCached('/past-events', () => {}).catch(() => {});
 
-    // 2. Announcements fetch
+
     apiGetCached('/announcements', (data) => {
       const items   = data.data?.announcements || data.data || [];
       const banners = items.filter(n => n.isActive);
@@ -38,13 +37,13 @@ const MobileHome = () => {
       setSlides(banners);
     }, { cacheDuration: 2 * 60 * 1000 }).catch(() => {});
 
-    // 3. Sponsors fetch (Current & Past Sponsors)
+
     apiGetCached('/sponsors', (data) => {
       const all = data.data?.sponsors || data.data || [];
       setSponsors(all);
     }).catch(() => {});
 
-    // 4. Section images (Dept & Team)
+
     apiGetCached('/upload/sections?device=mobile', (data) => {
       const map = {};
       (data.data?.images || []).forEach(img => { map[img.sectionKey] = img; });

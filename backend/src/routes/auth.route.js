@@ -17,17 +17,17 @@ router.post('/login', microsoftOnlyAuth);
 router.post('/forgot-password', microsoftOnlyAuth);
 router.post('/reset-password/:token', microsoftOnlyAuth);
 
-// Microsoft OAuth2
+
 router.get('/microsoft/url', authController.getMicrosoftAuthUrl);
 router.post('/microsoft/callback', authLimiter, authController.microsoftLoginCallback);
 router.post('/microsoft/token', authLimiter, authController.microsoftTokenLogin);
 
-// Authenticated user routes
+
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getCurrentUser);
 router.put('/profile', authenticate, authController.updateProfile);
 
-// Super Admin only routes
+
 router.get(
     '/users',
     authenticate,

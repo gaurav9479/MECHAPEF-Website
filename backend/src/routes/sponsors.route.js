@@ -5,11 +5,9 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Public routes
 router.get('/config', configController.getConfig);
 router.get('/', sponsorController.getSponsors);
 
-// Content Management Routes
 router.put(
     '/config',
     authenticate,

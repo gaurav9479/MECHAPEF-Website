@@ -66,7 +66,7 @@ const Team = () => {
   const [specialSponsor, setSpecialSponsor] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Filtering & Search states
+
   const [activeTab, setActiveTab] = useState('team_ty'); // 'team_al', 'team_ty', 'team_sy', 'team_fy'
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -115,7 +115,7 @@ const Team = () => {
     team_al: 'Notable Alumni',
   };
 
-  // Helper to extract and sort members for a prefix
+
   const getSortedMembers = (prefix) => {
     return Object.keys(imagesMap)
       .filter(k => k.startsWith(prefix + '_') && imagesMap[k].url)
@@ -134,7 +134,7 @@ const Team = () => {
       }));
   };
 
-  // Build full list of active members
+
   const allSeniors = getSortedMembers('team_ty');
   const allPreFinals = getSortedMembers('team_sy');
   const allSophomores = getSortedMembers('team_fy');
@@ -155,7 +155,7 @@ const Team = () => {
 
   const filteredMembers = getFilteredList();
 
-  // Helper to get category count badge
+
   const getCount = (tabKey) => {
     return getSortedMembers(tabKey).length;
   };

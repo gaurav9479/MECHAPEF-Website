@@ -32,7 +32,7 @@ const AdminSpecialSponsor = () => {
   const [fileToUpload, setFileToUpload] = useState(null);
   const [customLogosToUpload, setCustomLogosToUpload] = useState({});
 
-  // Cropper state
+
   const [cropperTarget, setCropperTarget] = useState(null); // 'main' or placement key
   const [cropSrc, setCropSrc] = useState(null);
   const cropperRef = useRef(null);
@@ -161,7 +161,7 @@ const AdminSpecialSponsor = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      // Upload image helper
+
       const uploadImageFile = async (file) => {
         const uploadFormData = new FormData();
         uploadFormData.append('image', file);

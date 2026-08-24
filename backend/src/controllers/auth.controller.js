@@ -357,10 +357,6 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MICROSOFT OAUTH2
-// ─────────────────────────────────────────────────────────────────────────────
-
 function base64URLEncode(buffer) {
     return buffer.toString('base64')
         .replace(/\+/g, '-')
@@ -465,7 +461,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
     const collegeRegNo = email.split('@')[0].split('.').pop() || email.split('@')[0];
     const { branch: parsedBranch, yearOfStudy: parsedYear } = parseStudentInfoFromRegNo(collegeRegNo);
 
-    // Atomic update for existing users — single DB round-trip
+
     let user = await User.findOneAndUpdate(
         { email },
         {
@@ -489,7 +485,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         if (shouldSave) await user.save();
     }
 
-    // New user — create them
+
     if (!user) {
         const assignedRole = isMechOrProd ? 'member' : 'general-user';
         user = await User.create({
@@ -574,7 +570,7 @@ export const microsoftLoginCallback = asyncHandler(async (req, res) => {
         );
     }
 
-    // Decode id_token directly — eliminates the Graph API round-trip (~400-800ms saved)
+
     const profileData = decodeIdToken(tokenData.id_token);
 
     const loginData = await issueLoginForMicrosoftProfile(profileData, res);

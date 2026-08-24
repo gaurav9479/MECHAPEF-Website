@@ -12,7 +12,7 @@ const redisOptions = {
 let connection;
 
 if (process.env.REDIS_URL) {
-    // If a full URL is provided (e.g., from a managed service)
+
     connection = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
 } else {
     connection = new Redis(redisOptions);
@@ -34,5 +34,5 @@ connection.on('error', (err) => {
 
 connection.on('connect', () => {
     console.log('[Redis] Connected successfully');
-    redisErrorLogged = false; // Reset if we successfully connect
+    redisErrorLogged = false; 
 });

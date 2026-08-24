@@ -5,7 +5,6 @@ import { USER_ROLES } from '../constants/index.js';
 
 const router = Router();
 
-// Only super admins can view footprints
 router.get('/', authenticate, checkRole([USER_ROLES.SUPER_ADMIN]), getFootprints);
 
 export default router;

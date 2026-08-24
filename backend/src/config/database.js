@@ -61,7 +61,7 @@ const fixUserBranchesAndYears = async () => {
             console.log(`[Migration] Successfully fixed ${fixedCount} users.`);
         }
 
-        // Upgrade any existing Mechanical or Production general-users to member role
+
         const upgradeResult = await User.updateMany(
             {
                 role: 'general-user',
@@ -91,7 +91,7 @@ const connectDB = async () => {
 
         console.log('MongoDB connected successfully');
 
-        // Run migration to fix missing branch or year
+
         await fixUserBranchesAndYears();
 
         if (process.env.NODE_ENV === 'development') {

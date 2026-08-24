@@ -350,16 +350,12 @@ const AnimatedRoutes = () => {
 
 function App() {
   useEffect(() => {
-    // 1. High Priority Pre-fetching (Home Page Data)
-    // Instantly triggers background network requests so they are in cache by the time components mount
     apiGetCached('/upload/sections?device=desktop', () => {});
     apiGetCached('/events', () => {});
     apiGetCached('/announcements', () => {});
     apiGetCached('/special-sponsor/active', () => {});
     apiGetCached('/past-events', () => {});
 
-    // 2. Low Priority Pre-fetching (Other Heavy Pages)
-    // Delayed by 2 seconds so they don't compete with the initial Home page load
     setTimeout(() => {
       apiGetCached('/sponsors', () => {});
       apiGetCached('/team', () => {});

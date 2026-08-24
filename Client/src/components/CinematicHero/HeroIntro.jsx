@@ -18,7 +18,7 @@ const HeroIntro = () => {
     offset: ["start start", "end start"],
   });
 
-  // Disperse animations as it scrolls up normally
+
   const h1Y = useTransform(scrollYProgress, [0, 0.75], ["0vh", "15vh"]);
   const h1Scale = useTransform(scrollYProgress, [0, 0.75], [1, 1.5]);
   const h1Opacity = useTransform(scrollYProgress, [0.3, 0.75], [1, 0]);
@@ -40,10 +40,10 @@ const HeroIntro = () => {
   const botX = useTransform(scrollYProgress, [0, 0.75], ["0vw", "15vw"]);
   const botOpacity = useTransform(scrollYProgress, [0.3, 0.75], [1, 0]);
   
-  // Background stays red
+
   const bgOpacity = useTransform(scrollYProgress, [0, 1], [1, 1]); 
   
-  // Entire scene fades by 75%
+
   const sceneOpacity = useTransform(scrollYProgress, [0.6, 0.75], [1, 0]);
   const pointerEvents = useTransform(scrollYProgress, (val) => val >= 0.75 ? "none" : "auto");
 

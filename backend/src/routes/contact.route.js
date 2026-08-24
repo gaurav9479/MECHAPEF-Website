@@ -4,10 +4,10 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Public: Submit message from Get In Touch form
+
 router.post('/submit', contactController.submitContactMessage);
 
-// Admin Protected: Manage messages
+
 router.get(
     '/messages',
     authenticate,

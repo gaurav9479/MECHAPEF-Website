@@ -22,18 +22,13 @@ const Home = () => {
   const navigate = useNavigate();
   const [specialSponsorConfig, setSpecialSponsorConfig] = useState(null);
   const [loadStage, setLoadStage] = useState(1); 
-  // 1: Render Hero & AboutUs. Start PastEvents fetch.
-  // 2: PastEvents finished. Render OurDepartment & LiveEvents.
-  // 3: Render OurTeam & rest of the page.
 
   useEffect(() => {
-    // Fetch special sponsor config in the background without blocking the UI
     api.get('/special-sponsor/active').then(res => {
       if (res.data?.data) {
         const sp = res.data.data;
         setSpecialSponsorConfig(sp);
         
-        // Apply custom font/brand styling if applicable
         if (sp.customFontUrl && sp.applyBrandFont) {
           const link = document.createElement('link');
           link.href = sp.customFontUrl;
@@ -49,26 +44,22 @@ const Home = () => {
 
   useEffect(() => {
     if (loadStage === 2) {
-      // Since OurDepartment has no API calls, immediately progress to stage 3 after a 100ms render frame
       const t = setTimeout(() => setLoadStage(3), 100);
       return () => clearTimeout(t);
     }
   }, [loadStage]);
 
   useEffect(() => {
-    // 2. Prefetch team images in the background
     apiGetCached('/upload/sections?device=desktop', (data) => {
       if (data?.data?.images) {
         data.data.images.forEach(img => {
           if (img.imageURL) {
-            // High priority network fetch
             const link = document.createElement('link');
             link.rel = 'preload';
             link.as = 'image';
             link.href = img.imageURL;
             document.head.appendChild(link);
             
-            // Cache in memory
             const prefetchImg = new Image();
             prefetchImg.src = img.imageURL;
           }
@@ -82,7 +73,6 @@ const Home = () => {
       history.scrollRestoration = 'manual';
     }
     
-    // Check both hash (for backward compatibility) and router state
     const hash = window.location.hash;
     const targetId = location.state?.scrollTo || (hash ? hash.replace('#', '') : null);
 
@@ -102,7 +92,6 @@ const Home = () => {
             el.scrollIntoView({ behavior: 'smooth' });
           }
           
-          // Clean up the URL/state so it doesn't trigger again on reload
           if (hash) {
             window.history.replaceState(null, '', window.location.pathname);
           } else if (location.state?.scrollTo) {
@@ -125,11 +114,11 @@ const Home = () => {
       <div className="desktop-only">
         <div id="home"><HeroIntro /></div>
         
-        {/* Render rest of the sections progressively */}
+
         {loadStage >= 1 && (
           <>
             <div id="about-us"><AboutWheel /></div>
-            {/* <div id="learning"><LearningLogos /></div> */}
+            
             <div id="past-events">
               <PastEventsStack onLoaded={() => setLoadStage(2)} />
             </div>
@@ -153,7 +142,7 @@ const Home = () => {
         )}
       </div>
 
-      {/* ── Mobile layout (hidden on desktop via CSS) ── */}
+
       <MobileHome />
     </>
   );

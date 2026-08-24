@@ -13,18 +13,16 @@ const ScrollStory = () => {
     offset: ["start start", "end end"]
   });
 
-  // --- 1. Red Strips Enter from Bottom-Right (0.00 to 0.15) ---
   const stripsOpacity = useTransform(scrollYProgress, [0.0, 0.10], [0, 1]);
   const stripsY = useTransform(scrollYProgress, [0.0, 0.15], [1000, 0]);
   const stripsX = useTransform(scrollYProgress, [0.0, 0.15], [466, 0]); // 1000 * tan(25) = ~466
 
-  // --- 2. Wheel Enters from Top-Left, small to large (0.05 to 0.20) ---
+
   const wheelOpacity = useTransform(scrollYProgress, [0.05, 0.15], [0, 1]);
   const wheelX = useTransform(scrollYProgress, [0.05, 0.20], [-1500, 0]);
   const wheelY = useTransform(scrollYProgress, [0.05, 0.20], [-800, 0]);
   const wheelScale = useTransform(scrollYProgress, [0.05, 0.20], [0.2, 1]);
 
-  // --- 3. Text and Cards Enter (0.15 to 0.30) ---
   const contentOpacity = useTransform(scrollYProgress, [0.15, 0.25], [0, 1]);
   const contentX = useTransform(scrollYProgress, [0.15, 0.30], [-500, 0]);
   const pointerEvents = useTransform(scrollYProgress, (val) => val > 0.25 ? "auto" : "none");
@@ -33,7 +31,7 @@ const ScrollStory = () => {
     <div ref={containerRef} className="scroll-story-wrapper">
       <div className="scroll-story-camera">
         
-        {/* Red Strips Layer */}
+
         <motion.div 
           className="spirit-bg-layer"
           style={{ x: stripsX, y: stripsY, opacity: stripsOpacity }}
@@ -41,14 +39,12 @@ const ScrollStory = () => {
           <RedStrips index={0} shiftX="-20%" />
         </motion.div>
 
-        {/* Removed black gradient fade here per user request */}
 
-        {/* Content Scene */}
         <motion.div 
           className="spirit-scene"
           style={{ pointerEvents }}
         >
-          {/* Background Rays */}
+
           <motion.div 
             className="spirit-bg-rays"
             style={{ opacity: contentOpacity }}
@@ -93,13 +89,11 @@ const ScrollStory = () => {
             </motion.div>
 
             <div className="spirit-right">
-              {/* Extra glow behind the wheel */}
               <motion.div 
                 className="wheel-glow"
                 style={{ opacity: wheelOpacity }}
               ></motion.div>
 
-              {/* Wheel scales up and flies in from Top-Left without spinning */}
               <motion.img 
                 src={wheelImg} 
                 alt="Mechanical Wheel" 

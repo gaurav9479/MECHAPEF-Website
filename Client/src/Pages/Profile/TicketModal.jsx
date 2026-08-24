@@ -25,7 +25,7 @@ const TicketModal = ({ registration, onClose }) => {
   if (!registration) return null;
 
   const event = registration.eventId;
-  // If event is not populated properly, fallback
+
   if (!event) return null;
 
   const qrData = JSON.stringify({

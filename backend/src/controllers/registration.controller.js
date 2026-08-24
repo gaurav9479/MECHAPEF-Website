@@ -10,7 +10,7 @@ import { syncWithGoogleSheet } from '../utils/googleSheetsWebhook.js';
 import fs from 'fs';
 import path from 'path';
 
-// Absolute path to backup file
+
 const backupFilePath = path.join(process.cwd(), 'registrations_backup.log');
 
 export const appendBackupLog = (action, payload) => {
@@ -26,7 +26,7 @@ export const appendBackupLog = (action, payload) => {
     }
 };
 
-// Shared helper — used by both direct write and Redis fallback path
+
 const saveRegistrationDirectly = async (payload, eventTitle) => {
     const registration = new Registration(payload);
     await registration.save();
@@ -41,17 +41,16 @@ const saveRegistrationDirectly = async (payload, eventTitle) => {
         )
     ]);
 
-    // Send to Google Sheets webhook (fire and forget)
-    // The user data is available inside registration.registeredBy because it was populated above
+
+
     syncWithGoogleSheet(registration.registeredBy, eventTitle, payload);
 
-    // Backup Log: Save COMPLETED registration directly to disk log file
     appendBackupLog('COMPLETED_REGISTRATION', registration.toObject());
 
     return registration;
 };
 
-// Get the current user's registration for a specific event
+
 export const getMyRegistrationForEvent = asyncHandler(async (req, res) => {
     const { id: eventId } = req.params;
     const userId = req.user.userId;
@@ -86,7 +85,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
 
-    // Check branch and year eligibility for registerer
+
     const userObj = await User.findById(req.user.userId);
     if (!userObj) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
@@ -146,10 +145,10 @@ export const registerForEvent = asyncHandler(async (req, res) => {
             throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
         }
 
-        // Check branch and year eligibility for team members
+
         if (event.eligibleBranches && event.eligibleBranches.length > 0) {
             const ineligibleMember = members.find(m => {
-                if (!m.branch) return true; // branch not set
+                if (!m.branch) return true; 
                 return !event.eligibleBranches.some(b => b.toLowerCase().trim() === m.branch.toLowerCase().trim());
             });
             if (ineligibleMember) {
@@ -162,7 +161,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
 
         if (event.eligibleYears && event.eligibleYears.length > 0) {
             const ineligibleYearMember = members.find(m => {
-                if (!m.yearOfStudy) return true; // year not set
+                if (!m.yearOfStudy) return true;
                 return !event.eligibleYears.includes(m.yearOfStudy);
             });
             if (ineligibleYearMember) {
@@ -201,12 +200,10 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         customData: customData || {}
     };
 
-    // 🛡️ PEAK HOUR FAIL-SAFE DISK BACKUP:
-    // Write raw incoming payload synchronously to server disk BEFORE touching Redis/Mongo.
-    // If Redis crashes, free tier expires, or Mongo hangs — THIS FILE HAS 100% OF REGISTRATION DATA!
+
     appendBackupLog('RAW_PEAK_HOUR_PAYLOAD', payload);
 
-    // Try queue first — if Redis is up, enqueue and return early
+
     if (isRegistrationQueueEnabled()) {
         try {
             await enqueueRegistration(payload);
@@ -220,14 +217,11 @@ export const registerForEvent = asyncHandler(async (req, res) => {
                     )
                 );
         } catch (error) {
-            // Redis is down or free tier expired — fall through to direct write
+
             console.error('[RegistrationQueue] Redis unavailable, falling back to direct DB write:', error.message);
         }
     }
 
-    // Direct write — runs when:
-    // 1. Redis is not configured (REDIS_URL not set)
-    // 2. Redis was configured but is now down (free tier expired, outage, etc.)
     try {
         const registration = await saveRegistrationDirectly(payload, event.title);
         return res
@@ -283,14 +277,14 @@ export const markAttendance = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Attended status is required');
     }
 
-    // Load registration first to detect previous attendance state
+
     const registration = await Registration.findById(req.params.id).populate('eventId', 'title ticketStages enableQRScanning');
 
     if (!registration) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
 
-    // Block QR scans if event has QR scanning disabled — only manual admin override allowed
+
     if (!isManualOverride && registration.eventId?.enableQRScanning === false) {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'QR ticket scanning is disabled for this event. Use manual attendance marking.');
     }
@@ -299,7 +293,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
     const activeStage = stageName || eventStages[0] || 'Stage 1: Check-in';
 
     if (attended) {
-        // Check if activeStage is already completed
+
         const existingStageIndex = (registration.completedStages || []).findIndex(
             s => s.stageName.toLowerCase() === activeStage.toLowerCase()
         );
@@ -315,8 +309,8 @@ export const markAttendance = asyncHandler(async (req, res) => {
                 }, `Ticket already scanned for "${activeStage}"`));
         }
 
-        // 10-Minute Cooldown Check between scans for the same ticket
-        const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+
+        const COOLDOWN_MS = 10 * 60 * 1000; 
         let lastScannedAt = registration.attendanceMarkedAt ? new Date(registration.attendanceMarkedAt).getTime() : 0;
         if (registration.completedStages && registration.completedStages.length > 0) {
             const latestStageScan = Math.max(...registration.completedStages.map(s => new Date(s.scannedAt).getTime()));
@@ -343,7 +337,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
             }
         }
 
-        // Push new stage completion
+
         if (!registration.completedStages) registration.completedStages = [];
         registration.completedStages.push({
             stageName: activeStage,
@@ -365,7 +359,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
                 completedStages: registration.completedStages
             }, `"${activeStage}" verified successfully!`));
     } else {
-        // Reset attendance if unchecking
+
         registration.attendanceMarked = false;
         registration.attendanceMarkedAt = null;
         registration.attendanceMarkedBy = null;
@@ -470,14 +464,14 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
 
     const customFieldsSet = new Set();
     
-    // First add all defined custom form fields (questions asked in event config)
+
     if (event.customFormFields && Array.isArray(event.customFormFields)) {
         event.customFormFields.forEach(f => {
             if (f.fieldName) customFieldsSet.add(f.fieldName);
         });
     }
 
-    // Also include any extra custom data keys found in registrations
+
     registrations.forEach(reg => {
         if (reg.customData) {
             Object.keys(reg.customData).forEach(key => customFieldsSet.add(key));
@@ -497,7 +491,7 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
     const isDeadlinePassed = new Date() > new Date(event.registrationDeadline);
     const maxMembers = (event.maxTeamSize && event.maxTeamSize > 1) ? (event.maxTeamSize - 1) : 0;
 
-    // Standard headers
+
     let headers = [
         'Leader Name',
         'Leader Email',
@@ -511,14 +505,14 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
         'Verified'
     ];
 
-    // Add separate individual columns for each teammate slot
+
     for (let i = 1; i <= maxMembers; i++) {
         headers.push(`Teammate ${i + 1} Name`);
         headers.push(`Teammate ${i + 1} Reg No`);
         headers.push(`Teammate ${i + 1} Email`);
     }
 
-    // Add custom form fields
+
     headers = headers.concat(customFields);
 
     let csvString = headers.map(escapeCSV).join(',') + '\n';
@@ -526,10 +520,10 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
     registrations.forEach(reg => {
         const user = reg.registeredBy || {};
         
-        // Confirmed members excluding leader
+
         const confirmedMembers = reg.teamMembers?.filter(m => m.status === 'Confirmed') || [];
 
-        // If registration deadline has passed, unverified registrations are automatically considered Verified
+
         const effectiveIsVerified = reg.isVerified || isDeadlinePassed;
 
         const row = [
@@ -545,7 +539,7 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
             escapeCSV(effectiveIsVerified ? 'Yes' : 'No')
         ];
 
-        // Fill individual columns for each teammate slot
+
         for (let i = 0; i < maxMembers; i++) {
             const member = confirmedMembers[i];
             row.push(escapeCSV(member ? member.name : ''));
@@ -553,11 +547,11 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
             row.push(escapeCSV(member ? member.email : ''));
         }
 
-        // Fill custom form fields answers
+
         customFields.forEach(field => {
             let val = reg.customData ? reg.customData[field] : '';
             if (val && typeof val === 'object' && val.url) {
-                val = val.url; // Export uploaded file link directly
+                val = val.url; 
             }
             row.push(escapeCSV(val));
         });
@@ -570,15 +564,8 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
     res.status(HTTP_STATUS.OK).send(csvString);
 });
 
-// ─────────────────────────────────────────────────────────────
-// TYPE 2 REGISTRATION: JoinRequests Mode Controllers
-// ─────────────────────────────────────────────────────────────
 
-/**
- * POST /events/:eventId/register-draft
- * Leader creates a Draft team registration (Type 2 only).
- * No team members required at this stage.
- */
+
 export const createDraftTeamRegistration = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const { teamName, customData } = req.body;
@@ -594,7 +581,6 @@ export const createDraftTeamRegistration = asyncHandler(async (req, res) => {
     const user = await User.findById(userId);
     if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
 
-    // Check eligibility
     if (event.eligibleBranches?.length > 0 && user.branch) {
         const eligible = event.eligibleBranches.some(b => b.toLowerCase().trim() === user.branch.toLowerCase().trim());
         if (!eligible) throw new ApiError(HTTP_STATUS.FORBIDDEN, `Your branch (${user.branch}) is not eligible for this event`);
@@ -605,7 +591,6 @@ export const createDraftTeamRegistration = asyncHandler(async (req, res) => {
         }
     }
 
-    // Check existing registration
     const existing = await Registration.findOne({ eventId, registeredBy: userId, deletedAt: null });
     if (existing) throw new ApiError(HTTP_STATUS.CONFLICT, 'You are already registered/have a draft for this event');
 
@@ -653,7 +638,7 @@ export const searchTeamsForEvent = asyncHandler(async (req, res) => {
     };
 
     if (regNo) {
-        // Find the user with that regNo first, then find their team
+
         const leader = await User.findOne({ collegeRegNo: regNo.trim() });
         if (!leader) {
             return res.status(HTTP_STATUS.NOT_FOUND).json(
@@ -672,11 +657,13 @@ export const searchTeamsForEvent = asyncHandler(async (req, res) => {
         teamName: t.teamName,
         leaderName: t.registeredBy?.name,
         leaderRegNo: t.registeredBy?.collegeRegNo,
-        currentSize: t.teamMembers.filter(m => m.status === 'Confirmed').length + 1, // +1 for leader
+        currentSize: t.teamMembers.filter(m => m.status === 'Confirmed').length + 1, 
         maxSize: event.maxTeamSize,
         slotsLeft: event.maxTeamSize - (t.teamMembers.filter(m => m.status === 'Confirmed').length + 1),
         hasPendingRequestFromUser: t.joinRequests?.some(r => r.userId?.toString() === req.user.userId?.toString() && r.status === 'Pending')
-    })).filter(t => t.slotsLeft > 0); // hide full teams
+    })).filter(t => t.slotsLeft > 0); 
+
+
 
     return res.status(HTTP_STATUS.OK).json(
         new APIResponse(HTTP_STATUS.OK, result, 'Teams found')
@@ -702,7 +689,7 @@ export const checkUserEligibilityForEvent = asyncHandler(async (req, res) => {
         );
     }
 
-    // Check branch eligibility
+
     if (event.eligibleBranches?.length > 0 && user.branch) {
         const eligible = event.eligibleBranches.some(b => b.toLowerCase().trim() === user.branch.toLowerCase().trim());
         if (!eligible) {
@@ -712,7 +699,6 @@ export const checkUserEligibilityForEvent = asyncHandler(async (req, res) => {
         }
     }
 
-    // Check year eligibility
     if (event.eligibleYears?.length > 0 && user.yearOfStudy) {
         if (!event.eligibleYears.includes(user.yearOfStudy)) {
             return res.status(HTTP_STATUS.FORBIDDEN).json(
@@ -721,7 +707,6 @@ export const checkUserEligibilityForEvent = asyncHandler(async (req, res) => {
         }
     }
 
-    // Check if already registered
     const alreadyRegistered = await Registration.findOne({
         eventId,
         $or: [
@@ -770,30 +755,28 @@ export const sendJoinRequest = asyncHandler(async (req, res) => {
     const user = await User.findById(userId);
     if (!user) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
 
-    // Can't send to your own team
+
     if (registration.registeredBy.toString() === userId.toString()) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You cannot send a join request to your own team');
     }
 
-    // Already a confirmed member?
+
     const alreadyMember = registration.teamMembers.find(
         m => m.userId?.toString() === userId && m.status === 'Confirmed'
     );
     if (alreadyMember) throw new ApiError(HTTP_STATUS.CONFLICT, 'You are already a member of this team');
 
-    // Already sent a pending request?
+
     const pendingRequest = registration.joinRequests.find(
         r => r.userId?.toString() === userId && r.status === 'Pending'
     );
     if (pendingRequest) throw new ApiError(HTTP_STATUS.CONFLICT, 'You already have a pending join request for this team');
 
-    // Check team not full (confirmed members + leader)
     const confirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1;
     if (confirmedCount >= event.maxTeamSize) {
         throw new ApiError(HTTP_STATUS.CONFLICT, 'This team is already full');
     }
 
-    // Check user not already registered for this event elsewhere
     const existingReg = await Registration.findOne({
         eventId: registration.eventId,
         $or: [
@@ -839,7 +822,7 @@ export const respondToJoinRequest = asyncHandler(async (req, res) => {
     const registration = await Registration.findById(teamRegId);
     if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
 
-    // Only leader can respond
+
     if (registration.registeredBy.toString() !== userId.toString()) {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Only the team leader can respond to join requests');
     }
@@ -864,7 +847,6 @@ export const respondToJoinRequest = asyncHandler(async (req, res) => {
             throw new ApiError(HTTP_STATUS.CONFLICT, 'Team is already full');
         }
 
-        // Check if user registered for event elsewhere in the meantime
         const existingReg = await Registration.findOne({
             eventId: registration.eventId,
             $or: [
@@ -879,7 +861,6 @@ export const respondToJoinRequest = asyncHandler(async (req, res) => {
 
         const requester = registration.joinRequests[requestIdx];
 
-        // Move from joinRequests → teamMembers as Confirmed
         registration.joinRequests[requestIdx].status = 'Accepted';
         registration.teamMembers.push({
             userId: requester.userId,
@@ -917,7 +898,7 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
     const registration = await Registration.findById(teamRegId);
     if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
 
-    // Only leader can add members
+
     if (registration.registeredBy.toString() !== userId.toString()) {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Only the team leader can add team members');
     }
@@ -929,24 +910,20 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
     const event = await Event.findById(registration.eventId);
     if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
 
-    // Check team capacity
-    const confirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1; // +1 leader
+    const confirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1;
     if (confirmedCount >= event.maxTeamSize) {
         throw new ApiError(HTTP_STATUS.CONFLICT, `Team capacity reached (${event.maxTeamSize} max)`);
     }
 
-    // Find target user by Reg No
     const targetUser = await User.findOne({ collegeRegNo: collegeRegNo.trim() });
     if (!targetUser) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, 'No user found with that Registration Number');
     }
 
-    // Leader cannot add themselves
     if (targetUser._id.toString() === userId.toString()) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You are already the leader of this team');
     }
 
-    // Check branch eligibility
     if (event.eligibleBranches?.length > 0 && targetUser.branch) {
         const eligible = event.eligibleBranches.some(b => b.toLowerCase().trim() === targetUser.branch.toLowerCase().trim());
         if (!eligible) {
@@ -954,14 +931,12 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
         }
     }
 
-    // Check year eligibility
     if (event.eligibleYears?.length > 0 && targetUser.yearOfStudy) {
         if (!event.eligibleYears.includes(targetUser.yearOfStudy)) {
             throw new ApiError(HTTP_STATUS.FORBIDDEN, `${targetUser.name}'s year (${targetUser.yearOfStudy}) is not eligible for this event`);
         }
     }
 
-    // Check if already in this team
     const alreadyInTeam = registration.teamMembers.some(
         m => m.userId?.toString() === targetUser._id.toString() && m.status === 'Confirmed'
     );
@@ -969,7 +944,6 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.CONFLICT, `${targetUser.name} is already in your team`);
     }
 
-    // Check if user is registered elsewhere for this event
     const existingReg = await Registration.findOne({
         eventId: registration.eventId,
         $or: [
@@ -982,7 +956,7 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.CONFLICT, `${targetUser.name} is already registered for this event`);
     }
 
-    // Add user as Confirmed team member
+
     registration.teamMembers.push({
         userId: targetUser._id,
         name: targetUser.name,
@@ -991,7 +965,7 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
         status: 'Confirmed'
     });
 
-    // If user had a pending join request to this team, mark it accepted
+
     const pendingReqIdx = registration.joinRequests.findIndex(
         r => r.userId?.toString() === targetUser._id.toString() && r.status === 'Pending'
     );
@@ -1022,12 +996,11 @@ export const leaveTeam = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cannot leave a team after registration is finalized');
     }
 
-    // Leader cannot "leave" via this route (they must cancel/delete the team)
+
     if (registration.registeredBy.toString() === userId.toString()) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Team leader cannot leave the team. You can disband the team if needed.');
     }
 
-    // 1. Remove from teamMembers if confirmed
     const memberIdx = registration.teamMembers.findIndex(
         m => m.userId?.toString() === userId.toString()
     );
@@ -1037,7 +1010,6 @@ export const leaveTeam = asyncHandler(async (req, res) => {
         removedMember = true;
     }
 
-    // 2. Remove/Cancel from joinRequests if pending/accepted
     const reqIdx = registration.joinRequests.findIndex(
         r => r.userId?.toString() === userId.toString()
     );
@@ -1070,7 +1042,6 @@ export const removeTeamMember = asyncHandler(async (req, res) => {
     const registration = await Registration.findById(teamRegId);
     if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
 
-    // Only leader can remove members
     if (registration.registeredBy.toString() !== userId.toString()) {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Only the team leader can remove team members');
     }
@@ -1079,7 +1050,6 @@ export const removeTeamMember = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cannot remove members after registration is finalized');
     }
 
-    // Cannot remove leader
     if (memberUserId === userId.toString()) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Leader cannot remove themselves');
     }
@@ -1117,7 +1087,6 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
     const registration = await Registration.findById(teamRegId);
     if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
 
-    // Only the leader can finalize (any confirmed member can trigger custom data submission per UX, but final lock by leader)
     const isLeader = registration.registeredBy.toString() === userId.toString();
     const isConfirmedMember = registration.teamMembers.some(
         m => m.userId?.toString() === userId && m.status === 'Confirmed'
@@ -1133,10 +1102,9 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
     const event = await Event.findById(registration.eventId);
     if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
 
-    // Check team size range constraints [minTeamSize, maxTeamSize] (e.g., [2, 5] inclusive)
     const minSize = event.minTeamSize || 2;
     const maxSize = event.maxTeamSize || 5;
-    const currentConfirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1; // +1 leader
+    const currentConfirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1;
 
     if (currentConfirmedCount < minSize) {
         throw new ApiError(
@@ -1152,7 +1120,6 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
         );
     }
 
-    // Validate required custom fields
     if (event.customFormFields?.length > 0) {
         const requiredFields = event.customFormFields.filter(f => f.isRequired);
         for (const field of requiredFields) {
@@ -1176,10 +1143,8 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
         )
     ]);
 
-    // Send finalized Type 2 team data (Leader + all Endorsed Members + Custom Data) to Google Sheets
     syncWithGoogleSheet(registration.registeredBy, event.title, registration.toObject());
 
-    // Fail-safe backup: write finalized Type 2 team payload synchronously to disk
     appendBackupLog('TYPE2_TEAM_FINALIZED', registration.toObject());
 
     return res.status(HTTP_STATUS.OK).json(
@@ -1197,14 +1162,12 @@ export const getMyTeamRegistration = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const userId = req.user.userId;
 
-    // Either they are the leader
     let registration = await Registration.findOne({
         eventId,
         registeredBy: userId,
         deletedAt: null
     }).populate('registeredBy', 'name collegeRegNo email');
 
-    // Or they are a confirmed team member
     if (!registration) {
         registration = await Registration.findOne({
             eventId,
@@ -1246,7 +1209,6 @@ export const deleteDraftTeam = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cannot delete a team after registration is finalized');
     }
 
-    // Soft delete draft registration
     registration.deletedAt = new Date();
     await registration.save();
 
@@ -1270,7 +1232,6 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const userId = req.user.userId;
 
-    // Case 1: user is the leader of a draft team
     const asLeader = await Registration.findOne({
         eventId,
         registeredBy: userId,
@@ -1283,7 +1244,6 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
         );
     }
 
-    // Case 2: user is a confirmed member of a team
     const asMember = await Registration.findOne({
         eventId,
         'teamMembers.userId': userId,
@@ -1297,7 +1257,6 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
         );
     }
 
-    // Case 3: user has a pending/accepted/rejected join request somewhere
     const teamsWithMyRequest = await Registration.find({
         eventId,
         'joinRequests.userId': userId,
@@ -1305,7 +1264,6 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
     }).populate('registeredBy', 'name collegeRegNo').lean();
 
     if (teamsWithMyRequest.length > 0) {
-        // Find the specific request entry
         const result = teamsWithMyRequest.map(team => {
             const myReq = team.joinRequests.find(r => r.userId?.toString() === userId);
             return {

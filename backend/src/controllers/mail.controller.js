@@ -30,7 +30,7 @@ const buildEmailContent = (title, description, isEndorsement, endorsementType, c
     const escapedTitle = escapeHtml(title);
     const escapedDescription = escapeHtml(description).replace(/\n/g, '<br>');
     
-    // Determine button link & label
+
     let buttonUrl = dashboardUrl;
     let buttonLabel = 'Open Dashboard';
 
@@ -87,7 +87,7 @@ export const sendMail = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'targetRole is required');
     }
 
-    // Determine content
+
     let title = customSubject || '';
     let description = customBody || '';
     let isEndorsement = false;
@@ -127,14 +127,14 @@ export const sendMail = asyncHandler(async (req, res) => {
             }
         }
     } else {
-        // Fetch users based on target role from User model
+
         let query = { deletedAt: null, isActive: true, email: { $exists: true, $type: 'string', $ne: '' } };
         
         if (targetRole === 'super-admin') query.role = USER_ROLES.SUPER_ADMIN;
         else if (targetRole === 'content-lead') query.role = USER_ROLES.CONTENT_LEAD;
         else if (targetRole === 'media-lead') query.role = USER_ROLES.MEDIA_LEAD;
         else if (targetRole === 'member') query.role = USER_ROLES.MEMBER;
-        // if 'all', don't add role filter
+
 
         const users = await User.find(query).select('email name').lean();
         
@@ -145,7 +145,7 @@ export const sendMail = asyncHandler(async (req, res) => {
             }
         }
 
-        // Also search Team collection for matching subTeams (e.g. Media/PR team)
+
         let teamQuery = { deletedAt: null, isActive: true, email: { $exists: true, $type: 'string', $ne: '' } };
         if (targetRole === 'media-lead') teamQuery.subTeam = { $in: ['PR', 'Media', 'Graphics'] };
 
@@ -168,11 +168,11 @@ export const sendMail = asyncHandler(async (req, res) => {
 
     const emailContent = buildEmailContent(title, description, isEndorsement, endorsementType, customLink);
     
-    // Process sending in background using BullMQ
+
     const jobs = validUsers.map((user, index) => {
         let jobDelay = 0;
         if (scheduleType === 'smart_batch') {
-            // 1 email every 1 minute (60,000 ms) — safe anti-spam rate
+
             jobDelay = index * 60000;
         }
 
@@ -211,13 +211,13 @@ export const sendMail = asyncHandler(async (req, res) => {
         console.error('[Mail Portal] Failed to save emails to MongoDB pending queue:', dbErr.message);
     }
     
-    // Log the footprint for initiating the batch mail
+
     logFootprint(req, 'MAIL_SENT', 'Mail Portal', `Queued/sent email "${title}" to ${validUsers.length} users (${targetRole})`);
 
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { targeted: validUsers.length }, 'Email dispatch initiated successfully'));
 });
 
-// Fetch Mail Dispatch Logs, Failed Emails & Statistics (Admin Only)
+
 export const getMailStats = asyncHandler(async (req, res) => {
     const PendingEmail = (await import('../models/pendingEmail.model.js')).default;
     const Footprint = (await import('../models/footprint.model.js')).default;
@@ -262,7 +262,7 @@ export const getMailStats = asyncHandler(async (req, res) => {
     );
 });
 
-// Retry Failed Emails (Admin Only - Supports specific IDs or All)
+
 export const retryFailedMails = asyncHandler(async (req, res) => {
     const PendingEmail = (await import('../models/pendingEmail.model.js')).default;
     const { ids } = req.body || {};
@@ -272,7 +272,7 @@ export const retryFailedMails = asyncHandler(async (req, res) => {
         query._id = { $in: ids };
     }
     
-    // Reset failed emails back to pending & reset attempts to 0
+
     const result = await PendingEmail.updateMany(
         query,
         { $set: { status: 'pending', attempts: 0, executeAt: new Date() } }
@@ -283,7 +283,7 @@ export const retryFailedMails = asyncHandler(async (req, res) => {
     );
 });
 
-// Delete Failed Emails (Admin Only - Supports specific IDs or All)
+
 export const deleteFailedMails = asyncHandler(async (req, res) => {
     const PendingEmail = (await import('../models/pendingEmail.model.js')).default;
     const { ids, all } = req.body || {};

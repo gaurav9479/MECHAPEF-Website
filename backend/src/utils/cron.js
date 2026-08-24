@@ -10,24 +10,22 @@ const imagekit = new ImageKit({
     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
 });
 
-// Run every year on May 15 at 00:00 (Midnight)
-// cron expression format: minute hour dayOfMonth month dayOfWeek
 export const startCronJobs = () => {
     cron.schedule('0 0 15 5 *', async () => {
         console.log('🔄 Executing Annual Academic Year Promotion Cron Job (May 15)...');
         
         try {
-            // Find all users who are currently 4th year and promote them to Alumni
+
             const fourthYears = await User.find({ yearOfStudy: 4 });
             for (const user of fourthYears) {
                 user.role = 'Alumni';
-                // Set to 5 to indicate passed out.
+
                 user.yearOfStudy = 5; 
                 await user.save({ validateBeforeSave: false });
             }
             console.log(`✅ Promoted ${fourthYears.length} 4th-year students to Alumni.`);
 
-            // Now increment yearOfStudy for 1st, 2nd, and 3rd years
+
             const lowerYears = await User.find({ yearOfStudy: { $in: [1, 2, 3] } });
             for (const user of lowerYears) {
                 user.yearOfStudy += 1;
@@ -42,7 +40,7 @@ export const startCronJobs = () => {
         timezone: "Asia/Kolkata"
     });
 
-    // Run every day at 02:00 AM to clean up ended events photos > 4 days old
+
     cron.schedule('0 2 * * *', async () => {
         console.log('🔄 Executing Event Photo Cleanup Cron Job...');
         try {
@@ -60,7 +58,7 @@ export const startCronJobs = () => {
             }
 
             for (const event of eventsToClean) {
-                // Find all registrations for this event
+
                 const registrations = await Registration.find({ eventId: event._id });
                 let deletedFilesCount = 0;
 
@@ -68,7 +66,7 @@ export const startCronJobs = () => {
                     let hasChanges = false;
                     const newCustomData = { ...reg.customData };
 
-                    // Find any fileIds in customData
+
                     for (const [key, value] of Object.entries(newCustomData)) {
                         if (value && typeof value === 'object' && value.fileId) {
                             try {
@@ -77,7 +75,7 @@ export const startCronJobs = () => {
                             } catch (err) {
                                 console.error(`Failed to delete file from ImageKit (${value.fileId}):`, err.message);
                             }
-                            // Replace the object with just a string or null indicating deletion
+
                             newCustomData[key] = '[File Deleted for Privacy]';
                             hasChanges = true;
                         }
@@ -98,7 +96,7 @@ export const startCronJobs = () => {
         timezone: "Asia/Kolkata"
     });
 
-    // Run every 10 minutes to prevent Render cold starts on event days
+
     cron.schedule('*/10 * * * *', async () => {
         try {
             const todayStart = new Date();
@@ -107,7 +105,7 @@ export const startCronJobs = () => {
             const todayEnd = new Date();
             todayEnd.setHours(23, 59, 59, 999);
 
-            // Check if there's any active event today
+
             const eventToday = await Event.findOne({
                 startTime: { $lte: todayEnd },
                 endTime: { $gte: todayStart }
@@ -123,7 +121,7 @@ export const startCronJobs = () => {
         }
     });
 
-    // Run every hour to check and permanently purge events whose 7-day retention period has expired
+
     cron.schedule('0 * * * *', async () => {
         try {
             const now = new Date();
@@ -135,9 +133,9 @@ export const startCronJobs = () => {
             if (expiredEvents.length > 0) {
                 console.log(`🗑️ [7-Day Auto-Purge] Found ${expiredEvents.length} event(s) past 7-day retention deadline. Vanishing data...`);
                 for (const ev of expiredEvents) {
-                    // 1. Delete all associated registration records completely
+
                     const regDeleteResult = await Registration.deleteMany({ eventId: ev._id });
-                    // 2. Completely remove the event document
+
                     await Event.findByIdAndDelete(ev._id);
                     console.log(`✅ [7-Day Auto-Purge] Successfully vanished event "${ev.title}" and purged ${regDeleteResult.deletedCount} registration records.`);
                 }

@@ -19,7 +19,7 @@ const AlbumView = () => {
   const [album, setAlbum] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Lightbox State
+
   const [lightboxIndex, setLightboxIndex] = useState(-1);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
@@ -35,7 +35,7 @@ const AlbumView = () => {
     });
   }, [id]);
 
-  // Deterministic random heights for the mosaic layout (between 250px and 500px)
+
   const getMosaicHeight = (index) => {
     const heights = [280, 420, 320, 480, 250, 380, 350, 450];
     return heights[index % heights.length];
@@ -83,7 +83,7 @@ const AlbumView = () => {
     );
   }
 
-  // Format images for Lightbox
+
   const lightboxSlides = album.images?.map(img => ({
     src: img.imageURL,
     alt: img.caption || 'MechaPEF Gallery Image'
@@ -123,14 +123,14 @@ const AlbumView = () => {
                   key={img._id} 
                   className="mosaic-image-wrapper"
                   style={{ height: `${getMosaicHeight(idx)}px` }}
-                  // Initial scattered state
+
                   initial={{ 
                     opacity: 0, 
                     scale: 0.85, 
                     rotate: getRotation(idx), 
                     y: 50 
                   }}
-                  // Scroll reveal with spring physics
+
                   whileInView={{ 
                     opacity: 1, 
                     scale: 1, 
@@ -142,13 +142,13 @@ const AlbumView = () => {
                     type: "spring", 
                     stiffness: 100, 
                     damping: 15,
-                    delay: (idx % 6) * 0.08 // Stagger effect
+                    delay: (idx % 6) * 0.08 
                   }}
-                  // Hover effects
+
                   whileHover={{ 
                     scale: 1.03, 
                     y: -8,
-                    rotate: getRotation(idx) * 0.5, // Subtle return to rotation
+                    rotate: getRotation(idx) * 0.5, 
                     transition: { duration: 0.3, ease: "easeOut" } 
                   }}
                   onClick={() => {

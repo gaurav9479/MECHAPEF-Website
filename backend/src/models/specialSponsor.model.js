@@ -2,12 +2,12 @@ import mongoose from 'mongoose';
 
 const specialSponsorSchema = new mongoose.Schema({
   name: { type: String, default: 'Special Sponsor' },
-  // Default Fallback Logo (Optional if placement logos are provided)
+
   logoURL: { type: String, default: '' },
   logoFileId: { type: String, default: '' },
   tagline: { type: String, default: '' },
 
-  // Location-Specific Custom Logo & Text Overrides (Optional — falls back to global name/tagline/logo if empty)
+
   navbarLogoURL: { type: String, default: '' },
   navbarCustomName: { type: String, default: '' },
   navbarCustomTagline: { type: String, default: '' },
@@ -36,7 +36,7 @@ const specialSponsorSchema = new mongoose.Schema({
   sliderCustomName: { type: String, default: '' },
   sliderCustomTagline: { type: String, default: '' },
   
-  // Display feature toggles
+
   showCoBrandingLogo: { type: Boolean, default: true },
   showFloatingBubbles: { type: Boolean, default: true },
   showEventCardsLogo: { type: Boolean, default: true },
@@ -45,7 +45,7 @@ const specialSponsorSchema = new mongoose.Schema({
   showAnnouncementSliderLogo: { type: Boolean, default: true },
   includeInEmails: { type: Boolean, default: false },
 
-  // Brand Font & Styling Takeover
+
   customFontUrl: { type: String, default: '' },
   customFontFamily: { type: String, default: '' },
   brandColor: { type: String, default: '#ff1f01' },

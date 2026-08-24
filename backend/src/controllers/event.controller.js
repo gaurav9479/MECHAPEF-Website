@@ -66,7 +66,7 @@ export const createEvent = asyncHandler(async (req, res) => {
 
     logFootprint(req, 'CREATE', 'Event', `Created event: ${newEvent.title}`);
     
-    // Trigger Redis check since an active event might have been created
+
     checkAndToggleRedis().catch(err => console.error(err));
 
     return res
@@ -182,7 +182,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
 
     logFootprint(req, 'UPDATE', 'Event', `Updated event: ${event.title}`);
 
-    // Trigger Redis check since an active event might have changed status
+
     checkAndToggleRedis().catch(err => console.error(err));
 
     return res
@@ -207,7 +207,7 @@ export const deleteEvent = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event is already approved for deletion and queued in 7-day retention period');
     }
 
-    // Initiate deletion request with 1st vote (Initiator)
+
     event.deletionState = {
         status: 'PENDING_APPROVAL',
         initiatedBy: userId,
@@ -250,18 +250,18 @@ export const approveEventDeletion = asyncHandler(async (req, res) => {
     let csvData = null;
     let csvFileName = null;
 
-    // Total required approvals: 3 SuperAdmins (Initiator + 2 Approvers)
+
     if (event.deletionState.approvals.length >= 3) {
         event.deletionState.status = 'APPROVED_RETENTION';
         event.deletionState.approvedAt = new Date();
-        // 7 Days Retention Period before vanishing completely!
+
         event.deletionState.vanishAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         
-        // Hide from public website
+
         event.isActive = false;
         event.isRegistrationOpen = false;
 
-        // Generate automatic final CSV backup string
+
         const registrations = await Registration.find({ eventId: event._id, deletedAt: null })
             .populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy');
 
@@ -373,7 +373,7 @@ export const endEvent = asyncHandler(async (req, res) => {
     event.endedAt = new Date();
     await event.save();
     
-    // Trigger Redis check since an active event might have ended
+
     checkAndToggleRedis().catch(err => console.error(err));
 
     return res
@@ -442,7 +442,7 @@ export const wipeEventData = asyncHandler(async (req, res) => {
             }
         }
         
-        // Clear the custom data entirely
+
         reg.customData = { wiped: "Data has been wiped to save storage" };
         await reg.save();
     }

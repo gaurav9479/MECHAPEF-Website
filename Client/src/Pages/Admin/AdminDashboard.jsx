@@ -25,7 +25,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (location.state?.error) {
       setToast({ msg: location.state.error, type: 'error' });
-      // Clear the state so the toast doesn't reappear on refresh
+
       window.history.replaceState({}, document.title);
       setTimeout(() => setToast(null), 4000);
     }
@@ -67,15 +67,15 @@ const AdminDashboard = () => {
   ];
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
+
       <AdminSidebar />
-      {/* Main Content */}
+
       <main className="admin-main">
         <div className="admin-header">
           <h1>Dashboard</h1>
           <p>Welcome to MechaPEF Admin Panel</p>
         </div>
-        {/* Stat Cards */}
+
         <div className="admin-stats-grid">
           <div className="admin-stat-card">
             <FaCalendarAlt className="stat-icon" />
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-        {/* Quick Links */}
+
         <div className="admin-section-title">Quick Actions</div>
         <div className="admin-quick-grid">
           {adminLinks.map(link => (
@@ -119,7 +119,7 @@ const AdminDashboard = () => {
             </Link>
           ))}
         </div>
-        {/* Recent Events */}
+
         <div className="admin-section-title">Recent Events</div>
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -142,7 +142,7 @@ const AdminDashboard = () => {
           </table>
         </div>
 
-        {/* Design Guidelines */}
+
         <div className="admin-section-title" style={{ marginTop: '40px' }}>Design Guidelines</div>
         <div style={{ background: '#111', padding: '20px', borderRadius: '12px', border: '1px solid #333', marginBottom: '40px' }}>
           <p style={{ color: '#aaa', marginBottom: '15px' }}>

@@ -2,9 +2,7 @@
 
 const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzPRCwHaYSh98X2Nin6iFvHtG1gzsduTWCtu38j3JF-vl9tACkBI8RRvhb0KAjuuKcAtw/exec';
 
-/**
- * Pings the Google Apps Script Webhook asynchronously
- */
+
 export const syncWithGoogleSheet = async (user, eventTitle, registrationPayload) => {
     try {
         const teamMembersFormatted = Array.isArray(registrationPayload.teamMembers) 
@@ -29,7 +27,7 @@ export const syncWithGoogleSheet = async (user, eventTitle, registrationPayload)
             customData: registrationPayload.customData || {}
         };
 
-        // Fire and forget
+
         fetch(WEBHOOK_URL, {
             method: 'POST',
             body: JSON.stringify(data),

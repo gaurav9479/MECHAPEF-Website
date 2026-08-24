@@ -38,7 +38,6 @@ const PastEventsStack = ({ onLoaded }) => {
     };
     fetchEvents();
 
-    // Fetch Special Sponsor for card top-right branding
     apiGetCached('/special-sponsor/active', (data) => {
       if (data?.data) setSpecialSponsor(data.data);
     }).catch(() => {});
@@ -51,7 +50,6 @@ const PastEventsStack = ({ onLoaded }) => {
     const timer = setTimeout(() => {
       ctx = gsap.context(() => {
         
-        // -- MOBILE GSAP PINNING --
         if (window.innerWidth <= 768) {
           const mobileCardsWrapper = sectionRef.current.querySelector('.pe-gsap-cards-wrapper');
           gsap.set(mobileCardsWrapper, { y: window.innerHeight });
@@ -78,7 +76,6 @@ const PastEventsStack = ({ onLoaded }) => {
 
         const cards = gsap.utils.toArray('.gsap-pe-card');
 
-        // -- DESKTOP STACKING --
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
@@ -105,10 +102,8 @@ const PastEventsStack = ({ onLoaded }) => {
         const cardDuration = 1.2;
         const settleDelay = 0.4;
 
-        // Add an initial blank scroll delay
         tl.to({}, { duration: initialBuffer });
 
-        // Animate the first card in
         tl.fromTo(cards[0], 
           { y: window.innerHeight, opacity: 0, scale: 0.8, pointerEvents: 'none' },
           { y: 0, opacity: 1, scale: 1, rotation: 0, duration: cardDuration, ease: 'power3.out', pointerEvents: 'auto' }, 
@@ -118,7 +113,6 @@ const PastEventsStack = ({ onLoaded }) => {
         cards.forEach((card, index) => {
           if (index === 0) return;
           
-          // Calculate start time so this card only enters after the previous card has fully settled + settleDelay
           const startTime = initialBuffer + cardDuration + settleDelay + (index - 1) * (cardDuration + settleDelay);
           
           tl.fromTo(card, 

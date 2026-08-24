@@ -13,11 +13,11 @@ const PastEventsManager = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   
-  // Form State
+
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ title: '', date: '', description: '', imageURL: '', imagekitFileId: '', mobileImageURL: '', mobileImagekitFileId: '' });
   
-  // Cropper State
+
   const [showCropper, setShowCropper] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
   const [cropTarget, setCropTarget] = useState('desktop');
@@ -102,7 +102,7 @@ const PastEventsManager = () => {
     }
   };
 
-  // Image Upload Handlers
+
   const handleFileChange = (e, target = 'desktop') => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];

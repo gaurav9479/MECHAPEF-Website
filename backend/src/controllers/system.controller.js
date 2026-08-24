@@ -37,7 +37,7 @@ export const updateSystemConfig = asyncHandler(async (req, res) => {
     
     await config.save();
 
-    // Dynamically trigger Redis toggle evaluation
+
     await checkAndToggleRedis(config.redisModeType);
 
     return res.status(HTTP_STATUS.OK).json(

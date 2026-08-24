@@ -10,9 +10,7 @@ const eventSchema = new mongoose.Schema(
             maxlength: [100, 'Title cannot exceed 100 characters']
         },
 
-        // NOTE: `status` is kept for legacy compatibility but should be
-        // treated as a HINT only. Use the `currentStatus` virtual for
-        // accurate, real-time status derived from startTime / endTime.
+
         status: {
             type: String,
             enum: ['Upcoming', 'Ongoing', 'Ended'],
@@ -187,14 +185,13 @@ const eventSchema = new mongoose.Schema(
             default: ['Stage 1: Check-in']
         },
 
-        // If true — QR ticket scanning is active for this event.
-        // If false — attendance is marked manually by admin only (no QR scan UI).
+
         enableQRScanning: {
             type: Boolean,
             default: true
         },
 
-        // Standard = leader adds members. JoinRequests = members search and send join requests
+
         registrationMode: {
             type: String,
             enum: ['Standard', 'JoinRequests'],
@@ -253,27 +250,15 @@ const eventSchema = new mongoose.Schema(
     }
 );
 
-// ─────────────────────────────────────────────
-//  INDEXES
-// ─────────────────────────────────────────────
 eventSchema.index({ startTime: 1 });
-eventSchema.index({ endTime: 1 });           // needed for currentStatus queries
-eventSchema.index({ status: 1 });            // #3 – fast status filtering
+eventSchema.index({ endTime: 1 });
+eventSchema.index({ status: 1 });
 eventSchema.index({ category: 1 });
 eventSchema.index({ featured: 1, startTime: 1 });
 eventSchema.index({ registrationDeadline: 1 });
 eventSchema.index({ createdAt: -1 });
-eventSchema.index({ deletedAt: 1, isActive: 1 }); // compound for soft-delete queries
+eventSchema.index({ deletedAt: 1, isActive: 1 });
 
-// ─────────────────────────────────────────────
-//  VIRTUALS
-// ─────────────────────────────────────────────
-
-/**
- * #1 – Real-time status derived from startTime / endTime.
- * Use `event.currentStatus` instead of `event.status` everywhere in
- * the frontend so stale stored values never cause display bugs.
- */
 eventSchema.virtual('currentStatus').get(function () {
     const now = new Date();
     if (now < this.startTime)  return 'Upcoming';
@@ -281,44 +266,28 @@ eventSchema.virtual('currentStatus').get(function () {
     return 'Ended';
 });
 
-/**
- * #4 – Duration in minutes between startTime and endTime.
- * Returns 0 if either date is missing.
- */
 eventSchema.virtual('duration').get(function () {
     if (!this.startTime || !this.endTime) return 0;
     return Math.floor((this.endTime - this.startTime) / (1000 * 60));
 });
 
-/**
- * #5 – True when the event's endTime is in the past.
- */
 eventSchema.virtual('hasEnded').get(function () {
     return new Date() > this.endTime;
 });
 
-/**
- * #6 – True when the event hasn't started yet.
- */
 eventSchema.virtual('isUpcoming').get(function () {
     return new Date() < this.startTime;
 });
 
-/**
- * #7 – Live registration count derived from the populated array.
- * Useful when registrations are populated; falls back to 0 otherwise.
- */
 eventSchema.virtual('registrationCount').get(function () {
     return this.registrations?.length || 0;
 });
 
-/** Already existing – kept as-is */
 eventSchema.virtual('isLive').get(function () {
     const now = new Date();
     return now >= this.startTime && now <= this.endTime && this.isActive;
 });
 
-/** Already existing – kept as-is */
 eventSchema.virtual('isRegistrationOpen').get(function () {
     if (!this.registrationDeadline || this.isTBD) return false;
     const now = new Date();
@@ -326,7 +295,6 @@ eventSchema.virtual('isRegistrationOpen').get(function () {
     return now < this.registrationDeadline && this.isActive && this.deletedAt === null;
 });
 
-/** Already existing – kept as-is */
 eventSchema.virtual('formattedDate').get(function () {
     if (!this.startTime) return null;
     return this.startTime.toLocaleDateString('en-IN', {
@@ -337,25 +305,15 @@ eventSchema.virtual('formattedDate').get(function () {
     });
 });
 
-// ─────────────────────────────────────────────
-//  QUERY HELPERS
-// ─────────────────────────────────────────────
 eventSchema.query.notDeleted = function () {
     return this.where({ deletedAt: null, isActive: true });
 };
 
-// ─────────────────────────────────────────────
-//  STATICS
-// ─────────────────────────────────────────────
-
-/**
- * #2 – Added `isActive: true` so hidden featured events don't appear.
- */
 eventSchema.statics.getFeaturedEvents = async function (limit = 3) {
     return await this.find({
         featured: true,
         deletedAt: null,
-        isActive: true,           // #2 fix
+        isActive: true,
         endTime: { $gte: new Date() }
     })
         .sort({ startTime: 1 })
@@ -374,12 +332,6 @@ eventSchema.statics.getUpcomingEvents = async function (limit = 10) {
         .populate('createdBy', 'name email');
 };
 
-// ─────────────────────────────────────────────
-//  PRE-SAVE MIDDLEWARE
-//  Still syncs the stored `status` field for backward compatibility
-//  (e.g. existing admin queries that filter by status).
-//  For display, always prefer the `currentStatus` virtual.
-// ─────────────────────────────────────────────
 eventSchema.pre('save', function (next) {
     const now = new Date();
 
