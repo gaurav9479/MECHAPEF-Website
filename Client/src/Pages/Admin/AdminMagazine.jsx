@@ -13,7 +13,7 @@ const AdminMagazine = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+
   const [form, setForm] = useState({
     title: 'Latest Magazine',
     pdfUrl: '',
@@ -84,7 +84,7 @@ const AdminMagazine = () => {
 
   const handleRemovePdf = async () => {
     if (!window.confirm("Are you sure you want to remove the PDF? This will unpublish the magazine immediately.")) return;
-    
+
     setUploading(true);
     try {
       const updatedForm = { ...form, pdfUrl: null };
@@ -107,42 +107,42 @@ const AdminMagazine = () => {
         <div className="admin-form-topbar">
           <h1>Manage Magazine (PDF Edition)</h1>
         </div>
-        
+
         <form onSubmit={handleSave} className="admin-form-container">
           <h3>Magazine Information</h3>
           <div className="admin-form-grid">
             <div className="form-group">
               <label>Magazine Title</label>
-              <input 
-                value={form.title || ''} 
-                onChange={e => setForm({...form, title: e.target.value})} 
-                maxLength={80} 
-                required 
+              <input
+                value={form.title || ''}
+                onChange={e => setForm({ ...form, title: e.target.value })}
+                maxLength={80}
+                required
               />
             </div>
-            
+
             <div className="form-group">
               <label>Status</label>
-              <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
+              <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                 <option value="Draft">Draft</option>
                 <option value="Published">Published</option>
               </select>
             </div>
           </div>
 
-          <hr style={{margin: '30px 0', borderColor: '#333'}} />
-          
+          <hr style={{ margin: '30px 0', borderColor: '#333' }} />
+
           <h3>Upload PDF</h3>
           <div className="admin-form-grid">
             <div className="form-group full">
               <label>Select PDF File</label>
-              <input 
-                type="file" 
+              <input
+                type="file"
                 accept="application/pdf"
                 onChange={handlePdfUpload}
                 disabled={uploading}
               />
-              {uploading && <p style={{color: '#ffc107', marginTop: '10px'}}>Uploading PDF, please wait...</p>}
+              {uploading && <p style={{ color: '#ffc107', marginTop: '10px' }}>Uploading PDF, please wait...</p>}
             </div>
 
             {form.pdfUrl && (
@@ -153,10 +153,10 @@ const AdminMagazine = () => {
                   <a href={form.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: '10px 15px', textDecoration: 'none' }}>
                     View PDF
                   </a>
-                  <button 
-                    type="button" 
-                    className="btn-secondary" 
-                    style={{ padding: '10px 15px', background: '#dc3545', color: '#fff', border: 'none' }} 
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ padding: '10px 15px', background: '#dc3545', color: '#fff', border: 'none' }}
                     onClick={handleRemovePdf}
                   >
                     Remove PDF
@@ -182,4 +182,6 @@ const AdminMagazine = () => {
     </div>
   );
 };
+
+export default AdminMagazine;
 
