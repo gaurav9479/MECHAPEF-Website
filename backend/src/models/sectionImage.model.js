@@ -32,6 +32,14 @@ const sectionImageSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    linkedinURL: {
+        type: String,
+        default: null,
+    },
+    instagramURL: {
+        type: String,
+        default: null,
+    },
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

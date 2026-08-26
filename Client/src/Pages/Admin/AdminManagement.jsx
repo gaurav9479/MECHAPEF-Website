@@ -839,8 +839,8 @@ const AdminManagement = () => {
               {selectedSection.startsWith('team_') && (
                 <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', background: '#111', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
                   <h4 style={{ color: '#fff', margin: 0 }}>Team Member Details</h4>
-                  <div style={{ display: 'flex', gap: '15px' }}>
-                    <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Name</label>
                       <input 
                         type="text" 
@@ -855,7 +855,7 @@ const AdminManagement = () => {
                         placeholder="Enter name"
                       />
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Registration Number / Role</label>
                       <input 
                         type="text" 
@@ -870,7 +870,7 @@ const AdminManagement = () => {
                         placeholder="Enter Reg No or Role"
                       />
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: '120px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Sequence (Order)</label>
                       <input 
                         type="number" 
@@ -886,6 +886,40 @@ const AdminManagement = () => {
                       />
                     </div>
                   </div>
+
+                  <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#0077b5', fontWeight: 600 }}>LinkedIn Profile URL</label>
+                      <input 
+                        type="url" 
+                        value={sectionImages[selectedSection]?.linkedinURL || ''} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], linkedinURL: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #0077b5', color: '#fff', borderRadius: '4px' }}
+                        placeholder="https://linkedin.com/in/username"
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#e1306c', fontWeight: 600 }}>Instagram Profile URL</label>
+                      <input 
+                        type="url" 
+                        value={sectionImages[selectedSection]?.instagramURL || ''} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], instagramURL: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #e1306c', color: '#fff', borderRadius: '4px' }}
+                        placeholder="https://instagram.com/username"
+                      />
+                    </div>
+                  </div>
+
                   <button 
                     onClick={async () => {
                       try {
@@ -895,11 +929,13 @@ const AdminManagement = () => {
                           sectionKey: selectedSection,
                           name: imgData?.name || '',
                           regNo: imgData?.regNo || '',
-                          order: imgData?.order || defaultOrder
+                          order: imgData?.order || defaultOrder,
+                          linkedinURL: imgData?.linkedinURL || '',
+                          instagramURL: imgData?.instagramURL || ''
                         });
                         clearSectionCache();
                         fetchSectionImages();
-                        showToast('Details saved and sequences swapped!');
+                        showToast('Details & social links saved successfully!');
                       } catch (error) {
                         showToast('Failed to save details', 'error');
                       }

@@ -4,20 +4,25 @@ import { useNavigate } from 'react-router-dom';
 import { FaCog } from 'react-icons/fa';
 import api from '../../services/api';
 import { apiGetCached } from '../../utils/apiCache';
+import TeamMemberModal from './TeamMemberModal';
 import './OurTeam.css';
 
 import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 
 /* ─── Single card with glitch hover ─────────────────────────── */
-const TeamCard = ({ data, num, index, fallbackRole, isFinalYear, specialSponsor }) => {
+const TeamCard = ({ data, num, index, fallbackRole, isFinalYear, specialSponsor, onSelect }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -60px 0px' });
+  const isClickable = isFinalYear;
 
   return (
     <motion.div
       ref={ref}
       className={`team-card ${isFinalYear ? 'final-year-card' : ''}`}
-      style={{ position: 'relative' }}
+      style={{ position: 'relative', cursor: isClickable ? 'pointer' : 'default' }}
+      onClick={() => {
+        if (isClickable && onSelect) onSelect(data);
+      }}
       initial={{ opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay: index * 0.05 }}
@@ -77,7 +82,7 @@ const TeamCard = ({ data, num, index, fallbackRole, isFinalYear, specialSponsor 
 };
 
 /* ─── Layer row with framer-motion reveal ───────────────────── */
-const TeamLayer = ({ title, sectionPrefix, imagesMap, specialSponsor }) => {
+const TeamLayer = ({ title, sectionPrefix, imagesMap, specialSponsor, onSelectMember }) => {
   const cards = Object.keys(imagesMap)
     .filter(k => k.startsWith(sectionPrefix + '_') && imagesMap[k].url)
     .sort((a, b) => {
@@ -119,7 +124,10 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap, specialSponsor }) => {
         <div className="layer-track">
           {cards.map((k, idx) => {
             const num = parseInt(k.replace(sectionPrefix + '_', ''));
-            const data = imagesMap[k];
+            const data = {
+              ...imagesMap[k],
+              category: sectionPrefix
+            };
             return (
               <TeamCard
                 key={k}
@@ -129,6 +137,7 @@ const TeamLayer = ({ title, sectionPrefix, imagesMap, specialSponsor }) => {
                 fallbackRole={fallbackRole}
                 isFinalYear={sectionPrefix === 'team_ty' || sectionPrefix === 'team_al'}
                 specialSponsor={specialSponsor}
+                onSelect={onSelectMember}
               />
             );
           })}
@@ -143,6 +152,7 @@ const OurTeam = () => {
   const navigate = useNavigate();
   const [imagesMap, setImagesMap] = useState({});
   const [specialSponsor, setSpecialSponsor] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
   const sectionRef = useRef(null);
 
   /* Spotlight mouse tracking */
@@ -165,6 +175,8 @@ const OurTeam = () => {
             name: img.name,
             regNo: img.regNo,
             order: img.order,
+            linkedinURL: img.linkedinURL,
+            instagramURL: img.instagramURL,
           };
         });
       }
@@ -242,7 +254,7 @@ const OurTeam = () => {
       {/* Scroll Container */}
       <div className="team-scroll-container">
         {/* Homepage only renders Final Year Seniors */}
-        <TeamLayer title="Final Year Seniors" sectionPrefix="team_ty" imagesMap={imagesMap} specialSponsor={specialSponsor} />
+        <TeamLayer title="Final Year Seniors" sectionPrefix="team_ty" imagesMap={imagesMap} specialSponsor={specialSponsor} onSelectMember={setSelectedMember} />
       </div>
 
       {/* Meet the Entire Team Button */}
@@ -287,6 +299,11 @@ const OurTeam = () => {
           <span style={{ fontSize: '1.2rem' }}>→</span>
         </button>
       </div>
+
+      <TeamMemberModal 
+        member={selectedMember} 
+        onClose={() => setSelectedMember(null)} 
+      />
     </section>
   );
 };
