@@ -2,12 +2,15 @@
 export const getOptimizedImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
 
-
+  // Return maximum highest resolution original photo without downscaling or lossy compression
   if (url.includes('ik.imagekit.io')) {
-    if (url.includes('tr=')) return url; 
-
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}tr=q-100,f-auto`;
+    let cleanUrl = url;
+    cleanUrl = cleanUrl.replace(/\/tr:[^/]+\//g, '/');
+    cleanUrl = cleanUrl.replace(/([?&])tr=[^&]*/g, '');
+    cleanUrl = cleanUrl.replace(/[?&]$/, '');
+    
+    const separator = cleanUrl.includes('?') ? '&' : '?';
+    return `${cleanUrl}${separator}tr=orig-true,q-100`;
   }
 
   return url;

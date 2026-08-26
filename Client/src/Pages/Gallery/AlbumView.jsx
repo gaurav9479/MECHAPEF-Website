@@ -12,6 +12,7 @@ import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import api from '../../services/api';
 import { apiGetCached } from '../../utils/apiCache';
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 import './Gallery.css';
 
 const AlbumView = () => {
@@ -85,8 +86,10 @@ const AlbumView = () => {
 
 
   const lightboxSlides = album.images?.map(img => ({
-    src: img.imageURL,
-    alt: img.caption || 'MechaPEF Gallery Image'
+    src: getOptimizedImageUrl(img.imageURL),
+    alt: img.caption || 'MechaPEF Gallery Image',
+    width: 4096,
+    height: 3072,
   })) || [];
 
   return (
@@ -156,7 +159,7 @@ const AlbumView = () => {
                     setIsLightboxOpen(true);
                   }}
                 >
-                  <img src={img.imageURL} alt={img.caption || `Image ${idx + 1}`} loading="lazy" />
+                  <img src={getOptimizedImageUrl(img.imageURL)} alt={img.caption || `Image ${idx + 1}`} loading="lazy" />
                   
                   {/* Glassmorphism Hover Overlay */}
                   <div className="mosaic-overlay">
@@ -181,9 +184,20 @@ const AlbumView = () => {
         index={lightboxIndex}
         slides={lightboxSlides}
         plugins={[Zoom, Thumbnails]}
+        zoom={{
+          maxZoomPixelRatio: 10,
+          zoomInMultiplier: 2,
+          doubleTapDelay: 300,
+          doubleClickDelay: 300,
+          doubleClickMaxStops: 2,
+          keyboardMoveDistance: 50,
+          wheelZoomDistanceFactor: 100,
+          pinchZoomDistanceFactor: 100,
+          scrollToZoom: true,
+        }}
         animation={{ fade: 300, swipe: 250, zoom: 300 }}
         styles={{ 
-          container: { backgroundColor: "rgba(0, 0, 0, 0.92)", backdropFilter: "blur(10px)" },
+          container: { backgroundColor: "rgba(0, 0, 0, 0.95)", backdropFilter: "blur(12px)" },
         }}
       />
     </div>
