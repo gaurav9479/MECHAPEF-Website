@@ -177,6 +177,7 @@ const OurTeam = () => {
             order: img.order,
             linkedinURL: img.linkedinURL,
             instagramURL: img.instagramURL,
+            email: img.email,
           };
         });
       }

@@ -62,7 +62,7 @@ export const getSectionImages = asyncHandler(async (req, res) => {
 });
 
 export const updateSectionImage = asyncHandler(async (req, res) => {
-    const { sectionKey, label, imageURL, imagekitFileId, name, regNo, order, linkedinURL, instagramURL } = req.body;
+    const { sectionKey, label, imageURL, imagekitFileId, name, regNo, order, linkedinURL, instagramURL, email } = req.body;
     if (!sectionKey) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey is required');
 
     const existingImage = await SectionImage.findOne({ sectionKey });
@@ -90,6 +90,7 @@ export const updateSectionImage = asyncHandler(async (req, res) => {
     if (order !== undefined) updateData.order = newOrder;
     if (linkedinURL !== undefined) updateData.linkedinURL = linkedinURL;
     if (instagramURL !== undefined) updateData.instagramURL = instagramURL;
+    if (email !== undefined) updateData.email = email;
 
     const image = await SectionImage.findOneAndUpdate(
         { sectionKey },

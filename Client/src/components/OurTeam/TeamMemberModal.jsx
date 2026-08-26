@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaLinkedin, FaInstagram, FaTimes, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaLinkedin, FaInstagram, FaTimes, FaEnvelope, FaExternalLinkAlt } from 'react-icons/fa';
 import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 
 const TeamMemberModal = ({ member, onClose }) => {
@@ -14,6 +14,9 @@ const TeamMemberModal = ({ member, onClose }) => {
 
   const linkedinUrl = member.linkedinURL?.trim();
   const instagramUrl = member.instagramURL?.trim();
+  const email = member.email?.trim();
+
+  const hasSocials = Boolean(linkedinUrl || instagramUrl);
 
   return (
     <AnimatePresence>
@@ -48,43 +51,44 @@ const TeamMemberModal = ({ member, onClose }) => {
           <h2 className="member-modal-name">{member.name || 'Team Member'}</h2>
           <p className="member-modal-role">{member.regNo || member.fallbackRole || 'Senior Coordinator'}</p>
 
-          <div className="member-modal-socials">
-            {linkedinUrl ? (
-              <a 
-                href={linkedinUrl.startsWith('http') ? linkedinUrl : `https://${linkedinUrl}`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="social-btn linkedin"
-              >
-                <FaLinkedin size={20} />
-                <span>LinkedIn</span>
-                <FaExternalLinkAlt size={12} style={{ opacity: 0.7 }} />
-              </a>
-            ) : (
-              <span className="social-btn disabled">
-                <FaLinkedin size={20} />
-                <span>No LinkedIn</span>
-              </span>
-            )}
+          {/* Email in written format if provided */}
+          {email && (
+            <div className="member-modal-email">
+              <FaEnvelope size={14} className="email-icon" />
+              <a href={`mailto:${email}`} className="email-link">{email}</a>
+            </div>
+          )}
 
-            {instagramUrl ? (
-              <a 
-                href={instagramUrl.startsWith('http') ? instagramUrl : `https://${instagramUrl}`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="social-btn instagram"
-              >
-                <FaInstagram size={20} />
-                <span>Instagram</span>
-                <FaExternalLinkAlt size={12} style={{ opacity: 0.7 }} />
-              </a>
-            ) : (
-              <span className="social-btn disabled">
-                <FaInstagram size={20} />
-                <span>No Instagram</span>
-              </span>
-            )}
-          </div>
+          {/* Social Links if provided */}
+          {hasSocials && (
+            <div className="member-modal-socials">
+              {linkedinUrl && (
+                <a 
+                  href={linkedinUrl.startsWith('http') ? linkedinUrl : `https://${linkedinUrl}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="social-btn linkedin"
+                >
+                  <FaLinkedin size={20} />
+                  <span>LinkedIn</span>
+                  <FaExternalLinkAlt size={12} style={{ opacity: 0.7 }} />
+                </a>
+              )}
+
+              {instagramUrl && (
+                <a 
+                  href={instagramUrl.startsWith('http') ? instagramUrl : `https://${instagramUrl}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="social-btn instagram"
+                >
+                  <FaInstagram size={20} />
+                  <span>Instagram</span>
+                  <FaExternalLinkAlt size={12} style={{ opacity: 0.7 }} />
+                </a>
+              )}
+            </div>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>

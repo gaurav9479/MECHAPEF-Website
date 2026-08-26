@@ -888,7 +888,22 @@ const AdminManagement = () => {
                   </div>
 
                   <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: '240px' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#ff1f01', fontWeight: 600 }}>Email Address</label>
+                      <input 
+                        type="email" 
+                        value={sectionImages[selectedSection]?.email || ''} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], email: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #ff1f01', color: '#fff', borderRadius: '4px' }}
+                        placeholder="e.g. member@mnnit.ac.in"
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#0077b5', fontWeight: 600 }}>LinkedIn Profile URL</label>
                       <input 
                         type="url" 
@@ -903,7 +918,7 @@ const AdminManagement = () => {
                         placeholder="https://linkedin.com/in/username"
                       />
                     </div>
-                    <div style={{ flex: 1, minWidth: '240px' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#e1306c', fontWeight: 600 }}>Instagram Profile URL</label>
                       <input 
                         type="url" 
@@ -931,7 +946,8 @@ const AdminManagement = () => {
                           regNo: imgData?.regNo || '',
                           order: imgData?.order || defaultOrder,
                           linkedinURL: imgData?.linkedinURL || '',
-                          instagramURL: imgData?.instagramURL || ''
+                          instagramURL: imgData?.instagramURL || '',
+                          email: imgData?.email || ''
                         });
                         clearSectionCache();
                         fetchSectionImages();

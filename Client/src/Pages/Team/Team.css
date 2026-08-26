@@ -632,7 +632,36 @@
 .member-modal-role {
   font-size: 0.92rem;
   color: #a1a1aa;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+.member-modal-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 31, 1, 0.08);
+  border: 1px dashed rgba(255, 31, 1, 0.25);
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+}
+
+.member-modal-email .email-icon {
+  color: #ff1f01;
+  flex-shrink: 0;
+}
+
+.member-modal-email .email-link {
+  color: #f4f4f5;
+  text-decoration: none;
+  font-family: 'Consolas', 'Courier New', monospace;
+  transition: color 0.2s ease;
+}
+
+.member-modal-email .email-link:hover {
+  color: #ff1f01;
+  text-decoration: underline;
 }
 
 .member-modal-socials {
