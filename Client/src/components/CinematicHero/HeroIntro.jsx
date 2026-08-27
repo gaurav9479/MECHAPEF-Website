@@ -3,7 +3,6 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { assets } from "../../assets/assets";
 import { FaArrowRight, FaUsers } from "react-icons/fa";
-import { scrollToId } from "../../utils/scroll";
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
 import MagneticButton from "../MagneticButton/MagneticButton";
 import '../CinematicHero/CinematicHero.css';
@@ -39,10 +38,10 @@ const HeroIntro = () => {
   const botRotate = useTransform(scrollYProgress, [0, 0.75], [0, -10]);
   const botX = useTransform(scrollYProgress, [0, 0.75], ["0vw", "15vw"]);
   const botOpacity = useTransform(scrollYProgress, [0.3, 0.75], [1, 0]);
-  
 
-  const bgOpacity = useTransform(scrollYProgress, [0, 1], [1, 1]); 
-  
+
+  const bgOpacity = useTransform(scrollYProgress, [0, 1], [1, 1]);
+
 
   const sceneOpacity = useTransform(scrollYProgress, [0.6, 0.75], [1, 0]);
   const pointerEvents = useTransform(scrollYProgress, (val) => val >= 0.75 ? "none" : "auto");
@@ -50,7 +49,7 @@ const HeroIntro = () => {
   return (
     <div ref={containerRef} className="cinematic-wrapper" style={{ height: "100vh" }}>
       <div className="cinematic-camera" style={{ position: "relative" }}>
-        
+
         <motion.div className="cinematic-bg-layer" style={{ opacity: bgOpacity }}>
           <RedStrips index={0} shiftX="-10%" />
           <div className="fade-right"></div>
@@ -79,15 +78,15 @@ const HeroIntro = () => {
                 <MagneticButton className="primary-btn" onClick={() => navigate('/magazine')}>
                   Explore Magazine
                 </MagneticButton>
-                <MagneticButton className="secondary-btn" onClick={() => scrollToId('our-team')}>
-                  Meet the Team
+                <MagneticButton className="secondary-btn" onClick={() => window.location.assign('https://mechapef-website.vercel.app/team')}>
+                  Meet the ALUMS
                 </MagneticButton>
               </motion.div>
             </div>
           </div>
 
           <motion.div className="cinematic-right" style={{ x: botX, scale: botScale, rotate: botRotate, opacity: botOpacity, transformOrigin: "center center" }}>
-             <img src={assets.heroBot} className="hero-bot" alt="MechaPEF Bot" />
+            <img src={assets.heroBot} className="hero-bot" alt="MechaPEF Bot" />
           </motion.div>
         </motion.div>
 
