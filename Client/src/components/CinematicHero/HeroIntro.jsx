@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { assets } from "../../assets/assets";
+import { apiGetCached } from '../../utils/apiCache';
 import { FaArrowRight, FaUsers } from "react-icons/fa";
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
 import MagneticButton from "../MagneticButton/MagneticButton";
@@ -11,6 +12,15 @@ import '../Hero/Hero.css';
 const HeroIntro = () => {
   const navigate = useNavigate();
   const containerRef = useRef(null);
+  const [specialSponsor, setSpecialSponsor] = useState(null);
+
+  useEffect(() => {
+    apiGetCached('/special-sponsor/active', (data) => {
+      if (data?.data) {
+        setSpecialSponsor(data.data);
+      }
+    }).catch(() => { });
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -67,7 +77,23 @@ const HeroIntro = () => {
                 <h2>COMMUNITY OF MNNIT</h2>
               </motion.div>
 
-              <motion.h1 style={{ y: h1Y, scale: h1Scale, opacity: h1Opacity, transformOrigin: "left center" }}>MECHAPEF</motion.h1>
+              {specialSponsor?.logoURL && specialSponsor?.showCoBrandingLogo !== false ? (
+                <motion.div
+                  className="hero-cobranding"
+                  style={{ y: badgeY, opacity: badgeOpacity }}
+                  aria-label="Sponsored co-branding"
+                >
+                  <span className="hero-cobranding-logo-text">MECHAPEF</span>
+                  <span className="hero-cobranding-cross" style={{ color: specialSponsor.brandColor || '#ff1f01' }}>×</span>
+                  <img
+                    src={specialSponsor.navbarLogoURL || specialSponsor.logoURL}
+                    alt={specialSponsor.name}
+                    className="hero-cobranding-logo"
+                  />
+                </motion.div>
+              ) : (
+                <motion.h1 style={{ y: h1Y, scale: h1Scale, opacity: h1Opacity, transformOrigin: "left center" }}>MECHAPEF</motion.h1>
+              )}
 
               <motion.p style={{ x: pX, opacity: pOpacity }}>
                 The Official Club of Mechanical and Production<br />

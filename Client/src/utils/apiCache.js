@@ -17,7 +17,7 @@ const getCacheDuration = (url, options) => {
   }
 
 
-  if (urlLower.includes('/events') || urlLower.includes('/announcements') || urlLower.includes('/upload/sections')) {
+  if (urlLower.includes('/events') || urlLower.includes('/announcements') || urlLower.includes('/upload/sections') || urlLower.includes('/special-sponsor')) {
     return 2 * 60 * 1000;
   }
 

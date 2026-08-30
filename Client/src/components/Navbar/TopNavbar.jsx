@@ -53,13 +53,11 @@ const TopNavbar = () => {
       setHasUnreadNotice(hasUnread);
     }).catch(() => {});
 
-    // Fetch active special sponsor for Co-Branding & Brand Font Takeover
     apiGetCached('/special-sponsor/active', (data) => {
       const sp = data.data;
       if (sp) {
         setSpecialSponsor(sp);
         
-        // Inject Custom Brand Font & Accent Color if takeover enabled
         if (sp.applyBrandFont) {
           if (sp.customFontUrl) {
             const fontLinkId = 'special-sponsor-font-link';
@@ -281,7 +279,7 @@ const TopNavbar = () => {
             <div className="logo-sub">MNNIT</div>
           </div>
 
-          {specialSponsor?.logoURL && specialSponsor?.showCoBrandingLogo !== false && (
+          {(specialSponsor?.navbarLogoURL || specialSponsor?.logoURL) && specialSponsor?.showCoBrandingLogo !== false && (
             <div className="cobranding-sponsor" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: '10px', borderLeft: '2px solid rgba(255, 255, 255, 0.2)', paddingLeft: '14px', height: '42px' }}>
               <span style={{ color: specialSponsor?.brandColor || '#ff1f01', fontWeight: '900', fontSize: '1.4rem', fontFamily: 'sans-serif', lineHeight: 1 }}>×</span>
               <img 
