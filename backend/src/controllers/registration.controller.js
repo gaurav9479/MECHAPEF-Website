@@ -13,6 +13,30 @@ import path from 'path';
 
 const backupFilePath = path.join(process.cwd(), 'registrations_backup.log');
 
+const BRANCH_CODES = {
+    '0': 'Biotechnology',
+    '1': 'Civil Engineering',
+    '2': 'Chemical Engineering',
+    '3': 'Computer Science and Engineering',
+    '4': 'Electronics and Communication Engineering',
+    '5': 'Electrical Engineering',
+    '6': 'Mechanical Engineering',
+    '7': 'Production and Industrial Engineering',
+    '8': 'Electronics and Computational Mechanics',
+    '9': 'Materials Engineering'
+};
+
+const getStudentInfoFromRegNo = (collegeRegNo) => {
+    const enrollmentYear = Number(collegeRegNo.slice(0, 4));
+    const branchCode = collegeRegNo.charAt(4);
+
+    return {
+        enrollmentYear,
+        yearOfStudy: Number.isNaN(enrollmentYear) ? undefined : 2027 - enrollmentYear,
+        branch: BRANCH_CODES[branchCode]
+    };
+};
+
 export const appendBackupLog = (action, payload) => {
     try {
         const logEntry = JSON.stringify({
@@ -374,6 +398,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
 
 export const markAttendanceByCollegeRegNo = asyncHandler(async (req, res, next) => {
     const collegeRegNo = decodeURIComponent(req.params.collegeRegNo).trim().toUpperCase();
+    const studentInfo = getStudentInfoFromRegNo(collegeRegNo);
 
     const participant = await User.findOne({ collegeRegNo }).select('_id');
     const participantMatches = [{ 'teamMembers.collegeRegNo': collegeRegNo }];
@@ -394,6 +419,7 @@ export const markAttendanceByCollegeRegNo = asyncHandler(async (req, res, next) 
         throw new ApiError(HTTP_STATUS.NOT_FOUND, `No registration found for ID "${collegeRegNo}" in this event`);
     }
 
+    req.scannedStudentInfo = studentInfo;
     req.params.id = registration._id.toString();
     return next ? markAttendance(req, res, next) : undefined;
 });
