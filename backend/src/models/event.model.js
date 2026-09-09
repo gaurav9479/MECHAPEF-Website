@@ -191,6 +191,12 @@ const eventSchema = new mongoose.Schema(
             default: true
         },
 
+        attendanceMethod: {
+            type: String,
+            enum: ['qr', 'id-card'],
+            default: 'qr'
+        },
+
 
         registrationMode: {
             type: String,
@@ -261,8 +267,8 @@ eventSchema.index({ deletedAt: 1, isActive: 1 });
 
 eventSchema.virtual('currentStatus').get(function () {
     const now = new Date();
-    if (now < this.startTime)  return 'Upcoming';
-    if (now <= this.endTime)   return 'Ongoing';
+    if (now < this.startTime) return 'Upcoming';
+    if (now <= this.endTime) return 'Ongoing';
     return 'Ended';
 });
 

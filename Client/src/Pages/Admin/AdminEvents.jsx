@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
-import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages, FaImage, FaCheckCircle, FaLink } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaHome, FaSignOutAlt, FaCog, FaImages, FaCheckCircle, FaLink } from 'react-icons/fa';
 import api from '../../services/api';
 import { eventService } from '../../services/services';
+import CropperInput from '../../components/CropperInput/CropperInput';
 import './AdminDashboard.css';
 const CATEGORIES = ['Mechapef-Event', 'Departmental'];
 const BRANCHES = [
@@ -26,6 +27,7 @@ const emptyForm = {
   customFormFields: [], eligibleBranches: [], eligibleYears: [],
   ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
   enableQRScanning: true,
+  attendanceMethod: 'qr',
   bannerURL: ''
 };
 const AdminEvents = () => {
@@ -39,8 +41,7 @@ const AdminEvents = () => {
   const [form, setForm] = useState(emptyForm);
   const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [uploadingBanner, setUploadingBanner] = useState(false);
-  
+
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
@@ -137,7 +138,7 @@ const AdminEvents = () => {
     if (!editingEvent && showModal) {
       const timer = setTimeout(() => {
         localStorage.setItem('mechapef_adminEventFormDraft', JSON.stringify(form));
-      }, 500); 
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [form, editingEvent, showModal]);
@@ -182,7 +183,8 @@ const AdminEvents = () => {
       eligibleBranches: ev.eligibleBranches || [],
       eligibleYears: ev.eligibleYears || [],
       ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
-      enableQRScanning: ev.enableQRScanning !== undefined ? ev.enableQRScanning : true
+      enableQRScanning: ev.enableQRScanning !== undefined ? ev.enableQRScanning : true,
+      attendanceMethod: ev.attendanceMethod || (ev.enableQRScanning === false ? 'id-card' : 'qr')
     });
     setShowModal(true);
   };
@@ -232,6 +234,7 @@ const AdminEvents = () => {
       maxTeamSize: Number(form.maxTeamSize),
       registrationMode: Number(form.maxTeamSize) > 1 ? form.registrationMode : 'Standard',
       registrationFee: Number(form.registrationFee),
+      enableQRScanning: form.attendanceMethod === 'qr',
     };
     try {
       if (editingEvent) {
@@ -248,26 +251,6 @@ const AdminEvents = () => {
     finally { setSubmitting(false); }
   };
 
-  const handleBannerUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const formData = new FormData();
-    formData.append('image', file);
-    
-    setUploadingBanner(true);
-    try {
-      const uploadRes = await api.post('/upload/image', formData, { 
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      f('bannerURL', uploadRes.data.data.url);
-      showToast('Poster uploaded successfully');
-    } catch (err) {
-      showToast('Error uploading poster', 'error');
-    } finally {
-      setUploadingBanner(false);
-    }
-  };
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const addCustomField = () => {
@@ -307,14 +290,14 @@ const AdminEvents = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="5" style={{textAlign:'center', color:'#555', padding:'30px'}}>Loading...</td></tr>
+                <tr><td colSpan="5" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
               ) : events.length === 0 ? (
-                <tr><td colSpan="5" style={{textAlign:'center', color:'#555', padding:'30px'}}>No events yet. Create one!</td></tr>
+                <tr><td colSpan="5" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No events yet. Create one!</td></tr>
               ) : events.map(ev => (
                 <tr key={ev._id} style={{ background: ev.deletionState?.status === 'APPROVED_RETENTION' ? 'rgba(255, 31, 1, 0.05)' : ev.deletionState?.status === 'PENDING_APPROVAL' ? 'rgba(255, 170, 0, 0.05)' : 'transparent' }}>
                   <td>
-                    <strong style={{color:'#fff'}}>{ev.title}</strong>
-                    {ev.featured && <span className="tag" style={{marginLeft:'8px', backgroundColor:'#222'}}>Featured</span>}
+                    <strong style={{ color: '#fff' }}>{ev.title}</strong>
+                    {ev.featured && <span className="tag" style={{ marginLeft: '8px', backgroundColor: '#222' }}>Featured</span>}
                   </td>
                   <td>{ev.isTBD ? 'TBD' : new Date(ev.startTime).toLocaleDateString()}</td>
                   <td>{ev.isTBD && ev.venue === 'TBD' ? 'TBD' : ev.venue}</td>
@@ -334,7 +317,7 @@ const AdminEvents = () => {
                     )}
                   </td>
                   <td style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-                    
+
 
                     {(ev.deletionState?.status === 'PENDING_APPROVAL' || ev.deletionState?.status === 'APPROVED_RETENTION') && user?.role === 'super-admin' && (
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -384,21 +367,21 @@ const AdminEvents = () => {
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {ev.status !== 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
-                        <button className="btn-secondary" title="End Event" onClick={() => handleEndEvent(ev._id)} style={{padding:'6px 10px'}}>
-                          <FaCheckCircle style={{color: '#ffaa00'}} />
+                        <button className="btn-secondary" title="End Event" onClick={() => handleEndEvent(ev._id)} style={{ padding: '6px 10px' }}>
+                          <FaCheckCircle style={{ color: '#ffaa00' }} />
                         </button>
                       )}
                       {ev.status === 'Ended' && ev.deletionState?.status === 'ACTIVE' && (
-                        <button className="btn-danger" title="Wipe Form Data & Files" onClick={() => handleWipeData(ev._id)} style={{padding:'6px 10px'}}>
+                        <button className="btn-danger" title="Wipe Form Data & Files" onClick={() => handleWipeData(ev._id)} style={{ padding: '6px 10px' }}>
                           🧹
                         </button>
                       )}
-                      <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{padding:'6px 10px'}}><FaUsers /></Link>
-                      <button className="btn-secondary" style={{padding:'6px 10px'}} onClick={() => openEdit(ev)}><FaEdit /></button>
-                      
+                      <Link to={`/admin/events/${ev._id}/registrations`} className="btn-primary" style={{ padding: '6px 10px' }}><FaUsers /></Link>
+                      <button className="btn-secondary" style={{ padding: '6px 10px' }} onClick={() => openEdit(ev)}><FaEdit /></button>
+
 
                       {user?.role === 'super-admin' && ev.deletionState?.status === 'ACTIVE' && (
-                        <button className="btn-secondary" title="Initiate Multi-Sig Deletion" onClick={() => handleDelete(ev._id)} style={{padding:'6px 10px', color:'#ff1f01', borderColor:'#ff1f01'}}>
+                        <button className="btn-secondary" title="Initiate Multi-Sig Deletion" onClick={() => handleDelete(ev._id)} style={{ padding: '6px 10px', color: '#ff1f01', borderColor: '#ff1f01' }}>
                           <FaTrash />
                         </button>
                       )}
@@ -419,20 +402,19 @@ const AdminEvents = () => {
               <div className="admin-form-grid">
                 <div className="form-group full" style={{ marginBottom: '20px' }}>
                   <label>Event Poster (1:1 Aspect Ratio Recommended)</label>
+                  <CropperInput
+                    initialImage={form.bannerURL}
+                    aspect={1}
+                    folder="events"
+                    onSave={(url) => {
+                      f('bannerURL', url);
+                      showToast('Poster cropped and uploaded successfully');
+                    }}
+                    label="Upload & Crop Poster"
+                  />
                   {form.bannerURL && (
-                    <div style={{ marginBottom: '10px' }}>
-                      <img src={form.bannerURL} alt="Poster preview" style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #333' }} />
-                    </div>
+                    <button type="button" onClick={() => f('bannerURL', '')} className="btn-danger" style={{ marginTop: '10px', padding: '8px 12px' }}>Remove Poster</button>
                   )}
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <input type="file" accept="image/*" id="bannerUpload" style={{ display: 'none' }} onChange={handleBannerUpload} disabled={uploadingBanner} />
-                    <label htmlFor="bannerUpload" className="btn-secondary" style={{ cursor: uploadingBanner ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 15px', margin: 0 }}>
-                      <FaImage /> {uploadingBanner ? 'Uploading...' : 'Upload Poster'}
-                    </label>
-                    {form.bannerURL && (
-                      <button type="button" onClick={() => f('bannerURL', '')} className="btn-danger" style={{ padding: '10px 15px' }}>Remove</button>
-                    )}
-                  </div>
                 </div>
                 <div className="form-group full">
                   <label>Title *</label>
@@ -490,12 +472,12 @@ const AdminEvents = () => {
                   <label>Registration Fee (₹)</label>
                   <input type="number" min="0" value={form.registrationFee} onChange={e => f('registrationFee', e.target.value)} />
                 </div>
-                <div className="form-group" style={{justifyContent:'flex-end'}}>
-                  <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer'}}>
+                <div className="form-group" style={{ justifyContent: 'flex-end' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                     <input type="checkbox" checked={form.featured} onChange={e => f('featured', e.target.checked)} />
                     Featured Event
                   </label>
-                  <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer', marginLeft:'20px'}}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginLeft: '20px' }}>
                     <input type="checkbox" checked={form.isTBD} onChange={e => f('isTBD', e.target.checked)} />
                     TBD (To Be Decided)
                   </label>
@@ -513,9 +495,9 @@ const AdminEvents = () => {
                 <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <label style={{ fontSize: '0.9rem', color: '#ff1f01', fontWeight: 'bold' }}>Eligible Branches *</label>
-                    <button 
-                      type="button" 
-                      className="btn-secondary" 
+                    <button
+                      type="button"
+                      className="btn-secondary"
                       onClick={() => {
                         if (form.eligibleBranches.length === BRANCHES.length) {
                           f('eligibleBranches', []);
@@ -534,9 +516,9 @@ const AdminEvents = () => {
                       return (
                         <label key={branch} style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
                           <span style={{ width: '28px', flexShrink: 0, display: 'flex', alignItems: 'center', height: '20px' }}>
-                            <input 
-                              type="checkbox" 
-                              checked={isChecked} 
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
                               onChange={() => {
                                 if (isChecked) {
                                   f('eligibleBranches', form.eligibleBranches.filter(b => b !== branch));
@@ -551,10 +533,10 @@ const AdminEvents = () => {
                       );
                     })}
                   </div>
-                  <span style={{ 
-                    color: '#ff4444', 
-                    fontSize: '0.75rem', 
-                    marginTop: '5px', 
+                  <span style={{
+                    color: '#ff4444',
+                    fontSize: '0.75rem',
+                    marginTop: '5px',
                     display: 'block',
                     visibility: form.eligibleBranches.length === 0 ? 'visible' : 'hidden',
                     height: '14px'
@@ -567,9 +549,9 @@ const AdminEvents = () => {
                 <div className="form-group full" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <label style={{ fontSize: '0.9rem', color: '#ff1f01', fontWeight: 'bold' }}>Eligible Years *</label>
-                    <button 
-                      type="button" 
-                      className="btn-secondary" 
+                    <button
+                      type="button"
+                      className="btn-secondary"
                       onClick={() => {
                         if (form.eligibleYears.length === 5) {
                           f('eligibleYears', []);
@@ -594,9 +576,9 @@ const AdminEvents = () => {
                       return (
                         <label key={yearObj.val} style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', fontSize: '0.85rem', color: '#ccc' }}>
                           <span style={{ width: '28px', flexShrink: 0, display: 'flex', alignItems: 'center', height: '20px' }}>
-                            <input 
-                              type="checkbox" 
-                              checked={isChecked} 
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
                               onChange={() => {
                                 if (isChecked) {
                                   f('eligibleYears', form.eligibleYears.filter(y => y !== yearObj.val));
@@ -611,10 +593,10 @@ const AdminEvents = () => {
                       );
                     })}
                   </div>
-                  <span style={{ 
-                    color: '#ff4444', 
-                    fontSize: '0.75rem', 
-                    marginTop: '5px', 
+                  <span style={{
+                    color: '#ff4444',
+                    fontSize: '0.75rem',
+                    marginTop: '5px',
                     display: 'block',
                     visibility: form.eligibleYears.length === 0 ? 'visible' : 'hidden',
                     height: '14px'
@@ -632,15 +614,15 @@ const AdminEvents = () => {
                   </div>
                   {form.customFormFields.map((field, idx) => (
                     <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center', backgroundColor: '#111', padding: '10px', borderRadius: '8px' }}>
-                      <input 
-                        value={field.fieldName} 
-                        onChange={e => updateCustomField(idx, 'fieldName', e.target.value)} 
-                        placeholder="Field Name (e.g. GitHub Link)" 
-                        required 
+                      <input
+                        value={field.fieldName}
+                        onChange={e => updateCustomField(idx, 'fieldName', e.target.value)}
+                        placeholder="Field Name (e.g. GitHub Link)"
+                        required
                         style={{ flex: 2 }}
                       />
-                      <select 
-                        value={field.fieldType} 
+                      <select
+                        value={field.fieldType}
                         onChange={e => updateCustomField(idx, 'fieldType', e.target.value)}
                         style={{ flex: 1 }}
                       >
@@ -650,10 +632,10 @@ const AdminEvents = () => {
                         <option value="file">File Upload (Image/PDF)</option>
                       </select>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={field.isRequired} 
-                          onChange={e => updateCustomField(idx, 'isRequired', e.target.checked)} 
+                        <input
+                          type="checkbox"
+                          checked={field.isRequired}
+                          onChange={e => updateCustomField(idx, 'isRequired', e.target.checked)}
                         /> Req
                       </label>
                       <button type="button" className="btn-danger" onClick={() => removeCustomField(idx)} style={{ padding: '8px' }}>
@@ -697,11 +679,11 @@ const AdminEvents = () => {
                       <span style={{ fontSize: '0.85rem', color: '#ff1f01', fontWeight: 'bold', width: '70px', flexShrink: 0 }}>
                         Stage {idx + 1}:
                       </span>
-                      <input 
-                        value={stage} 
-                        onChange={e => updateTicketStage(idx, e.target.value)} 
-                        placeholder={`Stage ${idx + 1} Name (e.g. Stage 1: Main Gate Check-in)`} 
-                        required 
+                      <input
+                        value={stage}
+                        onChange={e => updateTicketStage(idx, e.target.value)}
+                        placeholder={`Stage ${idx + 1} Name (e.g. Stage 1: Main Gate Check-in)`}
+                        required
                         style={{ flex: 1, background: '#1c1c20', color: '#fff', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px' }}
                       />
                       {(form.ticketStages || []).length > 1 && (
@@ -714,35 +696,24 @@ const AdminEvents = () => {
                 </div>
               </div>
 
-              {/* QR Scanning Toggle */}
+              {/* Attendance Method */}
               <div className="form-group" style={{ marginTop: '16px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', userSelect: 'none' }}>
-                  <div
-                    onClick={() => f('enableQRScanning', !form.enableQRScanning)}
-                    style={{
-                      width: '46px', height: '26px', borderRadius: '13px', flexShrink: 0,
-                      background: form.enableQRScanning ? '#00e5ff' : '#444',
-                      position: 'relative', transition: 'background 0.25s', cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{
-                      position: 'absolute', top: '3px',
-                      left: form.enableQRScanning ? '23px' : '3px',
-                      width: '20px', height: '20px', borderRadius: '50%',
-                      background: '#fff', transition: 'left 0.25s'
-                    }} />
-                  </div>
-                  <span style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                    <strong style={{ color: form.enableQRScanning ? '#00e5ff' : '#888' }}>
-                      QR Ticket Scanning {form.enableQRScanning ? 'Enabled' : 'Disabled'}
-                    </strong>
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>
-                      {form.enableQRScanning
-                        ? 'Attendees will have scannable QR tickets. Scanner will be active at the event.'
-                        : 'No QR tickets — admin marks attendance manually from the registrations list.'}
-                    </span>
-                  </span>
+                <label style={{ display: 'block', color: '#ccc', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                  Attendance Method
                 </label>
+                <select
+                  value={form.attendanceMethod || 'qr'}
+                  onChange={e => f('attendanceMethod', e.target.value)}
+                  style={{ width: '100%', maxWidth: '420px', padding: '10px 14px', background: '#1a1a20', color: '#fff', border: '1px solid #333', borderRadius: '8px', fontSize: '0.9rem' }}
+                >
+                  <option value="qr">QR Code</option>
+                  <option value="id-card">ID Card Barcode</option>
+                </select>
+                <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', marginTop: '6px' }}>
+                  {form.attendanceMethod === 'id-card'
+                    ? 'Use the scanner to read participant ID card barcodes, including IDs such as 20246 and 20247.'
+                    : 'Use the scanner to read each participant ticket QR code.'}
+                </span>
               </div>
 
               <div className="modal-actions">

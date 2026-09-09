@@ -15,10 +15,10 @@ const backupFilePath = path.join(process.cwd(), 'registrations_backup.log');
 
 export const appendBackupLog = (action, payload) => {
     try {
-        const logEntry = JSON.stringify({ 
-            timestamp: new Date().toISOString(), 
+        const logEntry = JSON.stringify({
+            timestamp: new Date().toISOString(),
             action,
-            payload 
+            payload
         }) + '\n';
         fs.appendFileSync(backupFilePath, logEntry);
     } catch (err) {
@@ -95,7 +95,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
         if (!userObj.branch) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please update your branch in your profile before registering');
         }
-        const isEligible = event.eligibleBranches.some(b => 
+        const isEligible = event.eligibleBranches.some(b =>
             b.toLowerCase().trim() === userObj.branch.toLowerCase().trim()
         );
         if (!isEligible) {
@@ -148,12 +148,12 @@ export const registerForEvent = asyncHandler(async (req, res) => {
 
         if (event.eligibleBranches && event.eligibleBranches.length > 0) {
             const ineligibleMember = members.find(m => {
-                if (!m.branch) return true; 
+                if (!m.branch) return true;
                 return !event.eligibleBranches.some(b => b.toLowerCase().trim() === m.branch.toLowerCase().trim());
             });
             if (ineligibleMember) {
                 throw new ApiError(
-                    HTTP_STATUS.BAD_REQUEST, 
+                    HTTP_STATUS.BAD_REQUEST,
                     `Team member ${ineligibleMember.name} (Branch: ${ineligibleMember.branch || 'Not Set'}) is not eligible for this event.`
                 );
             }
@@ -166,7 +166,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
             });
             if (ineligibleYearMember) {
                 throw new ApiError(
-                    HTTP_STATUS.BAD_REQUEST, 
+                    HTTP_STATUS.BAD_REQUEST,
                     `Team member ${ineligibleYearMember.name} (Year: ${ineligibleYearMember.yearOfStudy || 'Not Set'}) is not eligible for this event.`
                 );
             }
@@ -278,14 +278,14 @@ export const markAttendance = asyncHandler(async (req, res) => {
     }
 
 
-    const registration = await Registration.findById(req.params.id).populate('eventId', 'title ticketStages enableQRScanning');
+    const registration = await Registration.findById(req.params.id).populate('eventId', 'title ticketStages enableQRScanning attendanceMethod');
 
     if (!registration) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
 
 
-    if (!isManualOverride && registration.eventId?.enableQRScanning === false) {
+    if (!isManualOverride && registration.eventId?.enableQRScanning === false && registration.eventId?.attendanceMethod !== 'id-card') {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'QR ticket scanning is disabled for this event. Use manual attendance marking.');
     }
 
@@ -310,7 +310,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
         }
 
 
-        const COOLDOWN_MS = 10 * 60 * 1000; 
+        const COOLDOWN_MS = 10 * 60 * 1000;
         let lastScannedAt = registration.attendanceMarkedAt ? new Date(registration.attendanceMarkedAt).getTime() : 0;
         if (registration.completedStages && registration.completedStages.length > 0) {
             const latestStageScan = Math.max(...registration.completedStages.map(s => new Date(s.scannedAt).getTime()));
@@ -370,6 +370,32 @@ export const markAttendance = asyncHandler(async (req, res) => {
             .status(HTTP_STATUS.OK)
             .json(new APIResponse(HTTP_STATUS.OK, { registration, alreadyMarked: false }, 'Attendance reset successfully'));
     }
+});
+
+export const markAttendanceByCollegeRegNo = asyncHandler(async (req, res, next) => {
+    const collegeRegNo = decodeURIComponent(req.params.collegeRegNo).trim().toUpperCase();
+
+    const participant = await User.findOne({ collegeRegNo }).select('_id');
+    const participantMatches = [{ 'teamMembers.collegeRegNo': collegeRegNo }];
+    if (participant) {
+        participantMatches.push(
+            { registeredBy: participant._id },
+            { 'teamMembers.userId': participant._id }
+        );
+    }
+
+    const registration = await Registration.findOne({
+        eventId: req.params.eventId,
+        deletedAt: null,
+        $or: participantMatches
+    });
+
+    if (!registration) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, `No registration found for ID "${collegeRegNo}" in this event`);
+    }
+
+    req.params.id = registration._id.toString();
+    return next ? markAttendance(req, res, next) : undefined;
 });
 
 export const getEventRegistrations = asyncHandler(async (req, res) => {
@@ -463,7 +489,7 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
     }
 
     const customFieldsSet = new Set();
-    
+
 
     if (event.customFormFields && Array.isArray(event.customFormFields)) {
         event.customFormFields.forEach(f => {
@@ -519,7 +545,7 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
 
     registrations.forEach(reg => {
         const user = reg.registeredBy || {};
-        
+
 
         const confirmedMembers = reg.teamMembers?.filter(m => m.status === 'Confirmed') || [];
 
@@ -551,7 +577,7 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
         customFields.forEach(field => {
             let val = reg.customData ? reg.customData[field] : '';
             if (val && typeof val === 'object' && val.url) {
-                val = val.url; 
+                val = val.url;
             }
             row.push(escapeCSV(val));
         });
@@ -657,11 +683,11 @@ export const searchTeamsForEvent = asyncHandler(async (req, res) => {
         teamName: t.teamName,
         leaderName: t.registeredBy?.name,
         leaderRegNo: t.registeredBy?.collegeRegNo,
-        currentSize: t.teamMembers.filter(m => m.status === 'Confirmed').length + 1, 
+        currentSize: t.teamMembers.filter(m => m.status === 'Confirmed').length + 1,
         maxSize: event.maxTeamSize,
         slotsLeft: event.maxTeamSize - (t.teamMembers.filter(m => m.status === 'Confirmed').length + 1),
         hasPendingRequestFromUser: t.joinRequests?.some(r => r.userId?.toString() === req.user.userId?.toString() && r.status === 'Pending')
-    })).filter(t => t.slotsLeft > 0); 
+    })).filter(t => t.slotsLeft > 0);
 
 
 

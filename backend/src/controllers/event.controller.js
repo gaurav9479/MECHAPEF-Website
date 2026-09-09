@@ -56,6 +56,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         eligibleYears: eligibleYears || [1, 2, 3, 4],
         ticketStages: req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in'],
         enableQRScanning: req.body.enableQRScanning !== undefined ? req.body.enableQRScanning : true,
+        attendanceMethod: req.body.attendanceMethod || 'qr',
         registrationMode: registrationMode || 'Standard',
         isTBD: isTBD || false,
         createdBy: req.user.userId
@@ -65,7 +66,7 @@ export const createEvent = asyncHandler(async (req, res) => {
     await newEvent.populate('createdBy', 'name email');
 
     logFootprint(req, 'CREATE', 'Event', `Created event: ${newEvent.title}`);
-    
+
 
     checkAndToggleRedis().catch(err => console.error(err));
 
@@ -159,6 +160,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'eligibleYears',
         'ticketStages',
         'enableQRScanning',
+        'attendanceMethod',
         'registrationMode',
         'isTBD'
     ];
@@ -256,7 +258,7 @@ export const approveEventDeletion = asyncHandler(async (req, res) => {
         event.deletionState.approvedAt = new Date();
 
         event.deletionState.vanishAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        
+
 
         event.isActive = false;
         event.isRegistrationOpen = false;
@@ -360,7 +362,7 @@ export const cancelEventDeletion = asyncHandler(async (req, res) => {
 
 export const endEvent = asyncHandler(async (req, res) => {
     const event = await Event.findById(req.params.id);
-    
+
     if (!event || event.deletedAt) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
@@ -372,7 +374,7 @@ export const endEvent = asyncHandler(async (req, res) => {
     event.status = 'Ended';
     event.endedAt = new Date();
     await event.save();
-    
+
 
     checkAndToggleRedis().catch(err => console.error(err));
 
@@ -441,7 +443,7 @@ export const wipeEventData = asyncHandler(async (req, res) => {
                 }
             }
         }
-        
+
 
         reg.customData = { wiped: "Data has been wiped to save storage" };
         await reg.save();

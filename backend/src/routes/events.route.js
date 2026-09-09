@@ -100,6 +100,13 @@ router.put(
     registrationController.markAttendance
 );
 
+router.put(
+    '/:eventId/registrations/by-college-reg-no/:collegeRegNo/attendance',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
+    registrationController.markAttendanceByCollegeRegNo
+);
+
 router.post(
     '/:eventId/register-draft',
     authenticate,

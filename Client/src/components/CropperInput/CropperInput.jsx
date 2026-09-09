@@ -6,7 +6,7 @@ import api from '../../services/api';
 import './CropperInput.css';
 import { FaUpload, FaCrop, FaTimes, FaSpinner } from 'react-icons/fa';
 
-const CropperInput = ({ initialImage, aspect, onSave, label = "Upload Image" }) => {
+const CropperInput = ({ initialImage, aspect, onSave, label = "Upload Image", folder = 'magazine' }) => {
   const [src, setSrc] = useState(null);
   const [uploading, setUploading] = useState(false);
   const cropperRef = useRef(null);
@@ -45,16 +45,16 @@ const CropperInput = ({ initialImage, aspect, onSave, label = "Upload Image" }) 
           imageSmoothingEnabled: true,
           imageSmoothingQuality: 'high',
         });
-        
+
         const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.92));
         const formData = new FormData();
         formData.append('file', blob, `cropped_${Date.now()}.jpg`);
-        formData.append('folder', 'magazine');
-        
+        formData.append('folder', folder);
+
         const res = await api.post('/upload/file', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        
+
         const url = res.data.data.url;
         onSave(url);
         setSrc(null);
@@ -221,22 +221,22 @@ const CropperInput = ({ initialImage, aspect, onSave, label = "Upload Image" }) 
           <img src={initialImage} alt="Current" className="cropper-preview-img" />
         </div>
       )}
-      
+
       {/* Upload Button */}
-      <button 
-        type="button" 
+      <button
+        type="button"
         className="cropper-upload-btn"
         onClick={() => fileInputRef.current.click()}
       >
         <FaUpload /> {label}
       </button>
-      
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={onChange} 
-        accept="image/*" 
-        style={{ display: 'none' }} 
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={onChange}
+        accept="image/*"
+        style={{ display: 'none' }}
       />
 
       {/* Portal Modal — renders at document.body, always perfectly centered */}
