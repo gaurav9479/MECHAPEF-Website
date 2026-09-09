@@ -33,7 +33,9 @@ const getStudentInfoFromRegNo = (collegeRegNo) => {
     return {
         enrollmentYear,
         yearOfStudy: Number.isNaN(enrollmentYear) ? undefined : 2027 - enrollmentYear,
-        branch: BRANCH_CODES[branchCode]
+        branch: enrollmentYear === 2026 && branchCode === '9'
+            ? 'Mechanical Engineering'
+            : BRANCH_CODES[branchCode]
     };
 };
 

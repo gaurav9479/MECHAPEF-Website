@@ -12,10 +12,10 @@ const PASSWORD_RESET_EXPIRY_MS = 15 * 60 * 1000;
 
 function parseStudentInfoFromRegNo(regNo) {
     if (!regNo || regNo.length < 8) return { branch: undefined, yearOfStudy: undefined };
-    
+
     const enrollmentYear = parseInt(regNo.substring(0, 4), 10);
     const branchCode = regNo.substring(4, 5);
-    
+
     if (isNaN(enrollmentYear)) return { branch: undefined, yearOfStudy: undefined };
 
     let yearOfStudy = 2027 - enrollmentYear;
@@ -35,7 +35,9 @@ function parseStudentInfoFromRegNo(regNo) {
         '9': 'Materials Engineering'
     };
 
-    const branch = branchMap[branchCode];
+    const branch = enrollmentYear === 2026 && branchCode === '9'
+        ? 'Mechanical Engineering'
+        : branchMap[branchCode];
     return { branch, yearOfStudy };
 }
 
@@ -75,7 +77,7 @@ export const register = asyncHandler(async (req, res) => {
     }
 
     const isMechOrProd = parsedBranch && (
-        parsedBranch.toLowerCase().includes('mechanical') || 
+        parsedBranch.toLowerCase().includes('mechanical') ||
         parsedBranch.toLowerCase().includes('production') ||
         parsedBranch.toLowerCase().includes('pie')
     );
@@ -472,7 +474,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
     );
 
     const isMechOrProd = parsedBranch && (
-        parsedBranch.toLowerCase().includes('mechanical') || 
+        parsedBranch.toLowerCase().includes('mechanical') ||
         parsedBranch.toLowerCase().includes('production') ||
         parsedBranch.toLowerCase().includes('pie')
     );
