@@ -8,6 +8,7 @@ import HeroTicker from '../HeroTicker/HeroTicker';
 import './LiveEventsSlider.css';
 
 const LiveEventsSlider = () => {
+  const navigate = useNavigate();
   const [slides, setSlides] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,7 @@ const LiveEventsSlider = () => {
   useEffect(() => {
     apiGetCached('/special-sponsor/active', (res) => {
       if (res.data) setSpecialSponsor(res.data);
-    }, { cacheDuration: 5 * 60 * 1000 }).catch(() => {});
+    }, { cacheDuration: 5 * 60 * 1000 }).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -63,7 +64,7 @@ const LiveEventsSlider = () => {
   };
 
   if (loading) return null;
-  
+
   if (slides.length === 0) {
     return (
       <section className="live-events-slider-wrapper">
@@ -85,12 +86,12 @@ const LiveEventsSlider = () => {
     <section className="live-events-slider-wrapper">
       <div className="slider-container">
         {slides.map((slide, index) => (
-          <div 
-            key={slide._id} 
+          <div
+            key={slide._id}
             className={`slide ${index === currentIdx ? 'active' : ''}`}
             style={slide.bannerURL ? { backgroundImage: `url(${slide.bannerURL})` } : { background: 'linear-gradient(135deg, #660a00 0%, #111111 100%)' }}
           >
-            
+
             <div className="slide-overlay">
               {/* Ultra-Sexy Co-Branding Glass Badge Container */}
               <div className="slide-content-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '20px' }}>
@@ -107,18 +108,18 @@ const LiveEventsSlider = () => {
                         <h2 className="cobranded-slide-title">
                           {specialSponsor.sliderCustomName || slide.title}
                         </h2>
-                        
+
                         <div className="cobrand-x-divider">
                           <span className="x-line"></span>
                           <span className="cobranding-cross" style={{ color: specialSponsor.brandColor || '#ff1f01' }}>×</span>
                           <span className="x-line"></span>
                         </div>
 
-                        { (specialSponsor.sliderLogoURL || specialSponsor.logoURL) ? (
+                        {(specialSponsor.sliderLogoURL || specialSponsor.logoURL) ? (
                           <div className="cobrand-logo-glow-wrapper">
-                            <img 
-                              src={specialSponsor.sliderLogoURL || specialSponsor.logoURL} 
-                              alt={specialSponsor.name} 
+                            <img
+                              src={specialSponsor.sliderLogoURL || specialSponsor.logoURL}
+                              alt={specialSponsor.name}
                               className="cobranding-slide-logo"
                             />
                           </div>
@@ -136,8 +137,8 @@ const LiveEventsSlider = () => {
                   <p className="slide-description">{slide.description}</p>
 
                   {slide.targetLink && (
-                    <button 
-                      className="explore-btn sexy-glow-btn" 
+                    <button
+                      className="explore-btn sexy-glow-btn"
                       onClick={() => handleExplore(slide.targetLink)}
                     >
                       <span>EXPLORE EVENT</span>
@@ -154,11 +155,11 @@ const LiveEventsSlider = () => {
           <>
             <button className="slider-arrow prev" onClick={handlePrev}><FaChevronLeft /></button>
             <button className="slider-arrow next" onClick={handleNext}><FaChevronRight /></button>
-            
+
             <div className="slider-dots">
               {slides.map((_, idx) => (
-                <span 
-                  key={idx} 
+                <span
+                  key={idx}
                   className={`dot ${idx === currentIdx ? 'active' : ''}`}
                   onClick={() => setCurrentIdx(idx)}
                 />
@@ -174,15 +175,15 @@ const LiveEventsSlider = () => {
       {slides[currentIdx]?.targetType === 'Event' && slides[currentIdx]?.eventSponsors?.length > 0 && (
         <div className="active-event-sponsors-section" style={{ padding: '20px 20px', backgroundColor: '#050505', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', overflow: 'hidden' }}>
           <h3 style={{ color: '#ff1f01', fontSize: '1.2rem', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '2px' }}>Event Endorsed Sponsors</h3>
-          
+
           <div className="sponsors-chain-wrapper" style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-            <div className="event-sponsors-horizontal-scroll" style={{ 
-              display: 'flex', 
-              gap: '20px', 
-              overflowX: 'auto', 
+            <div className="event-sponsors-horizontal-scroll" style={{
+              display: 'flex',
+              gap: '20px',
+              overflowX: 'auto',
               overflowY: 'hidden',
-              padding: '5px 20px', 
-              width: '100%', 
+              padding: '5px 20px',
+              width: '100%',
               maxWidth: '1200px',
               scrollSnapType: 'x mandatory',
               zIndex: 1,
