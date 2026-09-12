@@ -316,7 +316,6 @@ export const getActiveLiveQuestions = async (req, res) => {
         const events = await Event.find({
             isActive: true,
             'liveInteractive.enabled': true,
-            'liveInteractive.isAcceptingSubmissions': true,
             'liveInteractive.activeQuestionId': { $ne: null }
         }).select('title liveInteractive.activeQuestionId liveInteractive.questionStartTime liveInteractive.questions');
 
@@ -324,12 +323,6 @@ export const getActiveLiveQuestions = async (req, res) => {
             const live = event.liveInteractive;
             const question = live.questions.find(item => item.id === live.activeQuestionId);
             if (!question) return [];
-
-            if (hasLiveQuestionSettled(live, question)) {
-                event.liveInteractive.isAcceptingSubmissions = false;
-                event.save().catch(error => console.error('[LiveVoting] Failed to close expired question:', error));
-                return [];
-            }
 
             return [{
                 eventId: event._id,
@@ -339,7 +332,10 @@ export const getActiveLiveQuestions = async (req, res) => {
                 pollType: question.pollType,
                 options: question.options,
                 timeLimitSeconds: question.timeLimitSeconds,
-                questionStartTime: live.questionStartTime
+                questionStartTime: live.questionStartTime,
+                isAcceptingSubmissions: Boolean(live.isAcceptingSubmissions && !hasLiveQuestionExpired(live, question)),
+                expired: hasLiveQuestionExpired(live, question),
+                settled: hasLiveQuestionSettled(live, question)
             }];
         });
 
@@ -408,6 +404,10 @@ export const broadcastQuestion = async (req, res) => {
         event.liveInteractive.currentType = question?.pollType || 'none';
         event.liveInteractive.questionStartTime = questionId ? new Date() : null;
         event.liveInteractive.isAcceptingSubmissions = Boolean(questionId && isAcceptingSubmissions);
+
+        if (questionId) {
+            await redis.del(`voting:voted:${questionId}`, `voting:counts:${questionId}`);
+        }
         await event.save();
 
         return res.status(200).json({ success: true, liveInteractive: event.liveInteractive });
