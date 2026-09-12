@@ -13,6 +13,16 @@ const LivePoll = () => {
     const [message, setMessage] = useState('Loading live poll...');
     const [submitted, setSubmitted] = useState(false);
 
+    const getAttendeeId = () => {
+        const storageKey = 'mechapef_live_attendee_id';
+        let attendeeId = localStorage.getItem(storageKey);
+        if (!attendeeId) {
+            attendeeId = window.crypto?.randomUUID?.() || `guest_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+            localStorage.setItem(storageKey, attendeeId);
+        }
+        return attendeeId;
+    };
+
     useEffect(() => {
         api.get('/events/live/active')
             .then(res => {
@@ -48,7 +58,11 @@ const LivePoll = () => {
     const submitVote = async () => {
         if (!selectedOption || remainingSeconds === 0) return;
         try {
-            await api.post(`/events/${eventId}/live/vote`, { pollId: questionId, selectedOption });
+            await api.post(`/events/${eventId}/live/vote`, {
+                pollId: questionId,
+                selectedOption,
+                userId: getAttendeeId()
+            });
             setSubmitted(true);
             setMessage('Vote recorded. Results will appear when the timer ends.');
         } catch (error) {
