@@ -356,7 +356,25 @@ const AdminEventEditor = () => {
 
     const firstQuestion = form.liveInteractive?.questions?.[0];
     if (!firstQuestion) {
-      showToast('Add at least one question before enabling live mode', 'error');
+      const defaultType = form.liveInteractive?.currentType || 'voting';
+      const newQuestion = {
+        id: `q_${Date.now().toString(36)}`,
+        title: 'New Live Question',
+        pollType: defaultType,
+        options: [
+          { key: 'option_A', text: 'Option A' },
+          { key: 'option_B', text: 'Option B' }
+        ],
+        correctOption: defaultType === 'quiz' ? 'option_A' : '',
+        timeLimitSeconds: 30,
+        points: 1000
+      };
+      f('liveInteractive', {
+        ...form.liveInteractive,
+        enabled: true,
+        questions: [newQuestion]
+      });
+      showToast('Question editor opened. Fill the question and click Broadcast Live.');
       return;
     }
 
