@@ -81,13 +81,22 @@ export const getMyRegistrationForEvent = asyncHandler(async (req, res) => {
     const { id: eventId } = req.params;
     const userId = req.user.userId;
 
-    const registration = await Registration.findOne({
+    let registration = await Registration.findOne({
         eventId,
         registeredBy: userId,
         deletedAt: null
-    }).select('_id registrationType teamName attended paymentStatus createdAt');
+    }).select('_id registrationType registrationStatus teamName teamMembers customData attended paymentStatus createdAt');
 
     if (!registration) {
+        registration = await Registration.findOne({
+            eventId,
+            'teamMembers.userId': userId,
+            'teamMembers.status': 'Confirmed',
+            deletedAt: null
+        }).select('_id registrationType registrationStatus teamName teamMembers customData attended paymentStatus createdAt');
+    }
+
+    if (!registration || registration.registrationStatus === 'Draft') {
         return res.status(HTTP_STATUS.OK).json(
             new APIResponse(HTTP_STATUS.OK, { isRegistered: false }, 'Not registered for this event')
         );

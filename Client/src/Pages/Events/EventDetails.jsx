@@ -8,6 +8,7 @@ import { eventService } from '../../services/services';
 import api from '../../services/api';
 import { Helmet } from 'react-helmet-async';
 import './EventDetails.css';
+import TeamDetailView from './TeamDetailView';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -17,6 +18,7 @@ const EventDetails = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showTeamDetail, setShowTeamDetail] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const [userRegistration, setUserRegistration] = useState(null);
@@ -145,6 +147,12 @@ const EventDetails = () => {
     fetchJoinStatus();
   }, [id, user, event]);
 
+  useEffect(() => {
+    if (myJoinStatus?.registration?.registrationStatus === 'Confirmed') {
+      setShowTeamDetail(true);
+    }
+  }, [myJoinStatus]);
+
 
   const handleRegisterClick = () => {
     if (!user) {
@@ -195,6 +203,28 @@ const EventDetails = () => {
 
   const submitRegistration = async (e) => {
     e.preventDefault();
+
+    // Validate team name for team registrations
+    if (regType === 'Team' && !teamName.trim()) {
+      showToast('Please enter a team name', 'error');
+      return;
+    }
+
+    // Validate required custom form fields
+    if (event.customFormFields?.length > 0) {
+      for (const field of event.customFormFields) {
+        if (field.isRequired) {
+          const val = customData[field.fieldName];
+          const isEmpty = val === undefined || val === null || val === '' ||
+            (typeof val === 'object' && !val?.url);
+          if (isEmpty) {
+            showToast(`"${field.fieldName}" is required`, 'error');
+            return;
+          }
+        }
+      }
+    }
+
     if (Object.values(fileUploading).some(status => status)) {
       showToast('Please wait for all files to finish uploading', 'error');
       return;
@@ -208,7 +238,6 @@ const EventDetails = () => {
       };
       if (regType === 'Team') {
         payload.teamName = teamName;
-
         payload.teamMemberIds = [user._id];
       }
 
@@ -445,6 +474,7 @@ const EventDetails = () => {
       setShowDraftDashboard(false);
       setDraftRegistration(null);
       setUserRegistration({ registrationStatus: 'Confirmed' });
+      setShowTeamDetail(true);
       await refreshJoinStatus();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to finalize', 'error');
@@ -618,16 +648,17 @@ const EventDetails = () => {
                   {(() => {
                     const isNotStarted = event.registrationStartDate && new Date() < new Date(event.registrationStartDate);
                     const isClosed = new Date() > new Date(event.registrationDeadline);
-                    const hasDraft = myJoinStatus?.role === 'leader';
+                    const isFinalized = myJoinStatus?.registration?.registrationStatus === 'Confirmed';
+                    const hasDraft = myJoinStatus?.role === 'leader' && !isFinalized;
                     const isRequester = myJoinStatus?.role === 'requester';
                     const isMember = myJoinStatus?.role === 'member';
-                    const isDisabled = !!userRegistration || isClosed || event.isTBD || isNotStarted || hasDraft || isRequester || isMember;
+                    const isDisabled = !!userRegistration || isFinalized || isClosed || event.isTBD || isNotStarted || hasDraft || isRequester || isMember;
                     return (
                       <>
                         <button
                           className="primary-btn register-btn"
                           onClick={hasDraft ? handleLoadDraftDashboard : handleRegisterClick}
-                          disabled={isDisabled && !hasDraft}
+                          disabled={isDisabled}
                         >
                           {userRegistration
                             ? userRegistration.attended
@@ -658,12 +689,16 @@ const EventDetails = () => {
                   })()}
                 </div>
 
+                {showTeamDetail && myJoinStatus?.registration?.registrationStatus === 'Confirmed' && (
+                  <TeamDetailView registration={myJoinStatus.registration} event={event} />
+                )}
+
                 {/* ── TYPE 2: Join Activity Panel ────────────────── */}
                 {event.registrationMode === 'JoinRequests' && user && myJoinStatus && (
                   <div style={{ marginTop: '20px', borderTop: '1px solid #222', paddingTop: '16px' }}>
 
                     {/* LEADER: show incoming requests summary */}
-                    {myJoinStatus.role === 'leader' && myJoinStatus.registration && (
+                    {myJoinStatus.role === 'leader' && myJoinStatus.registration && myJoinStatus.registration.registrationStatus !== 'Confirmed' && (
                       <div style={{ background: 'rgba(0,200,100,0.07)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '10px', padding: '14px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                           <h4 style={{ color: '#00c864', margin: 0, fontSize: '0.95rem' }}>Your Draft Team: <span style={{ color: '#fff' }}>{myJoinStatus.registration.teamName}</span></h4>
@@ -703,7 +738,7 @@ const EventDetails = () => {
                     )}
 
 
-                    {myJoinStatus.role === 'member' && myJoinStatus.registration && (
+                    {myJoinStatus.role === 'member' && myJoinStatus.registration && myJoinStatus.registration.registrationStatus !== 'Confirmed' && (
                       <div style={{ background: 'rgba(0,200,100,0.07)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '10px', padding: '14px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                           <h4 style={{ color: '#00c864', margin: 0, fontSize: '0.95rem' }}>You're in a Team!</h4>
