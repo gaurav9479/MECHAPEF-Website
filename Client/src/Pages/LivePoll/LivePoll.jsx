@@ -58,9 +58,9 @@ const LivePoll = () => {
                     });
             })
             .catch(error => setMessage(error.response?.data?.message || 'Unable to load this live poll.'));
-            loadLiveState();
-            const waitingTimer = questionId === 'waiting' ? setInterval(loadLiveState, 3000) : null;
-            return () => { if (waitingTimer) clearInterval(waitingTimer); };
+        loadLiveState();
+        const waitingTimer = questionId === 'waiting' ? setInterval(loadLiveState, 3000) : null;
+        return () => { if (waitingTimer) clearInterval(waitingTimer); };
     }, [eventId, questionId]);
 
     useEffect(() => {
@@ -91,7 +91,7 @@ const LivePoll = () => {
                         setMessage('Next question is live.');
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         };
         const nextQuestionTimer = setInterval(checkNextQuestion, 3000);
         return () => clearInterval(nextQuestionTimer);
