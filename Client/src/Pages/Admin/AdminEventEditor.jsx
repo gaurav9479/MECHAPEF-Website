@@ -325,11 +325,15 @@ const AdminEventEditor = () => {
           isAcceptingSubmissions: Boolean(qId)
         }
       });
-      await eventService.broadcastQuestion(id, { questionId: qId, isAcceptingSubmissions: true });
+      const broadcastResponse = await eventService.broadcastQuestion(id, { questionId: qId, isAcceptingSubmissions: true });
       f('liveInteractive', {
         ...form.liveInteractive,
+        enabled: true,
+        currentType: form.liveInteractive?.questions?.find(question => question.id === qId)?.pollType || 'voting',
         activeQuestionId: qId,
-        isAcceptingSubmissions: true
+        questionStartTime: new Date().toISOString(),
+        isAcceptingSubmissions: true,
+        ...(broadcastResponse.data?.liveInteractive ? { ...broadcastResponse.data.liveInteractive } : {})
       });
       showToast(qId ? `Question broadcasted live!` : 'Broadcast closed');
     } catch (err) {
