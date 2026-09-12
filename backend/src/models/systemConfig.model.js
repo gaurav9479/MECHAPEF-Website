@@ -12,9 +12,13 @@ const systemConfigSchema = new mongoose.Schema(
     startHour: { type: Number, default: 10 }, 
     endHour: { type: Number, default: 23 }, 
     enableSeatLock: { type: Boolean, default: true },
-    autoFallbackToDb: { type: Boolean, default: true }
+    autoFallbackToDb: { type: Boolean, default: true },
+    turnOffScheduledAt: { type: Date, default: null },
+    turnOffEffectiveAt: { type: Date, default: null },
+    shutdownBufferMinutes: { type: Number, default: 15 }
   },
   { timestamps: true }
 );
 
 export const SystemConfig = mongoose.model('SystemConfig', systemConfigSchema);
+

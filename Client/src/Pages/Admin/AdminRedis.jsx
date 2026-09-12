@@ -11,6 +11,8 @@ const AdminRedis = () => {
   const [startHour, setStartHour] = useState(10);
   const [endHour, setEndHour] = useState(23);
   const [redisLoading, setRedisLoading] = useState(false);
+  const [isShuttingDown, setIsShuttingDown] = useState(false);
+  const [shutdownMinutesRemaining, setShutdownMinutesRemaining] = useState(0);
   const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = 'success') => {
@@ -26,6 +28,8 @@ const AdminRedis = () => {
       setEnableDualRedis(conf.enableDualRedis || false);
       setStartHour(conf.startHour ?? 10);
       setEndHour(conf.endHour ?? 23);
+      setIsShuttingDown(Boolean(conf.isShuttingDown));
+      setShutdownMinutesRemaining(conf.shutdownMinutesRemaining || 0);
     } catch {
 
     }
@@ -33,6 +37,8 @@ const AdminRedis = () => {
 
   useEffect(() => {
     fetchSystemConfig();
+    const interval = setInterval(fetchSystemConfig, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const updateSystemConfig = async (updates) => {
@@ -44,7 +50,9 @@ const AdminRedis = () => {
       if (conf.enableDualRedis !== undefined) setEnableDualRedis(conf.enableDualRedis);
       if (conf.startHour !== undefined) setStartHour(conf.startHour);
       if (conf.endHour !== undefined) setEndHour(conf.endHour);
+      setIsShuttingDown(Boolean(conf.turnOffEffectiveAt && new Date() < new Date(conf.turnOffEffectiveAt)));
       showToast(res.data?.message || 'System Config updated');
+      fetchSystemConfig();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update system config', 'error');
     } finally {
@@ -85,7 +93,7 @@ const AdminRedis = () => {
                 type="button"
                 disabled={redisLoading}
                 onClick={() => updateSystemConfig({ redisModeType: 'AUTO' })}
-                style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: redisModeType === 'AUTO' ? '#ff1f01' : 'transparent', color: redisModeType === 'AUTO' ? '#fff' : '#aaa', transition: 'all 0.2s ease' }}
+                style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: redisModeType === 'AUTO' && !isShuttingDown ? '#ff1f01' : 'transparent', color: redisModeType === 'AUTO' && !isShuttingDown ? '#fff' : '#aaa', transition: 'all 0.2s ease' }}
               >
                 🤖 AUTO
               </button>
@@ -93,7 +101,7 @@ const AdminRedis = () => {
                 type="button"
                 disabled={redisLoading}
                 onClick={() => updateSystemConfig({ redisModeType: 'ALWAYS_ON' })}
-                style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: redisModeType === 'ALWAYS_ON' ? '#00c864' : 'transparent', color: redisModeType === 'ALWAYS_ON' ? '#000' : '#aaa', transition: 'all 0.2s ease' }}
+                style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: redisModeType === 'ALWAYS_ON' && !isShuttingDown ? '#00c864' : 'transparent', color: redisModeType === 'ALWAYS_ON' && !isShuttingDown ? '#000' : '#aaa', transition: 'all 0.2s ease' }}
               >
                 ⚡ ALWAYS ON
               </button>
@@ -101,11 +109,43 @@ const AdminRedis = () => {
                 type="button"
                 disabled={redisLoading}
                 onClick={() => updateSystemConfig({ redisModeType: 'ALWAYS_OFF' })}
-                style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: redisModeType === 'ALWAYS_OFF' ? '#333' : 'transparent', color: redisModeType === 'ALWAYS_OFF' ? '#fff' : '#aaa', transition: 'all 0.2s ease' }}
+                style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: redisModeType === 'ALWAYS_OFF' || isShuttingDown ? '#ffaa00' : 'transparent', color: redisModeType === 'ALWAYS_OFF' || isShuttingDown ? '#000' : '#aaa', transition: 'all 0.2s ease' }}
               >
-                ⚪ OFF
+                {isShuttingDown ? '⏳ SHUTTING DOWN (15m)' : '⚪ TURN OFF (15m Buffer)'}
               </button>
             </div>
+
+            {isShuttingDown && (
+              <div style={{ background: 'rgba(255, 170, 0, 0.1)', border: '1px solid rgba(255, 170, 0, 0.3)', borderRadius: '8px', padding: '16px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+                <div>
+                  <h4 style={{ color: '#ffaa00', margin: '0 0 6px 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    ⏳ 15-Minute Grace Period Active
+                  </h4>
+                  <p style={{ color: '#ccc', margin: 0, fontSize: '0.88rem' }}>
+                    Redis is remaining active for ongoing tasks. It will disconnect in <strong>~{shutdownMinutesRemaining} min(s)</strong>.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    type="button"
+                    disabled={redisLoading}
+                    onClick={() => updateSystemConfig({ cancelShutdown: true })}
+                    style={{ background: '#00c864', color: '#000', border: 'none', padding: '7px 14px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer' }}
+                  >
+                    Keep Redis ON (Cancel)
+                  </button>
+                  <button
+                    type="button"
+                    disabled={redisLoading}
+                    onClick={() => updateSystemConfig({ redisModeType: 'ALWAYS_OFF', immediate: true })}
+                    style={{ background: '#333', color: '#ff4444', border: '1px solid #555', padding: '7px 14px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer' }}
+                  >
+                    Force Turn OFF Now
+                  </button>
+                </div>
+              </div>
+            )}
+
 
             {redisModeType === 'AUTO' && (
               <div style={{ display: 'flex', gap: '24px', marginTop: '20px', background: '#0a0a0a', padding: '20px', borderRadius: '8px', border: '1px solid #222', alignItems: 'center', flexWrap: 'wrap' }}>

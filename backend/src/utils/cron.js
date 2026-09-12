@@ -144,4 +144,15 @@ export const startCronJobs = () => {
             console.error('❌ Error executing 7-Day Event Auto-Purge Cron:', error.message);
         }
     });
+
+    // Run every minute to check if 15-minute Redis shutdown buffer has expired
+    cron.schedule('* * * * *', async () => {
+        try {
+            const { checkAndToggleRedis } = await import('../queues/registrationQueue.js');
+            await checkAndToggleRedis();
+        } catch (error) {
+            // Ignore minor background errors
+        }
+    });
 };
+

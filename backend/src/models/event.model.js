@@ -185,6 +185,17 @@ const eventSchema = new mongoose.Schema(
             default: ['Stage 1: Check-in']
         },
 
+        highlights: [{
+            question: { type: String, required: true },
+            options: [{
+                label: { type: String, required: true },
+                votes: { type: Number, default: 0 },
+                percentage: { type: Number, default: 0 }
+            }],
+            totalVotes: { type: Number, default: 0 },
+            majorityOption: { type: String, default: '' },
+            createdAt: { type: Date, default: Date.now }
+        }],
 
         enableQRScanning: {
             type: Boolean,

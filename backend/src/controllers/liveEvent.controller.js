@@ -1,353 +1,419 @@
 import { connection as redis } from '../config/redis.js';
 import Event from '../models/event.model.js';
-import User from '../models/user.model.js';
-import asyncHandler from '../utils/asyncHandler.js';
-import APIResponse from '../utils/APIResponse.js';
-import ApiError from '../utils/ApiError.js';
-import { HTTP_STATUS } from '../constants/index.js';
+import { SystemConfig } from '../models/systemConfig.model.js';
 
-const parseZSetWithScores = (rawArr) => {
-    const result = [];
-    if (!rawArr || !Array.isArray(rawArr)) return result;
-    for (let i = 0; i < rawArr.length; i += 2) {
-        result.push({
-            member: rawArr[i],
-            score: parseFloat(rawArr[i + 1]) || 0
-        });
+const checkIsRedisLiveActive = async () => {
+    try {
+        const config = await SystemConfig.findOne();
+        if (config) {
+            if (config.redisModeType === 'ALWAYS_OFF') return false;
+            if (config.redisModeType === 'ALWAYS_ON') return true;
+            if (config.enableRedis === false) return false;
+        }
+        return true;
+    } catch {
+        return true;
     }
-    return result;
 };
 
-const populateUserLeaderboard = async (leaderboardEntries) => {
-    if (!leaderboardEntries || leaderboardEntries.length === 0) return [];
-    const userIds = leaderboardEntries.map(e => e.member);
-    const users = await User.find({ _id: { $in: userIds } }).select('name email collegeRegNo branch yearOfStudy');
-    const userMap = {};
-    users.forEach(u => { userMap[u._id.toString()] = u; });
+/**
+ * ============================================================================
+ * TYPE 1: QUIZ MODE (Speed + Accuracy Scoring & Leaderboards) [COMMENTED OUT]
+ * ============================================================================
+ * 
+ * export const submitQuizAnswer = async (req, res) => {
+ *     const { eventId, questionId, selectedOption, correctOption, responseTimeMs } = req.body;
+ *     const userId = req.user?._id?.toString() || req.body.userId;
+ * 
+ *     if (!questionId || !selectedOption || !userId) {
+ *         return res.status(400).json({ success: false, message: 'Missing required quiz fields' });
+ *     }
+ * 
+ *     // Double submission guard
+ *     const hasAnswered = await redis.sismember(`quiz:answered:${questionId}`, userId);
+ *     if (hasAnswered) {
+ *         return res.status(409).json({ success: false, message: 'Question already answered' });
+ *     }
+ * 
+ *     // Speed/Accuracy formula: Score = max(100, Points - floor(min(Δt_ms, 30000) / 30))
+ *     const basePoints = 1000;
+ *     const penalty = Math.floor(Math.min(responseTimeMs || 0, 30000) / 30);
+ *     const score = Math.max(100, basePoints - penalty);
+ *     const isCorrect = selectedOption === correctOption;
+ *     const finalScore = isCorrect ? score : 0;
+ * 
+ *     const pipeline = redis.pipeline();
+ *     pipeline.sadd(`quiz:answered:${questionId}`, userId);
+ *     pipeline.rpush(`quiz:log:${questionId}`, JSON.stringify({
+ *         userId,
+ *         selectedOption,
+ *         isCorrect,
+ *         score: finalScore,
+ *         responseTimeMs,
+ *         timestamp: Date.now()
+ *     }));
+ * 
+ *     if (isCorrect) {
+ *         pipeline.zincrby(`quiz:${eventId}:overall_leaderboard`, finalScore, userId);
+ *         pipeline.zadd(`quiz:${eventId}:leaderboard:${questionId}`, finalScore, userId);
+ *     }
+ *     await pipeline.exec();
+ * 
+ *     return res.status(200).json({
+ *         success: true,
+ *         score: finalScore,
+ *         isCorrect
+ *     });
+ * };
+ * 
+ * export const getQuizLeaderboard = async (req, res) => {
+ *     const { eventId } = req.params;
+ *     const topScores = await redis.zrevrange(`quiz:${eventId}:overall_leaderboard`, 0, 9, 'WITHSCORES');
+ *     // format Top 10 with populated user details
+ *     return res.status(200).json({ success: true, leaderboard: topScores });
+ * };
+ * ============================================================================
+ */
 
-    return leaderboardEntries.map((entry, index) => {
-        const u = userMap[entry.member?.toString()];
-        return {
-            rank: index + 1,
-            userId: entry.member,
-            userName: u ? u.name : `Participant #${index + 1}`,
-            collegeRegNo: u?.collegeRegNo || '',
-            branch: u?.branch || '',
-            score: entry.score
-        };
-    });
-};
+/**
+ * ============================================================================
+ * TYPE 2: LIVE VOTING MODE (Instant Percentages, Atomic Counters, Majority Option)
+ * ============================================================================
+ */
 
-export const submitLiveAnswer = asyncHandler(async (req, res) => {
-    const { eventId } = req.params;
-    const {
-        pollType = 'quiz',
-        questionId,
-        selectedOption,
-        questionStartTime
-    } = req.body;
+/**
+ * Submit a vote for an active poll
+ * Route: POST /api/events/:eventId/live/vote
+ */
+export const submitLiveVote = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { pollId, selectedOption } = req.body;
+        const userId = req.user?._id?.toString() || req.body.userId;
 
-    const userId = req.user?.userId || req.body.userId;
-    if (!userId) {
-        throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'User authentication or userId required to participate');
-    }
-    if (!questionId) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'questionId is required');
-    }
-    if (!selectedOption) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'selectedOption is required');
-    }
-
-    const now = Date.now();
-    let event = null;
-    let questionObj = null;
-
-    if (eventId) {
-        event = await Event.findById(eventId);
-        if (event?.liveInteractive?.enabled) {
-            questionObj = event.liveInteractive.questions.find(q => q.id === questionId);
-        }
-    }
-
-    const effectivePollType = questionObj?.pollType || pollType;
-    const scopePrefix = eventId ? `event:${eventId}:` : '';
-
-    if (effectivePollType === 'quiz') {
-        const answeredKey = `${scopePrefix}quiz:answered:${questionId}`;
-        const alreadySubmitted = await redis.sismember(answeredKey, userId);
-        if (alreadySubmitted) {
-            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Already submitted for this question!');
-        }
-
-        const startMs = questionStartTime ? Number(questionStartTime) : (event?.liveInteractive?.questionStartTime ? new Date(event.liveInteractive.questionStartTime).getTime() : now);
-        const responseTimeMs = Math.max(0, now - startMs);
-
-        const correctOption = questionObj?.correctOption || req.body.correctOption;
-        const isCorrect = correctOption ? (selectedOption === correctOption) : false;
-
-        let questionScore = 0;
-        if (isCorrect) {
-            const maxBonus = questionObj?.points || 1000;
-            const penalty = Math.min(responseTimeMs, 30000);
-            questionScore = Math.max(100, maxBonus - Math.floor(penalty / 30));
-        }
-
-        const pipeline = redis.pipeline();
-        pipeline.sadd(answeredKey, userId);
-        pipeline.rpush(
-            `${scopePrefix}quiz:log:${questionId}`,
-            JSON.stringify({ userId, selectedOption, responseTimeMs, isCorrect, questionScore, timestamp: now })
-        );
-        pipeline.zincrby(`${scopePrefix}quiz:overall_leaderboard`, questionScore, userId);
-        pipeline.zadd(`${scopePrefix}quiz:leaderboard:${questionId}`, questionScore, userId);
-        await pipeline.exec();
-
-        return res.status(HTTP_STATUS.OK).json(
-            new APIResponse(HTTP_STATUS.OK, {
-                success: true,
-                pointsEarned: questionScore,
-                isCorrect,
-                responseTimeMs
-            }, 'Quiz response recorded')
-        );
-    }
-
-    if (effectivePollType === 'voting') {
-        const votedKey = `${scopePrefix}voting:voted:${questionId}`;
-        const alreadyVoted = await redis.sismember(votedKey, userId);
-        if (alreadyVoted) {
-            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Already voted on this poll!');
+        if (!eventId || !pollId || !selectedOption || !userId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Event ID, poll ID, user ID, and selected option are required.'
+            });
         }
 
-        const pipeline = redis.pipeline();
-        pipeline.sadd(votedKey, userId);
-        pipeline.hincrby(`${scopePrefix}voting:counts:${questionId}`, selectedOption, 1);
-        await pipeline.exec();
-
-        return res.status(HTTP_STATUS.OK).json(
-            new APIResponse(HTTP_STATUS.OK, {
-                success: true,
-                message: 'Vote successfully recorded'
-            }, 'Vote recorded')
-        );
-    }
-
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid pollType parameter');
-});
-
-export const getLiveResults = asyncHandler(async (req, res) => {
-    const { eventId } = req.params;
-    const {
-        pollType = 'quiz',
-        questionId,
-        isFinal
-    } = req.query;
-
-    const scopePrefix = eventId ? `event:${eventId}:` : '';
-
-    if (pollType === 'quiz') {
-        const qLeaderboardRaw = questionId
-            ? await redis.zrevrange(`${scopePrefix}quiz:leaderboard:${questionId}`, 0, 9, 'WITHSCORES')
-            : [];
-        const parsedQLeaderboard = parseZSetWithScores(qLeaderboardRaw);
-        const questionLeaderboard = await populateUserLeaderboard(parsedQLeaderboard);
-
-        const overallRaw = await redis.zrevrange(`${scopePrefix}quiz:overall_leaderboard`, 0, 9, 'WITHSCORES');
-        const parsedOverall = parseZSetWithScores(overallRaw);
-        const overallLeaderboard = await populateUserLeaderboard(parsedOverall);
-
-        let finalSummary = null;
-        if (isFinal === 'true') {
-            const fullRaw = await redis.zrevrange(`${scopePrefix}quiz:overall_leaderboard`, 0, -1, 'WITHSCORES');
-            const parsedFull = parseZSetWithScores(fullRaw);
-            finalSummary = await populateUserLeaderboard(parsedFull);
+        const isRedisActive = await checkIsRedisLiveActive();
+        if (!isRedisActive) {
+            return res.status(503).json({
+                success: false,
+                message: 'Live interactive voting is currently inactive. Admin has not enabled Redis.'
+            });
         }
 
-        return res.status(HTTP_STATUS.OK).json(
-            new APIResponse(HTTP_STATUS.OK, {
-                questionLeaderboard,
-                overallLeaderboard,
-                finalSummary
-            }, 'Quiz results fetched')
-        );
-    }
+        const votedKey = `voting:voted:${pollId}`;
+        const countsKey = `voting:counts:${pollId}`;
 
-    if (pollType === 'voting') {
-        if (!questionId) {
-            throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'questionId is required for voting results');
+        // 1. Atomic Double Submission Guard (SADD returns 1 if new, 0 if already in set)
+        const isNewVote = await redis.sadd(votedKey, userId);
+        if (isNewVote === 0) {
+            return res.status(409).json({
+                success: false,
+                message: 'You have already submitted your vote for this poll.'
+            });
         }
 
-        const rawCounts = await redis.hgetall(`${scopePrefix}voting:counts:${questionId}`) || {};
+        // 2. Atomic increment of selected option counter in Redis Hash
+        await redis.hincrby(countsKey, selectedOption, 1);
+
+        // 3. Fetch full breakdown and compute percentages
+        const rawCounts = await redis.hgetall(countsKey) || {};
         let totalVotes = 0;
-        let winningOption = null;
+        const distribution = {};
+
+        for (const [option, countStr] of Object.entries(rawCounts)) {
+            const count = parseInt(countStr, 10) || 0;
+            distribution[option] = count;
+            totalVotes += count;
+        }
+
+        const breakdown = {};
+        let majorityOption = null;
         let maxVotes = -1;
 
-        const breakdownRaw = Object.keys(rawCounts).map(option => {
-            const votes = parseInt(rawCounts[option], 10) || 0;
-            totalVotes += votes;
-            if (votes > maxVotes) {
-                maxVotes = votes;
-                winningOption = option;
-            }
-            return { option, votes };
-        });
+        for (const [option, count] of Object.entries(distribution)) {
+            const pct = totalVotes > 0 ? Number(((count / totalVotes) * 100).toFixed(1)) : 0;
+            breakdown[option] = {
+                votes: count,
+                percentage: pct
+            };
 
-        const percentageBreakdown = breakdownRaw.map(item => ({
-            option: item.option,
-            votes: item.votes,
-            percentage: totalVotes > 0 ? parseFloat(((item.votes / totalVotes) * 100).toFixed(1)) : 0
+            if (count > maxVotes) {
+                maxVotes = count;
+                majorityOption = option;
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            mode: 'voting',
+            pollId,
+            userVote: selectedOption,
+            results: {
+                totalVotes,
+                majorityOption,
+                breakdown
+            }
+        });
+    } catch (error) {
+        console.error('[LiveVoting] Error submitting vote:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to submit vote'
+        });
+    }
+};
+
+/**
+ * Get live results for a poll
+ * Route: GET /api/events/:eventId/live/results?pollId=...
+ */
+export const getLiveResults = async (req, res) => {
+    try {
+        const { pollId } = req.query;
+
+        if (!pollId) {
+            return res.status(400).json({
+                success: false,
+                message: 'pollId query parameter is required.'
+            });
+        }
+
+        const countsKey = `voting:counts:${pollId}`;
+        const rawCounts = await redis.hgetall(countsKey) || {};
+
+        let totalVotes = 0;
+        const distribution = {};
+
+        for (const [option, countStr] of Object.entries(rawCounts)) {
+            const count = parseInt(countStr, 10) || 0;
+            distribution[option] = count;
+            totalVotes += count;
+        }
+
+        const breakdown = {};
+        let majorityOption = null;
+        let maxVotes = -1;
+
+        for (const [option, count] of Object.entries(distribution)) {
+            const pct = totalVotes > 0 ? Number(((count / totalVotes) * 100).toFixed(1)) : 0;
+            breakdown[option] = {
+                votes: count,
+                percentage: pct
+            };
+
+            if (count > maxVotes) {
+                maxVotes = count;
+                majorityOption = option;
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            pollId,
+            totalVotes,
+            majorityOption,
+            breakdown
+        });
+    } catch (error) {
+        console.error('[LiveVoting] Error fetching results:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to fetch live results'
+        });
+    }
+};
+
+/**
+ * Check if the user has already voted
+ * Route: GET /api/events/:eventId/live/status?pollId=...
+ */
+export const getLiveVoteStatus = async (req, res) => {
+    try {
+        const { pollId } = req.query;
+        const userId = req.user?._id?.toString() || req.query.userId;
+
+        if (!pollId || !userId) {
+            return res.status(400).json({
+                success: false,
+                message: 'pollId and userId are required.'
+            });
+        }
+
+        const votedKey = `voting:voted:${pollId}`;
+        const hasVoted = await redis.sismember(votedKey, userId);
+
+        return res.status(200).json({
+            success: true,
+            pollId,
+            hasVoted: Boolean(hasVoted)
+        });
+    } catch (error) {
+        console.error('[LiveVoting] Error checking status:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to check vote status'
+        });
+    }
+};
+
+/**
+ * Reset a live poll session
+ * Route: POST /api/events/:eventId/live/reset
+ */
+export const resetLivePoll = async (req, res) => {
+    try {
+        const { pollId } = req.body;
+
+        if (!pollId) {
+            return res.status(400).json({
+                success: false,
+                message: 'pollId is required to reset.'
+            });
+        }
+
+        await redis.del(`voting:voted:${pollId}`, `voting:counts:${pollId}`);
+
+        return res.status(200).json({
+            success: true,
+            message: `Poll session ${pollId} successfully reset.`
+        });
+    } catch (error) {
+        console.error('[LiveVoting] Error resetting poll:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to reset poll'
+        });
+    }
+};
+
+/**
+ * Save active poll results permanently to Event Highlights in MongoDB
+ * Route: POST /api/events/:eventId/live/save-highlight
+ */
+export const savePollToHighlights = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { pollId, question, options } = req.body;
+
+        if (!question) {
+            return res.status(400).json({
+                success: false,
+                message: 'Question is required to save as an event highlight.'
+            });
+        }
+
+        let breakdown = {};
+        let totalVotes = 0;
+        let majorityOption = '';
+
+        if (pollId) {
+            const countsKey = `voting:counts:${pollId}`;
+            const rawCounts = (await redis.hgetall(countsKey)) || {};
+            const distribution = {};
+
+            for (const [opt, countStr] of Object.entries(rawCounts)) {
+                const count = parseInt(countStr, 10) || 0;
+                distribution[opt] = count;
+                totalVotes += count;
+            }
+
+            let maxVotes = -1;
+            for (const [opt, count] of Object.entries(distribution)) {
+                const pct = totalVotes > 0 ? Number(((count / totalVotes) * 100).toFixed(1)) : 0;
+                breakdown[opt] = { votes: count, percentage: pct };
+                if (count > maxVotes) {
+                    maxVotes = count;
+                    majorityOption = opt;
+                }
+            }
+        }
+
+        // Format options array
+        const optionsList = Array.isArray(options) ? options.map(opt => {
+            const optLabel = typeof opt === 'string' ? opt : opt.label;
+            const data = breakdown[optLabel] || { votes: opt.votes || 0, percentage: opt.percentage || 0 };
+            return {
+                label: optLabel,
+                votes: data.votes,
+                percentage: data.percentage
+            };
+        }) : Object.entries(breakdown).map(([label, data]) => ({
+            label,
+            votes: data.votes,
+            percentage: data.percentage
         }));
 
-        return res.status(HTTP_STATUS.OK).json(
-            new APIResponse(HTTP_STATUS.OK, {
-                totalVotes,
-                winningOption: totalVotes > 0 ? winningOption : null,
-                breakdown: percentageBreakdown
-            }, 'Voting results fetched')
+        const event = await Event.findByIdAndUpdate(
+            eventId,
+            {
+                $push: {
+                    highlights: {
+                        question,
+                        options: optionsList,
+                        totalVotes,
+                        majorityOption,
+                        createdAt: new Date()
+                    }
+                }
+            },
+            { new: true }
         );
-    }
 
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid pollType parameter');
-});
-
-export const getLiveState = asyncHandler(async (req, res) => {
-    const { eventId } = req.params;
-    const event = await Event.findById(eventId);
-    if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
-
-    const liveConfig = event.liveInteractive || { enabled: false, questions: [] };
-    const activeQ = liveConfig.questions?.find(q => q.id === liveConfig.activeQuestionId);
-
-    const sanitizedQuestion = activeQ ? {
-        id: activeQ.id,
-        title: activeQ.title,
-        pollType: activeQ.pollType,
-        options: activeQ.options,
-        timeLimitSeconds: activeQ.timeLimitSeconds,
-        points: activeQ.points
-    } : null;
-
-    let hasAnswered = false;
-    const userId = req.user?.userId;
-    if (userId && activeQ) {
-        const scopePrefix = `event:${eventId}:`;
-        if (activeQ.pollType === 'quiz') {
-            hasAnswered = Boolean(await redis.sismember(`${scopePrefix}quiz:answered:${activeQ.id}`, userId));
-        } else {
-            hasAnswered = Boolean(await redis.sismember(`${scopePrefix}voting:voted:${activeQ.id}`, userId));
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
         }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Poll results saved to Event Highlights successfully!',
+            highlights: event.highlights
+        });
+    } catch (error) {
+        console.error('[LiveVoting] Error saving highlight:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to save highlight'
+        });
     }
+};
 
-    return res.status(HTTP_STATUS.OK).json(
-        new APIResponse(HTTP_STATUS.OK, {
-            enabled: liveConfig.enabled,
-            currentType: liveConfig.currentType,
-            activeQuestionId: liveConfig.activeQuestionId,
-            questionStartTime: liveConfig.questionStartTime,
-            isAcceptingSubmissions: liveConfig.isAcceptingSubmissions,
-            activeQuestion: sanitizedQuestion,
-            hasAnswered,
-            totalQuestions: liveConfig.questions?.length || 0
-        }, 'Live state fetched')
-    );
-});
+/**
+ * Delete a highlight from an event
+ * Route: DELETE /api/events/:eventId/live/highlights/:highlightId
+ */
+export const deleteHighlight = async (req, res) => {
+    try {
+        const { eventId, highlightId } = req.params;
 
-export const updateLiveConfig = asyncHandler(async (req, res) => {
-    const { eventId } = req.params;
-    const { enabled, currentType, questions } = req.body;
+        const event = await Event.findByIdAndUpdate(
+            eventId,
+            {
+                $pull: { highlights: { _id: highlightId } }
+            },
+            { new: true }
+        );
 
-    const event = await Event.findById(eventId);
-    if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
-
-    if (!event.liveInteractive) {
-        event.liveInteractive = { enabled: false, currentType: 'none', questions: [] };
-    }
-
-    if (enabled !== undefined) event.liveInteractive.enabled = enabled;
-    if (currentType !== undefined) event.liveInteractive.currentType = currentType;
-    if (questions !== undefined) event.liveInteractive.questions = questions;
-
-    await event.save();
-
-    return res.status(HTTP_STATUS.OK).json(
-        new APIResponse(HTTP_STATUS.OK, { liveInteractive: event.liveInteractive }, 'Live interactive configuration updated')
-    );
-});
-
-export const broadcastQuestion = asyncHandler(async (req, res) => {
-    const { eventId } = req.params;
-    const { questionId, isAcceptingSubmissions = true } = req.body;
-
-    const event = await Event.findById(eventId);
-    if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
-
-    const question = event.liveInteractive?.questions?.find(q => q.id === questionId);
-    if (questionId && !question) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Question '${questionId}' not found in event configuration`);
-    }
-
-    const now = new Date();
-    event.liveInteractive.activeQuestionId = questionId || null;
-    event.liveInteractive.questionStartTime = questionId ? now : null;
-    event.liveInteractive.isAcceptingSubmissions = isAcceptingSubmissions;
-    if (question) {
-        event.liveInteractive.currentType = question.pollType;
-    }
-
-    await event.save();
-
-    return res.status(HTTP_STATUS.OK).json(
-        new APIResponse(HTTP_STATUS.OK, {
-            activeQuestionId: event.liveInteractive.activeQuestionId,
-            questionStartTime: event.liveInteractive.questionStartTime,
-            isAcceptingSubmissions: event.liveInteractive.isAcceptingSubmissions,
-            currentType: event.liveInteractive.currentType
-        }, questionId ? `Broadcasted question ${questionId}` : 'Broadcast closed')
-    );
-});
-
-export const toggleSubmissions = asyncHandler(async (req, res) => {
-    const { eventId } = req.params;
-    const { isAcceptingSubmissions } = req.body;
-
-    const event = await Event.findById(eventId);
-    if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
-
-    event.liveInteractive.isAcceptingSubmissions = Boolean(isAcceptingSubmissions);
-    await event.save();
-
-    return res.status(HTTP_STATUS.OK).json(
-        new APIResponse(HTTP_STATUS.OK, {
-            isAcceptingSubmissions: event.liveInteractive.isAcceptingSubmissions
-        }, `Submissions ${isAcceptingSubmissions ? 'opened' : 'closed'}`)
-    );
-});
-
-export const resetLiveSession = asyncHandler(async (req, res) => {
-    const { eventId } = req.params;
-    const { questionId } = req.body;
-
-    const scopePrefix = eventId ? `event:${eventId}:` : '';
-
-    if (questionId) {
-        await Promise.all([
-            redis.del(`${scopePrefix}quiz:answered:${questionId}`),
-            redis.del(`${scopePrefix}quiz:log:${questionId}`),
-            redis.del(`${scopePrefix}quiz:leaderboard:${questionId}`),
-            redis.del(`${scopePrefix}voting:voted:${questionId}`),
-            redis.del(`${scopePrefix}voting:counts:${questionId}`)
-        ]);
-    } else {
-        const keys = await redis.keys(`${scopePrefix}quiz:*`);
-        const voteKeys = await redis.keys(`${scopePrefix}voting:*`);
-        const allKeys = [...keys, ...voteKeys];
-        if (allKeys.length > 0) {
-            await redis.del(...allKeys);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
         }
-    }
 
-    return res.status(HTTP_STATUS.OK).json(
-        new APIResponse(HTTP_STATUS.OK, null, 'Live session data reset in Redis')
-    );
-});
+        return res.status(200).json({
+            success: true,
+            message: 'Highlight removed successfully',
+            highlights: event.highlights
+        });
+    } catch (error) {
+        console.error('[LiveVoting] Error deleting highlight:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to delete highlight'
+        });
+    }
+};
 
