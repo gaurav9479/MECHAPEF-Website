@@ -10,6 +10,7 @@ const LivePoll = () => {
     const [selectedOption, setSelectedOption] = useState('');
     const [remainingSeconds, setRemainingSeconds] = useState(0);
     const [settlementSeconds, setSettlementSeconds] = useState(0);
+    const [result, setResult] = useState(null);
     const [message, setMessage] = useState('Loading live poll...');
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -35,6 +36,7 @@ const LivePoll = () => {
                     setEventEnded(Boolean(active.eventEnded));
                     if (active.waiting) {
                         setQuestion(null);
+                        setResult(null);
                         setWaitingForNext(true);
                         setMessage('Live mode is enabled. Waiting for the organizer to broadcast a question...');
                         return;
@@ -42,6 +44,7 @@ const LivePoll = () => {
                     if (active.questionId !== questionId) {
                         setSelectedOption('');
                         setSubmitted(false);
+                        setResult(null);
                     }
                     setQuestion(active);
                     setWaitingForNext(false);
@@ -51,6 +54,7 @@ const LivePoll = () => {
                 return api.get(`/events/${eventId}/live/poll/${questionId}`)
                     .then(res => {
                         setQuestion(res.data.question);
+                        setResult(res.data.result || null);
                         setEventEnded(Boolean(res.data.question?.eventEnded));
                         setMessage(res.data.expired ? 'Voting has ended. Results are available to the organizer.' : '');
                     });
@@ -92,6 +96,7 @@ const LivePoll = () => {
                         setQuestion(active);
                         setSelectedOption('');
                         setSubmitted(false);
+                        setResult(null);
                         setWaitingForNext(false);
                         setEventEnded(false);
                         setMessage('Next question is live.');
@@ -102,6 +107,16 @@ const LivePoll = () => {
         const nextQuestionTimer = setInterval(checkNextQuestion, 3000);
         return () => clearInterval(nextQuestionTimer);
     }, [eventId, questionId, question, remainingSeconds, settlementSeconds]);
+
+    useEffect(() => {
+        if (!question || remainingSeconds > 0 || settlementSeconds > 0 || result) return undefined;
+        const fetchResult = () => api.get(`/events/${eventId}/live/results`, { params: { pollId: questionId } })
+            .then(res => setResult(res.data))
+            .catch(() => {});
+        fetchResult();
+        const retryTimer = setInterval(fetchResult, 1500);
+        return () => clearInterval(retryTimer);
+    }, [eventId, questionId, question, remainingSeconds, settlementSeconds, result]);
 
     useEffect(() => {
         if (!question) return undefined;
@@ -153,6 +168,19 @@ const LivePoll = () => {
                         {eventEnded ? (
                             <div style={{ textAlign: 'center', padding: '28px 12px', border: '1px solid #444', color: '#aaa' }}>
                                 This event has ended. Thank you for participating.
+                            </div>
+                        ) : result && settlementSeconds === 0 ? (
+                            <div>
+                                {(Array.isArray(result.breakdown)
+                                    ? result.breakdown
+                                    : Object.entries(result.breakdown || {}).map(([option, data]) => ({ option, ...data })))
+                                    .map(data => (
+                                    <div key={data.option} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', padding: '14px 0' }}>
+                                        <span>{question.options.find(item => item.key === data.option)?.text || data.option}</span>
+                                        <strong>{data.percentage}% ({data.votes} votes)</strong>
+                                    </div>
+                                ))}
+                                <p style={{ color: '#aaa' }}>Total votes: {result.totalVotes || 0}</p>
                             </div>
                         ) : settlementSeconds === 0 ? (
                             <div style={{ textAlign: 'center', padding: '28px 12px', border: '1px solid #444', color: '#aaa' }}>

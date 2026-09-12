@@ -37,6 +37,44 @@ const closeExpiredLiveQuestion = async (event, question) => {
     return true;
 };
 
+const buildLiveResult = async (question, pollId) => {
+    const rawCounts = await redis.hgetall(`voting:counts:${pollId}`) || {};
+    const distribution = {};
+    let totalVotes = 0;
+
+    for (const [option, countValue] of Object.entries(rawCounts)) {
+        const votes = parseInt(countValue, 10) || 0;
+        distribution[option] = votes;
+        totalVotes += votes;
+    }
+
+    let majorityOption = null;
+    let maxVotes = -1;
+    const breakdown = (question.options || []).map(option => {
+        const votes = distribution[option.key] || 0;
+        if (votes > maxVotes) {
+            maxVotes = votes;
+            majorityOption = option.key;
+        }
+        return {
+            option: option.key,
+            votes,
+            percentage: totalVotes > 0 ? Number(((votes / totalVotes) * 100).toFixed(1)) : 0
+        };
+    });
+
+    return { totalVotes, majorityOption, breakdown, finalizedAt: new Date() };
+};
+
+const finalizeLiveQuestion = async (event, question) => {
+    if (question.result?.finalizedAt) return question.result;
+    const result = await buildLiveResult(question, question.id);
+    question.result = result;
+    event.liveInteractive.isAcceptingSubmissions = false;
+    await event.save();
+    return result;
+};
+
 /**
  * ============================================================================
  * TYPE 1: QUIZ MODE (Speed + Accuracy Scoring & Leaderboards) [COMMENTED OUT]
@@ -243,60 +281,23 @@ export const getLiveResults = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Live question not found' });
         }
 
-        const expired = hasLiveQuestionExpired(live, question);
         const settled = hasLiveQuestionSettled(live, question);
-        if (live.isAcceptingSubmissions && !settled) {
+        if (!question.result?.finalizedAt && live.isAcceptingSubmissions && !settled) {
             return res.status(403).json({
                 success: false,
-                message: expired
-                    ? 'Results are being processed. Please wait a few seconds.'
-                    : 'Results will be available when the voting time ends.'
+                message: 'Results will be available when the voting time ends.'
             });
         }
-        if (settled) await closeExpiredLiveQuestion(event, question);
-
-        const countsKey = `voting:counts:${pollId}`;
-        const rawCounts = await redis.hgetall(countsKey) || {};
-
-        let totalVotes = 0;
-        const distribution = {};
-
-        for (const [option, countStr] of Object.entries(rawCounts)) {
-            const count = parseInt(countStr, 10) || 0;
-            distribution[option] = count;
-            totalVotes += count;
-        }
-
-        const breakdown = {};
-        let majorityOption = null;
-        let maxVotes = -1;
-
-        for (const option of question.options || []) {
-            breakdown[option.key] = {
-                votes: 0,
-                percentage: 0
-            };
-        }
-
-        for (const [option, count] of Object.entries(distribution)) {
-            const pct = totalVotes > 0 ? Number(((count / totalVotes) * 100).toFixed(1)) : 0;
-            breakdown[option] = {
-                votes: count,
-                percentage: pct
-            };
-
-            if (count > maxVotes) {
-                maxVotes = count;
-                majorityOption = option;
-            }
-        }
+        const result = question.result?.finalizedAt
+            ? question.result
+            : await finalizeLiveQuestion(event, question);
 
         return res.status(200).json({
             success: true,
             pollId,
-            totalVotes,
-            majorityOption,
-            breakdown
+            totalVotes: result.totalVotes,
+            majorityOption: result.majorityOption,
+            breakdown: result.breakdown
         });
     } catch (error) {
         console.error('[LiveVoting] Error fetching results:', error);
@@ -375,9 +376,11 @@ export const getLivePollDetails = async (req, res) => {
 
         const expired = hasLiveQuestionExpired(live, question);
         const settled = hasLiveQuestionSettled(live, question);
-        if (settled && live.isAcceptingSubmissions) {
-            await closeExpiredLiveQuestion(event, question);
-        }
+        const result = question.result?.finalizedAt
+            ? question.result
+            : settled
+                ? await finalizeLiveQuestion(event, question)
+                : null;
 
         return res.status(200).json({
             success: true,
@@ -395,6 +398,7 @@ export const getLivePollDetails = async (req, res) => {
             isAcceptingSubmissions: Boolean(live.isAcceptingSubmissions && !expired),
             expired,
             settled,
+            result,
             resultGraceSeconds: LIVE_RESULT_GRACE_SECONDS
         });
     } catch (error) {

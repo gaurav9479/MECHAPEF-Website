@@ -281,6 +281,16 @@ const eventSchema = new mongoose.Schema(
                     points: {
                         type: Number,
                         default: 1000
+                    },
+                    result: {
+                        totalVotes: { type: Number, default: 0 },
+                        majorityOption: { type: String, default: null },
+                        breakdown: [{
+                            option: { type: String, required: true },
+                            votes: { type: Number, default: 0 },
+                            percentage: { type: Number, default: 0 }
+                        }],
+                        finalizedAt: { type: Date, default: null }
                     }
                 }
             ]
