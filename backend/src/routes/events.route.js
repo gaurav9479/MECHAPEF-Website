@@ -103,6 +103,7 @@ router.put(
 
 // Live Interactive Voting Routes (Type 2)
 router.get('/live/active', liveEventController.getActiveLiveQuestions);
+router.get('/:eventId/live/poll/:questionId', liveEventController.getLivePollDetails);
 router.post('/:eventId/live/vote', liveEventController.submitLiveVote);
 router.get('/:eventId/live/results', liveEventController.getLiveResults);
 router.get('/:eventId/live/status', authenticate, liveEventController.getLiveVoteStatus);

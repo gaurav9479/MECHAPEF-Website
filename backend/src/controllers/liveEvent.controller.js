@@ -2,6 +2,8 @@ import { connection as redis } from '../config/redis.js';
 import Event from '../models/event.model.js';
 import { SystemConfig } from '../models/systemConfig.model.js';
 
+const LIVE_RESULT_GRACE_SECONDS = 10;
+
 const checkIsRedisLiveActive = async () => {
     try {
         const config = await SystemConfig.findOne();
@@ -21,8 +23,14 @@ const hasLiveQuestionExpired = (live, question) => {
     return Date.now() >= new Date(live.questionStartTime).getTime() + question.timeLimitSeconds * 1000;
 };
 
+const hasLiveQuestionSettled = (live, question) => {
+    if (!live?.questionStartTime || !question?.timeLimitSeconds) return false;
+    const endTime = new Date(live.questionStartTime).getTime() + question.timeLimitSeconds * 1000;
+    return Date.now() >= endTime + LIVE_RESULT_GRACE_SECONDS * 1000;
+};
+
 const closeExpiredLiveQuestion = async (event, question) => {
-    if (!hasLiveQuestionExpired(event.liveInteractive, question)) return false;
+    if (!hasLiveQuestionSettled(event.liveInteractive, question)) return false;
 
     event.liveInteractive.isAcceptingSubmissions = false;
     await event.save();
@@ -129,10 +137,10 @@ export const submitLiveVote = async (req, res) => {
         }
 
         const question = live.questions.find(item => item.id === pollId);
-        if (question && await closeExpiredLiveQuestion(event, question)) {
+        if (question && hasLiveQuestionExpired(live, question)) {
             return res.status(409).json({
                 success: false,
-                message: 'The voting time has ended.'
+                message: 'The voting time has ended. Final results are being processed.'
             });
         }
         if (!question || !question.options.some(option => option.key === selectedOption)) {
@@ -229,13 +237,16 @@ export const getLiveResults = async (req, res) => {
         }
 
         const expired = hasLiveQuestionExpired(live, question);
-        if (live.isAcceptingSubmissions && !expired) {
+        const settled = hasLiveQuestionSettled(live, question);
+        if (live.isAcceptingSubmissions && !settled) {
             return res.status(403).json({
                 success: false,
-                message: 'Results will be available when the voting time ends.'
+                message: expired
+                    ? 'Results are being processed. Please wait a few seconds.'
+                    : 'Results will be available when the voting time ends.'
             });
         }
-        if (expired) await closeExpiredLiveQuestion(event, question);
+        if (settled) await closeExpiredLiveQuestion(event, question);
 
         const countsKey = `voting:counts:${pollId}`;
         const rawCounts = await redis.hgetall(countsKey) || {};
@@ -300,7 +311,7 @@ export const getActiveLiveQuestions = async (req, res) => {
             const question = live.questions.find(item => item.id === live.activeQuestionId);
             if (!question) return [];
 
-            if (hasLiveQuestionExpired(live, question)) {
+            if (hasLiveQuestionSettled(live, question)) {
                 event.liveInteractive.isAcceptingSubmissions = false;
                 event.save().catch(error => console.error('[LiveVoting] Failed to close expired question:', error));
                 return [];
@@ -322,6 +333,46 @@ export const getActiveLiveQuestions = async (req, res) => {
     } catch (error) {
         console.error('[LiveVoting] Error fetching active questions:', error);
         return res.status(500).json({ success: false, message: 'Failed to fetch active live questions' });
+    }
+};
+
+export const getLivePollDetails = async (req, res) => {
+    try {
+        const { eventId, questionId } = req.params;
+        const event = await Event.findById(eventId).select('title liveInteractive');
+        const live = event?.liveInteractive;
+        const question = live?.questions?.find(item => item.id === questionId);
+
+        if (!event || !question) {
+            return res.status(404).json({ success: false, message: 'Live question not found' });
+        }
+
+        const expired = hasLiveQuestionExpired(live, question);
+        const settled = hasLiveQuestionSettled(live, question);
+        if (settled && live.isAcceptingSubmissions) {
+            await closeExpiredLiveQuestion(event, question);
+        }
+
+        return res.status(200).json({
+            success: true,
+            question: {
+                eventId: event._id,
+                eventTitle: event.title,
+                questionId: question.id,
+                title: question.title,
+                pollType: question.pollType,
+                options: question.options,
+                timeLimitSeconds: question.timeLimitSeconds,
+                questionStartTime: live.questionStartTime
+            },
+            isAcceptingSubmissions: Boolean(live.isAcceptingSubmissions && !expired),
+            expired,
+            settled,
+            resultGraceSeconds: LIVE_RESULT_GRACE_SECONDS
+        });
+    } catch (error) {
+        console.error('[LiveVoting] Error fetching poll details:', error);
+        return res.status(500).json({ success: false, message: 'Failed to fetch live poll' });
     }
 };
 

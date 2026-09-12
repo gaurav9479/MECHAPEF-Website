@@ -25,16 +25,21 @@ const LivePoll = () => {
 
     useEffect(() => {
         api.get('/events/live/active')
-            .then(res => {
-                const active = (res.data.questions || []).find(item => item.eventId === eventId && item.questionId === questionId);
-                if (!active) {
-                    setMessage('This live poll is no longer active.');
+            .then(res => (res.data.questions || []).find(item => item.eventId === eventId && item.questionId === questionId))
+            .catch(() => null)
+            .then(active => {
+                if (active) {
+                    setQuestion(active);
+                    setMessage('');
                     return;
                 }
-                setQuestion(active);
-                setMessage('');
+                return api.get(`/events/${eventId}/live/poll/${questionId}`)
+                    .then(res => {
+                        setQuestion(res.data.question);
+                        setMessage(res.data.expired ? 'Voting has ended. Results are visible below.' : '');
+                    });
             })
-            .catch(() => setMessage('Unable to load this live poll.'));
+            .catch(error => setMessage(error.response?.data?.message || 'Unable to load this live poll.'));
     }, [eventId, questionId]);
 
     useEffect(() => {
@@ -50,9 +55,14 @@ const LivePoll = () => {
 
     useEffect(() => {
         if (!question || remainingSeconds > 0 || result) return;
-        api.get(`/events/${eventId}/live/results`, { params: { pollId: questionId } })
+        const fetchResults = () => api.get(`/events/${eventId}/live/results`, { params: { pollId: questionId } })
             .then(res => setResult(res.data))
-            .catch(error => setMessage(error.response?.data?.message || 'Results are not available yet.'));
+            .catch(error => setMessage(error.response?.data?.message || 'Results are being processed...'));
+        fetchResults();
+        const retryTimer = setInterval(() => {
+            if (!result) fetchResults();
+        }, 2000);
+        return () => clearInterval(retryTimer);
     }, [eventId, questionId, question, remainingSeconds, result]);
 
     const submitVote = async () => {
