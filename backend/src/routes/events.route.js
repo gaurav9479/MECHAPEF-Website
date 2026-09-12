@@ -137,4 +137,38 @@ router.get(
     registrationController.getMyJoinStatus
 );
 
+import * as liveEventController from '../controllers/liveEvent.controller.js';
+
+router.get('/:eventId/live/state', liveEventController.getLiveState);
+router.post('/:eventId/live/submit', authenticate, liveEventController.submitLiveAnswer);
+router.get('/:eventId/live/results', liveEventController.getLiveResults);
+
+router.put(
+    '/:eventId/live/config',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'event-lead']),
+    liveEventController.updateLiveConfig
+);
+
+router.post(
+    '/:eventId/live/broadcast',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'event-lead']),
+    liveEventController.broadcastQuestion
+);
+
+router.post(
+    '/:eventId/live/submissions/toggle',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'event-lead']),
+    liveEventController.toggleSubmissions
+);
+
+router.post(
+    '/:eventId/live/reset',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'event-lead']),
+    liveEventController.resetLiveSession
+);
+
 export default router;

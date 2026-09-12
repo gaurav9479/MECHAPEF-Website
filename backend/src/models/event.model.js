@@ -209,6 +209,59 @@ const eventSchema = new mongoose.Schema(
             default: true
         },
 
+        liveInteractive: {
+            enabled: {
+                type: Boolean,
+                default: false
+            },
+            currentType: {
+                type: String,
+                enum: ['quiz', 'voting', 'none'],
+                default: 'none'
+            },
+            activeQuestionId: {
+                type: String,
+                default: null
+            },
+            questionStartTime: {
+                type: Date,
+                default: null
+            },
+            isAcceptingSubmissions: {
+                type: Boolean,
+                default: false
+            },
+            questions: [
+                {
+                    id: { type: String, required: true },
+                    title: { type: String, required: true },
+                    pollType: {
+                        type: String,
+                        enum: ['quiz', 'voting'],
+                        default: 'quiz'
+                    },
+                    options: [
+                        {
+                            key: { type: String, required: true },
+                            text: { type: String, required: true }
+                        }
+                    ],
+                    correctOption: {
+                        type: String,
+                        default: null
+                    },
+                    timeLimitSeconds: {
+                        type: Number,
+                        default: 30
+                    },
+                    points: {
+                        type: Number,
+                        default: 1000
+                    }
+                }
+            ]
+        },
+
         deletionState: {
             status: {
                 type: String,

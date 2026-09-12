@@ -67,6 +67,13 @@ export const eventService = {
   getRegistrations: (eventId) => api.get(`/events/${eventId}/registrations`),
   markAttendance: (registrationId, data) => api.put(`/registrations/${registrationId}/attendance`, data),
   wipeData: (id) => api.delete(`/events/${id}/wipe-data`),
+  getLiveState: (eventId) => api.get(`/events/${eventId}/live/state`),
+  submitLiveAnswer: (eventId, data) => api.post(`/events/${eventId}/live/submit`, data),
+  getLiveResults: (eventId, params) => api.get(`/events/${eventId}/live/results`, { params }),
+  updateLiveConfig: (eventId, data) => api.put(`/events/${eventId}/live/config`, data),
+  broadcastQuestion: (eventId, data) => api.post(`/events/${eventId}/live/broadcast`, data),
+  toggleLiveSubmissions: (eventId, data) => api.post(`/events/${eventId}/live/submissions/toggle`, data),
+  resetLiveSession: (eventId, data) => api.post(`/events/${eventId}/live/reset`, data),
 };
 
 export const registrationService = {
