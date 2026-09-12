@@ -310,7 +310,11 @@ const EventDetails = () => {
   const handleLoadDraftDashboard = async () => {
     try {
       const res = await api.get(`/events/${id}/my-team-registration`, { bypassCache: true });
-      setDraftRegistration(res.data?.data);
+      const reg = res.data?.data;
+      setDraftRegistration(reg);
+      if (reg?.customData) {
+        setCustomData(reg.customData);
+      }
       setShowDraftDashboard(true);
     } catch (err) {
       showToast('Could not load your team dashboard', 'error');
@@ -398,22 +402,46 @@ const EventDetails = () => {
     }
   };
 
+  const handleSaveDraftChanges = async () => {
+    if (!draftRegistration) return;
+    setSubmitting(true);
+    try {
+      await api.patch(`/registrations/${draftRegistration._id}/draft-data`, { customData });
+      showToast('Draft changes saved successfully!', 'success');
+      setShowDraftDashboard(false);
+      await refreshJoinStatus();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to save changes', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleFinalizeRegistration = async () => {
     if (!draftRegistration) return;
 
+    if (event.customFormFields?.length > 0) {
+      const requiredMissing = event.customFormFields.find(f => f.isRequired && !customData[f.fieldName]);
+      if (requiredMissing) {
+        showToast(`Please fill the required field: ${requiredMissing.fieldName}`, 'error');
+        return;
+      }
+    }
+
     const confirmMessage =
-      "WARNING: Are you sure you want to finalize your team registration now?\n\n" +
-      "• Finalizing will LOCK your team roster.\n" +
-      "• You will NOT be able to add or remove members after finalization.\n" +
-      "• You can still wait and add more members before the deadline if your team is not full.\n\n" +
-      "Do you want to proceed and finalize now?";
+      "⚠️ PERMANENT FINALIZATION NOTICE:\n\n" +
+      "Are you sure you want to finalize your team registration now?\n\n" +
+      "• Once finalized, your team roster will be PERMANENTLY LOCKED.\n" +
+      "• NO changes, member additions, or removals will be allowed after this.\n" +
+      "• Official registration tickets will be generated.\n\n" +
+      "Do you want to proceed and permanently finalize now?";
 
     if (!window.confirm(confirmMessage)) return;
 
     setSubmitting(true);
     try {
       await api.post(`/registrations/${draftRegistration._id}/finalize`, { customData });
-      showToast('Registration finalized! Your team is officially registered.', 'success');
+      showToast('🎉 Registration finalized! Your team is officially registered and locked.', 'success');
       setShowDraftDashboard(false);
       setDraftRegistration(null);
       setUserRegistration({ registrationStatus: 'Confirmed' });
@@ -1091,34 +1119,47 @@ const EventDetails = () => {
               </div>
             )}
 
-            <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="modal-actions" style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <button
                 type="button"
                 className="btn-danger"
-                style={{ background: 'rgba(255,51,51,0.15)', color: '#ff4444', border: '1px solid #ff4444', padding: '8px 14px', fontSize: '0.8rem' }}
+                style={{ background: 'rgba(255,51,51,0.15)', color: '#ff4444', border: '1px solid #ff4444', padding: '8px 14px', fontSize: '0.82rem' }}
                 onClick={handleDeleteDraftTeam}
                 disabled={submitting}
               >
-                Delete Team
+                Disband Team
               </button>
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={
-                  submitting ||
-                  (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2) ||
-                  (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) > event.maxTeamSize
-                }
-                onClick={handleFinalizeRegistration}
-                title={
-                  (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2)
-                    ? `Team must have at least ${event.minTeamSize || 2} members to finalize`
-                    : `Finalize Team Registration`
-                }
-                style={{ minWidth: '200px' }}
-              >
-                {submitting ? 'Finalizing...' : 'Finalize Registration'}
-              </button>
+
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleSaveDraftChanges}
+                  disabled={submitting}
+                  style={{ padding: '9px 18px', fontSize: '0.85rem' }}
+                >
+                  {submitting ? 'Saving...' : '💾 Save Changes'}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={
+                    submitting ||
+                    (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2) ||
+                    (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) > event.maxTeamSize
+                  }
+                  onClick={handleFinalizeRegistration}
+                  title={
+                    (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2)
+                      ? `Team must have at least ${event.minTeamSize || 2} members to finalize`
+                      : `Finalize Team Registration (No changes allowed after this)`
+                  }
+                  style={{ minWidth: '180px', padding: '9px 20px', fontSize: '0.85rem', fontWeight: 'bold' }}
+                >
+                  {submitting ? 'Finalizing...' : '🚀 Finalize Registration'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

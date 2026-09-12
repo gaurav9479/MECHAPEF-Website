@@ -45,6 +45,9 @@ const emptyForm = {
 
 const formatLocal = (isoString) => {
   if (!isoString) return '';
+  if (typeof isoString === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(isoString)) {
+    return isoString;
+  }
   const d = new Date(isoString);
   if (isNaN(d.getTime())) return '';
   const year = d.getFullYear();
@@ -57,7 +60,12 @@ const formatLocal = (isoString) => {
 
 const toISO = (dateStr) => {
   if (!dateStr) return null;
-  const d = new Date(dateStr);
+  if (typeof dateStr === 'string' && dateStr.endsWith('Z')) return dateStr;
+  let normalized = dateStr;
+  if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateStr)) {
+    normalized = `${dateStr}:00`;
+  }
+  const d = new Date(normalized);
   return isNaN(d.getTime()) ? null : d.toISOString();
 };
 
@@ -72,6 +80,7 @@ const AdminEventEditor = () => {
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [lastSavedTime, setLastSavedTime] = useState(null);
 
   const [liveResults, setLiveResults] = useState(null);
   const [loadingResults, setLoadingResults] = useState(false);
@@ -141,7 +150,9 @@ const AdminEventEditor = () => {
       const draft = localStorage.getItem('mechapef_adminEventFormDraft');
       if (draft) {
         try {
-          setForm(JSON.parse(draft));
+          const parsed = JSON.parse(draft);
+          setForm(parsed);
+          setLastSavedTime('Restored from draft');
         } catch (e) {
           setForm(emptyForm);
         }
@@ -151,13 +162,26 @@ const AdminEventEditor = () => {
   }, [id, isEditing]);
 
   useEffect(() => {
-    if (!isEditing && form.title) {
-      const timer = setTimeout(() => {
-        localStorage.setItem('mechapef_adminEventFormDraft', JSON.stringify(form));
-      }, 600);
-      return () => clearTimeout(timer);
+    if (!isEditing) {
+      const isDirty = form.title || form.descriptionBlocks?.some(b => b.text) || form.venue || form.startTime || form.rules || form.prizes || (form.customFormFields && form.customFormFields.length > 0);
+      if (isDirty) {
+        const timer = setTimeout(() => {
+          localStorage.setItem('mechapef_adminEventFormDraft', JSON.stringify(form));
+          setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        }, 400);
+        return () => clearTimeout(timer);
+      }
     }
   }, [form, isEditing]);
+
+  const handleClearDraft = () => {
+    if (window.confirm('Are you sure you want to clear the saved draft and reset the form?')) {
+      localStorage.removeItem('mechapef_adminEventFormDraft');
+      setForm(emptyForm);
+      setLastSavedTime(null);
+      showToast('Draft cleared', 'info');
+    }
+  };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -520,15 +544,32 @@ const AdminEventEditor = () => {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={handleSubmit}
-            disabled={saving}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px', fontSize: '1rem', fontWeight: 'bold' }}
-          >
-            <FaSave /> {saving ? 'Saving...' : isEditing ? 'Update Event' : 'Publish Event'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            {!isEditing && lastSavedTime && (
+              <span style={{ fontSize: '0.8rem', color: '#00c864', background: 'rgba(0,200,100,0.1)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(0,200,100,0.25)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                💾 {lastSavedTime === 'Restored from draft' ? 'Restored from draft' : `Auto-saved at ${lastSavedTime}`}
+              </span>
+            )}
+            {!isEditing && lastSavedTime && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleClearDraft}
+                style={{ padding: '6px 12px', fontSize: '0.8rem', borderColor: '#444' }}
+              >
+                Clear Draft
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={handleSubmit}
+              disabled={saving}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px', fontSize: '1rem', fontWeight: 'bold' }}
+            >
+              <FaSave /> {saving ? 'Saving...' : isEditing ? 'Update Event' : 'Publish Event'}
+            </button>
+          </div>
         </div>
 
         {/* Section Navigation Tabs */}

@@ -1208,6 +1208,38 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
 
 
 /**
+ * PATCH /registrations/:teamRegId/draft-data
+ * Leader saves custom form fields / draft details without finalizing.
+ * Body: { customData }
+ */
+export const updateDraftData = asyncHandler(async (req, res) => {
+    const { teamRegId } = req.params;
+    const { customData } = req.body;
+    const userId = req.user.userId;
+
+    const registration = await Registration.findById(teamRegId);
+    if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
+
+    if (registration.registeredBy.toString() !== userId.toString()) {
+        throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Only the team leader can update team draft data');
+    }
+
+    if (registration.registrationStatus !== 'Draft') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cannot edit details after registration is finalized');
+    }
+
+    if (customData) {
+        registration.customData = customData;
+        await registration.save();
+    }
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { registration }, 'Draft changes saved successfully')
+    );
+});
+
+
+/**
  * GET /events/:eventId/my-team-registration
  * Get the current user's Draft/Confirmed team registration for a JoinRequests event.
  * Returns full team state: members, pending join requests, etc.

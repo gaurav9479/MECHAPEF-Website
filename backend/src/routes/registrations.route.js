@@ -53,6 +53,12 @@ router.post(
     registrationController.removeTeamMember
 );
 
+router.patch(
+    '/:teamRegId/draft-data',
+    authenticate,
+    registrationController.updateDraftData
+);
+
 router.post(
     '/:teamRegId/finalize',
     authenticate,
