@@ -65,6 +65,7 @@ const AdminEventEditor = () => {
   const [liveResults, setLiveResults] = useState(null);
   const [loadingResults, setLoadingResults] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
+  const [showPollComposer, setShowPollComposer] = useState(false);
   const [selectedResultQuestion, setSelectedResultQuestion] = useState(null);
 
   const showToast = (msg, type = 'success') => {
@@ -374,7 +375,7 @@ const AdminEventEditor = () => {
         enabled: true,
         questions: [newQuestion]
       });
-      showToast('Question editor opened. Fill the question and click Broadcast Live.');
+      setShowPollComposer(true);
       return;
     }
 
@@ -383,7 +384,8 @@ const AdminEventEditor = () => {
       return;
     }
 
-    await handleBroadcast(firstQuestion.id);
+    f('liveInteractive', { ...form.liveInteractive, enabled: true });
+    setShowPollComposer(true);
   };
 
   const handleToggleSubmissions = async (isOpen) => {
@@ -426,7 +428,15 @@ const AdminEventEditor = () => {
         questionId: q.id,
         isFinal: 'true'
       });
-      setLiveResults(res.data.data);
+      const data = res.data.data || res.data;
+      setLiveResults({
+        ...data,
+        breakdown: Object.entries(data.breakdown || {}).map(([option, values]) => ({
+          option,
+          votes: values.votes,
+          percentage: values.percentage
+        }))
+      });
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to load results', 'error');
     } finally {
@@ -1147,6 +1157,57 @@ const AdminEventEditor = () => {
             </button>
           </div>
         </form>
+
+        {showPollComposer && form.liveInteractive?.questions?.[0] && (
+          <div className="modal-overlay" onClick={() => setShowPollComposer(false)}>
+            <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '760px', width: '92%' }}>
+              <h2 style={{ color: '#00c864', marginBottom: '8px' }}>Configure Live Poll</h2>
+              <p style={{ color: '#999', marginTop: 0 }}>Write the question and configure its options before broadcasting.</p>
+              {(() => {
+                const poll = form.liveInteractive.questions[0];
+                const pollIndex = 0;
+                return (
+                  <>
+                    <label style={{ display: 'block', color: '#aaa', marginBottom: '6px' }}>Question</label>
+                    <textarea
+                      value={poll.title}
+                      onChange={e => updateQuestion(pollIndex, 'title', e.target.value)}
+                      rows={4}
+                      maxLength={500}
+                      style={{ width: '100%', boxSizing: 'border-box', background: '#101014', color: '#fff', minHeight: '110px', resize: 'vertical', marginBottom: '16px' }}
+                    />
+                    <label style={{ display: 'block', color: '#aaa', marginBottom: '8px' }}>Options</label>
+                    {poll.options.map((option, optionIndex) => (
+                      <div key={option.key} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                        <input
+                          value={option.text}
+                          onChange={e => updateQuestionOption(pollIndex, optionIndex, e.target.value)}
+                          style={{ flex: 1, background: '#101014', color: '#fff' }}
+                        />
+                        <button type="button" className="btn-danger" onClick={() => removeQuestionOption(pollIndex, optionIndex)} disabled={poll.options.length <= 2}>Remove</button>
+                      </div>
+                    ))}
+                    <button type="button" className="btn-secondary" onClick={() => addQuestionOption(pollIndex)} style={{ marginTop: '4px' }}>+ Add Option</button>
+                    <div className="modal-actions" style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                      <button type="button" className="btn-secondary" onClick={() => setShowPollComposer(false)}>Close</button>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={!isEditing || !poll.title.trim() || poll.options.some(option => !option.text.trim())}
+                        onClick={async () => {
+                          await handleBroadcast(poll.id);
+                          setShowPollComposer(false);
+                        }}
+                      >
+                        Save & Broadcast Live
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* Live Results & Leaderboard Modal */}
         {showResultsModal && (

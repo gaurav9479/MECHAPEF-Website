@@ -102,7 +102,7 @@ const LivePoll = () => {
                             {remainingSeconds > 0 ? `${remainingSeconds} seconds remaining` : 'Voting closed'}
                         </div>
 
-                        {result ? (
+                        {result && settlementSeconds === 0 ? (
                             <div>
                                 {Object.entries(result.breakdown || {}).map(([option, data]) => (
                                     <div key={option} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', padding: '14px 0' }}>
