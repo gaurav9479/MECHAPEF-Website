@@ -245,7 +245,7 @@ const eventSchema = new mongoose.Schema(
             questions: [
                 {
                     id: { type: String, required: true },
-                    title: { type: String, required: true },
+                    title: { type: String, required: true, maxlength: [500, 'Live question cannot exceed 500 characters'] },
                     pollType: {
                         type: String,
                         enum: ['quiz', 'voting'],

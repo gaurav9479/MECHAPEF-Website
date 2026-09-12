@@ -102,6 +102,7 @@ router.put(
 );
 
 // Live Interactive Voting Routes (Type 2)
+router.get('/live/active', liveEventController.getActiveLiveQuestions);
 router.post('/:eventId/live/vote', authenticate, liveEventController.submitLiveVote);
 router.get('/:eventId/live/results', liveEventController.getLiveResults);
 router.get('/:eventId/live/status', authenticate, liveEventController.getLiveVoteStatus);
@@ -122,6 +123,25 @@ router.delete(
     authenticate,
     checkRole(['super-admin', 'content-lead']),
     liveEventController.deleteHighlight
+);
+
+router.post(
+    '/:eventId/live/broadcast',
+    authenticate,
+    checkRole(['super-admin', 'event-lead']),
+    liveEventController.broadcastQuestion
+);
+router.post(
+    '/:eventId/live/submissions/toggle',
+    authenticate,
+    checkRole(['super-admin', 'event-lead']),
+    liveEventController.toggleSubmissions
+);
+router.post(
+    '/:eventId/live/reset-session',
+    authenticate,
+    checkRole(['super-admin', 'event-lead']),
+    liveEventController.resetLiveSession
 );
 router.put(
     '/:eventId/registrations/by-college-reg-no/:collegeRegNo/attendance',

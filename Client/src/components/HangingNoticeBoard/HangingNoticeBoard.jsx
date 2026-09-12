@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaExternalLinkAlt, FaCog, FaWrench, FaClipboardList } from 'react-icons/fa';
+import { FaTimes, FaExternalLinkAlt, FaCog, FaWrench, FaClipboardList, FaVoteYea } from 'react-icons/fa';
 import api from '../../services/api';
 import './HangingNoticeBoard.css';
 
@@ -98,6 +98,12 @@ const NoticeRow = ({ notice, index, onNavigate, isSeen }) => {
 /* ── Main Component ── */
 const HangingNoticeBoard = ({ onClose }) => {
   const [notices, setNotices] = useState([]);
+  const [liveQuestions, setLiveQuestions] = useState([]);
+  const [selectedLive, setSelectedLive] = useState(null);
+  const [selectedOption, setSelectedOption] = useState('');
+  const [liveResult, setLiveResult] = useState(null);
+  const [liveError, setLiveError] = useState('');
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [loading, setLoading] = useState(true);
   const [bootLine, setBootLine] = useState(0);
   const [seenNotices, setSeenNotices] = useState(() => JSON.parse(localStorage.getItem('seen_notices') || '[]'));
@@ -125,7 +131,7 @@ const HangingNoticeBoard = ({ onClose }) => {
   };
 
   useEffect(() => {
-    api.get('/announcements')
+    const fetchFeed = () => api.get('/announcements')
       .then(res => {
         const active = (res.data.data?.announcements || []).filter(n => n.isActive);
         setNotices(active);
@@ -133,9 +139,57 @@ const HangingNoticeBoard = ({ onClose }) => {
       .catch(() => {})
       .finally(() => setLoading(false));
 
+    fetchFeed();
+    const activePollTimer = setInterval(() => {
+      api.get('/events/live/active')
+        .then(res => setLiveQuestions(res.data.questions || []))
+        .catch(() => {});
+    }, 3000);
+    api.get('/events/live/active')
+      .then(res => setLiveQuestions(res.data.questions || []))
+      .catch(() => {});
+
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'auto'; };
+    return () => {
+      clearInterval(activePollTimer);
+      document.body.style.overflow = 'auto';
+    };
   }, []);
+
+  useEffect(() => {
+    if (!selectedLive) return undefined;
+    const updateTimer = () => {
+      const end = new Date(selectedLive.questionStartTime).getTime() + (selectedLive.timeLimitSeconds || 30) * 1000;
+      setRemainingSeconds(Math.max(0, Math.ceil((end - Date.now()) / 1000)));
+    };
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, [selectedLive]);
+
+  useEffect(() => {
+    if (!selectedLive || remainingSeconds > 0 || liveResult) return;
+    api.get(`/events/${selectedLive.eventId}/live/results`, { params: { pollId: selectedLive.questionId } })
+      .then(res => setLiveResult(res.data))
+      .catch(err => setLiveError(err.response?.data?.message || 'Results are not available yet.'));
+  }, [selectedLive, remainingSeconds, liveResult]);
+
+  const openLiveQuestion = (question) => {
+    navigate(`/live-poll/${question.eventId}/${question.questionId}`);
+  };
+
+  const submitLiveVote = async () => {
+    if (!selectedLive || !selectedOption || remainingSeconds === 0) return;
+    try {
+      await api.post(`/events/${selectedLive.eventId}/live/vote`, {
+        pollId: selectedLive.questionId,
+        selectedOption
+      });
+      setLiveError('Vote recorded. Results will appear when the timer ends.');
+    } catch (error) {
+      setLiveError(error.response?.data?.message || 'Unable to submit vote.');
+    }
+  };
 
   useEffect(() => {
     let i = 0;
@@ -204,20 +258,61 @@ const HangingNoticeBoard = ({ onClose }) => {
                 <div className="hnb-spinner" />
                 <span>FETCHING ENCRYPTED DATA...</span>
               </div>
-            ) : notices.length === 0 ? (
+            ) : notices.length === 0 && liveQuestions.length === 0 ? (
               <div className="hnb-empty">NO ACTIVE NOTICES FOUND IN DATABASE.</div>
             ) : (
-              notices.map((n, i) => (
-                <NoticeRow 
-                  key={n._id} 
-                  notice={n} 
-                  index={i} 
-                  onNavigate={() => handleNoticeClick(n)} 
-                  isSeen={seenNotices.includes(n._id)} 
-                />
-              ))
+              <>
+                {liveQuestions.slice(0, 1).map((question, i) => (
+                  <motion.div
+                    key={`${question.eventId}-${question.questionId}`}
+                    className="hnb-notice-row hnb-clickable"
+                    initial={{ opacity: 0, x: -24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    onClick={() => openLiveQuestion(question)}
+                  >
+                    <div className="hnb-row-idx">LIVE</div>
+                    <div className="hnb-status-dot active" />
+                    <div className="hnb-row-content">
+                      <div className="hnb-row-title"><FaVoteYea /> {question.title}</div>
+                      <div className="hnb-row-meta"><span>{question.eventTitle}</span><span>·</span><span>VOTE NOW</span></div>
+                    </div>
+                    <div className="hnb-row-action"><FaExternalLinkAlt /></div>
+                  </motion.div>
+                ))}
+                {notices.map((n, i) => (
+                  <NoticeRow key={n._id} notice={n} index={i} onNavigate={() => handleNoticeClick(n)} isSeen={seenNotices.includes(n._id)} />
+                ))}
+              </>
             )}
           </div>
+
+          {selectedLive && (
+            <div style={{ marginTop: '18px', padding: '18px', border: '1px solid #00c864', background: 'rgba(0, 200, 100, 0.08)' }}>
+              <button className="hnb-close-btn" onClick={() => setSelectedLive(null)} style={{ float: 'right' }}><FaTimes /></button>
+              <div style={{ color: '#00c864', fontWeight: 'bold', marginBottom: '8px' }}>LIVE POLL · {remainingSeconds > 0 ? `${remainingSeconds}s remaining` : 'VOTING CLOSED'}</div>
+              <h3 style={{ color: '#fff', margin: '0 0 14px' }}>{selectedLive.title}</h3>
+              {liveResult ? (
+                <div>
+                  {Object.entries(liveResult.breakdown || {}).map(([option, result]) => (
+                    <div key={option} style={{ color: '#fff', display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                      <span>{selectedLive.options.find(item => item.key === option)?.text || option}</span><strong>{result.percentage}%</strong>
+                    </div>
+                  ))}
+                  <div style={{ color: '#aaa', marginTop: '8px' }}>Total votes: {liveResult.totalVotes || 0}</div>
+                </div>
+              ) : (
+                <>
+                  {selectedLive.options.map(option => (
+                    <label key={option.key} style={{ display: 'block', color: '#fff', margin: '8px 0' }}>
+                      <input type="radio" name="live-option" value={option.key} checked={selectedOption === option.key} onChange={e => setSelectedOption(e.target.value)} disabled={remainingSeconds === 0} /> {option.text}
+                    </label>
+                  ))}
+                  <button type="button" onClick={submitLiveVote} disabled={!selectedOption || remainingSeconds === 0} style={{ marginTop: '10px', padding: '8px 14px' }}>Submit Vote</button>
+                  {liveError && <div style={{ color: remainingSeconds === 0 ? '#ffaa00' : '#fff', marginTop: '10px' }}>{liveError}</div>}
+                </>
+              )}
+            </div>
+          )}
 
           {/* ── Footer Status Bar ── */}
           <div className="hnb-footer-bar">

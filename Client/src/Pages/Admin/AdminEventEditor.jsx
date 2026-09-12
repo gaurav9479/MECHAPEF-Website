@@ -237,9 +237,7 @@ const AdminEventEditor = () => {
       pollType: defaultType,
       options: [
         { key: 'option_A', text: 'Option A' },
-        { key: 'option_B', text: 'Option B' },
-        { key: 'option_C', text: 'Option C' },
-        { key: 'option_D', text: 'Option D' }
+        { key: 'option_B', text: 'Option B' }
       ],
       correctOption: defaultType === 'quiz' ? 'option_A' : '',
       timeLimitSeconds: 30,
@@ -262,6 +260,27 @@ const AdminEventEditor = () => {
     const opts = [...questions[qIdx].options];
     opts[optIdx] = { ...opts[optIdx], text };
     questions[qIdx] = { ...questions[qIdx], options: opts };
+    f('liveInteractive', { ...form.liveInteractive, questions });
+  };
+
+  const addQuestionOption = (qIdx) => {
+    const questions = [...(form.liveInteractive?.questions || [])];
+    const question = { ...questions[qIdx] };
+    const nextIndex = question.options.length;
+    const nextKey = `option_${String.fromCharCode(65 + nextIndex)}_${Date.now().toString(36)}`;
+    question.options = [...question.options, { key: nextKey, text: `Option ${String.fromCharCode(65 + nextIndex)}` }];
+    questions[qIdx] = question;
+    f('liveInteractive', { ...form.liveInteractive, questions });
+  };
+
+  const removeQuestionOption = (qIdx, optIdx) => {
+    const questions = [...(form.liveInteractive?.questions || [])];
+    const question = { ...questions[qIdx] };
+    if (question.options.length <= 2) return;
+    const removedKey = question.options[optIdx].key;
+    question.options = question.options.filter((_, index) => index !== optIdx);
+    if (question.correctOption === removedKey) question.correctOption = question.options[0]?.key || '';
+    questions[qIdx] = question;
     f('liveInteractive', { ...form.liveInteractive, questions });
   };
 
@@ -889,14 +908,16 @@ const AdminEventEditor = () => {
 
                         {/* Title & Type */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '14px' }}>
-                          <div style={{ gridColumn: 'span 2' }}>
+                          <div style={{ gridColumn: '1 / -1' }}>
                             <label style={{ fontSize: '0.82rem', color: '#aaa', marginBottom: '4px', display: 'block' }}>Question Title / Prompt</label>
-                            <input
+                            <textarea
                               value={q.title}
                               onChange={e => updateQuestion(qIdx, 'title', e.target.value)}
                               placeholder="e.g. Which engine cycle is used in diesel vehicles?"
+                              maxLength={500}
                               required
-                              style={{ background: '#101014' }}
+                              rows={5}
+                              style={{ background: '#101014', color: '#fff', minHeight: '140px', resize: 'vertical' }}
                             />
                           </div>
                           <div>
@@ -904,7 +925,7 @@ const AdminEventEditor = () => {
                             <select
                               value={q.pollType}
                               onChange={e => updateQuestion(qIdx, 'pollType', e.target.value)}
-                              style={{ background: '#101014' }}
+                              style={{ background: '#101014', color: '#fff' }}
                             >
                               <option value="quiz">Type 1: Quiz (Leaderboard)</option>
                               <option value="voting">Type 2: Voting Poll (%)</option>
@@ -918,7 +939,7 @@ const AdminEventEditor = () => {
                               max="300"
                               value={q.timeLimitSeconds || 30}
                               onChange={e => updateQuestion(qIdx, 'timeLimitSeconds', Number(e.target.value))}
-                              style={{ background: '#101014' }}
+                              style={{ background: '#101014', color: '#fff' }}
                             />
                           </div>
                         </div>
@@ -964,10 +985,27 @@ const AdminEventEditor = () => {
                                     required
                                     style={{ background: 'transparent', border: 'none', padding: '4px', flex: 1, color: '#fff' }}
                                   />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeQuestionOption(qIdx, optIdx)}
+                                    disabled={q.options.length <= 2}
+                                    title={q.options.length <= 2 ? 'A poll needs at least two options' : 'Remove option'}
+                                    style={{ background: 'transparent', border: 'none', color: q.options.length <= 2 ? '#555' : '#ff4444', cursor: q.options.length <= 2 ? 'not-allowed' : 'pointer', fontSize: '1rem' }}
+                                  >
+                                    x
+                                  </button>
                                 </div>
                               );
                             })}
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => addQuestionOption(qIdx)}
+                            className="btn-secondary"
+                            style={{ marginTop: '10px', padding: '6px 12px', fontSize: '0.8rem' }}
+                          >
+                            + Add Option
+                          </button>
                           {q.pollType === 'quiz' && (
                             <small style={{ color: '#00c864', marginTop: '6px', display: 'block' }}>
                               ✓ Radio button marks the correct answer key. Correct option is kept hidden server-side until evaluated.

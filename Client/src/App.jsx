@@ -35,6 +35,7 @@ import Team from './Pages/Team/Team';
 import Projects from './Pages/Projects/Projects';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import MagazineContainer from './Pages/Magazine/MagazineContainer';
+import LivePoll from './Pages/LivePoll/LivePoll';
 
 const Unauthorized = () => (
   <div
@@ -86,6 +87,7 @@ const AnimatedRoutes = () => {
         <Route path="/gallery/:id" element={<AlbumView />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/live-poll/:eventId/:questionId" element={<LivePoll />} />
         <Route path="/sponsors" element={<Sponsors />} />
         <Route path="/team" element={<Team />} />
         <Route path="/projects" element={<Projects />} />

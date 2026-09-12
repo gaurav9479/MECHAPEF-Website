@@ -16,6 +16,19 @@ const checkIsRedisLiveActive = async () => {
     }
 };
 
+const hasLiveQuestionExpired = (live, question) => {
+    if (!live?.questionStartTime || !question?.timeLimitSeconds) return false;
+    return Date.now() >= new Date(live.questionStartTime).getTime() + question.timeLimitSeconds * 1000;
+};
+
+const closeExpiredLiveQuestion = async (event, question) => {
+    if (!hasLiveQuestionExpired(event.liveInteractive, question)) return false;
+
+    event.liveInteractive.isAcceptingSubmissions = false;
+    await event.save();
+    return true;
+};
+
 /**
  * ============================================================================
  * TYPE 1: QUIZ MODE (Speed + Accuracy Scoring & Leaderboards) [COMMENTED OUT]
@@ -106,6 +119,29 @@ export const submitLiveVote = async (req, res) => {
             });
         }
 
+        const event = await Event.findById(eventId).select('status liveInteractive');
+        const live = event?.liveInteractive;
+        if (!event || !live?.enabled || live.activeQuestionId !== pollId || !live.isAcceptingSubmissions) {
+            return res.status(409).json({
+                success: false,
+                message: 'This live question is not accepting submissions.'
+            });
+        }
+
+        const question = live.questions.find(item => item.id === pollId);
+        if (question && await closeExpiredLiveQuestion(event, question)) {
+            return res.status(409).json({
+                success: false,
+                message: 'The voting time has ended.'
+            });
+        }
+        if (!question || !question.options.some(option => option.key === selectedOption)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Selected option is not available for this question.'
+            });
+        }
+
         const votedKey = `voting:voted:${pollId}`;
         const countsKey = `voting:counts:${pollId}`;
 
@@ -175,7 +211,8 @@ export const submitLiveVote = async (req, res) => {
  */
 export const getLiveResults = async (req, res) => {
     try {
-        const { pollId } = req.query;
+        const pollId = req.query.pollId || req.query.questionId;
+        const { eventId } = req.params;
 
         if (!pollId) {
             return res.status(400).json({
@@ -183,6 +220,22 @@ export const getLiveResults = async (req, res) => {
                 message: 'pollId query parameter is required.'
             });
         }
+
+        const event = await Event.findById(eventId).select('liveInteractive');
+        const live = event?.liveInteractive;
+        const question = live?.questions?.find(item => item.id === pollId);
+        if (!event || !question) {
+            return res.status(404).json({ success: false, message: 'Live question not found' });
+        }
+
+        const expired = hasLiveQuestionExpired(live, question);
+        if (live.isAcceptingSubmissions && !expired) {
+            return res.status(403).json({
+                success: false,
+                message: 'Results will be available when the voting time ends.'
+            });
+        }
+        if (expired) await closeExpiredLiveQuestion(event, question);
 
         const countsKey = `voting:counts:${pollId}`;
         const rawCounts = await redis.hgetall(countsKey) || {};
@@ -226,6 +279,115 @@ export const getLiveResults = async (req, res) => {
             success: false,
             message: error.message || 'Failed to fetch live results'
         });
+    }
+};
+
+/**
+ * Return only questions that an organizer has explicitly broadcast.
+ * Route: GET /api/events/live/active
+ */
+export const getActiveLiveQuestions = async (req, res) => {
+    try {
+        const events = await Event.find({
+            isActive: true,
+            'liveInteractive.enabled': true,
+            'liveInteractive.isAcceptingSubmissions': true,
+            'liveInteractive.activeQuestionId': { $ne: null }
+        }).select('title liveInteractive.activeQuestionId liveInteractive.questionStartTime liveInteractive.questions');
+
+        const questions = events.flatMap(event => {
+            const live = event.liveInteractive;
+            const question = live.questions.find(item => item.id === live.activeQuestionId);
+            if (!question) return [];
+
+            if (hasLiveQuestionExpired(live, question)) {
+                event.liveInteractive.isAcceptingSubmissions = false;
+                event.save().catch(error => console.error('[LiveVoting] Failed to close expired question:', error));
+                return [];
+            }
+
+            return [{
+                eventId: event._id,
+                eventTitle: event.title,
+                questionId: question.id,
+                title: question.title,
+                pollType: question.pollType,
+                options: question.options,
+                timeLimitSeconds: question.timeLimitSeconds,
+                questionStartTime: live.questionStartTime
+            }];
+        });
+
+        return res.status(200).json({ success: true, questions });
+    } catch (error) {
+        console.error('[LiveVoting] Error fetching active questions:', error);
+        return res.status(500).json({ success: false, message: 'Failed to fetch active live questions' });
+    }
+};
+
+export const broadcastQuestion = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { questionId, isAcceptingSubmissions = true } = req.body;
+        const event = await Event.findById(eventId);
+
+        if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+
+        const question = event.liveInteractive?.questions?.find(item => item.id === questionId);
+        if (questionId && !question) {
+            return res.status(404).json({ success: false, message: 'Live question not found' });
+        }
+
+        event.liveInteractive.enabled = Boolean(questionId);
+        event.liveInteractive.activeQuestionId = questionId || null;
+        event.liveInteractive.currentType = question?.pollType || 'none';
+        event.liveInteractive.questionStartTime = questionId ? new Date() : null;
+        event.liveInteractive.isAcceptingSubmissions = Boolean(questionId && isAcceptingSubmissions);
+        await event.save();
+
+        return res.status(200).json({ success: true, liveInteractive: event.liveInteractive });
+    } catch (error) {
+        console.error('[LiveVoting] Error broadcasting question:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Failed to broadcast question' });
+    }
+};
+
+export const toggleSubmissions = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { isAcceptingSubmissions } = req.body;
+        const event = await Event.findByIdAndUpdate(
+            eventId,
+            { 'liveInteractive.isAcceptingSubmissions': Boolean(isAcceptingSubmissions) },
+            { new: true, runValidators: true }
+        ).select('liveInteractive');
+
+        if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+        return res.status(200).json({ success: true, liveInteractive: event.liveInteractive });
+    } catch (error) {
+        console.error('[LiveVoting] Error toggling submissions:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Failed to update submissions' });
+    }
+};
+
+export const resetLiveSession = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { questionId } = req.body;
+        const event = await Event.findById(eventId).select('liveInteractive');
+        if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+
+        const ids = questionId
+            ? [questionId]
+            : (event.liveInteractive?.questions || []).map(question => question.id);
+        for (const id of ids) {
+            await redis.del(`voting:voted:${id}`, `voting:counts:${id}`);
+        }
+
+        return res.status(200).json({ success: true, message: 'Live Redis data reset successfully' });
+    } catch (error) {
+        console.error('[LiveVoting] Error resetting live session:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Failed to reset live session' });
     }
 };
 
