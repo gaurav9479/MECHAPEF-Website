@@ -67,6 +67,7 @@ const AdminEventEditor = () => {
   const [showResultsModal, setShowResultsModal] = useState(false);
   const [showPollComposer, setShowPollComposer] = useState(false);
   const [selectedResultQuestion, setSelectedResultQuestion] = useState(null);
+  const [liveResponses, setLiveResponses] = useState([]);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -443,6 +444,7 @@ const AdminEventEditor = () => {
   const viewResults = async (q) => {
     if (!isEditing) return;
     setSelectedResultQuestion(q);
+    setLiveResponses([]);
     setLoadingResults(true);
     setShowResultsModal(true);
     try {
@@ -462,6 +464,8 @@ const AdminEventEditor = () => {
             percentage: values.percentage
           }))
       });
+      const responsesRes = await eventService.getLiveResponses(id, { questionId: q.id });
+      setLiveResponses(responsesRes.data.data?.responses || responsesRes.data.responses || []);
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to load results', 'error');
     } finally {
@@ -1266,6 +1270,23 @@ const AdminEventEditor = () => {
                       </div>
                     </div>
                   ))}
+                  <h3 style={{ color: '#00c864', fontSize: '1rem', margin: '24px 0 10px' }}>Saved Answers / Participants</h3>
+                  <div className="admin-table-wrap" style={{ maxHeight: '260px', overflowY: 'auto' }}>
+                    <table className="admin-table">
+                      <thead><tr><th>Participant</th><th>Answer</th><th>Submitted</th></tr></thead>
+                      <tbody>
+                        {liveResponses.length === 0 ? (
+                          <tr><td colSpan="3" style={{ textAlign: 'center', color: '#777' }}>No saved answers yet</td></tr>
+                        ) : liveResponses.map(response => (
+                          <tr key={response._id}>
+                            <td>{response.userId?.name || response.userId?.collegeRegNo || response.participantId}</td>
+                            <td>{selectedResultQuestion.options?.find(option => option.key === response.selectedOption)?.text || response.selectedOption}</td>
+                            <td>{new Date(response.submittedAt).toLocaleTimeString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               ) : (
                 <div>

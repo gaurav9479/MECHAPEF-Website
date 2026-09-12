@@ -106,6 +106,12 @@ router.get('/live/active', liveEventController.getActiveLiveQuestions);
 router.get('/:eventId/live/poll/:questionId', liveEventController.getLivePollDetails);
 router.post('/:eventId/live/vote', liveEventController.submitLiveVote);
 router.get('/:eventId/live/results', liveEventController.getLiveResults);
+router.get(
+    '/:eventId/live/responses',
+    authenticate,
+    checkRole(['super-admin', 'event-lead', 'content-lead']),
+    liveEventController.getLiveResponses
+);
 router.get('/:eventId/live/status', authenticate, liveEventController.getLiveVoteStatus);
 router.post(
     '/:eventId/live/reset',

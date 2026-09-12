@@ -1,6 +1,7 @@
 import { connection as redis } from '../config/redis.js';
 import Event from '../models/event.model.js';
 import { SystemConfig } from '../models/systemConfig.model.js';
+import LiveVoteResponse from '../models/liveVoteResponse.model.js';
 
 const LIVE_RESULT_GRACE_SECONDS = 5;
 
@@ -37,16 +38,13 @@ const closeExpiredLiveQuestion = async (event, question) => {
     return true;
 };
 
-const buildLiveResult = async (question, pollId) => {
-    const rawCounts = await redis.hgetall(`voting:counts:${pollId}`) || {};
-    const distribution = {};
-    let totalVotes = 0;
-
-    for (const [option, countValue] of Object.entries(rawCounts)) {
-        const votes = parseInt(countValue, 10) || 0;
-        distribution[option] = votes;
-        totalVotes += votes;
-    }
+const buildLiveResult = async (eventId, question) => {
+    const counts = await LiveVoteResponse.aggregate([
+        { $match: { eventId, questionId: question.id } },
+        { $group: { _id: '$selectedOption', votes: { $sum: 1 } } }
+    ]);
+    const distribution = Object.fromEntries(counts.map(item => [item._id, item.votes]));
+    const totalVotes = counts.reduce((sum, item) => sum + item.votes, 0);
 
     let majorityOption = null;
     let maxVotes = -1;
@@ -68,7 +66,7 @@ const buildLiveResult = async (question, pollId) => {
 
 const finalizeLiveQuestion = async (event, question) => {
     if (question.result?.finalizedAt) return question.result;
-    const result = await buildLiveResult(question, question.id);
+    const result = await buildLiveResult(event._id, question);
     question.result = result;
     event.liveInteractive.isAcceptingSubmissions = false;
     await event.save();
@@ -148,7 +146,7 @@ export const submitLiveVote = async (req, res) => {
     try {
         const { eventId } = req.params;
         const { pollId, selectedOption } = req.body;
-        const userId = req.user?._id?.toString() || req.body.userId;
+        const userId = req.user?.userId?.toString() || req.body.userId;
 
         if (!eventId || !pollId || !selectedOption || !userId) {
             return res.status(400).json({
@@ -186,6 +184,24 @@ export const submitLiveVote = async (req, res) => {
                 success: false,
                 message: 'Selected option is not available for this question.'
             });
+        }
+
+        try {
+            await LiveVoteResponse.create({
+                eventId,
+                questionId: pollId,
+                participantId: userId,
+                userId: req.user?.userId || null,
+                selectedOption
+            });
+        } catch (error) {
+            if (error?.code === 11000) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'You have already submitted your vote for this poll.'
+                });
+            }
+            throw error;
         }
 
         const votedKey = `voting:voted:${pollId}`;
@@ -428,6 +444,7 @@ export const broadcastQuestion = async (req, res) => {
         live.isAcceptingSubmissions = Boolean(questionId && isAcceptingSubmissions);
 
         if (questionId) {
+            await LiveVoteResponse.deleteMany({ eventId, questionId });
             await redis.del(`voting:voted:${questionId}`, `voting:counts:${questionId}`);
         }
         await event.save();
@@ -588,7 +605,6 @@ export const savePollToHighlights = async (req, res) => {
             const optLabel = typeof opt === 'string' ? opt : opt.label;
             const data = breakdown[optLabel] || { votes: opt.votes || 0, percentage: opt.percentage || 0 };
             return {
-                label: optLabel,
                 votes: data.votes,
                 percentage: data.percentage
             };
@@ -629,6 +645,25 @@ export const savePollToHighlights = async (req, res) => {
             success: false,
             message: error.message || 'Failed to save highlight'
         });
+    }
+};
+
+export const getLiveResponses = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { questionId } = req.query;
+        if (!questionId) {
+            return res.status(400).json({ success: false, message: 'questionId query parameter is required.' });
+        }
+
+        const responses = await LiveVoteResponse.find({ eventId, questionId })
+            .sort({ submittedAt: 1 })
+            .populate('userId', 'name email collegeRegNo');
+
+        return res.status(200).json({ success: true, responses });
+    } catch (error) {
+        console.error('[LiveVoting] Error fetching responses:', error);
+        return res.status(500).json({ success: false, message: 'Failed to fetch poll responses' });
     }
 };
 

@@ -70,6 +70,7 @@ export const eventService = {
   getLiveState: (eventId) => api.get(`/events/${eventId}/live/state`),
   submitLiveAnswer: (eventId, data) => api.post(`/events/${eventId}/live/submit`, data),
   getLiveResults: (eventId, params) => api.get(`/events/${eventId}/live/results`, { params }),
+  getLiveResponses: (eventId, params) => api.get(`/events/${eventId}/live/responses`, { params }),
   updateLiveConfig: (eventId, data) => api.put(`/events/${eventId}/live/config`, data),
   broadcastQuestion: async (eventId, data) => {
     try {
