@@ -180,6 +180,13 @@ export const submitLiveVote = async (req, res) => {
         let majorityOption = null;
         let maxVotes = -1;
 
+        for (const option of question.options || []) {
+            breakdown[option.key] = {
+                votes: 0,
+                percentage: 0
+            };
+        }
+
         for (const [option, count] of Object.entries(distribution)) {
             const pct = totalVotes > 0 ? Number(((count / totalVotes) * 100).toFixed(1)) : 0;
             breakdown[option] = {
@@ -263,6 +270,13 @@ export const getLiveResults = async (req, res) => {
         const breakdown = {};
         let majorityOption = null;
         let maxVotes = -1;
+
+        for (const option of question.options || []) {
+            breakdown[option.key] = {
+                votes: 0,
+                percentage: 0
+            };
+        }
 
         for (const [option, count] of Object.entries(distribution)) {
             const pct = totalVotes > 0 ? Number(((count / totalVotes) * 100).toFixed(1)) : 0;
