@@ -27,7 +27,7 @@ const BRANCHES = [
 const emptyForm = {
   title: '', description: '', descriptionBlocks: [{ type: 'paragraph', text: '' }], category: 'Mechapef-Event',
   startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
-  maxTeamSize: 1, registrationMode: 'Standard', registrationFee: 0, featured: false, isTBD: false,
+  minTeamSize: 1, maxTeamSize: 1, registrationMode: 'Standard', registrationFee: 0, featured: false, isTBD: false,
   rules: '', prizes: '',
   customFormFields: [], eligibleBranches: [...BRANCHES], eligibleYears: [1, 2, 3, 4, 5],
   ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
@@ -107,6 +107,7 @@ const AdminEventEditor = () => {
             endTime: formatLocal(ev.endTime),
             registrationStartDate: formatLocal(ev.registrationStartDate),
             registrationDeadline: formatLocal(ev.registrationDeadline),
+            minTeamSize: ev.minTeamSize || 1,
             maxTeamSize: ev.maxTeamSize || 1,
             registrationMode: ev.registrationMode || 'Standard',
             registrationFee: ev.registrationFee || 0,
@@ -168,8 +169,8 @@ const AdminEventEditor = () => {
       showToast('Event End Time cannot be earlier than Start Time', 'error');
       return;
     }
-    if (!form.isTBD && form.registrationDeadline && form.endTime && new Date(form.registrationDeadline) > new Date(form.endTime)) {
-      showToast('Registration Deadline cannot be after Event End Time', 'error');
+    if (Number(form.minTeamSize) > Number(form.maxTeamSize)) {
+      showToast('Minimum Team Size cannot be greater than Maximum Team Size', 'error');
       return;
     }
 
@@ -183,7 +184,8 @@ const AdminEventEditor = () => {
       registrationDeadline: form.isTBD && !form.registrationDeadline ? new Date('2099-12-30T23:59:59.000Z').toISOString() : (toISO(form.registrationDeadline) || form.registrationDeadline),
       rules: form.rules ? (typeof form.rules === 'string' ? form.rules.split('\n').filter(Boolean) : form.rules) : [],
       description: (form.descriptionBlocks || []).map(block => block.text).filter(Boolean).join('\n\n'),
-      maxTeamSize: Number(form.maxTeamSize),
+      minTeamSize: Math.max(1, Number(form.minTeamSize) || 1),
+      maxTeamSize: Math.max(1, Number(form.maxTeamSize) || 1),
       registrationMode: form.registrationMode || 'Standard',
       registrationFee: Number(form.registrationFee),
       enableQRScanning: form.attendanceMethod === 'qr',
@@ -668,29 +670,58 @@ const AdminEventEditor = () => {
               <div className="form-group">
                 <label>Event Start Time {!form.isTBD && '*'}</label>
                 <input type="datetime-local" value={form.startTime} onChange={e => f('startTime', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
+                <small style={{ color: '#888', fontSize: '0.78rem', marginTop: '4px' }}>Date and time when the event begins.</small>
               </div>
 
               <div className="form-group">
                 <label>Event End Time {!form.isTBD && '*'}</label>
                 <input type="datetime-local" value={form.endTime} onChange={e => f('endTime', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
+                <small style={{ color: '#888', fontSize: '0.78rem', marginTop: '4px' }}>Can be on the same date (e.g. single-day event) or later.</small>
               </div>
 
               <div className="form-group">
                 <label>Registration Start Date</label>
                 <input type="datetime-local" value={form.registrationStartDate} onChange={e => f('registrationStartDate', e.target.value)} disabled={form.isTBD} placeholder="Immediate if left empty" />
+                <small style={{ color: '#888', fontSize: '0.78rem', marginTop: '4px' }}>When registrations open (Immediate if blank).</small>
               </div>
 
               <div className="form-group">
                 <label>Registration Deadline {!form.isTBD && '*'}</label>
                 <input type="datetime-local" value={form.registrationDeadline} onChange={e => f('registrationDeadline', e.target.value)} required={!form.isTBD} disabled={form.isTBD} />
+                <small style={{ color: '#888', fontSize: '0.78rem', marginTop: '4px' }}>Last date & time to submit registration.</small>
+              </div>
+
+              <div className="form-group">
+                <label>Min Team Size (1 for Solo)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={form.minTeamSize || 1}
+                  onChange={e => f('minTeamSize', e.target.value)}
+                />
+                <small style={{ color: '#888', fontSize: '0.78rem', marginTop: '4px' }}>Minimum members required (1–10).</small>
               </div>
 
               <div className="form-group">
                 <label>Max Team Size (1 for Solo)</label>
-                <input type="number" min="1" max="10" value={form.maxTeamSize} onChange={e => f('maxTeamSize', e.target.value)} />
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={form.maxTeamSize || 1}
+                  onChange={e => f('maxTeamSize', e.target.value)}
+                />
+                <small style={{ color: '#888', fontSize: '0.78rem', marginTop: '4px' }}>Maximum members allowed (1–10).</small>
               </div>
 
-              <div className="form-group">
+              <div className="form-group full" style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '12px 16px', borderRadius: '8px', border: '1px solid #282830' }}>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#ccc', lineHeight: '1.5' }}>
+                  ℹ️ <strong>Team Size Range:</strong> For Solo events, set <strong>Min: 1</strong> and <strong>Max: 1</strong>. For Team events, specify the allowed range (e.g. <strong>Min: 2</strong> and <strong>Max: 4</strong> members per team).
+                </p>
+              </div>
+
+              <div className="form-group full">
                 <label>Registration Fee (₹)</label>
                 <input type="number" min="0" value={form.registrationFee} onChange={e => f('registrationFee', e.target.value)} />
               </div>
@@ -703,6 +734,7 @@ const AdminEventEditor = () => {
                     const mode = e.target.value;
                     f('registrationMode', mode);
                     if (mode === 'JoinRequests' && Number(form.maxTeamSize) <= 1) {
+                      f('minTeamSize', 2);
                       f('maxTeamSize', 4);
                     }
                   }}
