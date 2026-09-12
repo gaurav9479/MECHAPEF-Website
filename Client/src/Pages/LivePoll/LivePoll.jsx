@@ -9,6 +9,7 @@ const LivePoll = () => {
     const [question, setQuestion] = useState(null);
     const [selectedOption, setSelectedOption] = useState('');
     const [remainingSeconds, setRemainingSeconds] = useState(0);
+    const [settlementSeconds, setSettlementSeconds] = useState(0);
     const [result, setResult] = useState(null);
     const [message, setMessage] = useState('Loading live poll...');
     const [submitted, setSubmitted] = useState(false);
@@ -47,7 +48,9 @@ const LivePoll = () => {
         if (!question) return undefined;
         const updateTimer = () => {
             const end = new Date(question.questionStartTime).getTime() + question.timeLimitSeconds * 1000;
-            setRemainingSeconds(Math.max(0, Math.ceil((end - Date.now()) / 1000)));
+            const now = Date.now();
+            setRemainingSeconds(Math.max(0, Math.ceil((end - now) / 1000)));
+            setSettlementSeconds(Math.max(0, Math.ceil((end + 5000 - now) / 1000)));
         };
         updateTimer();
         const timer = setInterval(updateTimer, 1000);
@@ -108,6 +111,20 @@ const LivePoll = () => {
                                     </div>
                                 ))}
                                 <p style={{ color: '#aaa' }}>Total votes: {result.totalVotes || 0}</p>
+                            </div>
+                        ) : remainingSeconds === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '28px 12px', border: '1px solid rgba(255, 170, 0, 0.35)', background: 'rgba(255, 170, 0, 0.06)' }}>
+                                <style>{`@keyframes livePollSpin { to { transform: rotate(360deg); } } @keyframes livePollPulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }`}</style>
+                                <div style={{ width: '42px', height: '42px', margin: '0 auto 16px', border: '4px solid #444', borderTopColor: '#ffaa00', borderRadius: '50%', animation: 'livePollSpin .8s linear infinite' }} />
+                                <strong style={{ color: '#ffaa00', display: 'block', fontSize: '1.1rem', animation: 'livePollPulse 1.2s ease-in-out infinite' }}>
+                                    Final results processing...
+                                </strong>
+                                <span style={{ display: 'block', color: '#aaa', marginTop: '8px' }}>
+                                    Clearing the voting queue. Results in {settlementSeconds || 1}s
+                                </span>
+                                <div style={{ height: '5px', background: '#333', marginTop: '18px', overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', background: '#ffaa00', width: `${Math.max(8, ((5 - settlementSeconds) / 5) * 100)}%`, transition: 'width 1s linear' }} />
+                                </div>
                             </div>
                         ) : (
                             <>

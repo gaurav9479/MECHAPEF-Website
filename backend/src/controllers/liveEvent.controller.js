@@ -2,7 +2,7 @@ import { connection as redis } from '../config/redis.js';
 import Event from '../models/event.model.js';
 import { SystemConfig } from '../models/systemConfig.model.js';
 
-const LIVE_RESULT_GRACE_SECONDS = 10;
+const LIVE_RESULT_GRACE_SECONDS = 5;
 
 const checkIsRedisLiveActive = async () => {
     try {
