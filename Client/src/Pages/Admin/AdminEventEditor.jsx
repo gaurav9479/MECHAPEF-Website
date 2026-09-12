@@ -375,6 +375,17 @@ const AdminEventEditor = () => {
         enabled: true,
         questions: [newQuestion]
       });
+      if (isEditing) {
+        await eventService.update(id, {
+          liveInteractive: {
+            ...form.liveInteractive,
+            enabled: true,
+            activeQuestionId: null,
+            isAcceptingSubmissions: false,
+            questions: [newQuestion]
+          }
+        });
+      }
       setShowPollComposer(true);
       return;
     }
@@ -384,7 +395,15 @@ const AdminEventEditor = () => {
       return;
     }
 
-    f('liveInteractive', { ...form.liveInteractive, enabled: true });
+    await eventService.update(id, {
+      liveInteractive: {
+        ...form.liveInteractive,
+        enabled: true,
+        activeQuestionId: null,
+        isAcceptingSubmissions: false
+      }
+    });
+    f('liveInteractive', { ...form.liveInteractive, enabled: true, activeQuestionId: null, isAcceptingSubmissions: false });
     setShowPollComposer(true);
   };
 
