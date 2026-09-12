@@ -112,7 +112,7 @@ const LivePoll = () => {
         if (!question || remainingSeconds > 0 || settlementSeconds > 0 || result) return undefined;
         const fetchResult = () => api.get(`/events/${eventId}/live/results`, { params: { pollId: questionId } })
             .then(res => setResult(res.data))
-            .catch(() => {});
+            .catch(() => { });
         fetchResult();
         const retryTimer = setInterval(fetchResult, 1500);
         return () => clearInterval(retryTimer);
@@ -175,11 +175,11 @@ const LivePoll = () => {
                                     ? result.breakdown
                                     : Object.entries(result.breakdown || {}).map(([option, data]) => ({ option, ...data })))
                                     .map(data => (
-                                    <div key={data.option} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', padding: '14px 0' }}>
-                                        <span>{question.options.find(item => item.key === data.option)?.text || data.option}</span>
-                                        <strong>{data.percentage}% ({data.votes} votes)</strong>
-                                    </div>
-                                ))}
+                                        <div key={data.option} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', padding: '14px 0' }}>
+                                            <span>{question.options.find(item => item.key === data.option)?.text || data.option}</span>
+                                            <strong>{data.percentage}% ({data.votes} votes)</strong>
+                                        </div>
+                                    ))}
                                 <p style={{ color: '#aaa' }}>Total votes: {result.totalVotes || 0}</p>
                             </div>
                         ) : settlementSeconds === 0 ? (

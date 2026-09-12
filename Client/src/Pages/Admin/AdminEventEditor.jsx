@@ -457,10 +457,10 @@ const AdminEventEditor = () => {
         breakdown: Array.isArray(data.breakdown)
           ? data.breakdown
           : Object.entries(data.breakdown || {}).map(([option, values]) => ({
-              option,
-              votes: values.votes,
-              percentage: values.percentage
-            }))
+            option,
+            votes: values.votes,
+            percentage: values.percentage
+          }))
       });
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to load results', 'error');
