@@ -49,7 +49,22 @@ export const checkAndToggleRedis = async (overrideMode = null) => {
         const isTimeInWindow = currentIstHour >= startHour && currentIstHour < endHour;
 
         let shouldEnableRedis = false;
-        if (modeType === 'ALWAYS_ON') {
+
+        // Check if within 15-minute shutdown grace period
+        if (sysConfig?.turnOffEffectiveAt) {
+            if (now < new Date(sysConfig.turnOffEffectiveAt)) {
+                // Grace period is active - keep Redis running!
+                shouldEnableRedis = true;
+            } else {
+                // Grace period has elapsed - finalize shutdown
+                sysConfig.enableRedis = false;
+                sysConfig.redisModeType = 'ALWAYS_OFF';
+                sysConfig.turnOffScheduledAt = null;
+                sysConfig.turnOffEffectiveAt = null;
+                await sysConfig.save();
+                shouldEnableRedis = false;
+            }
+        } else if (modeType === 'ALWAYS_ON') {
             shouldEnableRedis = true;
         } else if (modeType === 'ALWAYS_OFF') {
             shouldEnableRedis = false;

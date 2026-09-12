@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as eventController from '../controllers/event.controller.js';
 import * as registrationController from '../controllers/registration.controller.js';
+import * as liveEventController from '../controllers/liveEvent.controller.js';
 import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 // import { limiter } from '../middleware/security.middleware.js';
 
@@ -102,6 +103,29 @@ router.put(
     authenticate,
     checkRole(['super-admin', 'content-lead', 'media-lead']),
     registrationController.markAttendance
+);
+
+// Live Interactive Voting Routes (Type 2)
+router.post('/:eventId/live/vote', authenticate, liveEventController.submitLiveVote);
+router.get('/:eventId/live/results', liveEventController.getLiveResults);
+router.get('/:eventId/live/status', authenticate, liveEventController.getLiveVoteStatus);
+router.post(
+    '/:eventId/live/reset',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    liveEventController.resetLivePoll
+);
+router.post(
+    '/:eventId/live/save-highlight',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    liveEventController.savePollToHighlights
+);
+router.delete(
+    '/:eventId/live/highlights/:highlightId',
+    authenticate,
+    checkRole(['super-admin', 'content-lead']),
+    liveEventController.deleteHighlight
 );
 
 export default router;

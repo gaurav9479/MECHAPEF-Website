@@ -259,6 +259,63 @@ const EventDetails = () => {
                   </p>
                 </div>
               )}
+
+              {event.highlights && event.highlights.length > 0 && (
+                <div className="event-highlights-section" style={{ marginTop: '35px', background: 'rgba(17, 17, 17, 0.85)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255, 31, 1, 0.25)', backdropFilter: 'blur(10px)' }}>
+                  <h3 style={{ color: '#ff1f01', fontSize: '1.3rem', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span>📊</span> Highlights of Event
+                  </h3>
+                  <div className="highlights-list" style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                    {event.highlights.map((highlight, idx) => (
+                      <div key={idx} className="highlight-item" style={{ background: '#0a0a0a', padding: '18px 20px', borderRadius: '10px', border: '1px solid #222' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px', gap: '12px' }}>
+                          <h4 style={{ color: '#f3f4f6', fontSize: '1.05rem', margin: 0, fontWeight: '600', lineHeight: 1.4 }}>
+                            {idx + 1}. {highlight.question}
+                          </h4>
+                          <span style={{ fontSize: '0.78rem', color: '#9ca3af', background: '#1f1f1f', padding: '4px 10px', borderRadius: '20px', border: '1px solid #333', whiteSpace: 'nowrap' }}>
+                            🗳️ {highlight.totalVotes || 0} Votes
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {highlight.options?.map((opt, optIdx) => {
+                            const isWinner = highlight.majorityOption && highlight.majorityOption === opt.label && (opt.votes > 0 || opt.percentage > 0);
+                            return (
+                              <div key={optIdx} style={{ position: 'relative', background: '#161616', borderRadius: '8px', overflow: 'hidden', border: isWinner ? '1px solid rgba(255, 31, 1, 0.4)' : '1px solid #262626' }}>
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    bottom: 0,
+                                    width: `${opt.percentage || 0}%`,
+                                    background: isWinner ? 'linear-gradient(90deg, rgba(255, 31, 1, 0.45) 0%, rgba(255, 31, 1, 0.15) 100%)' : 'rgba(255, 255, 255, 0.05)',
+                                    transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    zIndex: 0
+                                  }}
+                                />
+                                <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', fontSize: '0.92rem' }}>
+                                  <span style={{ color: isWinner ? '#ffffff' : '#d1d5db', fontWeight: isWinner ? '600' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {opt.label}
+                                    {isWinner && (
+                                      <span style={{ background: '#ff1f01', color: '#fff', fontSize: '0.7rem', padding: '2px 7px', borderRadius: '4px', fontWeight: 'bold' }}>
+                                        Majority Choice
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span style={{ color: isWinner ? '#ff4d36' : '#9ca3af', fontWeight: '700', fontSize: '0.9rem', whiteSpace: 'nowrap', marginLeft: '12px' }}>
+                                    {opt.percentage || 0}% <span style={{ color: '#6b7280', fontSize: '0.8rem', fontWeight: 'normal' }}>({opt.votes || 0})</span>
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Registration Card merged into Right Column */}
