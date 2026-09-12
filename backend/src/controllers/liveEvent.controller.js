@@ -315,14 +315,22 @@ export const getActiveLiveQuestions = async (req, res) => {
     try {
         const events = await Event.find({
             isActive: true,
-            'liveInteractive.enabled': true,
-            'liveInteractive.activeQuestionId': { $ne: null }
-        }).select('title liveInteractive.activeQuestionId liveInteractive.questionStartTime liveInteractive.questions');
+            'liveInteractive.enabled': true
+        }).select('title status liveInteractive.activeQuestionId liveInteractive.questionStartTime liveInteractive.questions');
 
         const questions = events.flatMap(event => {
             const live = event.liveInteractive;
             const question = live.questions.find(item => item.id === live.activeQuestionId);
-            if (!question) return [];
+            if (!question) {
+                return [{
+                    eventId: event._id,
+                    eventTitle: event.title,
+                    eventStatus: event.status,
+                    eventEnded: event.status === 'Ended',
+                    waiting: true,
+                    title: 'Live poll is ready. Waiting for the question...'
+                }];
+            }
 
             if (live.isAcceptingSubmissions && !live.questionStartTime) {
                 live.questionStartTime = new Date();
@@ -332,6 +340,8 @@ export const getActiveLiveQuestions = async (req, res) => {
             return [{
                 eventId: event._id,
                 eventTitle: event.title,
+                eventStatus: event.status,
+                eventEnded: event.status === 'Ended',
                 questionId: question.id,
                 title: question.title,
                 pollType: question.pollType,

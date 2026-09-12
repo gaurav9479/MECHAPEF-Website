@@ -177,7 +177,7 @@ const HangingNoticeBoard = ({ onClose }) => {
   }, [selectedLive, remainingSeconds, liveResult]);
 
   const openLiveQuestion = (question) => {
-    navigate(`/live-poll/${question.eventId}/${question.questionId}`);
+    navigate(`/live-poll/${question.eventId}/${question.questionId || 'waiting'}`);
   };
 
   const submitLiveVote = async () => {

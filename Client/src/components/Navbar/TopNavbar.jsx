@@ -215,7 +215,7 @@ const TopNavbar = () => {
       className="notice-bell-btn"
       onClick={() => {
         setMenuOpen(false);
-        if (activeLivePoll) navigate(`/live-poll/${activeLivePoll.eventId}/${activeLivePoll.questionId}`);
+        if (activeLivePoll) navigate(`/live-poll/${activeLivePoll.eventId}/${activeLivePoll.questionId || 'waiting'}`);
         else setShowNotices(true);
       }}
       style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', flexShrink: 0 }}

@@ -174,7 +174,7 @@ const MagazineSidebar = () => {
             <span>Our Team</span>
           </li>
           <li onClick={() => activeLivePoll
-            ? navigate(`/live-poll/${activeLivePoll.eventId}/${activeLivePoll.questionId}`)
+            ? navigate(`/live-poll/${activeLivePoll.eventId}/${activeLivePoll.questionId || 'waiting'}`)
             : setShowNotices(true)}>
             <span style={{ position: 'relative', display: 'inline-block' }}>
               Notice Board
