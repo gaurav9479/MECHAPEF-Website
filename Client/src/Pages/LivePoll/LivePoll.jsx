@@ -12,6 +12,7 @@ const LivePoll = () => {
     const [result, setResult] = useState(null);
     const [message, setMessage] = useState('Loading live poll...');
     const [submitted, setSubmitted] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     const getAttendeeId = () => {
         const storageKey = 'mechapef_live_attendee_id';
@@ -66,7 +67,8 @@ const LivePoll = () => {
     }, [eventId, questionId, question, remainingSeconds, result]);
 
     const submitVote = async () => {
-        if (!selectedOption || remainingSeconds === 0) return;
+        if (!selectedOption || remainingSeconds === 0 || submitted || submitting) return;
+        setSubmitting(true);
         try {
             await api.post(`/events/${eventId}/live/vote`, {
                 pollId: questionId,
@@ -76,6 +78,7 @@ const LivePoll = () => {
             setSubmitted(true);
             setMessage('Vote recorded. Results will appear when the timer ends.');
         } catch (error) {
+            setSubmitting(false);
             setMessage(error.response?.data?.message || 'Unable to submit vote.');
         }
     };
@@ -110,12 +113,12 @@ const LivePoll = () => {
                             <>
                                 {question.options.map(option => (
                                     <label key={option.key} style={{ display: 'block', padding: '14px', margin: '10px 0', border: '1px solid #444', cursor: remainingSeconds > 0 && !submitted ? 'pointer' : 'default' }}>
-                                        <input type="radio" name="live-poll-option" value={option.key} checked={selectedOption === option.key} disabled={remainingSeconds === 0 || submitted} onChange={e => setSelectedOption(e.target.value)} />{' '}
+                                        <input type="radio" name="live-poll-option" value={option.key} checked={selectedOption === option.key} disabled={remainingSeconds === 0 || submitted || submitting} onChange={e => setSelectedOption(e.target.value)} />{' '}
                                         {option.text}
                                     </label>
                                 ))}
-                                <button type="button" onClick={submitVote} disabled={!selectedOption || remainingSeconds === 0 || submitted} style={{ marginTop: '16px', padding: '12px 22px', background: '#00c864', border: 0, fontWeight: 'bold', cursor: 'pointer' }}>
-                                    {submitted ? 'Vote Submitted' : 'Submit Vote'}
+                                <button type="button" onClick={submitVote} disabled={!selectedOption || remainingSeconds === 0 || submitted || submitting} style={{ marginTop: '16px', padding: '12px 22px', background: '#00c864', border: 0, fontWeight: 'bold', cursor: 'pointer' }}>
+                                    {submitted ? 'Vote Submitted' : submitting ? 'Submitting...' : 'Submit Vote'}
                                 </button>
                             </>
                         )}
