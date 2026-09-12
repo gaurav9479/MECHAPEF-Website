@@ -315,6 +315,7 @@ export const getActiveLiveQuestions = async (req, res) => {
     try {
         const events = await Event.find({
             isActive: true,
+            status: { $ne: 'Ended' },
             'liveInteractive.enabled': true
         }).select('title status liveInteractive.activeQuestionId liveInteractive.questionStartTime liveInteractive.questions');
 
@@ -364,7 +365,7 @@ export const getActiveLiveQuestions = async (req, res) => {
 export const getLivePollDetails = async (req, res) => {
     try {
         const { eventId, questionId } = req.params;
-        const event = await Event.findById(eventId).select('title liveInteractive');
+        const event = await Event.findById(eventId).select('title status liveInteractive');
         const live = event?.liveInteractive;
         const question = live?.questions?.find(item => item.id === questionId);
 
@@ -383,6 +384,7 @@ export const getLivePollDetails = async (req, res) => {
             question: {
                 eventId: event._id,
                 eventTitle: event.title,
+                eventEnded: event.status === 'Ended',
                 questionId: question.id,
                 title: question.title,
                 pollType: question.pollType,
@@ -409,16 +411,17 @@ export const broadcastQuestion = async (req, res) => {
 
         if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
 
-        const question = event.liveInteractive?.questions?.find(item => item.id === questionId);
+        const live = event.liveInteractive;
+        const question = live?.questions?.find(item => item.id === questionId);
         if (questionId && !question) {
             return res.status(404).json({ success: false, message: 'Live question not found' });
         }
 
-        event.liveInteractive.enabled = Boolean(questionId);
-        event.liveInteractive.activeQuestionId = questionId || null;
-        event.liveInteractive.currentType = question?.pollType || 'none';
-        event.liveInteractive.questionStartTime = questionId ? new Date() : null;
-        event.liveInteractive.isAcceptingSubmissions = Boolean(questionId && isAcceptingSubmissions);
+        live.enabled = Boolean(questionId);
+        live.activeQuestionId = questionId || null;
+        live.currentType = question?.pollType || 'none';
+        live.questionStartTime = questionId ? new Date() : null;
+        live.isAcceptingSubmissions = Boolean(questionId && isAcceptingSubmissions);
 
         if (questionId) {
             await redis.del(`voting:voted:${questionId}`, `voting:counts:${questionId}`);

@@ -10,7 +10,6 @@ const LivePoll = () => {
     const [selectedOption, setSelectedOption] = useState('');
     const [remainingSeconds, setRemainingSeconds] = useState(0);
     const [settlementSeconds, setSettlementSeconds] = useState(0);
-    const [result, setResult] = useState(null);
     const [message, setMessage] = useState('Loading live poll...');
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -36,7 +35,6 @@ const LivePoll = () => {
                     setEventEnded(Boolean(active.eventEnded));
                     if (active.waiting) {
                         setQuestion(null);
-                        setResult(null);
                         setWaitingForNext(true);
                         setMessage('Live mode is enabled. Waiting for the organizer to broadcast a question...');
                         return;
@@ -44,7 +42,6 @@ const LivePoll = () => {
                     if (active.questionId !== questionId) {
                         setSelectedOption('');
                         setSubmitted(false);
-                        setResult(null);
                     }
                     setQuestion(active);
                     setWaitingForNext(false);
@@ -54,7 +51,8 @@ const LivePoll = () => {
                 return api.get(`/events/${eventId}/live/poll/${questionId}`)
                     .then(res => {
                         setQuestion(res.data.question);
-                        setMessage(res.data.expired ? 'Voting has ended. Results are visible below.' : '');
+                        setEventEnded(Boolean(res.data.question?.eventEnded));
+                        setMessage(res.data.expired ? 'Voting has ended. Results are available to the organizer.' : '');
                     });
             })
             .catch(error => setMessage(error.response?.data?.message || 'Unable to load this live poll.'));
@@ -64,20 +62,28 @@ const LivePoll = () => {
     }, [eventId, questionId]);
 
     useEffect(() => {
-        if (!result && !waitingForNext) return undefined;
+        if (!question || remainingSeconds > 0 || settlementSeconds > 0) return undefined;
         const checkNextQuestion = () => {
             api.get('/events/live/active')
                 .then(res => {
                     const active = (res.data.questions || []).find(item => item.eventId === eventId);
-                    if (!active || active.eventEnded) {
-                        setEventEnded(Boolean(active?.eventEnded));
+                    if (!active) {
+                        return api.get(`/events/${eventId}/live/poll/${questionId}`)
+                            .then(details => {
+                                setEventEnded(Boolean(details.data.question?.eventEnded));
+                                setWaitingForNext(true);
+                                setMessage(details.data.question?.eventEnded
+                                    ? 'This event has ended.'
+                                    : 'Waiting for the organizer to broadcast the next question...');
+                            });
+                    }
+                    if (active.eventEnded) {
+                        setEventEnded(true);
                         setWaitingForNext(false);
-                        setMessage(active?.eventEnded ? 'This event has ended.' : 'Live mode is waiting for the next question.');
                         return;
                     }
                     if (active.waiting) {
                         setQuestion(null);
-                        setResult(null);
                         setWaitingForNext(true);
                         setMessage('Waiting for the organizer to broadcast the next question...');
                         return;
@@ -86,8 +92,8 @@ const LivePoll = () => {
                         setQuestion(active);
                         setSelectedOption('');
                         setSubmitted(false);
-                        setResult(null);
                         setWaitingForNext(false);
+                        setEventEnded(false);
                         setMessage('Next question is live.');
                     }
                 })
@@ -95,7 +101,7 @@ const LivePoll = () => {
         };
         const nextQuestionTimer = setInterval(checkNextQuestion, 3000);
         return () => clearInterval(nextQuestionTimer);
-    }, [eventId, questionId, result, waitingForNext]);
+    }, [eventId, questionId, question, remainingSeconds, settlementSeconds]);
 
     useEffect(() => {
         if (!question) return undefined;
@@ -111,18 +117,6 @@ const LivePoll = () => {
         return () => clearInterval(timer);
     }, [question]);
 
-    useEffect(() => {
-        if (!question || remainingSeconds > 0 || result) return;
-        const fetchResults = () => api.get(`/events/${eventId}/live/results`, { params: { pollId: questionId } })
-            .then(res => setResult(res.data))
-            .catch(error => setMessage(error.response?.data?.message || 'Results are being processed...'));
-        fetchResults();
-        const retryTimer = setInterval(() => {
-            if (!result) fetchResults();
-        }, 2000);
-        return () => clearInterval(retryTimer);
-    }, [eventId, questionId, question, remainingSeconds, result]);
-
     const submitVote = async () => {
         if (!selectedOption || remainingSeconds === 0 || submitted || submitting) return;
         setSubmitting(true);
@@ -133,7 +127,7 @@ const LivePoll = () => {
                 userId: getAttendeeId()
             });
             setSubmitted(true);
-            setMessage('Vote recorded. Results will appear when the timer ends.');
+            setMessage('Vote recorded. Voting will close when the timer ends.');
         } catch (error) {
             setSubmitting(false);
             setMessage(error.response?.data?.message || 'Unable to submit vote.');
@@ -160,15 +154,9 @@ const LivePoll = () => {
                             <div style={{ textAlign: 'center', padding: '28px 12px', border: '1px solid #444', color: '#aaa' }}>
                                 This event has ended. Thank you for participating.
                             </div>
-                        ) : result && settlementSeconds === 0 && !waitingForNext ? (
-                            <div>
-                                {Object.entries(result.breakdown || {}).map(([option, data]) => (
-                                    <div key={option} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', padding: '14px 0' }}>
-                                        <span>{question.options.find(item => item.key === option)?.text || option}</span>
-                                        <strong>{data.percentage}%</strong>
-                                    </div>
-                                ))}
-                                <p style={{ color: '#aaa' }}>Total votes: {result.totalVotes || 0}</p>
+                        ) : settlementSeconds === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '28px 12px', border: '1px solid #444', color: '#aaa' }}>
+                                Voting closed. Waiting for the organizer to broadcast the next question.
                             </div>
                         ) : remainingSeconds === 0 ? (
                             <div style={{ textAlign: 'center', padding: '28px 12px', border: '1px solid rgba(255, 170, 0, 0.35)', background: 'rgba(255, 170, 0, 0.06)' }}>
