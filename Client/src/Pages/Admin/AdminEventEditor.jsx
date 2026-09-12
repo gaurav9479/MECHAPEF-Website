@@ -336,6 +336,38 @@ const AdminEventEditor = () => {
     }
   };
 
+  const handleToggleLiveMode = async () => {
+    const isEnabled = Boolean(form.liveInteractive?.enabled);
+    if (isEnabled) {
+      try {
+        await eventService.broadcastQuestion(id, { questionId: '', isAcceptingSubmissions: false });
+        f('liveInteractive', {
+          ...form.liveInteractive,
+          enabled: false,
+          activeQuestionId: '',
+          isAcceptingSubmissions: false
+        });
+        showToast('Live mode disabled');
+      } catch (err) {
+        showToast(err.response?.data?.message || 'Failed to disable live mode', 'error');
+      }
+      return;
+    }
+
+    const firstQuestion = form.liveInteractive?.questions?.[0];
+    if (!firstQuestion) {
+      showToast('Add at least one question before enabling live mode', 'error');
+      return;
+    }
+
+    if (!isEditing) {
+      showToast('Save the event first, then enable live mode', 'error');
+      return;
+    }
+
+    await handleBroadcast(firstQuestion.id);
+  };
+
   const handleToggleSubmissions = async (isOpen) => {
     if (!isEditing) return;
     try {
@@ -817,7 +849,7 @@ const AdminEventEditor = () => {
                   <button
                     type="button"
                     className={form.liveInteractive?.enabled ? 'btn-danger' : 'btn-primary'}
-                    onClick={() => f('liveInteractive', { ...form.liveInteractive, enabled: !form.liveInteractive?.enabled })}
+                    onClick={handleToggleLiveMode}
                     style={{ padding: '8px 18px' }}
                   >
                     {form.liveInteractive?.enabled ? 'Disable Live Mode' : 'Enable Live Mode'}
