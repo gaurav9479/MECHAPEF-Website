@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import {
@@ -52,10 +52,11 @@ const formatLocal = (isoString) => {
 
 const AdminEventEditor = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const isEditing = Boolean(id);
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') === 'live' ? 'live' : 'details');
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
@@ -314,6 +315,15 @@ const AdminEventEditor = () => {
       return;
     }
     try {
+      // Persist the current poll editor state before trying to broadcast it.
+      await eventService.update(id, {
+        liveInteractive: {
+          ...form.liveInteractive,
+          enabled: Boolean(qId),
+          activeQuestionId: qId || null,
+          isAcceptingSubmissions: Boolean(qId)
+        }
+      });
       await eventService.broadcastQuestion(id, { questionId: qId, isAcceptingSubmissions: true });
       f('liveInteractive', {
         ...form.liveInteractive,

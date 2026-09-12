@@ -126,6 +126,12 @@ router.delete(
 );
 
 router.post(
+    '/:eventId/live/admin/poll',
+    authenticate,
+    checkRole(['super-admin', 'event-lead', 'content-lead']),
+    liveEventController.broadcastQuestion
+);
+router.post(
     '/:eventId/live/broadcast',
     authenticate,
     checkRole(['super-admin', 'event-lead']),

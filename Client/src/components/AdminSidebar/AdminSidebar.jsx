@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  FaCog, 
-  FaCalendarAlt, 
-  FaUsers, 
-  FaBullhorn, 
-  FaHandshake, 
-  FaImages, 
-  FaHome, 
+import {
+  FaCog,
+  FaCalendarAlt,
+  FaUsers,
+  FaBullhorn,
+  FaHandshake,
+  FaImages,
+  FaHome,
   FaSignOutAlt,
   FaBars,
   FaTimes,
   FaQrcode,
+  FaVoteYea,
   FaBook,
   FaEnvelope,
   FaShoePrints,
@@ -104,8 +105,8 @@ const AdminSidebar = () => {
   return (
     <>
       {/* Mobile Hamburger Button */}
-      <button 
-        className="admin-mobile-toggle" 
+      <button
+        className="admin-mobile-toggle"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle Admin Sidebar"
       >
@@ -113,7 +114,7 @@ const AdminSidebar = () => {
       </button>
 
       {/* Backdrop for mobile */}
-      <div 
+      <div
         className={`admin-sidebar-backdrop ${isOpen ? 'active' : ''}`}
         onClick={closeSidebar}
       ></div>
@@ -137,25 +138,25 @@ const AdminSidebar = () => {
               <Link to="/admin" className={`sidebar-link ${location.pathname === '/admin' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin')}>
                 <FaCog /> Dashboard
               </Link>
-              
+
               {isRole('super-admin', 'event-lead', 'media-lead') && (
                 <Link to="/admin/messages" className={`sidebar-link ${location.pathname === '/admin/messages' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/messages')}>
                   <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                     <FaEnvelope />
                     {unseenCount > 0 && (
-                      <span 
+                      <span
                         title={`${unseenCount} unseen message(s)`}
-                        style={{ 
-                          position: 'absolute', 
-                          top: '-4px', 
-                          right: '-4px', 
-                          width: '9px', 
-                          height: '9px', 
-                          borderRadius: '50%', 
-                          backgroundColor: '#ffcc00', 
+                        style={{
+                          position: 'absolute',
+                          top: '-4px',
+                          right: '-4px',
+                          width: '9px',
+                          height: '9px',
+                          borderRadius: '50%',
+                          backgroundColor: '#ffcc00',
                           boxShadow: '0 0 8px #ffcc00',
                           border: '1px solid #000'
-                        }} 
+                        }}
                       />
                     )}
                   </div>
@@ -167,6 +168,9 @@ const AdminSidebar = () => {
                 <>
                   <Link to="/admin/events" className={`sidebar-link ${location.pathname === '/admin/events' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/events')}>
                     <FaCalendarAlt /> Live Events
+                  </Link>
+                  <Link to="/admin/live-polls" className={`sidebar-link ${location.pathname === '/admin/live-polls' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/live-polls')}>
+                    <FaVoteYea /> Live Polls
                   </Link>
                   <Link to="/admin/past-events" className={`sidebar-link ${location.pathname === '/admin/past-events' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/past-events')}>
                     <FaCalendarAlt /> Past Events

@@ -29,7 +29,8 @@ export const createEvent = asyncHandler(async (req, res) => {
         eligibleBranches,
         eligibleYears,
         registrationMode,
-        isTBD
+        isTBD,
+        liveInteractive
     } = req.body;
     if (!title || !description || !category || !startTime || !endTime || !venue || !registrationDeadline) {
         throw new ApiError(
@@ -61,6 +62,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         attendanceMethod: req.body.attendanceMethod || 'qr',
         registrationMode: registrationMode || 'Standard',
         isTBD: isTBD || false,
+        liveInteractive: liveInteractive || undefined,
         createdBy: req.user.userId
     });
 
@@ -165,7 +167,8 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'enableQRScanning',
         'attendanceMethod',
         'registrationMode',
-        'isTBD'
+        'isTBD',
+        'liveInteractive'
     ];
 
     const updates = {};

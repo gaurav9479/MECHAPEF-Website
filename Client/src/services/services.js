@@ -12,7 +12,7 @@ export const authService = {
   logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
-  
+
   getMicrosoftUrl: () => api.get('/auth/microsoft/url', {
     params: { redirectUri: getMicrosoftRedirectUri() },
   }),
@@ -71,9 +71,9 @@ export const eventService = {
   submitLiveAnswer: (eventId, data) => api.post(`/events/${eventId}/live/submit`, data),
   getLiveResults: (eventId, params) => api.get(`/events/${eventId}/live/results`, { params }),
   updateLiveConfig: (eventId, data) => api.put(`/events/${eventId}/live/config`, data),
-  broadcastQuestion: (eventId, data) => api.post(`/events/${eventId}/live/broadcast`, data),
+  broadcastQuestion: (eventId, data) => api.post(`/events/${eventId}/live/admin/poll`, data),
   toggleLiveSubmissions: (eventId, data) => api.post(`/events/${eventId}/live/submissions/toggle`, data),
-  resetLiveSession: (eventId, data) => api.post(`/events/${eventId}/live/reset`, data),
+  resetLiveSession: (eventId, data) => api.post(`/events/${eventId}/live/reset-session`, data),
 };
 
 export const registrationService = {
