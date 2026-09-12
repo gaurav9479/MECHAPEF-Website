@@ -45,7 +45,7 @@ const TopNavbar = () => {
     apiGetCached('/projects/active', (data) => {
       const activeProjects = data.data?.projects || [];
       setHasProjects(activeProjects.length > 0);
-    }).catch(() => {});
+    }).catch(() => { });
 
     apiGetCached('/announcements', (data) => {
       const items = data.data?.announcements || data.data || [];
@@ -53,13 +53,13 @@ const TopNavbar = () => {
       const seenNotices = JSON.parse(localStorage.getItem('seen_notices') || '[]');
       const hasUnread = active.some(n => !seenNotices.includes(n._id));
       setHasUnreadNotice(hasUnread);
-    }).catch(() => {});
+    }).catch(() => { });
 
     apiGetCached('/special-sponsor/active', (data) => {
       const sp = data.data;
       if (sp) {
         setSpecialSponsor(sp);
-        
+
         if (sp.applyBrandFont) {
           if (sp.customFontUrl) {
             const fontLinkId = 'special-sponsor-font-link';
@@ -79,7 +79,7 @@ const TopNavbar = () => {
           }
         }
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }, [showNotices]);
 
   useEffect(() => {
@@ -211,8 +211,8 @@ const TopNavbar = () => {
   };
 
   const renderBell = () => (
-    <div 
-      className="notice-bell-btn" 
+    <div
+      className="notice-bell-btn"
       onClick={() => {
         setMenuOpen(false);
         if (activeLivePoll) navigate(`/live-poll/${activeLivePoll.eventId}/${activeLivePoll.questionId}`);
@@ -299,10 +299,10 @@ const TopNavbar = () => {
           {(specialSponsor?.navbarLogoURL || specialSponsor?.logoURL) && specialSponsor?.showCoBrandingLogo !== false && (
             <div className="cobranding-sponsor" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: '10px', borderLeft: '2px solid rgba(255, 255, 255, 0.2)', paddingLeft: '14px', height: '42px' }}>
               <span style={{ color: specialSponsor?.brandColor || '#ff1f01', fontWeight: '900', fontSize: '1.4rem', fontFamily: 'sans-serif', lineHeight: 1 }}>×</span>
-              <img 
-                src={specialSponsor.navbarLogoURL || specialSponsor.logoURL} 
-                alt={specialSponsor.name} 
-                style={{ height: '42px', maxWidth: '160px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.25))' }} 
+              <img
+                src={specialSponsor.navbarLogoURL || specialSponsor.logoURL}
+                alt={specialSponsor.name}
+                style={{ height: '42px', maxWidth: '160px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.25))' }}
               />
             </div>
           )}
@@ -368,31 +368,31 @@ const TopNavbar = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', justifyContent: 'center', width: '100%' }}>
               {renderBell()}
               {!user ? (
-              <MagneticButton className="contact-btn" onClick={handleAuth}>Login</MagneticButton>
-            ) : (
-              <div className="nav-avatar-container" ref={mobileRef}>
-                <div className={`nav-avatar ${user.isVerified ? "verified-avatar" : ""}`} onClick={toggleAvatar}>
-                  {user.profileImage ? <img src={user.profileImage} alt="profile" /> : <FaUserCircle />}
-                </div>
-                {avatarMenuOpen && (
-                  <div className="avatar-dropdown" onClick={(e) => e.stopPropagation()}>
-                    <div className="dropdown-user-info">
-                      <strong>{user.name}</strong>
-                      <span>{user.email}</span>
-                    </div>
-                    <div className="dropdown-divider"></div>
-                    <button onClick={goProfile}><FaUserCircle />My Profile</button>
-                    {user?.role === 'endorsed-volunteer' && (
-                      <button onClick={goScanner} style={{ color: '#00e5ff', fontWeight: 'bold' }}><FaQrcode />Ticket Scanner</button>
-                    )}
-                    {(hasRole("event-lead") || hasRole("media-lead") || hasRole("super-admin")) && (
-                      <button onClick={goAdmin}><FaUserShield />Admin Portal</button>
-                    )}
-                    <button className="logout-btn" onClick={handleLogout}><FaSignOutAlt />Logout</button>
+                <MagneticButton className="contact-btn" onClick={handleAuth}>Login</MagneticButton>
+              ) : (
+                <div className="nav-avatar-container" ref={mobileRef}>
+                  <div className={`nav-avatar ${user.isVerified ? "verified-avatar" : ""}`} onClick={toggleAvatar}>
+                    {user.profileImage ? <img src={user.profileImage} alt="profile" /> : <FaUserCircle />}
                   </div>
-                )}
-              </div>
-            )}
+                  {avatarMenuOpen && (
+                    <div className="avatar-dropdown" onClick={(e) => e.stopPropagation()}>
+                      <div className="dropdown-user-info">
+                        <strong>{user.name}</strong>
+                        <span>{user.email}</span>
+                      </div>
+                      <div className="dropdown-divider"></div>
+                      <button onClick={goProfile}><FaUserCircle />My Profile</button>
+                      {user?.role === 'endorsed-volunteer' && (
+                        <button onClick={goScanner} style={{ color: '#00e5ff', fontWeight: 'bold' }}><FaQrcode />Ticket Scanner</button>
+                      )}
+                      {(hasRole("event-lead") || hasRole("media-lead") || hasRole("super-admin")) && (
+                        <button onClick={goAdmin}><FaUserShield />Admin Portal</button>
+                      )}
+                      <button className="logout-btn" onClick={handleLogout}><FaSignOutAlt />Logout</button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </li>
         </ul>

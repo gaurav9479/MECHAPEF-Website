@@ -34,7 +34,7 @@ const MagazineSidebar = () => {
       const seenNotices = JSON.parse(localStorage.getItem('seen_notices') || '[]');
       const hasUnread = active.some(n => !seenNotices.includes(n._id));
       setHasUnreadNotice(hasUnread);
-    }).catch(() => {});
+    }).catch(() => { });
   }, [showNotices]);
 
   useEffect(() => {
@@ -56,12 +56,12 @@ const MagazineSidebar = () => {
         else navigate(targetRoute);
 
         setTimeout(() => {
-           setTransitionState('idle');
+          setTransitionState('idle');
         }, 1200);
-        return; 
+        return;
       }
     }
-    
+
     if (callback) callback();
     else navigate(targetRoute);
   };
