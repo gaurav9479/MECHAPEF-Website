@@ -324,6 +324,11 @@ export const getActiveLiveQuestions = async (req, res) => {
             const question = live.questions.find(item => item.id === live.activeQuestionId);
             if (!question) return [];
 
+            if (live.isAcceptingSubmissions && !live.questionStartTime) {
+                live.questionStartTime = new Date();
+                event.save().catch(error => console.error('[LiveVoting] Failed to initialize question timer:', error));
+            }
+
             return [{
                 eventId: event._id,
                 eventTitle: event.title,

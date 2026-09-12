@@ -47,7 +47,8 @@ const LivePoll = () => {
     useEffect(() => {
         if (!question) return undefined;
         const updateTimer = () => {
-            const end = new Date(question.questionStartTime).getTime() + question.timeLimitSeconds * 1000;
+            const startTime = question.questionStartTime ? new Date(question.questionStartTime).getTime() : Date.now();
+            const end = startTime + question.timeLimitSeconds * 1000;
             const now = Date.now();
             setRemainingSeconds(Math.max(0, Math.ceil((end - now) / 1000)));
             setSettlementSeconds(Math.max(0, Math.ceil((end + 5000 - now) / 1000)));
