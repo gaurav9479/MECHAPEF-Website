@@ -112,9 +112,16 @@ const EventDetails = () => {
 
     if (sessionStorage.getItem('auto_open_reg') === 'true') {
       sessionStorage.removeItem('auto_open_reg');
+      if (event?.registrationMode === 'JoinRequests') {
+        setRegType('Team');
+      } else if (event?.maxTeamSize > 1) {
+        setRegType('Team');
+      } else {
+        setRegType('Solo');
+      }
       setShowModal(true);
     }
-  }, [id, user]);
+  }, [id, user, event]);
 
 
   useEffect(() => {
@@ -147,7 +154,9 @@ const EventDetails = () => {
       setTimeout(() => navigate('/login', { state: { from: { pathname: window.location.pathname, search: window.location.search } } }), 1200);
       return;
     }
-    if (event?.maxTeamSize > 1) {
+    if (event?.registrationMode === 'JoinRequests') {
+      setRegType('Team');
+    } else if (event?.maxTeamSize > 1) {
       setRegType('Team');
     } else {
       setRegType('Solo');
@@ -576,6 +585,7 @@ const EventDetails = () => {
                   <p><strong>Deadline:</strong> {new Date(event.registrationDeadline).toLocaleDateString()}</p>
                   <p><strong>Fee:</strong> {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}</p>
                   <p><strong>Team Size:</strong> {event.minTeamSize && event.minTeamSize > 1 ? `${event.minTeamSize}–${event.maxTeamSize} members` : `Up to ${event.maxTeamSize} members`}</p>
+                  <p><strong>Mode:</strong> {event.registrationMode === 'JoinRequests' ? <span style={{ color: '#00c864', fontWeight: 'bold' }}>Type 2 (Join Requests)</span> : 'Type 1 (Standard)'}</p>
 
                   {(() => {
                     const isNotStarted = event.registrationStartDate && new Date() < new Date(event.registrationStartDate);

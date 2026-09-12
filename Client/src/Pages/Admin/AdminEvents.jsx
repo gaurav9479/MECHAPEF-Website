@@ -130,6 +130,15 @@ const AdminEvents = () => {
                   <td>
                     <strong style={{ color: '#fff' }}>{ev.title}</strong>
                     {ev.featured && <span className="tag" style={{ marginLeft: '8px', backgroundColor: '#222' }}>Featured</span>}
+                    {ev.registrationMode === 'JoinRequests' ? (
+                      <span className="tag" style={{ marginLeft: '8px', backgroundColor: 'rgba(0, 200, 100, 0.15)', color: '#00c864', border: '1px solid rgba(0, 200, 100, 0.3)' }}>
+                        Type 2: Join Requests
+                      </span>
+                    ) : (
+                      <span className="tag" style={{ marginLeft: '8px', backgroundColor: '#1a1a24', color: '#888', border: '1px solid #333' }}>
+                        Type 1: Standard
+                      </span>
+                    )}
                   </td>
                   <td>{ev.isTBD ? 'TBD' : new Date(ev.startTime).toLocaleDateString()}</td>
                   <td>{ev.isTBD && ev.venue === 'TBD' ? 'TBD' : ev.venue}</td>

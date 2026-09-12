@@ -334,7 +334,10 @@
 }
 .form-group input:not([type="checkbox"]),
 .form-group textarea,
-.form-group select {
+.form-group select,
+.admin-form-page input:not([type="checkbox"]),
+.admin-form-page textarea,
+.admin-form-page select {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
@@ -348,8 +351,12 @@
 }
 .form-group input:not([type="checkbox"]):focus,
 .form-group textarea:focus,
-.form-group select:focus { border-color: #ff0000; }
-.form-group select option { background: #111; }
+.form-group select:focus,
+.admin-form-page input:not([type="checkbox"]):focus,
+.admin-form-page textarea:focus,
+.admin-form-page select:focus { border-color: #ff0000; }
+.form-group select option,
+.admin-form-page select option { background: #111; color: #fff; }
 .form-group textarea { resize: vertical; min-height: 100px; }
 .form-group input[type="checkbox"] {
   width: 16px !important;

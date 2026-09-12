@@ -47,7 +47,18 @@ const formatLocal = (isoString) => {
   if (!isoString) return '';
   const d = new Date(isoString);
   if (isNaN(d.getTime())) return '';
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+const toISO = (dateStr) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d.toISOString();
 };
 
 const AdminEventEditor = () => {
@@ -153,8 +164,12 @@ const AdminEventEditor = () => {
       showToast('At least one eligible branch must be selected', 'error');
       return;
     }
-    if (!form.eligibleYears || form.eligibleYears.length === 0) {
-      showToast('At least one eligible year must be selected', 'error');
+    if (!form.isTBD && form.startTime && form.endTime && new Date(form.endTime) < new Date(form.startTime)) {
+      showToast('Event End Time cannot be earlier than Start Time', 'error');
+      return;
+    }
+    if (!form.isTBD && form.registrationDeadline && form.endTime && new Date(form.registrationDeadline) > new Date(form.endTime)) {
+      showToast('Registration Deadline cannot be after Event End Time', 'error');
       return;
     }
 
@@ -162,14 +177,14 @@ const AdminEventEditor = () => {
     const payload = {
       ...form,
       venue: form.isTBD && !form.venue ? 'TBD' : form.venue,
-      startTime: form.isTBD && !form.startTime ? '2099-12-31T00:00' : form.startTime,
-      endTime: form.isTBD && !form.endTime ? '2099-12-31T23:59' : form.endTime,
-      registrationStartDate: form.isTBD && !form.registrationStartDate ? '2099-12-01T00:00' : (form.registrationStartDate || undefined),
-      registrationDeadline: form.isTBD && !form.registrationDeadline ? '2099-12-30T23:59' : form.registrationDeadline,
+      startTime: form.isTBD && !form.startTime ? new Date('2099-12-31T00:00:00.000Z').toISOString() : (toISO(form.startTime) || form.startTime),
+      endTime: form.isTBD && !form.endTime ? new Date('2099-12-31T23:59:59.000Z').toISOString() : (toISO(form.endTime) || form.endTime),
+      registrationStartDate: form.isTBD && !form.registrationStartDate ? new Date('2099-12-01T00:00:00.000Z').toISOString() : (toISO(form.registrationStartDate) || undefined),
+      registrationDeadline: form.isTBD && !form.registrationDeadline ? new Date('2099-12-30T23:59:59.000Z').toISOString() : (toISO(form.registrationDeadline) || form.registrationDeadline),
       rules: form.rules ? (typeof form.rules === 'string' ? form.rules.split('\n').filter(Boolean) : form.rules) : [],
       description: (form.descriptionBlocks || []).map(block => block.text).filter(Boolean).join('\n\n'),
       maxTeamSize: Number(form.maxTeamSize),
-      registrationMode: Number(form.maxTeamSize) > 1 ? form.registrationMode : 'Standard',
+      registrationMode: form.registrationMode || 'Standard',
       registrationFee: Number(form.registrationFee),
       enableQRScanning: form.attendanceMethod === 'qr',
     };
@@ -680,20 +695,28 @@ const AdminEventEditor = () => {
                 <input type="number" min="0" value={form.registrationFee} onChange={e => f('registrationFee', e.target.value)} />
               </div>
 
-              {Number(form.maxTeamSize) > 1 && (
-                <div className="form-group full" style={{ background: '#1b1b22', padding: '16px', borderRadius: '8px', border: '1px solid #333' }}>
-                  <label style={{ color: '#ff1f01', fontWeight: 'bold' }}>Team Registration Mode</label>
-                  <select value={form.registrationMode} onChange={e => f('registrationMode', e.target.value)} style={{ marginTop: '8px' }}>
-                    <option value="Standard">Standard – Leader registers all members at once</option>
-                    <option value="JoinRequests">Type 2 – Leader creates Draft, members search & request to join</option>
-                  </select>
-                  <p style={{ margin: '8px 0 0 0', fontSize: '0.8rem', color: '#aaa' }}>
-                    {form.registrationMode === 'JoinRequests'
-                      ? 'Team members will search for their leader using College Reg No and send a join request. Leader accepts/rejects before finalizing.'
-                      : 'The team leader must supply details of all teammates at the time of form submission.'}
-                  </p>
-                </div>
-              )}
+              <div className="form-group full" style={{ background: '#1b1b22', padding: '16px', borderRadius: '8px', border: '1px solid #333', marginTop: '10px' }}>
+                <label style={{ color: '#ff1f01', fontWeight: 'bold' }}>Registration Mode</label>
+                <select
+                  value={form.registrationMode || 'Standard'}
+                  onChange={e => {
+                    const mode = e.target.value;
+                    f('registrationMode', mode);
+                    if (mode === 'JoinRequests' && Number(form.maxTeamSize) <= 1) {
+                      f('maxTeamSize', 4);
+                    }
+                  }}
+                  style={{ marginTop: '8px' }}
+                >
+                  <option value="Standard">Type 1: Standard (Solo or Leader registers all members at once)</option>
+                  <option value="JoinRequests">Type 2: Join Requests (Leader creates Draft, members search Reg No & send join request)</option>
+                </select>
+                <p style={{ margin: '8px 0 0 0', fontSize: '0.8rem', color: '#aaa', lineHeight: '1.4' }}>
+                  {form.registrationMode === 'JoinRequests'
+                    ? '✨ Type 2 Mode Active: Team members search their leader by 8-digit College Reg No to send join requests. Leader approves members and confirms the team.'
+                    : '✨ Type 1 Mode Active: Solo registration or leader enters all teammate IDs at the time of form submission.'}
+                </p>
+              </div>
             </div>
           )}
 
@@ -790,18 +813,18 @@ const AdminEventEditor = () => {
                   </button>
                 </div>
                 {form.customFormFields.map((field, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center', backgroundColor: '#181820', padding: '12px', borderRadius: '8px' }}>
+                  <div key={idx} style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center', backgroundColor: '#181820', padding: '12px', borderRadius: '8px', border: '1px solid #282830' }}>
                     <input
                       value={field.fieldName}
                       onChange={e => updateCustomField(idx, 'fieldName', e.target.value)}
                       placeholder="Field Name (e.g. GitHub Repository, Problem Statement Choice)"
                       required
-                      style={{ flex: 2, background: '#101014' }}
+                      style={{ flex: 2, background: '#101014', color: '#ffffff', border: '1px solid #3a3a48', padding: '10px 14px', borderRadius: '8px' }}
                     />
                     <select
                       value={field.fieldType}
                       onChange={e => updateCustomField(idx, 'fieldType', e.target.value)}
-                      style={{ flex: 1, background: '#101014' }}
+                      style={{ flex: 1, background: '#101014', color: '#ffffff', border: '1px solid #3a3a48', padding: '10px 14px', borderRadius: '8px' }}
                     >
                       <option value="text">Text (Short)</option>
                       <option value="textarea">Textarea (Long)</option>
@@ -877,7 +900,7 @@ const AdminEventEditor = () => {
                 <select
                   value={form.attendanceMethod || 'qr'}
                   onChange={e => f('attendanceMethod', e.target.value)}
-                  style={{ width: '100%', maxWidth: '450px', background: '#fff' }}
+                  style={{ width: '100%', maxWidth: '450px', background: '#101014', color: '#ffffff', border: '1px solid #3a3a48', padding: '10px 14px', borderRadius: '8px' }}
                 >
                   <option value="qr">QR Code (Ticket pass generated per registration)</option>
                   <option value="id-card">ID Card Barcode (Participant college ID scan)</option>

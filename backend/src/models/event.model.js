@@ -53,9 +53,9 @@ const eventSchema = new mongoose.Schema(
             validate: {
                 validator(value) {
                     if (!this.startTime) return true;
-                    return value > this.startTime;
+                    return value >= this.startTime;
                 },
-                message: 'End time must be after start time'
+                message: 'End time must be after or equal to start time'
             }
         },
 
