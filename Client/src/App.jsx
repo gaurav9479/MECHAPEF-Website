@@ -252,7 +252,7 @@ const AnimatedRoutes = () => {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Alias for easy access */}
         <Route
           path="/redis"
@@ -379,16 +379,16 @@ const AnimatedRoutes = () => {
 
 function App() {
   useEffect(() => {
-    apiGetCached('/upload/sections?device=desktop', () => {});
-    apiGetCached('/events', () => {});
-    apiGetCached('/announcements', () => {});
-    apiGetCached('/special-sponsor/active', () => {});
-    apiGetCached('/past-events', () => {});
+    apiGetCached('/upload/sections?device=desktop', () => { });
+    apiGetCached('/events', () => { });
+    apiGetCached('/announcements', () => { });
+    apiGetCached('/special-sponsor/active', () => { });
+    apiGetCached('/past-events', () => { });
 
     setTimeout(() => {
-      apiGetCached('/sponsors', () => {});
-      apiGetCached('/team', () => {});
-      apiGetCached('/gallery', () => {});
+      apiGetCached('/sponsors', () => { });
+      apiGetCached('/team', () => { });
+      apiGetCached('/gallery', () => { });
     }, 2000);
   }, []);
 

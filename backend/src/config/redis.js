@@ -38,5 +38,5 @@ connection.on('error', (err) => {
 
 connection.on('connect', () => {
     console.log('[Redis] Connected successfully');
-    redisErrorLogged = false; 
+    redisErrorLogged = false;
 });

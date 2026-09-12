@@ -136,18 +136,18 @@ const HangingNoticeBoard = ({ onClose }) => {
         const active = (res.data.data?.announcements || []).filter(n => n.isActive);
         setNotices(active);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
 
     fetchFeed();
     const activePollTimer = setInterval(() => {
       api.get('/events/live/active')
         .then(res => setLiveQuestions(res.data.questions || []))
-        .catch(() => {});
+        .catch(() => { });
     }, 3000);
     api.get('/events/live/active')
       .then(res => setLiveQuestions(res.data.questions || []))
-      .catch(() => {});
+      .catch(() => { });
 
     document.body.style.overflow = 'hidden';
     return () => {
