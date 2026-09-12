@@ -13,13 +13,13 @@ const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
-  const [userRegistration, setUserRegistration] = useState(null); 
+  const [userRegistration, setUserRegistration] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
 
 
@@ -49,7 +49,7 @@ const EventDetails = () => {
 
   useEffect(() => {
     if (!event || event.isTBD) return;
-    
+
     const calculateTimeLeft = () => {
       const difference = new Date(event.registrationDeadline) - new Date();
       if (difference > 0) {
@@ -74,7 +74,7 @@ const EventDetails = () => {
       try {
         const res = await eventService.getById(id);
         setEvent(res.data.data.event);
-        
+
 
         const initialData = {};
         if (res.data.data.event.customFormFields) {
@@ -165,8 +165,8 @@ const EventDetails = () => {
 
     const formData = new FormData();
     formData.append('file', file);
-    
-    setFileUploading(prev => ({...prev, [fieldName]: true}));
+
+    setFileUploading(prev => ({ ...prev, [fieldName]: true }));
     try {
       const res = await api.post('/upload/file', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -180,7 +180,7 @@ const EventDetails = () => {
     } catch (err) {
       showToast('File upload failed', 'error');
     } finally {
-      setFileUploading(prev => ({...prev, [fieldName]: false}));
+      setFileUploading(prev => ({ ...prev, [fieldName]: false }));
     }
   };
 
@@ -200,17 +200,17 @@ const EventDetails = () => {
       if (regType === 'Team') {
         payload.teamName = teamName;
 
-        payload.teamMemberIds = [user._id]; 
+        payload.teamMemberIds = [user._id];
       }
 
       const res = await eventService.register(id, payload);
-      
+
       if (res.status === 202) {
         showToast(res.data?.message || 'Registration queued. Please check your Profile after 10 mins.', 'success');
       } else {
         showToast('Successfully registered! View your ticket in your Profile.', 'success');
       }
-      
+
       setShowModal(false);
     } catch (err) {
       showToast(err.response?.data?.message || 'Registration failed', 'error');
@@ -219,8 +219,8 @@ const EventDetails = () => {
     }
   };
 
-  if (loading) return <div className="loading-page"><Navbar/><div className="loading-text">Loading...</div></div>;
-  if (!event) return <div className="loading-page"><Navbar/><div className="loading-text">Event not found</div></div>;
+  if (loading) return <div className="loading-page"><Navbar /><div className="loading-text">Loading...</div></div>;
+  if (!event) return <div className="loading-page"><Navbar /><div className="loading-text">Event not found</div></div>;
 
   const refreshJoinStatus = async () => {
     if (!user || !event || event.registrationMode !== 'JoinRequests') return;
@@ -380,7 +380,7 @@ const EventDetails = () => {
     try {
       await api.post(`/registrations/${draftRegistration._id}/respond-join`, { requesterId, action });
       showToast(`Join request ${action}ed!`, 'success');
-      await handleLoadDraftDashboard(); 
+      await handleLoadDraftDashboard();
       await refreshJoinStatus();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to respond', 'error');
@@ -391,8 +391,8 @@ const EventDetails = () => {
 
   const handleFinalizeRegistration = async () => {
     if (!draftRegistration) return;
-    
-    const confirmMessage = 
+
+    const confirmMessage =
       "WARNING: Are you sure you want to finalize your team registration now?\n\n" +
       "• Finalizing will LOCK your team roster.\n" +
       "• You will NOT be able to add or remove members after finalization.\n" +
@@ -427,7 +427,7 @@ const EventDetails = () => {
       <Navbar />
       <div className="event-details-wrapper">
         <div className="event-content-split">
-          
+
           {/* Left Column: 1:1 Poster */}
           <div className="event-poster-container">
             {event.bannerURL ? (
@@ -452,14 +452,24 @@ const EventDetails = () => {
 
             <div className="event-main">
               <h3>About the Event</h3>
-              <p className="event-description">{event.description}</p>
-              
+              {event.descriptionBlocks?.length > 0 ? (
+                <div className="event-description">
+                  {event.descriptionBlocks.map((block, index) => (
+                    block.type === 'heading'
+                      ? <h4 key={index} style={{ color: '#ff1f01', margin: '22px 0 8px', fontSize: '1.15rem' }}>{block.text}</h4>
+                      : <p key={index} style={{ margin: '0 0 14px', color: '#fff' }}>{block.text}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="event-description">{event.description}</p>
+              )}
+
               <div className="event-meta-item">
                 <FaGraduationCap className="meta-icon" />
                 <div className="meta-content">
                   <span className="meta-label">Eligible Branches</span>
                   <div className="tags-container">
-                    {event.eligibleBranches?.length > 0 
+                    {event.eligibleBranches?.length > 0
                       ? event.eligibleBranches.map((b, i) => <span key={i} className="cute-tag">{b}</span>)
                       : <span className="cute-tag">All Branches</span>}
                   </div>
@@ -471,8 +481,8 @@ const EventDetails = () => {
                 <div className="meta-content">
                   <span className="meta-label">Eligible Years</span>
                   <div className="tags-container">
-                    {event.eligibleYears?.length > 0 
-                      ? event.eligibleYears.map((y, i) => <span key={i} className="cute-tag">{y === 5 ? 'Alumni' : `${y}${['st','nd','rd','th'][Math.min(y-1, 3)]} Year`}</span>)
+                    {event.eligibleYears?.length > 0
+                      ? event.eligibleYears.map((y, i) => <span key={i} className="cute-tag">{y === 5 ? 'Alumni' : `${y}${['st', 'nd', 'rd', 'th'][Math.min(y - 1, 3)]} Year`}</span>)
                       : <span className="cute-tag">All Years</span>}
                   </div>
                 </div>
@@ -560,13 +570,13 @@ const EventDetails = () => {
             {!event.isTBD && (
               <>
                 <div className="event-card-info">
-                   {event.registrationStartDate && (
+                  {event.registrationStartDate && (
                     <p><strong>Starts:</strong> {new Date(event.registrationStartDate).toLocaleString()}</p>
                   )}
                   <p><strong>Deadline:</strong> {new Date(event.registrationDeadline).toLocaleDateString()}</p>
                   <p><strong>Fee:</strong> {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}</p>
                   <p><strong>Team Size:</strong> {event.minTeamSize && event.minTeamSize > 1 ? `${event.minTeamSize}–${event.maxTeamSize} members` : `Up to ${event.maxTeamSize} members`}</p>
-                  
+
                   {(() => {
                     const isNotStarted = event.registrationStartDate && new Date() < new Date(event.registrationStartDate);
                     const isClosed = new Date() > new Date(event.registrationDeadline);
@@ -586,22 +596,22 @@ const EventDetails = () => {
                               ? 'Attended'
                               : 'Registered'
                             : hasDraft
-                            ? 'View My Team Dashboard'
-                            : isMember
-                            ? 'Team Member'
-                            : isRequester
-                            ? 'Join Request Pending'
-                            : isNotStarted
-                            ? 'Registration Opens Soon'
-                            : isClosed
-                            ? 'Registration Closed'
-                            : event.isTBD
-                            ? 'Coming Soon'
-                            : 'Register Now'
+                              ? 'View My Team Dashboard'
+                              : isMember
+                                ? 'Team Member'
+                                : isRequester
+                                  ? 'Join Request Pending'
+                                  : isNotStarted
+                                    ? 'Registration Opens Soon'
+                                    : isClosed
+                                      ? 'Registration Closed'
+                                      : event.isTBD
+                                        ? 'Coming Soon'
+                                        : 'Register Now'
                           }
                         </button>
                         {timeLeft && timeLeft !== 'Closed' && !userRegistration && !isNotStarted && !hasDraft && !isRequester && !isMember && (
-                          <div className="registration-countdown" style={{marginTop: '15px', textAlign: 'center', color: '#ff1f01', fontWeight: 'bold', background: 'rgba(255, 31, 1, 0.1)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255, 31, 1, 0.2)'}}>
+                          <div className="registration-countdown" style={{ marginTop: '15px', textAlign: 'center', color: '#ff1f01', fontWeight: 'bold', background: 'rgba(255, 31, 1, 0.1)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255, 31, 1, 0.2)' }}>
                             Closes in: {timeLeft}
                           </div>
                         )}
@@ -612,34 +622,34 @@ const EventDetails = () => {
 
                 {/* ── TYPE 2: Join Activity Panel ────────────────── */}
                 {event.registrationMode === 'JoinRequests' && user && myJoinStatus && (
-                  <div style={{marginTop: '20px', borderTop: '1px solid #222', paddingTop: '16px'}}>
+                  <div style={{ marginTop: '20px', borderTop: '1px solid #222', paddingTop: '16px' }}>
 
                     {/* LEADER: show incoming requests summary */}
                     {myJoinStatus.role === 'leader' && myJoinStatus.registration && (
-                      <div style={{background: 'rgba(0,200,100,0.07)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '10px', padding: '14px'}}>
-                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
-                          <h4 style={{color: '#00c864', margin: 0, fontSize: '0.95rem'}}>Your Draft Team: <span style={{color: '#fff'}}>{myJoinStatus.registration.teamName}</span></h4>
-                          <button className="btn-secondary" style={{padding: '4px 10px', fontSize: '0.75rem'}} onClick={handleLoadDraftDashboard}>Manage &rarr;</button>
+                      <div style={{ background: 'rgba(0,200,100,0.07)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '10px', padding: '14px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                          <h4 style={{ color: '#00c864', margin: 0, fontSize: '0.95rem' }}>Your Draft Team: <span style={{ color: '#fff' }}>{myJoinStatus.registration.teamName}</span></h4>
+                          <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }} onClick={handleLoadDraftDashboard}>Manage &rarr;</button>
                         </div>
-                        <p style={{color: '#aaa', fontSize: '0.82rem', margin: '4px 0'}}>
-                          Members: <strong style={{color: '#fff'}}>{(myJoinStatus.registration.teamMembers?.filter(m => m.status === 'Confirmed').length || 0) + 1}</strong> / {event.maxTeamSize}
+                        <p style={{ color: '#aaa', fontSize: '0.82rem', margin: '4px 0' }}>
+                          Members: <strong style={{ color: '#fff' }}>{(myJoinStatus.registration.teamMembers?.filter(m => m.status === 'Confirmed').length || 0) + 1}</strong> / {event.maxTeamSize}
                         </p>
                         {(() => {
                           const pending = myJoinStatus.registration.joinRequests?.filter(r => r.status === 'Pending') || [];
                           return pending.length > 0 ? (
-                            <div style={{marginTop: '10px'}}>
-                              <p style={{color: '#ffaa00', fontSize: '0.82rem', marginBottom: '6px'}}>{pending.length} pending join request{pending.length > 1 ? 's' : ''}:</p>
+                            <div style={{ marginTop: '10px' }}>
+                              <p style={{ color: '#ffaa00', fontSize: '0.82rem', marginBottom: '6px' }}>{pending.length} pending join request{pending.length > 1 ? 's' : ''}:</p>
                               {pending.map((r, i) => (
-                                <div key={i} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#111', borderRadius: '6px', padding: '6px 10px', marginBottom: '5px'}}>
-                                  <span style={{fontSize: '0.82rem'}}><strong>{r.name}</strong> <span style={{color: '#666'}}>{r.collegeRegNo}</span></span>
-                                  <div style={{display: 'flex', gap: '6px'}}>
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#111', borderRadius: '6px', padding: '6px 10px', marginBottom: '5px' }}>
+                                  <span style={{ fontSize: '0.82rem' }}><strong>{r.name}</strong> <span style={{ color: '#666' }}>{r.collegeRegNo}</span></span>
+                                  <div style={{ display: 'flex', gap: '6px' }}>
                                     <button
-                                      style={{padding: '3px 10px', background: '#00c864', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem'}}
+                                      style={{ padding: '3px 10px', background: '#00c864', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
                                       disabled={respondingTo === r.userId}
                                       onClick={() => handleRespondJoinRequest(r.userId, 'Accept')}
                                     >Accept</button>
                                     <button
-                                      style={{padding: '3px 10px', background: '#ff3333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem'}}
+                                      style={{ padding: '3px 10px', background: '#ff3333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
                                       disabled={respondingTo === r.userId}
                                       onClick={() => handleRespondJoinRequest(r.userId, 'Reject')}
                                     >Reject</button>
@@ -648,7 +658,7 @@ const EventDetails = () => {
                               ))}
                             </div>
                           ) : (
-                            <p style={{color: '#555', fontSize: '0.82rem', marginTop: '6px'}}>No pending join requests yet. Share your Reg No: <strong style={{color: '#00c864'}}>{user?.collegeRegNo}</strong></p>
+                            <p style={{ color: '#555', fontSize: '0.82rem', marginTop: '6px' }}>No pending join requests yet. Share your Reg No: <strong style={{ color: '#00c864' }}>{user?.collegeRegNo}</strong></p>
                           );
                         })()}
                       </div>
@@ -656,23 +666,23 @@ const EventDetails = () => {
 
 
                     {myJoinStatus.role === 'member' && myJoinStatus.registration && (
-                      <div style={{background: 'rgba(0,200,100,0.07)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '10px', padding: '14px'}}>
-                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
-                          <h4 style={{color: '#00c864', margin: 0, fontSize: '0.95rem'}}>You're in a Team!</h4>
+                      <div style={{ background: 'rgba(0,200,100,0.07)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '10px', padding: '14px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <h4 style={{ color: '#00c864', margin: 0, fontSize: '0.95rem' }}>You're in a Team!</h4>
                           {myJoinStatus.registration.registrationStatus === 'Draft' && (
                             <button
                               className="btn-danger"
-                              style={{padding: '4px 10px', fontSize: '0.75rem', background: 'rgba(255,51,51,0.2)', border: '1px solid #ff3333'}}
+                              style={{ padding: '4px 10px', fontSize: '0.75rem', background: 'rgba(255,51,51,0.2)', border: '1px solid #ff3333' }}
                               onClick={() => handleLeaveTeam(myJoinStatus.registration._id)}
                             >
                               Leave Team
                             </button>
                           )}
                         </div>
-                        <p style={{color: '#aaa', fontSize: '0.82rem', margin: '4px 0'}}>Team: <strong style={{color: '#fff'}}>{myJoinStatus.registration.teamName}</strong></p>
-                        <p style={{color: '#aaa', fontSize: '0.82rem', margin: '4px 0'}}>Leader: <strong style={{color: '#fff'}}>{myJoinStatus.registration.registeredBy?.name}</strong> ({myJoinStatus.registration.registeredBy?.collegeRegNo})</p>
-                        <p style={{color: '#aaa', fontSize: '0.82rem', margin: '4px 0'}}>
-                          Status: <strong style={{color: myJoinStatus.registration.registrationStatus === 'Confirmed' ? '#00c864' : '#ffaa00'}}>
+                        <p style={{ color: '#aaa', fontSize: '0.82rem', margin: '4px 0' }}>Team: <strong style={{ color: '#fff' }}>{myJoinStatus.registration.teamName}</strong></p>
+                        <p style={{ color: '#aaa', fontSize: '0.82rem', margin: '4px 0' }}>Leader: <strong style={{ color: '#fff' }}>{myJoinStatus.registration.registeredBy?.name}</strong> ({myJoinStatus.registration.registeredBy?.collegeRegNo})</p>
+                        <p style={{ color: '#aaa', fontSize: '0.82rem', margin: '4px 0' }}>
+                          Status: <strong style={{ color: myJoinStatus.registration.registrationStatus === 'Confirmed' ? '#00c864' : '#ffaa00' }}>
                             {myJoinStatus.registration.registrationStatus === 'Confirmed' ? 'Registration Finalized' : 'Draft — Waiting for leader to finalize'}
                           </strong>
                         </p>
@@ -681,14 +691,14 @@ const EventDetails = () => {
 
 
                     {myJoinStatus.role === 'requester' && myJoinStatus.requests?.length > 0 && (
-                      <div style={{background: 'rgba(255,170,0,0.07)', border: '1px solid rgba(255,170,0,0.25)', borderRadius: '10px', padding: '14px'}}>
-                        <h4 style={{color: '#ffaa00', margin: '0 0 10px', fontSize: '0.95rem'}}>Your Join Request{myJoinStatus.requests.length > 1 ? 's' : ''}</h4>
+                      <div style={{ background: 'rgba(255,170,0,0.07)', border: '1px solid rgba(255,170,0,0.25)', borderRadius: '10px', padding: '14px' }}>
+                        <h4 style={{ color: '#ffaa00', margin: '0 0 10px', fontSize: '0.95rem' }}>Your Join Request{myJoinStatus.requests.length > 1 ? 's' : ''}</h4>
                         {myJoinStatus.requests.map((req, i) => (
-                          <div key={i} style={{background: '#111', borderRadius: '8px', padding: '10px 12px', marginBottom: i < myJoinStatus.requests.length - 1 ? '8px' : 0}}>
-                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                          <div key={i} style={{ background: '#111', borderRadius: '8px', padding: '10px 12px', marginBottom: i < myJoinStatus.requests.length - 1 ? '8px' : 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
-                                <p style={{margin: '0 0 3px', fontWeight: 'bold', fontSize: '0.9rem'}}>{req.teamName}</p>
-                                <p style={{margin: 0, color: '#aaa', fontSize: '0.8rem'}}>Leader: {req.leaderName} · {req.currentSize}/{event.maxTeamSize} members</p>
+                                <p style={{ margin: '0 0 3px', fontWeight: 'bold', fontSize: '0.9rem' }}>{req.teamName}</p>
+                                <p style={{ margin: 0, color: '#aaa', fontSize: '0.8rem' }}>Leader: {req.leaderName} · {req.currentSize}/{event.maxTeamSize} members</p>
                               </div>
                               <span style={{
                                 padding: '3px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold',
@@ -725,14 +735,14 @@ const EventDetails = () => {
                     <div className="reg-user-info">
                       <h4>Your Details</h4>
                       <p><strong>Name:</strong> {user?.name}</p>
-                      <p><strong>Reg No:</strong> {user?.collegeRegNo || <span style={{color:'#ff4444'}}>Not set</span>}</p>
-                      <p><strong>Branch:</strong> {user?.branch || <span style={{color:'#ff4444'}}>Not set</span>}</p>
+                      <p><strong>Reg No:</strong> {user?.collegeRegNo || <span style={{ color: '#ff4444' }}>Not set</span>}</p>
+                      <p><strong>Branch:</strong> {user?.branch || <span style={{ color: '#ff4444' }}>Not set</span>}</p>
                     </div>
                   </div>
 
 
                   <div className="reg-form-right">
-                    <div className="form-group" style={{marginTop: '0px'}}>
+                    <div className="form-group" style={{ marginTop: '0px' }}>
                       <label>I want to</label>
                       <select value={regType} onChange={e => {
                         const val = e.target.value;
@@ -754,7 +764,7 @@ const EventDetails = () => {
                           <label>Team Name *</label>
                           <input required value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="Enter team name" />
                         </div>
-                        <p style={{fontSize: '0.82rem', color: '#aaa', marginTop: '8px', lineHeight: '1.5'}}>
+                        <p style={{ fontSize: '0.82rem', color: '#aaa', marginTop: '8px', lineHeight: '1.5' }}>
                           You'll create a Draft team. Other participants can search your <strong>Reg No ({user?.collegeRegNo || '—'})</strong> or find your team listed here to send a join request.
                         </p>
                       </>
@@ -763,14 +773,14 @@ const EventDetails = () => {
 
                     {regType === 'JoinTeam' && (
                       <>
-                        <div className="form-group" style={{marginTop: '0px'}}>
+                        <div className="form-group" style={{ marginTop: '0px' }}>
                           <label>
                             Search Leader's Reg No
-                            <span style={{color: '#aaa', fontWeight: 'normal', fontSize: '0.8rem', marginLeft: '8px'}}>
+                            <span style={{ color: '#aaa', fontWeight: 'normal', fontSize: '0.8rem', marginLeft: '8px' }}>
                               (Filter by 8 digits)
                             </span>
                           </label>
-                          <div style={{position: 'relative'}}>
+                          <div style={{ position: 'relative' }}>
                             <input
                               value={joinTeamRegNo}
                               maxLength={8}
@@ -784,7 +794,7 @@ const EventDetails = () => {
                                 }
                               }}
                               placeholder="Type 8-digit Reg No or view list below"
-                              style={{paddingRight: '36px'}}
+                              style={{ paddingRight: '36px' }}
                             />
                             <span style={{
                               position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
@@ -797,27 +807,27 @@ const EventDetails = () => {
                         </div>
 
                         {searchTeamStatus?.type === 'error' && (
-                          <p style={{color: '#ff4444', fontSize: '0.85rem', marginTop: '8px'}}>{searchTeamStatus.msg}</p>
+                          <p style={{ color: '#ff4444', fontSize: '0.85rem', marginTop: '8px' }}>{searchTeamStatus.msg}</p>
                         )}
                         {searchTeamStatus?.type === 'success' && searchTeamStatus.teams && (
-                          <div style={{marginTop: '12px', maxHeight: '220px', overflowY: 'auto'}}>
-                            <p style={{color: '#00c864', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '8px'}}>
+                          <div style={{ marginTop: '12px', maxHeight: '220px', overflowY: 'auto' }}>
+                            <p style={{ color: '#00c864', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '8px' }}>
                               Open Teams Looking for Members ({searchTeamStatus.teams.length})
                             </p>
                             {searchTeamStatus.teams.map((t, idx) => (
-                              <div key={idx} style={{background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', marginBottom: '8px'}}>
-                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+                              <div key={idx} style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', marginBottom: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                   <div>
-                                    <strong style={{color: '#fff', fontSize: '0.95rem'}}>{t.teamName}</strong>
-                                    <p style={{color: '#aaa', fontSize: '0.8rem', margin: '2px 0 0'}}>
-                                      Leader: <strong style={{color: '#fff'}}>{t.leaderName}</strong> ({t.leaderRegNo})
+                                    <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{t.teamName}</strong>
+                                    <p style={{ color: '#aaa', fontSize: '0.8rem', margin: '2px 0 0' }}>
+                                      Leader: <strong style={{ color: '#fff' }}>{t.leaderName}</strong> ({t.leaderRegNo})
                                     </p>
-                                    <p style={{color: '#888', fontSize: '0.75rem', margin: '2px 0 0'}}>
-                                      Members: {t.currentSize} / {t.maxSize} · Slots Left: <strong style={{color: '#00c864'}}>{t.slotsLeft}</strong>
+                                    <p style={{ color: '#888', fontSize: '0.75rem', margin: '2px 0 0' }}>
+                                      Members: {t.currentSize} / {t.maxSize} · Slots Left: <strong style={{ color: '#00c864' }}>{t.slotsLeft}</strong>
                                     </p>
                                   </div>
                                   {t.hasPendingRequestFromUser ? (
-                                    <span style={{color: '#ffaa00', fontSize: '0.75rem', background: 'rgba(255,170,0,0.15)', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold'}}>
+                                    <span style={{ color: '#ffaa00', fontSize: '0.75rem', background: 'rgba(255,170,0,0.15)', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
                                       Requested
                                     </span>
                                   ) : (
@@ -826,7 +836,7 @@ const EventDetails = () => {
                                       className="btn-primary"
                                       onClick={() => handleSendJoinRequest(t._id)}
                                       disabled={submittingJoinReq}
-                                      style={{padding: '6px 12px', fontSize: '0.78rem', whiteSpace: 'nowrap'}}
+                                      style={{ padding: '6px 12px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}
                                     >
                                       {submittingJoinReq ? 'Sending...' : 'Request to Join'}
                                     </button>
@@ -841,7 +851,7 @@ const EventDetails = () => {
                   </div>
                 </div>
 
-                <div className="modal-actions" style={{marginTop: '20px'}}>
+                <div className="modal-actions" style={{ marginTop: '20px' }}>
                   <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                   {regType === 'Team' && (
                     <button type="button" className="btn-primary" disabled={submitting} onClick={handleCreateDraftTeam}>
@@ -859,10 +869,10 @@ const EventDetails = () => {
                       <h4>Your Details</h4>
                       <p><strong>Name:</strong> {user?.name}</p>
                       <p><strong>Email:</strong> {user?.email}</p>
-                      <p><strong>Reg No:</strong> {user?.collegeRegNo || <span style={{color:'#ff4444'}}>Not set</span>}</p>
-                      <p><strong>Phone:</strong> {user?.phoneNumber || <span style={{color:'#ff4444'}}>Not set</span>}</p>
-                      <p><strong>Branch:</strong> {user?.branch || <span style={{color:'#ff4444'}}>Not set</span>}</p>
-                      <p><strong>Year:</strong> {user?.yearOfStudy ? `${user.yearOfStudy} Year` : <span style={{color:'#ff4444'}}>Not set</span>}</p>
+                      <p><strong>Reg No:</strong> {user?.collegeRegNo || <span style={{ color: '#ff4444' }}>Not set</span>}</p>
+                      <p><strong>Phone:</strong> {user?.phoneNumber || <span style={{ color: '#ff4444' }}>Not set</span>}</p>
+                      <p><strong>Branch:</strong> {user?.branch || <span style={{ color: '#ff4444' }}>Not set</span>}</p>
+                      <p><strong>Year:</strong> {user?.yearOfStudy ? `${user.yearOfStudy} Year` : <span style={{ color: '#ff4444' }}>Not set</span>}</p>
                       {(!user?.collegeRegNo || !user?.phoneNumber || !user?.branch || !user?.yearOfStudy) && (
                         <p style={{ fontSize: '0.8rem', color: '#ffaa00', marginTop: '6px' }}>
                           ⚠️ Missing info? <a href="/profile" style={{ color: '#00ccff', textDecoration: 'underline' }}>Update Profile</a>
@@ -875,7 +885,7 @@ const EventDetails = () => {
                   {((event.customFormFields && event.customFormFields.length > 0) || event.maxTeamSize > 1) && (
                     <div className="reg-form-right">
                       {event.maxTeamSize > 1 && (
-                        <div className="form-group" style={{marginTop: '0px'}}>
+                        <div className="form-group" style={{ marginTop: '0px' }}>
                           <label>Registration Type</label>
                           <select value={regType} onChange={e => setRegType(e.target.value)}>
                             <option value="Solo">Solo</option>
@@ -906,17 +916,17 @@ const EventDetails = () => {
                                 <textarea required={field.isRequired} value={customData[field.fieldName] || ''} onChange={e => handleCustomFieldChange(field.fieldName, e.target.value)} />
                               )}
                               {field.fieldType === 'checkbox' && (
-                                <label style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'normal'}}>
-                                  <input type="checkbox" required={field.isRequired} checked={customData[field.fieldName] || false} onChange={e => handleCustomFieldChange(field.fieldName, e.target.checked)} style={{width: 'auto'}} />
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'normal' }}>
+                                  <input type="checkbox" required={field.isRequired} checked={customData[field.fieldName] || false} onChange={e => handleCustomFieldChange(field.fieldName, e.target.checked)} style={{ width: 'auto' }} />
                                   Yes / I agree
                                 </label>
                               )}
                               {field.fieldType === 'file' && (
                                 <div>
                                   <input type="file" required={field.isRequired && !customData[field.fieldName]} onChange={e => handleFileUpload(e, field.fieldName)} accept="image/*,.pdf" />
-                                  {fileUploading[field.fieldName] && <span style={{color: '#ffaa00', fontSize: '0.8rem'}}>Uploading...</span>}
+                                  {fileUploading[field.fieldName] && <span style={{ color: '#ffaa00', fontSize: '0.8rem' }}>Uploading...</span>}
                                   {customData[field.fieldName]?.url && !fileUploading[field.fieldName] && (
-                                    <span style={{color: '#00c864', fontSize: '0.8rem', marginLeft: '10px'}}>✓ File uploaded</span>
+                                    <span style={{ color: '#00c864', fontSize: '0.8rem', marginLeft: '10px' }}>✓ File uploaded</span>
                                   )}
                                 </div>
                               )}
@@ -928,7 +938,7 @@ const EventDetails = () => {
                   )}
                 </div>
 
-                <div className="modal-actions" style={{marginTop: '30px'}}>
+                <div className="modal-actions" style={{ marginTop: '30px' }}>
                   <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                   <button type="submit" className="btn-primary" disabled={submitting || Object.values(fileUploading).some(status => status)}>
                     {submitting ? 'Submitting...' : 'Submit Registration'}
@@ -945,25 +955,25 @@ const EventDetails = () => {
         <div className="modal-overlay" onClick={() => setShowDraftDashboard(false)}>
           <div className="modal-box reg-modal reg-modal-extra-wide" onClick={e => e.stopPropagation()}>
             <h2>{draftRegistration.teamName} — Team Dashboard</h2>
-            <p style={{color: '#aaa', marginBottom: '20px', fontSize: '0.9rem'}}>
-              Share your Reg No <strong style={{color: '#00c864'}}>({user?.collegeRegNo})</strong> with others so they can find and join your team.
+            <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '0.9rem' }}>
+              Share your Reg No <strong style={{ color: '#00c864' }}>({user?.collegeRegNo})</strong> with others so they can find and join your team.
             </p>
 
 
-            <div style={{marginBottom: '20px'}}>
-              <h4 style={{color: '#ff1f01', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px'}}>
+            <div style={{ marginBottom: '20px' }}>
+              <h4 style={{ color: '#ff1f01', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px' }}>
                 Team Members ({draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1} / {event.maxTeamSize})
               </h4>
-              <p><strong>{user?.name}</strong> <span style={{color: '#ffaa00', fontSize: '0.8rem'}}>Leader (You)</span></p>
+              <p><strong>{user?.name}</strong> <span style={{ color: '#ffaa00', fontSize: '0.8rem' }}>Leader (You)</span></p>
               {draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').map((m, i) => (
-                <div key={i} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', background: '#111', padding: '6px 10px', borderRadius: '6px', border: '1px solid #222'}}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', background: '#111', padding: '6px 10px', borderRadius: '6px', border: '1px solid #222' }}>
                   <span>
-                    <strong>{m.name}</strong> <span style={{color: '#aaa', fontSize: '0.8rem'}}>{m.collegeRegNo}</span>
-                    <span style={{color: '#00c864', marginLeft: '10px', fontSize: '0.8rem'}}>Confirmed</span>
+                    <strong>{m.name}</strong> <span style={{ color: '#aaa', fontSize: '0.8rem' }}>{m.collegeRegNo}</span>
+                    <span style={{ color: '#00c864', marginLeft: '10px', fontSize: '0.8rem' }}>Confirmed</span>
                   </span>
                   <button
                     type="button"
-                    style={{padding: '3px 8px', background: 'rgba(255,51,51,0.2)', color: '#ff4444', border: '1px solid #ff4444', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem'}}
+                    style={{ padding: '3px 8px', background: 'rgba(255,51,51,0.2)', color: '#ff4444', border: '1px solid #ff4444', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
                     onClick={() => handleRemoveTeamMember(m.userId)}
                   >
                     Remove
@@ -973,12 +983,12 @@ const EventDetails = () => {
 
 
               {(draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < event.maxTeamSize && (
-                <div style={{marginTop: '15px', background: '#111', border: '1px dashed #444', borderRadius: '8px', padding: '12px'}}>
-                  <label style={{display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#00c864', marginBottom: '8px'}}>
+                <div style={{ marginTop: '15px', background: '#111', border: '1px dashed #444', borderRadius: '8px', padding: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#00c864', marginBottom: '8px' }}>
                     Endorse & Add Teammate directly by Reg No:
                   </label>
-                  <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                    <div style={{position: 'relative', flex: 1}}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
                       <input
                         value={endorseRegNo}
                         maxLength={8}
@@ -991,7 +1001,7 @@ const EventDetails = () => {
                           }
                         }}
                         placeholder="Enter 8-digit Reg No (e.g. 20249013)"
-                        style={{paddingRight: '36px', fontSize: '0.85rem'}}
+                        style={{ paddingRight: '36px', fontSize: '0.85rem' }}
                       />
                       <span style={{
                         position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
@@ -1006,12 +1016,12 @@ const EventDetails = () => {
                       className="btn-primary"
                       disabled={addingMember || endorseRegNo.length !== 8}
                       onClick={() => handleAddMemberByRegNo()}
-                      style={{padding: '8px 14px', fontSize: '0.8rem', whiteSpace: 'nowrap'}}
+                      style={{ padding: '8px 14px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
                     >
                       {addingMember ? 'Adding...' : '+ Add Member'}
                     </button>
                   </div>
-                  <small style={{color: '#888', fontSize: '0.75rem', marginTop: '6px', display: 'block'}}>
+                  <small style={{ color: '#888', fontSize: '0.75rem', marginTop: '6px', display: 'block' }}>
                     Auto-adds teammate directly when 8 digits are entered.
                   </small>
                 </div>
@@ -1019,21 +1029,21 @@ const EventDetails = () => {
             </div>
 
 
-            <div style={{marginBottom: '20px', background: '#0a0a0a', border: '1px solid #222', borderRadius: '10px', padding: '14px'}}>
-              <h4 style={{color: '#ffaa00', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px', marginTop: 0}}>
+            <div style={{ marginBottom: '20px', background: '#0a0a0a', border: '1px solid #222', borderRadius: '10px', padding: '14px' }}>
+              <h4 style={{ color: '#ffaa00', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px', marginTop: 0 }}>
                 Incoming Join Requests ({draftRegistration.joinRequests?.filter(r => r.status === 'Pending').length || 0})
               </h4>
               {draftRegistration.joinRequests?.filter(r => r.status === 'Pending').length > 0 ? (
                 draftRegistration.joinRequests.filter(r => r.status === 'Pending').map((r, i) => (
-                  <div key={i} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#161616', borderRadius: '8px', padding: '10px 14px', marginBottom: '8px', border: '1px solid #333'}}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#161616', borderRadius: '8px', padding: '10px 14px', marginBottom: '8px', border: '1px solid #333' }}>
                     <div>
-                      <strong style={{color: '#fff', fontSize: '0.95rem'}}>{r.name}</strong>
-                      <span style={{color: '#00ccff', fontSize: '0.85rem', marginLeft: '10px', fontWeight: 'bold'}}>{r.collegeRegNo}</span>
+                      <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{r.name}</strong>
+                      <span style={{ color: '#00ccff', fontSize: '0.85rem', marginLeft: '10px', fontWeight: 'bold' }}>{r.collegeRegNo}</span>
                     </div>
-                    <div style={{display: 'flex', gap: '8px'}}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         className="btn-primary"
-                        style={{padding: '6px 14px', background: '#00c864', color: '#000', fontSize: '0.8rem', fontWeight: 'bold'}}
+                        style={{ padding: '6px 14px', background: '#00c864', color: '#000', fontSize: '0.8rem', fontWeight: 'bold' }}
                         disabled={respondingTo === r.userId}
                         onClick={() => handleRespondJoinRequest(r.userId, 'Accept')}
                       >
@@ -1041,7 +1051,7 @@ const EventDetails = () => {
                       </button>
                       <button
                         className="btn-danger"
-                        style={{padding: '6px 14px', fontSize: '0.8rem', background: '#ff3333', color: '#fff'}}
+                        style={{ padding: '6px 14px', fontSize: '0.8rem', background: '#ff3333', color: '#fff' }}
                         disabled={respondingTo === r.userId}
                         onClick={() => handleRespondJoinRequest(r.userId, 'Reject')}
                       >
@@ -1051,16 +1061,16 @@ const EventDetails = () => {
                   </div>
                 ))
               ) : (
-                <p style={{color: '#666', fontSize: '0.85rem', margin: 0}}>
-                  No pending join requests right now. Teammates can search your Reg No <strong style={{color: '#00c864'}}>{user?.collegeRegNo}</strong> or you can add them directly above.
+                <p style={{ color: '#666', fontSize: '0.85rem', margin: 0 }}>
+                  No pending join requests right now. Teammates can search your Reg No <strong style={{ color: '#00c864' }}>{user?.collegeRegNo}</strong> or you can add them directly above.
                 </p>
               )}
             </div>
 
 
             {event.customFormFields?.length > 0 && (
-              <div style={{marginBottom: '20px'}}>
-                <h4 style={{color: '#ff1f01', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px'}}>Additional Information Required</h4>
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#ff1f01', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px' }}>Additional Information Required</h4>
                 {event.customFormFields.map((field, idx) => (
                   <div className="form-group" key={idx}>
                     <label>{field.fieldName} {field.isRequired && '*'}</label>
@@ -1071,11 +1081,11 @@ const EventDetails = () => {
               </div>
             )}
 
-            <div className="modal-actions" style={{marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <button
                 type="button"
                 className="btn-danger"
-                style={{background: 'rgba(255,51,51,0.15)', color: '#ff4444', border: '1px solid #ff4444', padding: '8px 14px', fontSize: '0.8rem'}}
+                style={{ background: 'rgba(255,51,51,0.15)', color: '#ff4444', border: '1px solid #ff4444', padding: '8px 14px', fontSize: '0.8rem' }}
                 onClick={handleDeleteDraftTeam}
                 disabled={submitting}
               >
@@ -1085,7 +1095,7 @@ const EventDetails = () => {
                 type="button"
                 className="btn-primary"
                 disabled={
-                  submitting || 
+                  submitting ||
                   (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2) ||
                   (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) > event.maxTeamSize
                 }
@@ -1095,7 +1105,7 @@ const EventDetails = () => {
                     ? `Team must have at least ${event.minTeamSize || 2} members to finalize`
                     : `Finalize Team Registration`
                 }
-                style={{minWidth: '200px'}}
+                style={{ minWidth: '200px' }}
               >
                 {submitting ? 'Finalizing...' : 'Finalize Registration'}
               </button>

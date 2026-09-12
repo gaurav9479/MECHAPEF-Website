@@ -67,6 +67,19 @@ const eventSchema = new mongoose.Schema(
 
         description_detailed: String,
 
+        descriptionBlocks: [{
+            type: {
+                type: String,
+                enum: ['heading', 'paragraph'],
+                required: true
+            },
+            text: {
+                type: String,
+                required: true,
+                maxlength: [5000, 'Description block cannot exceed 5000 characters']
+            }
+        }],
+
         minTeamSize: {
             type: Number,
             default: 1,

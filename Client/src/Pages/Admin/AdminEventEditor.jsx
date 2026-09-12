@@ -25,7 +25,7 @@ const BRANCHES = [
 ];
 
 const emptyForm = {
-  title: '', description: '', category: 'Mechapef-Event',
+  title: '', description: '', descriptionBlocks: [{ type: 'paragraph', text: '' }], category: 'Mechapef-Event',
   startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
   maxTeamSize: 1, registrationMode: 'Standard', registrationFee: 0, featured: false, isTBD: false,
   rules: '', prizes: '',
@@ -84,6 +84,9 @@ const AdminEventEditor = () => {
           setForm({
             title: ev.title || '',
             description: ev.description || '',
+            descriptionBlocks: ev.descriptionBlocks?.length
+              ? ev.descriptionBlocks
+              : [{ type: 'paragraph', text: ev.description || '' }],
             category: ev.category || 'Mechapef-Event',
             venue: ev.venue || '',
             startTime: formatLocal(ev.startTime),
@@ -161,6 +164,7 @@ const AdminEventEditor = () => {
       registrationStartDate: form.isTBD && !form.registrationStartDate ? '2099-12-01T00:00' : (form.registrationStartDate || undefined),
       registrationDeadline: form.isTBD && !form.registrationDeadline ? '2099-12-30T23:59' : form.registrationDeadline,
       rules: form.rules ? (typeof form.rules === 'string' ? form.rules.split('\n').filter(Boolean) : form.rules) : [],
+      description: (form.descriptionBlocks || []).map(block => block.text).filter(Boolean).join('\n\n'),
       maxTeamSize: Number(form.maxTeamSize),
       registrationMode: Number(form.maxTeamSize) > 1 ? form.registrationMode : 'Standard',
       registrationFee: Number(form.registrationFee),
@@ -198,6 +202,21 @@ const AdminEventEditor = () => {
 
   const removeCustomField = (index) => {
     f('customFormFields', form.customFormFields.filter((_, i) => i !== index));
+  };
+
+  const addDescriptionBlock = (type) => {
+    f('descriptionBlocks', [...(form.descriptionBlocks || []), { type, text: '' }]);
+  };
+
+  const updateDescriptionBlock = (index, text) => {
+    const blocks = [...(form.descriptionBlocks || [])];
+    blocks[index] = { ...blocks[index], text };
+    f('descriptionBlocks', blocks);
+  };
+
+  const removeDescriptionBlock = (index) => {
+    const blocks = (form.descriptionBlocks || []).filter((_, blockIndex) => blockIndex !== index);
+    f('descriptionBlocks', blocks.length ? blocks : [{ type: 'paragraph', text: '' }]);
   };
 
   const updateCustomField = (index, key, value) => {
@@ -459,7 +478,39 @@ const AdminEventEditor = () => {
 
               <div className="form-group full">
                 <label>Event Description *</label>
-                <textarea rows={5} value={form.description} onChange={e => f('description', e.target.value)} required placeholder="Detailed event description, agenda, guidelines..." />
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                  <button type="button" className="btn-secondary" onClick={() => addDescriptionBlock('heading')} style={{ padding: '7px 12px' }}>
+                    + Add Heading Tile
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => addDescriptionBlock('paragraph')} style={{ padding: '7px 12px' }}>
+                    + Add Paragraph Tile
+                  </button>
+                </div>
+                {(form.descriptionBlocks || []).map((block, index) => (
+                  <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '10px' }}>
+                    {block.type === 'heading' ? (
+                      <input
+                        value={block.text}
+                        onChange={e => updateDescriptionBlock(index, e.target.value)}
+                        placeholder="Section heading"
+                        required={index === 0}
+                        style={{ flex: 1, background: '#101014', color: '#ff1f01', fontWeight: 'bold', fontSize: '1.05rem' }}
+                      />
+                    ) : (
+                      <textarea
+                        rows={3}
+                        value={block.text}
+                        onChange={e => updateDescriptionBlock(index, e.target.value)}
+                        placeholder="Write the event description paragraph..."
+                        required={index === 0}
+                        style={{ flex: 1, background: '#101014', color: '#fff', resize: 'vertical' }}
+                      />
+                    )}
+                    <button type="button" className="btn-danger" onClick={() => removeDescriptionBlock(index)} style={{ padding: '8px 12px' }}>
+                      <FaTrash />
+                    </button>
+                  </div>
+                ))}
               </div>
 
               <div className="form-group">
@@ -710,7 +761,7 @@ const AdminEventEditor = () => {
                     onChange={e => updateTicketStage(idx, e.target.value)}
                     placeholder={`Stage ${idx + 1} Name (e.g. Stage 1: Main Gate Check-in)`}
                     required
-                    style={{ flex: 1, background: '#101014' }}
+                    style={{ flex: 1, background: '#101014', color: '#fff' }}
                   />
                   {(form.ticketStages || []).length > 1 && (
                     <button type="button" className="btn-danger" onClick={() => removeTicketStage(idx)} style={{ padding: '8px 12px' }}>
@@ -727,7 +778,7 @@ const AdminEventEditor = () => {
                 <select
                   value={form.attendanceMethod || 'qr'}
                   onChange={e => f('attendanceMethod', e.target.value)}
-                  style={{ width: '100%', maxWidth: '450px', background: '#181820' }}
+                  style={{ width: '100%', maxWidth: '450px', background: '#fff' }}
                 >
                   <option value="qr">QR Code (Ticket pass generated per registration)</option>
                   <option value="id-card">ID Card Barcode (Participant college ID scan)</option>

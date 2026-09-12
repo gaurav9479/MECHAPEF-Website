@@ -13,6 +13,7 @@ export const createEvent = asyncHandler(async (req, res) => {
     const {
         title,
         description,
+        descriptionBlocks,
         category,
         startTime,
         endTime,
@@ -40,6 +41,7 @@ export const createEvent = asyncHandler(async (req, res) => {
     const newEvent = new Event({
         title,
         description,
+        descriptionBlocks: descriptionBlocks || [],
         category,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
@@ -144,6 +146,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
     const allowedUpdates = [
         'title',
         'description',
+        'descriptionBlocks',
         'startTime',
         'endTime',
         'venue',
