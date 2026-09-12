@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { FaQrcode, FaCheckCircle, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +14,7 @@ const AdminScanner = () => {
   const [availableStages, setAvailableStages] = useState(['Stage 1: Check-in']);
   const [selectedStage, setSelectedStage] = useState('Stage 1: Check-in');
   const [isEndorsed, setIsEndorsed] = useState(false);
+  const [attendanceMethod, setAttendanceMethod] = useState('qr');
 
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
@@ -36,7 +37,7 @@ const AdminScanner = () => {
       const evList = res.data.data?.events || [];
       setEvents(evList);
 
-      // Check if user is an endorsed Scanner Holder
+
       if (user?.assignedEvent) {
         const assignedEvId = typeof user.assignedEvent === 'object' ? user.assignedEvent._id : user.assignedEvent;
         const matchedEv = evList.find(e => e._id === assignedEvId);
@@ -47,6 +48,7 @@ const AdminScanner = () => {
           const targetStg = user.assignedStage || stages[0];
           setSelectedStage(targetStg);
           setIsEndorsed(true);
+          setAttendanceMethod(matchedEv.attendanceMethod || (matchedEv.enableQRScanning === false ? 'id-card' : 'qr'));
           return;
         }
       }
@@ -56,8 +58,9 @@ const AdminScanner = () => {
         const stages = evList[0].ticketStages && evList[0].ticketStages.length > 0 ? evList[0].ticketStages : ['Stage 1: Check-in'];
         setAvailableStages(stages);
         setSelectedStage(stages[0]);
+        setAttendanceMethod(evList[0].attendanceMethod || (evList[0].enableQRScanning === false ? 'id-card' : 'qr'));
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }, [user]);
 
   const handleEventChange = (eventId) => {
@@ -66,6 +69,7 @@ const AdminScanner = () => {
     const stages = ev?.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Check-in'];
     setAvailableStages(stages);
     setSelectedStage(stages[0]);
+    setAttendanceMethod(ev?.attendanceMethod || (ev?.enableQRScanning === false ? 'id-card' : 'qr'));
   };
 
   const verifyAndMarkAttendance = async (eventId, regId) => {
@@ -103,7 +107,23 @@ const AdminScanner = () => {
     }
   };
 
+  const verifyBarcodeAttendance = async (collegeRegNo) => {
+    const stageToVerify = selectedStageRef.current || 'Stage 1: Check-in';
+    const res = await api.put(
+      `/events/${selectedEventId}/registrations/by-college-reg-no/${encodeURIComponent(collegeRegNo)}/attendance`,
+      { attended: true, stageName: stageToVerify }
+    );
+    const payload = res.data.data || {};
+    const reg = payload.registration || payload;
+    setScanResult(reg);
+    setAlreadyMarked(!!payload.alreadyMarked);
+    setCooldownActive(!!payload.cooldownActive);
+    setStatusMessage(res.data.message || (payload.alreadyMarked ? `Already scanned for ${stageToVerify}` : `${stageToVerify} Verified!`));
+  };
+
   useEffect(() => {
+    if (!selectedEventId) return undefined;
+
     const readerElement = document.getElementById('reader');
     if (readerElement) {
       readerElement.innerHTML = '';
@@ -116,7 +136,19 @@ const AdminScanner = () => {
 
     const scanner = new Html5QrcodeScanner(
       'reader',
-      { fps: 10, qrbox: { width: 250, height: 250 } },
+      {
+        fps: 10,
+        qrbox: { width: 280, height: 180 },
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E
+        ]
+      },
       false
     );
     scannerRef.current = scanner;
@@ -128,13 +160,24 @@ const AdminScanner = () => {
       lastScannedRef.current = decodedText;
 
       try {
-        const data = JSON.parse(decodedText);
-        if (!data.eventId || !data.registrationId) {
-          throw new Error('Invalid QR Code format.');
+        const scannedValue = decodedText.trim();
+        let data;
+
+        try {
+          data = JSON.parse(scannedValue);
+        } catch {
+          data = null;
         }
-        await verifyAndMarkAttendance(data.eventId, data.registrationId);
+
+        if (data?.eventId && data?.registrationId) {
+          await verifyAndMarkAttendance(data.eventId, data.registrationId);
+        } else if (attendanceMethod === 'id-card' && scannedValue) {
+          await verifyBarcodeAttendance(scannedValue);
+        } else {
+          throw new Error('Invalid ticket barcode.');
+        }
       } catch (err) {
-        setError('Invalid QR Code. Not a valid Mechapef Ticket.');
+        setError(err.response?.data?.message || `Invalid ${attendanceMethod === 'id-card' ? 'ID card barcode' : 'QR ticket'}.`);
         setScanResult(null);
         isProcessingRef.current = false;
 
@@ -155,7 +198,7 @@ const AdminScanner = () => {
         scannerRef.current = null;
       }
     };
-  }, []);
+  }, [attendanceMethod, selectedEventId]);
 
   const handleBackClick = (e) => {
     if (e) {
@@ -165,11 +208,11 @@ const AdminScanner = () => {
 
     try {
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(() => {});
+        scannerRef.current.clear().catch(() => { });
         scannerRef.current = null;
       }
     } catch {
-      // Ignore cleanup error
+
     }
 
     const target = user?.role === 'endorsed-volunteer' ? '/' : (user?.role === 'super-admin' || user?.role === 'event-lead' || user?.role === 'media-lead') ? '/admin' : '/';
@@ -179,16 +222,16 @@ const AdminScanner = () => {
   return (
     <div className="admin-scanner-page">
       <div className="scanner-header">
-        <button 
-          className="scanner-back-btn" 
-          type="button" 
-          onClick={handleBackClick} 
+        <button
+          className="scanner-back-btn"
+          type="button"
+          onClick={handleBackClick}
           style={{ position: 'relative', zIndex: 9999, cursor: 'pointer', pointerEvents: 'auto' }}
         >
           <FaArrowLeft /> {user?.role === 'endorsed-volunteer' ? 'Back to Home' : 'Back to Admin'}
         </button>
         <h1><FaQrcode /> Ticket Scanner</h1>
-        <p>Scan participant QR codes at entry & verification stations.</p>
+        <p>Scan participant {attendanceMethod === 'id-card' ? 'ID card barcodes' : 'QR codes'} at entry & verification stations.</p>
       </div>
 
       <div className="scanner-container">
@@ -204,8 +247,8 @@ const AdminScanner = () => {
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ flex: '1 1 250px' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', color: '#ff1f01', fontWeight: 'bold', marginBottom: '6px' }}>Select Event:</label>
-              <select 
-                value={selectedEventId} 
+              <select
+                value={selectedEventId}
                 onChange={(e) => handleEventChange(e.target.value)}
                 disabled={isEndorsed}
                 style={{ width: '100%', padding: '10px 14px', background: '#1a1a20', color: '#fff', border: '1px solid #333', borderRadius: '8px', fontSize: '0.9rem', opacity: isEndorsed ? 0.8 : 1 }}
@@ -218,8 +261,8 @@ const AdminScanner = () => {
 
             <div style={{ flex: '1 1 280px' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', color: '#00e5ff', fontWeight: 'bold', marginBottom: '6px' }}>Active Scanning Station / Stage:</label>
-              <select 
-                value={selectedStage} 
+              <select
+                value={selectedStage}
                 onChange={(e) => setSelectedStage(e.target.value)}
                 disabled={isEndorsed}
                 style={{ width: '100%', padding: '10px 14px', background: '#0d2d3a', color: '#00e5ff', border: '1px solid #00e5ff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', opacity: isEndorsed ? 0.8 : 1 }}
@@ -233,8 +276,21 @@ const AdminScanner = () => {
         </div>
 
         <div className="scanner-grid">
-          <div id="reader" className="qr-reader-box"></div>
-
+          {selectedEventId ? (
+            <div id="reader" className="qr-reader-box"></div>
+          ) : (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              minHeight: '280px', background: '#1a1010', border: '2px dashed #ff1f01',
+              borderRadius: '16px', padding: '32px', textAlign: 'center', gap: '16px'
+            }}>
+              <span style={{ fontSize: '3rem' }}>🚫</span>
+              <h2 style={{ color: '#ff1f01', margin: 0, fontSize: '1.3rem' }}>Scanner Unavailable</h2>
+              <p style={{ color: '#aaa', margin: 0, fontSize: '0.9rem', maxWidth: '280px' }}>
+                Select an event to start the {attendanceMethod === 'id-card' ? 'ID card barcode' : 'QR code'} scanner.
+              </p>
+            </div>
+          )}
           <div className="scanner-status-panel">
             {loading ? (
               <div className="scanner-status-card loading-card">
@@ -268,7 +324,7 @@ const AdminScanner = () => {
                   Active Stage: {selectedStage}
                 </span>
                 <h2>Ready To Scan</h2>
-                <p>Point camera at participant ticket QR code.</p>
+                <p>Point camera at a participant {attendanceMethod === 'id-card' ? 'ID card barcode' : 'ticket QR code'}.</p>
               </div>
             )}
           </div>

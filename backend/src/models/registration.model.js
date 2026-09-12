@@ -49,22 +49,41 @@ const registrationSchema = new mongoose.Schema(
                     },
                     name: String,
                     email: String,
+                    collegeRegNo: String,
+                    status: {
+                        type: String,
+                        enum: ['Confirmed', 'Invited', 'Pending'],
+                        default: 'Confirmed'
+                    },
                     joined: {
                         type: Date,
                         default: Date.now
                     }
                 }
             ],
-            validate: {
-                validator: function (value) {
-                    if (this.registrationType === 'Solo') {
-                        return value.length === 0;
-                    }
-                    // Team size will be validated by event max team size
-                    return value.length > 0;
-                },
-                message: 'Invalid team members for registration type'
-            }
+            default: []
+        },
+
+
+        joinRequests: {
+            type: [
+                {
+                    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+                    name: String,
+                    email: String,
+                    collegeRegNo: String,
+                    status: { type: String, enum: ['Pending', 'Accepted', 'Rejected'], default: 'Pending' },
+                    requestedAt: { type: Date, default: Date.now }
+                }
+            ],
+            default: []
+        },
+
+
+        registrationStatus: {
+            type: String,
+            enum: ['Draft', 'Confirmed'],
+            default: 'Confirmed'
         },
 
         paymentStatus: {
@@ -153,6 +172,7 @@ const registrationSchema = new mongoose.Schema(
 );
 
 registrationSchema.index({ eventId: 1, registeredBy: 1, deletedAt: 1 }, { unique: true, sparse: true });
+registrationSchema.index({ eventId: 1, 'teamMembers.userId': 1, deletedAt: 1 });
 
 registrationSchema.index({ paymentStatus: 1, registeredAt: -1 });
 registrationSchema.index({ attendanceMarked: 1, eventId: 1 });
@@ -160,13 +180,12 @@ registrationSchema.index({ attendanceMarked: 1, eventId: 1 });
 
 registrationSchema.virtual('participantCount').get(function () {
     if (this.registrationType === 'Solo') return 1;
-    return this.teamMembers.length + 1; // +1 for registered user
+    return this.teamMembers.length + 1;
 });
 
 
 registrationSchema.pre('save', async function (next) {
     try {
-        // Check for duplicate registration
         if (this.isNew) {
             const existing = await mongoose.model('Registration').findOne({
                 eventId: this.eventId,
@@ -178,7 +197,8 @@ registrationSchema.pre('save', async function (next) {
                 throw new Error('User is already registered for this event');
             }
         }
-        if (this.registrationType === 'Team' && this.teamMembers.length === 0) {
+
+        if (this.registrationType === 'Team' && this.registrationStatus === 'Confirmed' && this.teamMembers.length === 0) {
             throw new Error('Team registration must have at least one team member');
         }
 

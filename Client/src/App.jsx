@@ -9,6 +9,7 @@ import Home from './Pages/Home';
 import Login from './Pages/Login/Login';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import AdminEvents from './Pages/Admin/AdminEvents';
+import AdminEventEditor from './Pages/Admin/AdminEventEditor';
 import PastEventsManager from './Pages/Admin/PastEventsManager';
 import AdminRegistrations from './Pages/Admin/AdminRegistrations';
 import AdminTeam from './Pages/Admin/AdminTeam';
@@ -129,6 +130,32 @@ const AnimatedRoutes = () => {
               toastMessage="Access Denied: Only Event Leads and Super Admins can manage Live Events."
             >
               <AdminEvents />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/events/new"
+          element={
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads and Super Admins can create Live Events."
+            >
+              <AdminEventEditor />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/events/:id/edit"
+          element={
+            <ProtectedRoute
+              allowedRoles={['super-admin', 'event-lead']}
+              fallbackPath="/admin"
+              toastMessage="Access Denied: Only Event Leads and Super Admins can edit Live Events."
+            >
+              <AdminEventEditor />
             </ProtectedRoute>
           }
         />
@@ -350,20 +377,16 @@ const AnimatedRoutes = () => {
 
 function App() {
   useEffect(() => {
-    // 1. High Priority Pre-fetching (Home Page Data)
-    // Instantly triggers background network requests so they are in cache by the time components mount
     apiGetCached('/upload/sections?device=desktop', () => {});
     apiGetCached('/events', () => {});
     apiGetCached('/announcements', () => {});
-    apiGetCached('/sponsors/special', () => {});
+    apiGetCached('/special-sponsor/active', () => {});
+    apiGetCached('/past-events', () => {});
 
-    // 2. Low Priority Pre-fetching (Other Heavy Pages)
-    // Delayed by 2 seconds so they don't compete with the initial Home page load
     setTimeout(() => {
       apiGetCached('/sponsors', () => {});
       apiGetCached('/team', () => {});
-      apiGetCached('/past-events', () => {});
-      apiGetCached('/gallery/albums', () => {});
+      apiGetCached('/gallery', () => {});
     }, 2000);
   }, []);
 

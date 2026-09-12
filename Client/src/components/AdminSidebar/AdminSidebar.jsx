@@ -34,13 +34,12 @@ const AdminSidebar = () => {
       const res = await api.get('/contact/unseen-count');
       setUnseenCount(res.data?.data?.unseenCount || 0);
     } catch (e) {
-      // Ignore background errors
     }
   };
 
   useEffect(() => {
     fetchUnseenCount();
-    const interval = setInterval(fetchUnseenCount, 30000); // Check every 30s
+    const interval = setInterval(fetchUnseenCount, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -64,18 +63,43 @@ const AdminSidebar = () => {
     }
   };
 
-  // Close sidebar when route changes on mobile
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
 
-  // Add a class to body to hide global gradients while in admin mode
   useEffect(() => {
     document.body.classList.add('admin-mode');
     return () => {
       document.body.classList.remove('admin-mode');
     };
   }, []);
+
+  useEffect(() => {
+    const IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+    let timeoutId;
+
+    const handleAutoLogout = async () => {
+      console.warn('Admin idle timeout reached (15m inactivity). Auto logging out...');
+      await logout();
+      alert('You have been logged out automatically due to 15 minutes of inactivity for security.');
+      navigate('/');
+    };
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleAutoLogout, IDLE_TIMEOUT);
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(event => window.addEventListener(event, resetTimer));
+
+    resetTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [logout, navigate]);
 
   return (
     <>

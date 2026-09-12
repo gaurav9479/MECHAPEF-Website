@@ -4,10 +4,8 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Public route
 router.get('/', teamController.getAllTeam);
 
-// Content Management Routes
 router.post(
     '/',
     authenticate,

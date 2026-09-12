@@ -3,16 +3,15 @@ import * as eventController from '../controllers/event.controller.js';
 import * as registrationController from '../controllers/registration.controller.js';
 import * as liveEventController from '../controllers/liveEvent.controller.js';
 import { authenticate, checkRole } from '../middleware/auth.middleware.js';
-// import { limiter } from '../middleware/security.middleware.js';
 
 const router = Router();
 
-// Public routes
+
 router.get('/', eventController.getAllEvents);
 router.get('/featured', eventController.getFeaturedEvents);
 router.get('/:id', eventController.getEventById);
 
-// Content Management Routes
+
 router.post(
     '/',
     authenticate,
@@ -69,9 +68,6 @@ router.get(
     eventController.getEventStats
 );
 
-// Event Registration Routes
-
-// User: Check their own registration status for this event
 router.get(
     '/:id/my-registration',
     authenticate,
@@ -126,6 +122,75 @@ router.delete(
     authenticate,
     checkRole(['super-admin', 'content-lead']),
     liveEventController.deleteHighlight
+router.put(
+    '/:eventId/registrations/by-college-reg-no/:collegeRegNo/attendance',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead']),
+    registrationController.markAttendanceByCollegeRegNo
+);
+
+router.post(
+    '/:eventId/register-draft',
+    authenticate,
+    registrationController.createDraftTeamRegistration
+);
+
+router.get(
+    '/:eventId/teams',
+    authenticate,
+    registrationController.searchTeamsForEvent
+);
+
+router.get(
+    '/:eventId/check-user/:regNo',
+    authenticate,
+    registrationController.checkUserEligibilityForEvent
+);
+
+router.get(
+    '/:eventId/my-team-registration',
+    authenticate,
+    registrationController.getMyTeamRegistration
+);
+
+router.get(
+    '/:eventId/my-join-status',
+    authenticate,
+    registrationController.getMyJoinStatus
+);
+
+import * as liveEventController from '../controllers/liveEvent.controller.js';
+
+router.get('/:eventId/live/state', liveEventController.getLiveState);
+router.post('/:eventId/live/submit', authenticate, liveEventController.submitLiveAnswer);
+router.get('/:eventId/live/results', liveEventController.getLiveResults);
+
+router.put(
+    '/:eventId/live/config',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'event-lead']),
+    liveEventController.updateLiveConfig
+);
+
+router.post(
+    '/:eventId/live/broadcast',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'event-lead']),
+    liveEventController.broadcastQuestion
+);
+
+router.post(
+    '/:eventId/live/submissions/toggle',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'event-lead']),
+    liveEventController.toggleSubmissions
+);
+
+router.post(
+    '/:eventId/live/reset',
+    authenticate,
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'event-lead']),
+    liveEventController.resetLiveSession
 );
 
 export default router;

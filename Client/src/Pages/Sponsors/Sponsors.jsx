@@ -183,7 +183,7 @@ const Sponsors = () => {
       checkLoading();
     });
 
-    apiGetCached('/sponsor-config', (data) => {
+    apiGetCached('/sponsors/config', (data) => {
       const configData = data.data || { tiers: [], deliverables: [] };
       configData.tiers.sort((a, b) => a.order - b.order);
       configData.deliverables.sort((a, b) => a.order - b.order);

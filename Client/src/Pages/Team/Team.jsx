@@ -3,14 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaSearch, FaUserGraduate, FaUsers, FaCog, FaChevronRight } from 'react-icons/fa';
 import TopNavbar from '../../components/Navbar/TopNavbar';
 import Footer from '../../components/Footer/Footer';
+import TeamMemberModal from '../../components/OurTeam/TeamMemberModal';
 import { apiGetCached } from '../../utils/apiCache';
 import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 import './Team.css';
 
-const TeamCard = ({ member, index, fallbackRole, specialSponsor }) => {
+const TeamCard = ({ member, index, fallbackRole, specialSponsor, onSelect }) => {
+  const isClickable = member.category === 'team_ty' || member.category === 'team_al';
+
   return (
     <motion.div
-      className="team-page-card"
+      className={`team-page-card ${isClickable ? 'clickable-card' : ''}`}
+      style={{ cursor: isClickable ? 'pointer' : 'default' }}
+      onClick={() => {
+        if (isClickable && onSelect) onSelect(member);
+      }}
       initial={{ opacity: 0, y: 30, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -65,8 +72,9 @@ const Team = () => {
   const [imagesMap, setImagesMap] = useState({});
   const [specialSponsor, setSpecialSponsor] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState(null);
   
-  // Filtering & Search states
+
   const [activeTab, setActiveTab] = useState('team_ty'); // 'team_al', 'team_ty', 'team_sy', 'team_fy'
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -81,6 +89,9 @@ const Team = () => {
             name: img.name,
             regNo: img.regNo,
             order: img.order,
+            linkedinURL: img.linkedinURL,
+            instagramURL: img.instagramURL,
+            email: img.email,
           };
         });
       }
@@ -115,7 +126,7 @@ const Team = () => {
     team_al: 'Notable Alumni',
   };
 
-  // Helper to extract and sort members for a prefix
+
   const getSortedMembers = (prefix) => {
     return Object.keys(imagesMap)
       .filter(k => k.startsWith(prefix + '_') && imagesMap[k].url)
@@ -134,7 +145,7 @@ const Team = () => {
       }));
   };
 
-  // Build full list of active members
+
   const allSeniors = getSortedMembers('team_ty');
   const allPreFinals = getSortedMembers('team_sy');
   const allSophomores = getSortedMembers('team_fy');
@@ -155,7 +166,7 @@ const Team = () => {
 
   const filteredMembers = getFilteredList();
 
-  // Helper to get category count badge
+
   const getCount = (tabKey) => {
     return getSortedMembers(tabKey).length;
   };
@@ -209,7 +220,7 @@ const Team = () => {
             <FaSearch className="search-icon" />
             <input
               type="text"
-              placeholder="Search member by name, role or reg no..."
+              placeholder="Search member by name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
@@ -258,6 +269,7 @@ const Team = () => {
                     index={idx}
                     fallbackRole={member.fallbackRole}
                     specialSponsor={specialSponsor}
+                    onSelect={setSelectedMember}
                   />
                 ))}
               </AnimatePresence>
@@ -276,6 +288,11 @@ const Team = () => {
         </div>
 
       </div>
+
+      <TeamMemberModal 
+        member={selectedMember} 
+        onClose={() => setSelectedMember(null)} 
+      />
 
       <Footer />
     </div>

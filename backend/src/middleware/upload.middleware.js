@@ -17,9 +17,9 @@ const ALLOWED_EXTENSIONS = {
 };
 
 const MAX_FILE_SIZES = {
-    image: 5 * 1024 * 1024, // 5MB
-    video: 50 * 1024 * 1024, // 50MB
-    pdf: 10 * 1024 * 1024 // 10MB
+    image: 5 * 1024 * 1024, 
+    video: 50 * 1024 * 1024, 
+    pdf: 10 * 1024 * 1024 
 };
 
 
@@ -69,7 +69,7 @@ export const uploadMiddleware = multer({
     storage,
     fileFilter,
     limits: {
-        fileSize: 50 * 1024 * 1024 // 50MB overall limit
+        fileSize: 50 * 1024 * 1024 
     }
 });
 

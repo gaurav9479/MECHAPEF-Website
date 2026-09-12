@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { HeadingGearIcon, Reveal, GearSVG } from './MobileShared';
 import { apiGetCached } from '../../utils/apiCache';
 import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
+import TeamMemberModal from '../OurTeam/TeamMemberModal';
 
 const MobileTeam = ({ team }) => {
   const navigate = useNavigate();
   const [specialSponsor, setSpecialSponsor] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
     apiGetCached('/special-sponsor/active', (data) => {
@@ -61,7 +63,12 @@ const MobileTeam = ({ team }) => {
       <div className="mh-team-track">
         {(team.fy && team.fy.length > 0) ? (
           team.fy.map((m, i) => (
-            <div key={i} className="mh-team-card" style={{ position: 'relative' }}>
+            <div 
+              key={i} 
+              className="mh-team-card" 
+              style={{ position: 'relative', cursor: 'pointer' }}
+              onClick={() => setSelectedMember({ ...m, category: 'team_ty' })}
+            >
               {specialSponsor?.logoURL && specialSponsor?.showTeamCardsLogo !== false && (
                 <div 
                   className="mobile-team-sponsor-badge"
@@ -134,6 +141,11 @@ const MobileTeam = ({ team }) => {
           <span>→</span>
         </button>
       </div>
+
+      <TeamMemberModal 
+        member={selectedMember} 
+        onClose={() => setSelectedMember(null)} 
+      />
     </section>
   );
 };

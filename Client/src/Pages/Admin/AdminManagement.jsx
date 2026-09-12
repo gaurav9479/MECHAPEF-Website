@@ -74,7 +74,7 @@ const AdminManagement = () => {
       setActiveTab('images');
     }
   }, [user]);
-  // ── Users Tab State ──
+
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -84,7 +84,7 @@ const AdminManagement = () => {
   const [toast, setToast] = useState(null);
 
   const fetchSystemConfig = async () => {
-    // keeping empty to avoid changing useEffect
+
   };
 
   useEffect(() => {
@@ -92,10 +92,10 @@ const AdminManagement = () => {
   }, []);
 
   const updateSystemConfig = async () => {
-    // Removed
+
   };
 
-  // ── Volunteer Endorsement Modal State ──
+
   const [endorseModalUser, setEndorseModalUser] = useState(null);
   const [endorseEvents, setEndorseEvents] = useState([]);
   const [endorseEventId, setEndorseEventId] = useState('');
@@ -103,13 +103,13 @@ const AdminManagement = () => {
   const [endorseStage, setEndorseStage] = useState('Stage 1: Check-in');
   const [endorseSubmitting, setEndorseSubmitting] = useState(false);
 
-  // ── Notices Tab State ──
+
   const [notices, setNotices] = useState([]);
   const [noticeForm, setNoticeForm] = useState({ title: '', description: '', priority: 'Medium', targetType: 'None', isActive: true, eventSponsors: [] });
   const [noticeSubmitting, setNoticeSubmitting] = useState(false);
   const [editingNotice, setEditingNotice] = useState(null);
   const [allSponsors, setAllSponsors] = useState([]);
-  // ── Image Manager Tab State ──
+
   const [sectionImages, setSectionImages] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('Our Department');
   const [selectedSection, setSelectedSection] = useState('hero_bot');
@@ -129,7 +129,7 @@ const AdminManagement = () => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
-  // ── Fetch Users (Cached) ──────────────────────────────────────────────────
+
   const clearUsersCache = () => {
     localStorage.removeItem('api_cache_/auth/users?limit=5000');
   };
@@ -242,7 +242,7 @@ const AdminManagement = () => {
 
     return matchesSearch && matchesRole && matchesVerified;
   });
-  // ── Fetch Notices ────────────────────────────────────────────────────────
+
   const fetchNotices = async () => {
     const [annRes, sponRes] = await Promise.all([
       api.get('/announcements'),
@@ -282,7 +282,7 @@ const AdminManagement = () => {
     setNoticeForm({ title: n.title, description: n.description, priority: n.priority, targetType: n.targetType || 'None', isActive: n.isActive, eventSponsors: n.eventSponsors || [] });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  // ── Fetch Section Images ──────────────────────────────────────────────────
+
   const fetchSectionImages = async () => {
     const res = await api.get('/upload/sections');
     const map = {};
@@ -352,10 +352,9 @@ const AdminManagement = () => {
     if (!cropper) return;
     setUploading(true);
     try {
-      // Get cropped canvas as blob
       const canvas = cropper.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1080 });
       const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.92));
-      // Upload to backend → ImageKit
+
       const formData = new FormData();
       formData.append('image', blob, 'section_image.jpg');
       formData.append('folder', '/mechapef/sections');
@@ -363,7 +362,7 @@ const AdminManagement = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       const { url, fileId } = uploadRes.data.data;
-      // Save to SectionImage model
+
       const section = dynamicSectionKeys.find(s => s.key === selectedSection);
       await api.post('/upload/sections', {
         sectionKey: selectedSection,
@@ -840,8 +839,8 @@ const AdminManagement = () => {
               {selectedSection.startsWith('team_') && (
                 <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', background: '#111', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
                   <h4 style={{ color: '#fff', margin: 0 }}>Team Member Details</h4>
-                  <div style={{ display: 'flex', gap: '15px' }}>
-                    <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Name</label>
                       <input 
                         type="text" 
@@ -856,7 +855,7 @@ const AdminManagement = () => {
                         placeholder="Enter name"
                       />
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Registration Number / Role</label>
                       <input 
                         type="text" 
@@ -871,7 +870,7 @@ const AdminManagement = () => {
                         placeholder="Enter Reg No or Role"
                       />
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: '120px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#aaa' }}>Sequence (Order)</label>
                       <input 
                         type="number" 
@@ -887,6 +886,55 @@ const AdminManagement = () => {
                       />
                     </div>
                   </div>
+
+                  <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#ff1f01', fontWeight: 600 }}>Email Address</label>
+                      <input 
+                        type="email" 
+                        value={sectionImages[selectedSection]?.email || ''} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], email: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #ff1f01', color: '#fff', borderRadius: '4px' }}
+                        placeholder="e.g. member@mnnit.ac.in"
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#0077b5', fontWeight: 600 }}>LinkedIn Profile URL</label>
+                      <input 
+                        type="url" 
+                        value={sectionImages[selectedSection]?.linkedinURL || ''} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], linkedinURL: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #0077b5', color: '#fff', borderRadius: '4px' }}
+                        placeholder="https://linkedin.com/in/username"
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#e1306c', fontWeight: 600 }}>Instagram Profile URL</label>
+                      <input 
+                        type="url" 
+                        value={sectionImages[selectedSection]?.instagramURL || ''} 
+                        onChange={(e) => {
+                          setSectionImages(p => ({
+                            ...p,
+                            [selectedSection]: { ...p[selectedSection], instagramURL: e.target.value }
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#000', border: '1px solid #e1306c', color: '#fff', borderRadius: '4px' }}
+                        placeholder="https://instagram.com/username"
+                      />
+                    </div>
+                  </div>
+
                   <button 
                     onClick={async () => {
                       try {
@@ -896,11 +944,14 @@ const AdminManagement = () => {
                           sectionKey: selectedSection,
                           name: imgData?.name || '',
                           regNo: imgData?.regNo || '',
-                          order: imgData?.order || defaultOrder
+                          order: imgData?.order || defaultOrder,
+                          linkedinURL: imgData?.linkedinURL || '',
+                          instagramURL: imgData?.instagramURL || '',
+                          email: imgData?.email || ''
                         });
                         clearSectionCache();
                         fetchSectionImages();
-                        showToast('Details saved and sequences swapped!');
+                        showToast('Details & social links saved successfully!');
                       } catch (error) {
                         showToast('Failed to save details', 'error');
                       }

@@ -27,6 +27,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         customFormFields,
         eligibleBranches,
         eligibleYears,
+        registrationMode,
         isTBD
     } = req.body;
     if (!title || !description || !category || !startTime || !endTime || !venue || !registrationDeadline) {
@@ -54,6 +55,9 @@ export const createEvent = asyncHandler(async (req, res) => {
         eligibleBranches: eligibleBranches || [],
         eligibleYears: eligibleYears || [1, 2, 3, 4],
         ticketStages: req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in'],
+        enableQRScanning: req.body.enableQRScanning !== undefined ? req.body.enableQRScanning : true,
+        attendanceMethod: req.body.attendanceMethod || 'qr',
+        registrationMode: registrationMode || 'Standard',
         isTBD: isTBD || false,
         createdBy: req.user.userId
     });
@@ -62,8 +66,8 @@ export const createEvent = asyncHandler(async (req, res) => {
     await newEvent.populate('createdBy', 'name email');
 
     logFootprint(req, 'CREATE', 'Event', `Created event: ${newEvent.title}`);
-    
-    // Trigger Redis check since an active event might have been created
+
+
     checkAndToggleRedis().catch(err => console.error(err));
 
     return res
@@ -155,6 +159,9 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'eligibleBranches',
         'eligibleYears',
         'ticketStages',
+        'enableQRScanning',
+        'attendanceMethod',
+        'registrationMode',
         'isTBD'
     ];
 
@@ -177,7 +184,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
 
     logFootprint(req, 'UPDATE', 'Event', `Updated event: ${event.title}`);
 
-    // Trigger Redis check since an active event might have changed status
+
     checkAndToggleRedis().catch(err => console.error(err));
 
     return res
@@ -202,7 +209,7 @@ export const deleteEvent = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event is already approved for deletion and queued in 7-day retention period');
     }
 
-    // Initiate deletion request with 1st vote (Initiator)
+
     event.deletionState = {
         status: 'PENDING_APPROVAL',
         initiatedBy: userId,
@@ -245,18 +252,18 @@ export const approveEventDeletion = asyncHandler(async (req, res) => {
     let csvData = null;
     let csvFileName = null;
 
-    // Total required approvals: 3 SuperAdmins (Initiator + 2 Approvers)
+
     if (event.deletionState.approvals.length >= 3) {
         event.deletionState.status = 'APPROVED_RETENTION';
         event.deletionState.approvedAt = new Date();
-        // 7 Days Retention Period before vanishing completely!
+
         event.deletionState.vanishAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        
-        // Hide from public website
+
+
         event.isActive = false;
         event.isRegistrationOpen = false;
 
-        // Generate automatic final CSV backup string
+
         const registrations = await Registration.find({ eventId: event._id, deletedAt: null })
             .populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy');
 
@@ -355,7 +362,7 @@ export const cancelEventDeletion = asyncHandler(async (req, res) => {
 
 export const endEvent = asyncHandler(async (req, res) => {
     const event = await Event.findById(req.params.id);
-    
+
     if (!event || event.deletedAt) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
@@ -367,8 +374,8 @@ export const endEvent = asyncHandler(async (req, res) => {
     event.status = 'Ended';
     event.endedAt = new Date();
     await event.save();
-    
-    // Trigger Redis check since an active event might have ended
+
+
     checkAndToggleRedis().catch(err => console.error(err));
 
     return res
@@ -436,8 +443,8 @@ export const wipeEventData = asyncHandler(async (req, res) => {
                 }
             }
         }
-        
-        // Clear the custom data entirely
+
+
         reg.customData = { wiped: "Data has been wiped to save storage" };
         await reg.save();
     }

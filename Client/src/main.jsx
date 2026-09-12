@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import BackgroundGears from "./components/BackgroundGears/BackgroundGears";
 import { HelmetProvider } from 'react-helmet-async';
 import "./index.css";
@@ -11,6 +13,8 @@ if (import.meta.env.DEV) {
     <HelmetProvider>
       <BackgroundGears />
       <App />
+      <Analytics />
+      <SpeedInsights />
     </HelmetProvider>
   );
 } else {
@@ -19,6 +23,8 @@ if (import.meta.env.DEV) {
       <HelmetProvider>
         <BackgroundGears />
         <App />
+        <Analytics />
+        <SpeedInsights />
       </HelmetProvider>
     </React.StrictMode>
   );

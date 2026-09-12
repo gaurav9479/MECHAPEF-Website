@@ -1,21 +1,48 @@
 import nodemailer from 'nodemailer';
 import { SpecialSponsor } from '../models/specialSponsor.model.js';
+import dns from 'dns';
+import { promisify } from 'util';
 
-const defaultFrom = process.env.FROM_EMAIL || process.env.SMTP_USER;
+const resolve4 = promisify(dns.resolve4);
+const defaultFrom = process.env.SMTP_USER || process.env.FROM_EMAIL;
 
-let transporter;
+let cachedTransporter = null;
+let cachedHost = null;
 
-const getTransporter = () => {
+const getTransporter = async () => {
     if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        throw new Error('SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS must be configured');
+        throw new Error('SMTP credentials (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS) must be configured');
     }
 
-    if (!transporter) {
-        transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT),
-            secure: Number(process.env.SMTP_PORT) === 465,
+    if (!cachedTransporter) {
+        let ipv4Host = process.env.SMTP_HOST;
+        try {
+            const addresses = await resolve4(process.env.SMTP_HOST);
+            if (addresses && addresses.length > 0) {
+                ipv4Host = addresses[0];
+            }
+        } catch (err) {
+            console.error('[Email] IPv4 resolution failed, using hostname:', err.message);
+        }
+
+        const port = Number(process.env.SMTP_PORT || 465);
+        cachedHost = ipv4Host;
+        cachedTransporter = nodemailer.createTransport({
+            host: ipv4Host,
+            port: port,
+            secure: port === 465,
             family: 4,
+            pool: true,
+            maxConnections: 1, 
+            maxMessages: 100,
+            idleTimeout: 300000, 
+            connectionTimeout: 30000,
+            greetingTimeout: 20000,
+            socketTimeout: 45000,
+            tls: {
+                rejectUnauthorized: false,
+                servername: process.env.SMTP_HOST
+            },
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS
@@ -23,13 +50,18 @@ const getTransporter = () => {
         });
     }
 
-    return transporter;
+    return cachedTransporter;
 };
 
 const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
-    if (!from) {
-        throw new Error('FROM_EMAIL or SMTP_USER must be configured');
+    let transporter;
+    try {
+        transporter = await getTransporter();
+    } catch (err) {
+        cachedTransporter = null; 
+        throw err;
     }
+
 
     let finalHtml = html;
     try {
@@ -44,8 +76,6 @@ const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
                 </div>
                 ${sponsor.tagline ? `<p style="margin-top: 15px; font-size: 14px; color: #555; font-weight: 500;">${sponsor.tagline}</p>` : ''}
             </div>`;
-            
-            // Inject before closing body tag if it exists, else append
             if (finalHtml.includes('</body>')) {
                 finalHtml = finalHtml.replace('</body>', `${sponsorHtml}</body>`);
             } else {
@@ -53,17 +83,30 @@ const sendEmail = async ({ to, subject, html, text, from = defaultFrom }) => {
             }
         }
     } catch (err) {
-        console.error('Error injecting special sponsor into email:', err);
+        console.error('[Email] Error injecting sponsor banner:', err.message);
     }
 
-    return getTransporter().sendMail({
-        from,
-        to,
-        subject,
-        html: finalHtml,
-        text,
-        replyTo: process.env.SMTP_USER
-    });
+    const finalFrom = from || process.env.SMTP_USER;
+    const port = Number(process.env.SMTP_PORT || 465);
+    console.log(`[Email] Sending to: ${to} via SMTP (${process.env.SMTP_HOST}:${port})`);
+
+    try {
+        const info = await transporter.sendMail({
+            from: `MechaPEF <${finalFrom}>`,
+            to,
+            subject,
+            html: finalHtml,
+            text,
+            replyTo: process.env.SMTP_USER
+        });
+
+        console.log(`[Email] Successfully sent to ${to}! MessageId: ${info.messageId}`);
+        return info;
+    } catch (err) {
+        // If pool connection died, clear cache so next attempt creates a fresh connection
+        cachedTransporter = null;
+        throw err;
+    }
 };
 
 export default sendEmail;

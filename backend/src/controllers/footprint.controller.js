@@ -4,7 +4,7 @@ import Footprint from '../models/footprint.model.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
 export const getFootprints = asyncHandler(async (req, res) => {
-    // Optional pagination
+
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 50;
     const startIndex = (page - 1) * limit;

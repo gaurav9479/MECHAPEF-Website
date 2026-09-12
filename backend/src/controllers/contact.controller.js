@@ -4,7 +4,7 @@ import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
-// ── Public: Submit contact form message ──────────────────────────────────────
+
 export const submitContactMessage = asyncHandler(async (req, res) => {
     const { name, email, message } = req.body;
 
@@ -25,7 +25,7 @@ export const submitContactMessage = asyncHandler(async (req, res) => {
     );
 });
 
-// ── Admin: Get all messages ──────────────────────────────────────────────────
+
 export const getAllMessages = asyncHandler(async (req, res) => {
     const { page = 1, limit = 20, isRead } = req.query;
 
@@ -57,7 +57,7 @@ export const getAllMessages = asyncHandler(async (req, res) => {
     );
 });
 
-// ── Admin: Get unseen message count ─────────────────────────────────────────
+
 export const getUnseenCount = asyncHandler(async (req, res) => {
     const unseenCount = await Contact.countDocuments({ deletedAt: null, isRead: false });
 
@@ -66,7 +66,7 @@ export const getUnseenCount = asyncHandler(async (req, res) => {
     );
 });
 
-// ── Admin: Toggle read/unread status ─────────────────────────────────────────
+
 export const toggleMessageRead = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { isRead } = req.body;
@@ -87,7 +87,7 @@ export const toggleMessageRead = asyncHandler(async (req, res) => {
     );
 });
 
-// ── Admin: Soft delete message ───────────────────────────────────────────────
+
 export const deleteMessage = asyncHandler(async (req, res) => {
     const { id } = req.params;
 

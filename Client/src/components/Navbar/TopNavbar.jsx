@@ -53,13 +53,11 @@ const TopNavbar = () => {
       setHasUnreadNotice(hasUnread);
     }).catch(() => {});
 
-    // Fetch active special sponsor for Co-Branding & Brand Font Takeover
     apiGetCached('/special-sponsor/active', (data) => {
       const sp = data.data;
       if (sp) {
         setSpecialSponsor(sp);
         
-        // Inject Custom Brand Font & Accent Color if takeover enabled
         if (sp.applyBrandFont) {
           if (sp.customFontUrl) {
             const fontLinkId = 'special-sponsor-font-link';
@@ -259,7 +257,7 @@ const TopNavbar = () => {
         if (el) {
           if (id === "about-us" && window.innerWidth > 768) {
             const elTop = el.getBoundingClientRect().top + window.scrollY;
-            const targetY = elTop + window.innerHeight * 5.5 * 0.28;
+            const targetY = elTop + window.innerHeight * 3.0 * 0.35;
             gsap.to(window, { duration: 0.9, scrollTo: { y: targetY, autoKill: false }, ease: "power2.out" });
           } else {
             el.scrollIntoView({ behavior: "smooth" });
@@ -281,11 +279,11 @@ const TopNavbar = () => {
             <div className="logo-sub">MNNIT</div>
           </div>
 
-          {specialSponsor?.logoURL && specialSponsor?.showCoBrandingLogo !== false && (
+          {(specialSponsor?.navbarLogoURL || specialSponsor?.logoURL) && specialSponsor?.showCoBrandingLogo !== false && (
             <div className="cobranding-sponsor" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: '10px', borderLeft: '2px solid rgba(255, 255, 255, 0.2)', paddingLeft: '14px', height: '42px' }}>
               <span style={{ color: specialSponsor?.brandColor || '#ff1f01', fontWeight: '900', fontSize: '1.4rem', fontFamily: 'sans-serif', lineHeight: 1 }}>×</span>
               <img 
-                src={specialSponsor.logoURL} 
+                src={specialSponsor.navbarLogoURL || specialSponsor.logoURL} 
                 alt={specialSponsor.name} 
                 style={{ height: '42px', maxWidth: '160px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.25))' }} 
               />

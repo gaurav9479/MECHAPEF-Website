@@ -129,7 +129,7 @@ export const notFoundHandler = (req, res) => {
 };
 
 export const requestLogger = (req, res, next) => {
-    // Ignore health check routes to prevent log spam
+
     if (req.path === '/health' || req.path === '/api/health') {
         return next();
     }

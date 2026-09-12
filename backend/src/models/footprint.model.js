@@ -32,7 +32,6 @@ const footprintSchema = new mongoose.Schema(
     }
 );
 
-// TTL index to automatically delete records after 7 days (604800 seconds)
 footprintSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
 
 export default mongoose.model('Footprint', footprintSchema);

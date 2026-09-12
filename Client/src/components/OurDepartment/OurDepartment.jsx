@@ -37,28 +37,26 @@ const OurDepartment = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Framer Motion Scroll Setup
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"]
   });
 
-  // Apply a spring to create a smooth "scrub" effect (like GSAP scrub: 1)
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 70,
     damping: 20,
     mass: 1.2
   });
 
-  // Parallax for the 3 columns (Start rising quickly after sticking, at 0.05)
+
   const y1 = useTransform(smoothProgress, [0.05, 0.80], ["100vh", "-100%"]);
   const y2 = useTransform(smoothProgress, [0.05, 0.80], ["120vh", "-120%"]);
   const y3 = useTransform(smoothProgress, [0.05, 0.80], ["110vh", "-110%"]);
 
-  // Mobile Parallax (Single column)
+
   const mobileY = useTransform(smoothProgress, [0.05, 0.80], ["100vh", "-100%"]);
 
-  // Footer arrives on the 7th scroll (0.75 to 0.875)
+
   const footerY = useTransform(smoothProgress, [0.75, 0.875], ["100vh", "0vh"]);
   const footerOpacity = useTransform(smoothProgress, [0.75, 0.80], [0, 1]);
 

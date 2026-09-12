@@ -6,13 +6,12 @@ import { HTTP_STATUS } from '../constants/index.js';
 import logFootprint from '../utils/logFootprint.js';
 
 export const getAllAlbums = asyncHandler(async (req, res) => {
-    // Determine whether to fetch only active albums
+
     const { all } = req.query;
     const filter = {};
     if (!all) filter.isActive = true;
 
-    // We can omit the full images array here to save bandwidth if needed,
-    // but returning it is fine for smaller galleries. Let's return only the count of images or slice it.
+
     const albums = await Album.find(filter).sort({ createdAt: -1 });
 
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { albums }, 'Albums fetched successfully'));
@@ -67,13 +66,13 @@ export const deleteAlbum = asyncHandler(async (req, res) => {
 
     logFootprint(req, 'DELETE', 'Album', `Deleted album: ${album.title}`);
 
-    // Note: We could also delete the associated ImageKit files here, but it's okay to just delete the DB record for now.
+
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, {}, 'Album deleted'));
 });
 
-// Adding multiple images
+
 export const addImagesToAlbum = asyncHandler(async (req, res) => {
-    const { images } = req.body; // Expecting an array: [{ imageURL, imagekitFileId }]
+    const { images } = req.body; 
     if (!images || !Array.isArray(images) || images.length === 0) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please provide an array of images');
     }
@@ -89,7 +88,7 @@ export const addImagesToAlbum = asyncHandler(async (req, res) => {
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { album }, 'Images added to album'));
 });
 
-// Removing a single image
+
 export const removeImageFromAlbum = asyncHandler(async (req, res) => {
     const { id, imageId } = req.params;
 

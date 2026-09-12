@@ -165,6 +165,11 @@
   max-width: 800px;
 }
 
+.reg-modal.reg-modal-extra-wide {
+  max-width: 900px;
+  width: 95%;
+}
+
 /* Layout for horizontal split */
 .reg-form-layout {
   display: flex;

@@ -35,6 +35,11 @@ router.use('/contact', contactRoutes);
 router.use('/system', systemRoutes);
 router.use('/projects', projectRoutes);
 
+import { submitLiveAnswer, getLiveResults } from '../controllers/liveEvent.controller.js';
+
+router.post('/submit', submitLiveAnswer);
+router.get('/results', getLiveResults);
+
 router.get('/health', (req, res) => {
     res.status(200).json({
         status: 'ok',

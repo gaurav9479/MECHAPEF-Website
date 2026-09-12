@@ -18,7 +18,7 @@ async function listFiles() {
         const files = await imagekit.listFiles({
             path: '/mechapef/sections',
             limit: 20,
-            sort: 'DESC_CREATED' // Most recent first
+            sort: 'DESC_CREATED'  
         });
         console.log(`Found ${files.length} recent files:`);
         files.forEach(f => {

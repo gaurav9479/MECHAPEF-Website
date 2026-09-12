@@ -41,7 +41,7 @@ const MobileDepartmentStack = ({ images }) => {
           }
         });
 
-        // Fade in and scale up the header smoothly as the section is pinned
+
         const mdsHeader = sectionRef.current.querySelector('.mds-header');
         mobileTl.fromTo(mdsHeader,
           { opacity: 0, scale: 0.7, y: 30 },
@@ -49,7 +49,7 @@ const MobileDepartmentStack = ({ images }) => {
           0
         );
 
-        // Bring wrapper up slightly
+
         mobileTl.to(mobileCardsWrapper, {
           y: 0,
           duration: 0.8,
@@ -88,12 +88,12 @@ const MobileDepartmentStack = ({ images }) => {
         mobileTl.to({}, { duration: 0.5 }); // Buffer
       }, sectionRef);
       
-      // Delay refresh slightly more to ensure it happens after PastEventsStack is done
+
       setTimeout(() => {
         ScrollTrigger.sort();
         ScrollTrigger.refresh();
       }, 500);
-    }, 400); // 400ms delay ensures PastEventsStack (100ms) creates its trigger first
+    }, 400); 
 
     return () => {
       clearTimeout(timer);

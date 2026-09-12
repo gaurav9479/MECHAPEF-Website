@@ -13,7 +13,6 @@ const imagekit = new ImageKit({
     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
 });
 
-// ── Upload image to ImageKit and return URL ──────────────────────────────────
 export const uploadImage = asyncHandler(async (req, res) => {
     if (!req.file) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No file uploaded');
 
@@ -29,7 +28,6 @@ export const uploadImage = asyncHandler(async (req, res) => {
             useUniqueFileName: true,
         });
 
-        // Cleanup temp file
         fs.unlinkSync(req.file.path);
 
         return res.status(HTTP_STATUS.OK).json(
@@ -47,16 +45,13 @@ export const uploadImage = asyncHandler(async (req, res) => {
     }
 });
 
-// ── Get all section images ───────────────────────────────────────────────────
 export const getSectionImages = asyncHandler(async (req, res) => {
     const { device } = req.query;
     let filter = {};
     
     if (device === 'mobile') {
-        // Mobile needs team images and mobile gallery (_mob)
         filter = { sectionKey: { $regex: /_mob$|^team_/ } };
     } else if (device === 'desktop') {
-        // Desktop needs team images and desktop gallery (no _mob)
         filter = { sectionKey: { $not: /_mob$/ } };
     }
 
@@ -66,9 +61,8 @@ export const getSectionImages = asyncHandler(async (req, res) => {
     );
 });
 
-// ── Update a section image ───────────────────────────────────────────────────
 export const updateSectionImage = asyncHandler(async (req, res) => {
-    const { sectionKey, label, imageURL, imagekitFileId, name, regNo, order } = req.body;
+    const { sectionKey, label, imageURL, imagekitFileId, name, regNo, order, linkedinURL, instagramURL, email } = req.body;
     if (!sectionKey) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey is required');
 
     const existingImage = await SectionImage.findOne({ sectionKey });
@@ -94,6 +88,9 @@ export const updateSectionImage = asyncHandler(async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (regNo !== undefined) updateData.regNo = regNo;
     if (order !== undefined) updateData.order = newOrder;
+    if (linkedinURL !== undefined) updateData.linkedinURL = linkedinURL;
+    if (instagramURL !== undefined) updateData.instagramURL = instagramURL;
+    if (email !== undefined) updateData.email = email;
 
     const image = await SectionImage.findOneAndUpdate(
         { sectionKey },
@@ -106,7 +103,6 @@ export const updateSectionImage = asyncHandler(async (req, res) => {
     );
 });
 
-// ── Delete a section image ───────────────────────────────────────────────────
 export const deleteSectionImage = asyncHandler(async (req, res) => {
     const { sectionKey } = req.params;
     if (!sectionKey) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'sectionKey is required');

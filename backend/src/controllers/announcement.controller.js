@@ -15,11 +15,11 @@ export const getAnnouncements = asyncHandler(async (req, res) => {
 export const createAnnouncement = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
     if (!title || !description) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'title and description are required');
-    // createdBy is required by schema — for testing, use a dummy ObjectId
+
     const createdBy = req.user?.userId || '000000000000000000000000';
     const item = await Announcement.create({ ...req.body, createdBy });
 
-    // Auto-email has been moved to a dedicated Mail portal for Super Admins
+
     logFootprint(req, 'CREATE', 'Announcement', `Created announcement: ${item.title}`);
 
     return res.status(HTTP_STATUS.CREATED).json(new APIResponse(HTTP_STATUS.CREATED, { item }, 'Announcement created'));

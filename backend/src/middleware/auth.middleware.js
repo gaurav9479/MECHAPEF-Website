@@ -146,7 +146,7 @@ export const verifyOwnership = (resourceField = 'userId') => {
                 req.body?.[resourceField] ||
                 req.params?.[resourceField];
 
-            // Super Admin can access any resource
+
             if (req.user.role === 'super-admin') {
                 return next();
             }

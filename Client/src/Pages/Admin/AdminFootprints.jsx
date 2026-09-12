@@ -9,10 +9,10 @@ const AdminFootprints = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Only fetch manually via Refresh button as requested
+
   useEffect(() => {
-    // fetchFootprints();
-    setLoading(false); // Make sure it doesn't show loading indefinitely at start
+
+    setLoading(false); 
   }, []);
 
   const fetchFootprints = async () => {

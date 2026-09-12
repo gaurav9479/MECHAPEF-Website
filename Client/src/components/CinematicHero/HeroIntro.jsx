@@ -1,9 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { assets } from "../../assets/assets";
+import { apiGetCached } from '../../utils/apiCache';
 import { FaArrowRight, FaUsers } from "react-icons/fa";
-import { scrollToId } from "../../utils/scroll";
 import RedStrips from '../RedInclinedStrips/RedInclinedStrips';
 import MagneticButton from "../MagneticButton/MagneticButton";
 import '../CinematicHero/CinematicHero.css';
@@ -12,13 +12,22 @@ import '../Hero/Hero.css';
 const HeroIntro = () => {
   const navigate = useNavigate();
   const containerRef = useRef(null);
+  const [specialSponsor, setSpecialSponsor] = useState(null);
+
+  useEffect(() => {
+    apiGetCached('/special-sponsor/active', (data) => {
+      if (data?.data) {
+        setSpecialSponsor(data.data);
+      }
+    }).catch(() => { });
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
   });
 
-  // Disperse animations as it scrolls up normally
+
   const h1Y = useTransform(scrollYProgress, [0, 0.75], ["0vh", "15vh"]);
   const h1Scale = useTransform(scrollYProgress, [0, 0.75], [1, 1.5]);
   const h1Opacity = useTransform(scrollYProgress, [0.3, 0.75], [1, 0]);
@@ -39,18 +48,18 @@ const HeroIntro = () => {
   const botRotate = useTransform(scrollYProgress, [0, 0.75], [0, -10]);
   const botX = useTransform(scrollYProgress, [0, 0.75], ["0vw", "15vw"]);
   const botOpacity = useTransform(scrollYProgress, [0.3, 0.75], [1, 0]);
-  
-  // Background stays red
-  const bgOpacity = useTransform(scrollYProgress, [0, 1], [1, 1]); 
-  
-  // Entire scene fades by 75%
+
+
+  const bgOpacity = useTransform(scrollYProgress, [0, 1], [1, 1]);
+
+
   const sceneOpacity = useTransform(scrollYProgress, [0.6, 0.75], [1, 0]);
   const pointerEvents = useTransform(scrollYProgress, (val) => val >= 0.75 ? "none" : "auto");
 
   return (
     <div ref={containerRef} className="cinematic-wrapper" style={{ height: "100vh" }}>
       <div className="cinematic-camera" style={{ position: "relative" }}>
-        
+
         <motion.div className="cinematic-bg-layer" style={{ opacity: bgOpacity }}>
           <RedStrips index={0} shiftX="-10%" />
           <div className="fade-right"></div>
@@ -68,7 +77,23 @@ const HeroIntro = () => {
                 <h2>COMMUNITY OF MNNIT</h2>
               </motion.div>
 
-              <motion.h1 style={{ y: h1Y, scale: h1Scale, opacity: h1Opacity, transformOrigin: "left center" }}>MECHAPEF</motion.h1>
+              {specialSponsor?.logoURL && specialSponsor?.showCoBrandingLogo !== false ? (
+                <motion.div
+                  className="hero-cobranding"
+                  style={{ y: badgeY, opacity: badgeOpacity }}
+                  aria-label="Sponsored co-branding"
+                >
+                  <span className="hero-cobranding-logo-text">MECHAPEF</span>
+                  <span className="hero-cobranding-cross" style={{ color: specialSponsor.brandColor || '#ff1f01' }}>×</span>
+                  <img
+                    src={specialSponsor.navbarLogoURL || specialSponsor.logoURL}
+                    alt={specialSponsor.name}
+                    className="hero-cobranding-logo"
+                  />
+                </motion.div>
+              ) : (
+                <motion.h1 style={{ y: h1Y, scale: h1Scale, opacity: h1Opacity, transformOrigin: "left center" }}>MECHAPEF</motion.h1>
+              )}
 
               <motion.p style={{ x: pX, opacity: pOpacity }}>
                 The Official Club of Mechanical and Production<br />
@@ -79,15 +104,15 @@ const HeroIntro = () => {
                 <MagneticButton className="primary-btn" onClick={() => navigate('/magazine')}>
                   Explore Magazine
                 </MagneticButton>
-                <MagneticButton className="secondary-btn" onClick={() => scrollToId('our-team')}>
-                  Meet the Team
+                <MagneticButton className="secondary-btn" onClick={() => window.location.assign('https://mechapef-website.vercel.app/team')}>
+                  Meet the ALUMS
                 </MagneticButton>
               </motion.div>
             </div>
           </div>
 
           <motion.div className="cinematic-right" style={{ x: botX, scale: botScale, rotate: botRotate, opacity: botOpacity, transformOrigin: "center center" }}>
-             <img src={assets.heroBot} className="hero-bot" alt="MechaPEF Bot" />
+            <img src={assets.heroBot} className="hero-bot" alt="MechaPEF Bot" />
           </motion.div>
         </motion.div>
 

@@ -9,8 +9,8 @@ const systemConfigSchema = new mongoose.Schema(
       enum: ['AUTO', 'ALWAYS_ON', 'ALWAYS_OFF'],
       default: 'AUTO'
     },
-    startHour: { type: Number, default: 10 }, // 10:00 AM IST
-    endHour: { type: Number, default: 23 },   // 11:00 PM IST
+    startHour: { type: Number, default: 10 }, 
+    endHour: { type: Number, default: 23 }, 
     enableSeatLock: { type: Boolean, default: true },
     autoFallbackToDb: { type: Boolean, default: true },
     turnOffScheduledAt: { type: Date, default: null },

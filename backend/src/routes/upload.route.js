@@ -10,7 +10,6 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Upload image to ImageKit (Media Management)
 router.post(
     '/image',
     authenticate,
@@ -19,7 +18,6 @@ router.post(
     uploadImage
 );
 
-// General file upload for registrations
 router.post(
     '/file',
     authenticate,
@@ -27,8 +25,7 @@ router.post(
     uploadImage
 );
 
-// Section image management
-router.get('/sections', getSectionImages); // Public
+router.get('/sections', getSectionImages);
 
 router.post(
     '/sections',

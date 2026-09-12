@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { FaPlus, FaEdit, FaTrash, FaCube } from 'react-icons/fa';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import api from '../../services/api';
-import './AdminDashboard.css'; // Re-use standard admin styles
+import './AdminDashboard.css';
 
 const AdminProjects = () => {
   const [projects, setProjects] = useState([]);

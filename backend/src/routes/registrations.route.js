@@ -4,7 +4,6 @@ import { authenticate, checkRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// User routes
 router.get(
     '/my-registrations',
     authenticate,
@@ -17,12 +16,53 @@ router.delete(
     registrationController.cancelRegistration
 );
 
-// Content Management Routes
 router.patch(
     '/:id/verify',
     authenticate,
     checkRole(['super-admin', 'content-lead', 'media-lead']),
     registrationController.verifyRegistration
+);
+
+router.post(
+    '/:teamRegId/send-join-request',
+    authenticate,
+    registrationController.sendJoinRequest
+);
+
+router.post(
+    '/:teamRegId/respond-join',
+    authenticate,
+    registrationController.respondToJoinRequest
+);
+
+router.post(
+    '/:teamRegId/add-member',
+    authenticate,
+    registrationController.addMemberByRegNo
+);
+
+router.post(
+    '/:teamRegId/leave',
+    authenticate,
+    registrationController.leaveTeam
+);
+
+router.post(
+    '/:teamRegId/remove-member',
+    authenticate,
+    registrationController.removeTeamMember
+);
+
+router.post(
+    '/:teamRegId/finalize',
+    authenticate,
+    registrationController.finalizeTeamRegistration
+);
+
+router.delete(
+    '/:teamRegId/draft',
+    authenticate,
+    registrationController.deleteDraftTeam
 );
 
 export default router;

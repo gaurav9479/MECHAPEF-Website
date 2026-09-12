@@ -26,7 +26,7 @@ export const scrollToId = (id, offset = 80, delay = 0, duration = 0.7) => {
   }
 
   if (!performScroll()) {
-    // Element not in DOM yet — retry every 100ms (max 30 times)
+
     let attempts = 0;
     const interval = setInterval(() => {
       if (performScroll() || ++attempts >= 30) {

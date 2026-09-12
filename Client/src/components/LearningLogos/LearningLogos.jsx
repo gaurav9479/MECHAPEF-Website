@@ -14,7 +14,6 @@ const learningSkills = [
   { id: 'ev', label: 'EV Design', icon: '🚗', desc: 'Automotive battery packs mapping, electric drivetrains, and motor controllers.', teeth: 20, r: 37, R: 44, angle: 300, d: 126, meshTweak: 9 }
 ];
 
-// Reusable SVG Gear Component Generator (centered at 0, 0)
 const Gear = ({ teeth, r, R, stroke = '#ff1f01', fill = 'url(#gearGrad)' }) => {
   const toothPoints = Array.from({ length: teeth }).map((_, i) => {
     const a0 = (i / teeth) * Math.PI * 2;
@@ -156,22 +155,18 @@ const LearningLogos = () => {
           return (1 + Td / Ts) * angle + 180 + 180 / Ts + (tweak || 0);
         };
 
-        // 1. Rotate Driver Gear
         tl.to(driverGear, { rotation: 1080, transformOrigin: "50% 50%", ease: 'none', duration: 1 }, 0);
         tl.to(centralCore, { rotation: 1080, transformOrigin: "50% 50%", ease: 'none', duration: 1 }, 0);
 
-        // 2. Rotate all satellite gears interlocking based on their teeth count gear ratio
         learningSkills.forEach((skill) => {
           const satelliteGear = svg.querySelector(`#gear-${skill.id}`);
           const gearRatio = teethDriver / skill.teeth;
           const initialOffset = getGearOffset(skill.angle, skill.teeth, skill.meshTweak);
-          // Maintain the perfect teeth meshing offset throughout the rotation
           const targetRotation = initialOffset - 1080 * gearRatio;
           
           tl.to(satelliteGear, { rotation: targetRotation, transformOrigin: "50% 50%", ease: 'none', duration: 1 }, 0);
         });
 
-        // Helper to update active skills details in the HUD panel
         const highlightSkill = (idx) => {
           const allGears = svg.querySelectorAll('.gear-node');
           allGears.forEach(g => g.classList.remove('gear-active'));
@@ -194,7 +189,6 @@ const LearningLogos = () => {
           }
         };
 
-        // Initialize state & timeline triggers
         tl.call(() => highlightSkill(-1), null, 0.08);
         tl.call(() => highlightSkill(0), null, 0.22);
         tl.call(() => highlightSkill(1), null, 0.38);
@@ -214,7 +208,6 @@ const LearningLogos = () => {
     };
   }, [isMobile]);
 
-  // Click handler to trigger manual sparks and HUD updates
   const handleGearClick = (skill, e) => {
     triggerSparks(e.clientX, e.clientY);
 
@@ -231,7 +224,6 @@ const LearningLogos = () => {
     hudTitle.textContent = skill.label;
     hudDesc.textContent = skill.desc;
     
-    // Highlight gear node visually
     const svg = svgRef.current;
     if (svg) {
       svg.querySelectorAll('.gear-node').forEach(g => g.classList.remove('gear-active'));
@@ -240,7 +232,6 @@ const LearningLogos = () => {
     }
   };
 
-  // Mobile layout state handlers
   const [mobileActiveSkill, setMobileActiveSkill] = useState(null);
   const [mobileAssembledIds, setMobileAssembledIds] = useState([]);
 
@@ -261,7 +252,7 @@ const LearningLogos = () => {
       </div>
 
       {!isMobile ? (
-        // DESKTOP: Full Interactive Interlocking Gear Train
+
         <div className="ll-desktop-container">
           <div className="ll-blueprint-view">
             <svg 
@@ -387,7 +378,7 @@ const LearningLogos = () => {
           </div>
         </div>
       ) : (
-        // MOBILE SCREEN: Tap-interactive grid
+
         <div className="ll-mobile-view">
           <div className="ll-mobile-grid">
             {learningSkills.map((sk) => {

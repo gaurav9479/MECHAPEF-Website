@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import api from '../../services/api';
 import { apiGetCached } from '../../utils/apiCache';
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 import './Gallery.css';
 
 const Gallery = () => {
@@ -48,9 +49,9 @@ const Gallery = () => {
               >
                 <div className="album-cover">
                   {album.coverImageURL ? (
-                    <img src={album.coverImageURL} alt={album.title} />
+                    <img src={getOptimizedImageUrl(album.coverImageURL)} alt={album.title} />
                   ) : album.images && album.images.length > 0 ? (
-                    <img src={album.images[0].imageURL} alt={album.title} />
+                    <img src={getOptimizedImageUrl(album.images[0].imageURL)} alt={album.title} />
                   ) : (
                     <div className="album-no-cover">No Cover</div>
                   )}

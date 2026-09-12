@@ -31,7 +31,7 @@ const AdminRedis = () => {
       setIsShuttingDown(Boolean(conf.isShuttingDown));
       setShutdownMinutesRemaining(conf.shutdownMinutesRemaining || 0);
     } catch {
-      // ignore
+
     }
   };
 

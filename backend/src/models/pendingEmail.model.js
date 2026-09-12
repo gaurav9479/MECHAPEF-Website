@@ -36,7 +36,6 @@ const pendingEmailSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Index to quickly fetch pending emails sorted by oldest first
 pendingEmailSchema.index({ status: 1, createdAt: 1 });
 
 export default mongoose.model('PendingEmail', pendingEmailSchema);

@@ -26,18 +26,15 @@ const PastSponsors = ({ showCurrentSponsors = true }) => {
       setLoading(false);
     });
   }, []);
-
-  // Helper function to ensure URL has a valid protocol
- // Helper function to handle sponsor click
   const handleSponsorClick = (websiteURL) => {
     if (!websiteURL) {
-      // If there is no URL, stay on the page (do nothing)
+
       return;
     }
 
     let formattedUrl = websiteURL.trim();
     
-    // Check if the URL starts with http:// or https://, if not, prepend https://
+
     if (!/^https?:\/\//i.test(formattedUrl)) {
       formattedUrl = `https://${formattedUrl}`;
     }
@@ -50,7 +47,7 @@ const PastSponsors = ({ showCurrentSponsors = true }) => {
   return (
     <section className="past-sponsors-home-section">
       <div className="past-sponsors-container">
-        {/* Render Current Sponsors ONLY if enabled and currentSponsors exist */}
+
         {showCurrentSponsors && currentSponsors.length > 0 && (
           <div style={{ marginBottom: '60px', width: '100%', textAlign: 'center' }}>
             <span style={{ color: '#ff1f01', fontSize: '0.9rem', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 'bold' }}>CURRENT YEAR</span>

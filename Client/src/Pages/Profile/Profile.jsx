@@ -60,8 +60,7 @@ const Profile = () => {
       await api.put('/auth/profile', formData);
       setToast({ msg: 'Profile updated successfully!', type: 'success' });
       setTimeout(() => setToast(null), 3000);
-      // Wait a moment and maybe reload to fetch fresh user context if needed,
-      // but the auth context gets updated on reload anyway.
+
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       setToast({ msg: error.response?.data?.message || 'Failed to update profile', type: 'error' });

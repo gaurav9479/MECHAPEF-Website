@@ -11,7 +11,7 @@ async function test() {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('Connected to DB');
 
-        // Get past events from 'pastevents'
+
         const PastEvent = mongoose.model('PastEvent', new mongoose.Schema({}, { strict: false }), 'pastevents');
         const events = await PastEvent.find({});
         console.log(`Found ${events.length} past events:`);

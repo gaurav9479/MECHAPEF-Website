@@ -22,7 +22,9 @@ function parseStudentInfoFromRegNo(regNo) {
         '8': 'Electronics and Computational Mechanics',
         '9': 'Materials Engineering'
     };
-    const branch = branchMap[branchCode];
+    const branch = enrollmentYear === 2026 && branchCode === '9'
+        ? 'Mechanical Engineering'
+        : branchMap[branchCode];
     return { branch, yearOfStudy };
 }
 
@@ -38,7 +40,7 @@ const fixUserBranchesAndYears = async () => {
             ]
         });
         if (users.length === 0) return;
-        
+
         console.log(`[Migration] Found ${users.length} users with missing branch or yearOfStudy.`);
         let fixedCount = 0;
         for (const user of users) {
@@ -61,7 +63,7 @@ const fixUserBranchesAndYears = async () => {
             console.log(`[Migration] Successfully fixed ${fixedCount} users.`);
         }
 
-        // Upgrade any existing Mechanical or Production general-users to member role
+
         const upgradeResult = await User.updateMany(
             {
                 role: 'general-user',
@@ -91,11 +93,11 @@ const connectDB = async () => {
 
         console.log('MongoDB connected successfully');
 
-        // Run migration to fix missing branch or year
+
         await fixUserBranchesAndYears();
 
         if (process.env.NODE_ENV === 'development') {
-            mongoose.set('debug', false); 
+            mongoose.set('debug', false);
         }
 
     } catch (error) {

@@ -1,6 +1,7 @@
 import validator from 'validator';
 import Announcement from '../models/announcement.model.js';
 import sendEmail from './sendEmail.js';
+import { getPublicAppUrl } from './publicAppUrl.js';
 
 const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 1500);
 
@@ -14,8 +15,7 @@ const escapeHtml = (value = '') => String(value)
     .replace(/'/g, '&#39;');
 
 const getDashboardUrl = () => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    return `${frontendUrl.replace(/\/$/, '')}/`;
+    return `${getPublicAppUrl()}/`;
 };
 
 const getAnnouncementDate = (announcement) => {

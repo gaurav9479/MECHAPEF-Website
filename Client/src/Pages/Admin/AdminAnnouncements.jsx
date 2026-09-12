@@ -156,7 +156,7 @@ const AdminAnnouncements = () => {
                 </div>
                 <div className="form-group full">
                   <label>Description *</label>
-                  <textarea value={form.description} onChange={e => f('description', e.target.value)} required placeholder="Details..." />
+                  <textarea value={form.description} onChange={e => f('description', e.target.value)}  placeholder="Details..." />
                 </div>
                 <div className="form-group">
                   <label>Priority</label>

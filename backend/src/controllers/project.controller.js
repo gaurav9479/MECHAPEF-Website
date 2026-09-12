@@ -4,7 +4,7 @@ import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
-// Create a new project (Admin Only)
+
 export const createProject = asyncHandler(async (req, res) => {
     const { title, description, modelUrl, credits, isActive } = req.body;
 
@@ -25,7 +25,7 @@ export const createProject = asyncHandler(async (req, res) => {
     );
 });
 
-// Get all active projects (Public)
+
 export const getActiveProjects = asyncHandler(async (req, res) => {
     const projects = await Project.find({ isActive: true }).sort({ createdAt: -1 });
     return res.status(HTTP_STATUS.OK).json(
@@ -33,7 +33,7 @@ export const getActiveProjects = asyncHandler(async (req, res) => {
     );
 });
 
-// Get all projects (Admin Only)
+
 export const getAllProjects = asyncHandler(async (req, res) => {
     const projects = await Project.find().sort({ createdAt: -1 });
     return res.status(HTTP_STATUS.OK).json(
@@ -41,7 +41,7 @@ export const getAllProjects = asyncHandler(async (req, res) => {
     );
 });
 
-// Update a project (Admin Only)
+
 export const updateProject = asyncHandler(async (req, res) => {
     const { id } = req.params;
     
@@ -60,7 +60,7 @@ export const updateProject = asyncHandler(async (req, res) => {
     );
 });
 
-// Delete a project (Admin Only)
+
 export const deleteProject = asyncHandler(async (req, res) => {
     const { id } = req.params;
     

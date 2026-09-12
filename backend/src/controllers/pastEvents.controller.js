@@ -16,7 +16,7 @@ export const createPastEvent = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Missing required fields' });
         }
 
-        // Get highest order to append to the end
+
         const lastEvent = await PastEvent.findOne().sort({ order: -1 });
         const newOrder = lastEvent ? lastEvent.order + 1 : 0;
 
@@ -58,7 +58,7 @@ export const deletePastEvent = async (req, res) => {
         const { id } = req.params;
         const event = await PastEvent.findByIdAndDelete(id);
         if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
-        // Assuming imagekitFileId will be handled by a generic clean-up or directly if needed
+
         res.status(200).json({ success: true, message: 'Event deleted successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -67,7 +67,7 @@ export const deletePastEvent = async (req, res) => {
 
 export const updatePastEventsOrder = async (req, res) => {
     try {
-        const { orderedIds } = req.body; // Array of event IDs in the new order
+        const { orderedIds } = req.body;
         if (!Array.isArray(orderedIds)) {
             return res.status(400).json({ success: false, message: 'orderedIds must be an array' });
         }

@@ -12,10 +12,10 @@ const PASSWORD_RESET_EXPIRY_MS = 15 * 60 * 1000;
 
 function parseStudentInfoFromRegNo(regNo) {
     if (!regNo || regNo.length < 8) return { branch: undefined, yearOfStudy: undefined };
-    
+
     const enrollmentYear = parseInt(regNo.substring(0, 4), 10);
     const branchCode = regNo.substring(4, 5);
-    
+
     if (isNaN(enrollmentYear)) return { branch: undefined, yearOfStudy: undefined };
 
     let yearOfStudy = 2027 - enrollmentYear;
@@ -35,7 +35,9 @@ function parseStudentInfoFromRegNo(regNo) {
         '9': 'Materials Engineering'
     };
 
-    const branch = branchMap[branchCode];
+    const branch = enrollmentYear === 2026 && branchCode === '9'
+        ? 'Mechanical Engineering'
+        : branchMap[branchCode];
     return { branch, yearOfStudy };
 }
 
@@ -75,7 +77,7 @@ export const register = asyncHandler(async (req, res) => {
     }
 
     const isMechOrProd = parsedBranch && (
-        parsedBranch.toLowerCase().includes('mechanical') || 
+        parsedBranch.toLowerCase().includes('mechanical') ||
         parsedBranch.toLowerCase().includes('production') ||
         parsedBranch.toLowerCase().includes('pie')
     );
@@ -108,7 +110,7 @@ export const register = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 14 * 24 * 60 * 60 * 1000
     });
 
     return res.status(HTTP_STATUS.CREATED).json(
@@ -157,7 +159,7 @@ export const login = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 14 * 24 * 60 * 60 * 1000
     });
 
     return res.status(HTTP_STATUS.OK).json(
@@ -357,10 +359,6 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MICROSOFT OAUTH2
-// ─────────────────────────────────────────────────────────────────────────────
-
 function base64URLEncode(buffer) {
     return buffer.toString('base64')
         .replace(/\+/g, '-')
@@ -465,7 +463,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
     const collegeRegNo = email.split('@')[0].split('.').pop() || email.split('@')[0];
     const { branch: parsedBranch, yearOfStudy: parsedYear } = parseStudentInfoFromRegNo(collegeRegNo);
 
-    // Atomic update for existing users — single DB round-trip
+
     let user = await User.findOneAndUpdate(
         { email },
         {
@@ -476,7 +474,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
     );
 
     const isMechOrProd = parsedBranch && (
-        parsedBranch.toLowerCase().includes('mechanical') || 
+        parsedBranch.toLowerCase().includes('mechanical') ||
         parsedBranch.toLowerCase().includes('production') ||
         parsedBranch.toLowerCase().includes('pie')
     );
@@ -489,7 +487,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         if (shouldSave) await user.save();
     }
 
-    // New user — create them
+
     if (!user) {
         const assignedRole = isMechOrProd ? 'member' : 'general-user';
         user = await User.create({
@@ -515,7 +513,7 @@ const issueLoginForMicrosoftProfile = async (profileData, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 14 * 24 * 60 * 60 * 1000
     });
 
     return {
@@ -574,7 +572,7 @@ export const microsoftLoginCallback = asyncHandler(async (req, res) => {
         );
     }
 
-    // Decode id_token directly — eliminates the Graph API round-trip (~400-800ms saved)
+
     const profileData = decodeIdToken(tokenData.id_token);
 
     const loginData = await issueLoginForMicrosoftProfile(profileData, res);

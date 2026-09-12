@@ -3,6 +3,7 @@ import Registration from '../models/registration.model.js';
 import Event from '../models/event.model.js';
 import User from '../models/user.model.js';
 import { syncWithGoogleSheet } from '../utils/googleSheetsWebhook.js';
+import { appendBackupLog } from '../controllers/registration.controller.js';
 
 let worker1 = null;
 let worker2 = null;
@@ -26,7 +27,6 @@ const createWorker = (queueName, redisConnection) => {
             throw new Error(`Event ${eventId} not found`);
         }
 
-        // Check branch eligibility for registerer
         if (event.eligibleBranches && event.eligibleBranches.length > 0) {
             const userObj = await User.findById(registeredBy);
             if (!userObj || !userObj.branch) {
@@ -60,7 +60,6 @@ const createWorker = (queueName, redisConnection) => {
         if (registrationType === 'Team' && teamMembers?.length) {
             const memberIds = teamMembers.map((member) => member.userId);
 
-            // Check branch eligibility for team members
             if (event.eligibleBranches && event.eligibleBranches.length > 0) {
                 const membersList = await User.find({ _id: { $in: memberIds } });
                 const ineligibleMember = membersList.find(m => {
@@ -102,13 +101,15 @@ const createWorker = (queueName, redisConnection) => {
             throw error;
         }
 
-        // Fetch User to send to webhook
         const registererObj = await User.findById(registeredBy);
         if (registererObj) {
-            syncWithGoogleSheet(registererObj, event.title, job.data);
+            syncWithGoogleSheet(registererObj, event.title, newRegistration.toObject());
         }
 
-        // Atomic increment + addToSet in parallel
+
+        appendBackupLog('COMPLETED_REGISTRATION', newRegistration.toObject());
+
+
         await Promise.all([
             Event.findByIdAndUpdate(eventId, { $inc: { totalRegistrations: 1 } }),
             User.findByIdAndUpdate(

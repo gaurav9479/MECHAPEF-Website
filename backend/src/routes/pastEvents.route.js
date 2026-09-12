@@ -10,10 +10,8 @@ import {
 
 const router = express.Router();
 
-// Public route
 router.get('/', getPastEvents);
 
-// Protected Content Management routes
 const adminAuth = [
     authenticate,
     checkRole(['super-admin', 'content-lead'])

@@ -21,7 +21,6 @@ const SectionIndicator = () => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + window.innerHeight / 2;
       
-      // Check if we are at the bottom of the page (footer area)
       if (window.scrollY + window.innerHeight >= document.body.scrollHeight - 200) {
         setIsVisible(false);
       } else {
@@ -41,9 +40,7 @@ const SectionIndicator = () => {
         }
       }
       
-      // Handle case where we might be between sections or at the very bottom
       if (currentIdx === 0 && window.scrollY > window.innerHeight) {
-        // Find the closest section above the fold
         for (let i = sections.length - 1; i >= 0; i--) {
           const el = document.getElementById(sections[i].id);
           if (el && el.offsetTop < scrollPosition) {
