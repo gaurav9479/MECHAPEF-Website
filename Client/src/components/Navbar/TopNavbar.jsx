@@ -20,6 +20,7 @@ import ScrollToPlugin from "gsap/ScrollToPlugin";
 gsap.registerPlugin(ScrollToPlugin);
 import MagneticButton from "../MagneticButton/MagneticButton";
 import { apiGetCached } from "../../utils/apiCache";
+import api from "../../services/api";
 import "./Navbar.css";
 
 const TopNavbar = () => {
@@ -35,6 +36,7 @@ const TopNavbar = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showNotices, setShowNotices] = useState(false);
   const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
+  const [activeLivePoll, setActiveLivePoll] = useState(null);
   const [specialSponsor, setSpecialSponsor] = useState(null);
   const [hasProjects, setHasProjects] = useState(false);
 
@@ -79,6 +81,17 @@ const TopNavbar = () => {
       }
     }).catch(() => {});
   }, [showNotices]);
+
+  useEffect(() => {
+    const fetchActivePoll = () => {
+      api.get('/events/live/active')
+        .then(res => setActiveLivePoll(res.data.questions?.[0] || null))
+        .catch(() => setActiveLivePoll(null));
+    };
+    fetchActivePoll();
+    const interval = setInterval(fetchActivePoll, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const desktopRef = useRef(null);
   const mobileRef = useRef(null);
@@ -200,12 +213,16 @@ const TopNavbar = () => {
   const renderBell = () => (
     <div 
       className="notice-bell-btn" 
-      onClick={() => { setMenuOpen(false); setShowNotices(true); }}
+      onClick={() => {
+        setMenuOpen(false);
+        if (activeLivePoll) navigate(`/live-poll/${activeLivePoll.eventId}/${activeLivePoll.questionId}`);
+        else setShowNotices(true);
+      }}
       style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', flexShrink: 0 }}
-      title="Notice Board"
+      title={activeLivePoll ? 'Open live poll' : 'Notice Board'}
     >
       <FaBell style={{ fontSize: '1.2rem', color: '#ff1f01' }} />
-      {hasUnreadNotice && (
+      {(hasUnreadNotice || activeLivePoll) && (
         <span style={{
           position: 'absolute',
           top: '8px',
@@ -213,8 +230,8 @@ const TopNavbar = () => {
           width: '8px',
           height: '8px',
           borderRadius: '50%',
-          background: '#ffff00',
-          boxShadow: '0 0 5px #ffff00'
+          background: activeLivePoll ? '#00c864' : '#ffff00',
+          boxShadow: activeLivePoll ? '0 0 5px #00c864' : '0 0 5px #ffff00'
         }} />
       )}
     </div>

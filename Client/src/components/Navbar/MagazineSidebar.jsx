@@ -11,6 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import HangingNoticeBoard from "../HangingNoticeBoard/HangingNoticeBoard";
 import { useMagazineTransition } from "../../context/MagazineTransitionContext";
 import { apiGetCached } from "../../utils/apiCache";
+import api from "../../services/api";
 import "./Navbar.css";
 
 const MagazineSidebar = () => {
@@ -23,6 +24,7 @@ const MagazineSidebar = () => {
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [showNotices, setShowNotices] = useState(false);
   const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
+  const [activeLivePoll, setActiveLivePoll] = useState(null);
   const desktopRef = useRef(null);
 
   useEffect(() => {
@@ -34,6 +36,17 @@ const MagazineSidebar = () => {
       setHasUnreadNotice(hasUnread);
     }).catch(() => {});
   }, [showNotices]);
+
+  useEffect(() => {
+    const fetchActivePoll = () => {
+      api.get('/events/live/active')
+        .then(res => setActiveLivePoll(res.data.questions?.[0] || null))
+        .catch(() => setActiveLivePoll(null));
+    };
+    fetchActivePoll();
+    const interval = setInterval(fetchActivePoll, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleNavClick = (targetRoute, callback) => {
     if (location.pathname === '/magazine' && transitionState === 'idle') {
@@ -160,10 +173,12 @@ const MagazineSidebar = () => {
           <li onClick={() => scrollToElement("our-team")}>
             <span>Our Team</span>
           </li>
-          <li onClick={() => setShowNotices(true)}>
+          <li onClick={() => activeLivePoll
+            ? navigate(`/live-poll/${activeLivePoll.eventId}/${activeLivePoll.questionId}`)
+            : setShowNotices(true)}>
             <span style={{ position: 'relative', display: 'inline-block' }}>
               Notice Board
-              {hasUnreadNotice && (
+              {(hasUnreadNotice || activeLivePoll) && (
                 <span style={{
                   position: 'absolute',
                   top: '0px',
@@ -171,8 +186,8 @@ const MagazineSidebar = () => {
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  background: '#ffff00',
-                  boxShadow: '0 0 5px #ffff00',
+                  background: activeLivePoll ? '#00c864' : '#ffff00',
+                  boxShadow: activeLivePoll ? '0 0 5px #00c864' : '0 0 5px #ffff00',
                   display: 'inline-block'
                 }} title="New Notice" />
               )}

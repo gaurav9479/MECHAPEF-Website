@@ -140,6 +140,7 @@ const HangingNoticeBoard = ({ onClose }) => {
       .finally(() => setLoading(false));
 
     fetchFeed();
+    const loadingFallback = setTimeout(() => setLoading(false), 4000);
     const activePollTimer = setInterval(() => {
       api.get('/events/live/active')
         .then(res => setLiveQuestions(res.data.questions || []))
@@ -152,6 +153,7 @@ const HangingNoticeBoard = ({ onClose }) => {
     document.body.style.overflow = 'hidden';
     return () => {
       clearInterval(activePollTimer);
+      clearTimeout(loadingFallback);
       document.body.style.overflow = 'auto';
     };
   }, []);
@@ -256,7 +258,7 @@ const HangingNoticeBoard = ({ onClose }) => {
             {loading ? (
               <div className="hnb-loading-state">
                 <div className="hnb-spinner" />
-                <span>FETCHING ENCRYPTED DATA...</span>
+                <span>Loading notices...</span>
               </div>
             ) : notices.length === 0 && liveQuestions.length === 0 ? (
               <div className="hnb-empty">NO ACTIVE NOTICES FOUND IN DATABASE.</div>
