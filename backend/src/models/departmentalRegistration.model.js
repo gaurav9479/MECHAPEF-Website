@@ -6,6 +6,7 @@ const departmentalRegistrationSchema = new mongoose.Schema({
     phoneNumber: { type: String, required: true, trim: true, maxlength: 20 },
     collegeRegNo: { type: String, required: true, trim: true, uppercase: true, index: true },
     collegeEmail: { type: String, required: true, trim: true, lowercase: true },
+    qrToken: { type: String, required: true, select: false },
     qrTokenHash: { type: String, required: true, unique: true, index: true },
     firstScannedAt: { type: Date, default: null },
     lastScannedAt: { type: Date, default: null },

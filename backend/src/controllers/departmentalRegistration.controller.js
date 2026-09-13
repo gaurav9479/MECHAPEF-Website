@@ -13,7 +13,7 @@ const EMAIL_PATTERN = /^([a-z0-9]+)\.([0-9A-Z]+)@mnnit\.ac\.in$/i;
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 const getEnabledEvent = async (eventId) => {
-    const event = await Event.findOne({ _id: eventId, deletedAt: null, departmentalRegistrationEnabled: true });
+    const event = await Event.findOne({ _id: eventId, deletedAt: null, registrationMode: 'DepartmentalQR' });
     if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Departmental registration is not enabled for this event');
     return event;
 };
@@ -35,12 +35,24 @@ export const createDepartmentalRegistration = asyncHandler(async (req, res) => {
     }
 
     await getEnabledEvent(eventId);
-    const existing = await DepartmentalRegistration.findOne({ eventId, collegeRegNo: normalizedRegNo });
-    if (existing) throw new ApiError(HTTP_STATUS.CONFLICT, 'This registration number is already registered for this event');
+    const existing = await DepartmentalRegistration.findOne({ eventId, collegeRegNo: normalizedRegNo }).select('+qrToken');
+    if (existing) {
+        const sameDetails = existing.name.trim().toLowerCase() === String(name).trim().toLowerCase()
+            && existing.phoneNumber === String(phoneNumber).trim()
+            && existing.collegeEmail === normalizedEmail;
+        if (!sameDetails) {
+            throw new ApiError(HTTP_STATUS.CONFLICT, 'This registration number is already registered with different details');
+        }
+        return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, {
+            existing: true,
+            registration: { id: existing._id, name: existing.name, collegeRegNo: existing.collegeRegNo, eventId },
+            qrToken: existing.qrToken
+        }, 'Existing registration found; QR restored'));
+    }
 
     const token = crypto.randomBytes(32).toString('hex');
     const registration = await DepartmentalRegistration.create({
-        eventId, name, phoneNumber, collegeRegNo: normalizedRegNo, collegeEmail: normalizedEmail, qrTokenHash: hashToken(token)
+        eventId, name, phoneNumber, collegeRegNo: normalizedRegNo, collegeEmail: normalizedEmail, qrToken: token, qrTokenHash: hashToken(token)
     });
 
     return res.status(HTTP_STATUS.CREATED).json(new APIResponse(HTTP_STATUS.CREATED, {

@@ -119,6 +119,9 @@ export const registerForEvent = asyncHandler(async (req, res) => {
     if (!event) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
+    if (event.registrationMode === 'DepartmentalQR') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Use the public departmental QR registration form for this event');
+    }
 
 
     const userObj = await User.findById(req.user.userId);

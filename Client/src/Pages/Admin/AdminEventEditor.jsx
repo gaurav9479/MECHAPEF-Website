@@ -25,6 +25,13 @@ const BRANCHES = [
   'Production and Industrial Engineering'
 ];
 
+const DEPARTMENTAL_QR_FIELDS = [
+  { fieldName: 'name', fieldType: 'text', isRequired: true },
+  { fieldName: 'phoneNumber', fieldType: 'text', isRequired: true },
+  { fieldName: 'collegeEmail', fieldType: 'text', isRequired: true },
+  { fieldName: 'collegeRegNo', fieldType: 'text', isRequired: true }
+];
+
 const emptyForm = {
   title: '', description: '', descriptionBlocks: [{ type: 'paragraph', text: '' }], category: 'Mechapef-Event',
   startTime: '', endTime: '', venue: '', registrationStartDate: '', registrationDeadline: '',
@@ -100,13 +107,12 @@ const AdminEventEditor = () => {
             isTBD: ev.isTBD || false,
             rules: Array.isArray(ev.rules) ? ev.rules.join('\n') : (ev.rules || ''),
             prizes: ev.prizes || '',
-            customFormFields: ev.customFormFields || [],
+            customFormFields: ev.registrationMode === 'DepartmentalQR' ? DEPARTMENTAL_QR_FIELDS : (ev.customFormFields || []),
             eligibleBranches: ev.eligibleBranches && ev.eligibleBranches.length > 0 ? ev.eligibleBranches : [...BRANCHES],
             eligibleYears: ev.eligibleYears && ev.eligibleYears.length > 0 ? ev.eligibleYears : [1, 2, 3, 4, 5],
             ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
             enableQRScanning: ev.enableQRScanning !== undefined ? ev.enableQRScanning : true,
             attendanceMethod: ev.attendanceMethod || (ev.enableQRScanning === false ? 'id-card' : 'qr'),
-            departmentalRegistrationEnabled: ev.departmentalRegistrationEnabled || false,
             bannerURL: ev.bannerURL || '',
             liveInteractive: {
               enabled: ev.liveInteractive?.enabled || false,
@@ -649,7 +655,6 @@ const AdminEventEditor = () => {
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              {form.category === 'Departmental' && <div style={{ marginTop: '12px' }}><label style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><input type="checkbox" checked={form.departmentalRegistrationEnabled} onChange={e => f('departmentalRegistrationEnabled', e.target.checked)} /> Enable public departmental QR registration</label>{isEditing && form.departmentalRegistrationEnabled && <small style={{ display: 'block', color: '#00c864', marginTop: '6px' }}>Public link: {window.location.origin}/departmentalregister?eventId={id}</small>}</div>}
 
               <div className="form-group">
                 <label>Venue {!form.isTBD && '*'}</label>
@@ -748,6 +753,11 @@ const AdminEventEditor = () => {
                   onChange={e => {
                     const mode = e.target.value;
                     f('registrationMode', mode);
+                    if (mode === 'DepartmentalQR') {
+                      f('attendanceMethod', 'qr');
+                      f('enableQRScanning', true);
+                      f('customFormFields', DEPARTMENTAL_QR_FIELDS);
+                    }
                     if (mode === 'JoinRequests' && Number(form.maxTeamSize) <= 1) {
                       f('minTeamSize', 2);
                       f('maxTeamSize', 4);
@@ -757,10 +767,13 @@ const AdminEventEditor = () => {
                 >
                   <option value="Standard">Type 1: Standard (Solo or Leader registers all members at once)</option>
                   <option value="JoinRequests">Type 2: Join Requests (Leader creates Draft, members search Reg No & send join request)</option>
+                  <option value="DepartmentalQR">Departmental QR Registration (Public form, no login required)</option>
                 </select>
                 <p style={{ margin: '8px 0 0 0', fontSize: '0.8rem', color: '#aaa', lineHeight: '1.4' }}>
                   {form.registrationMode === 'JoinRequests'
                     ? '✨ Type 2 Mode Active: Team members search their leader by 8-digit College Reg No to send join requests. Leader approves members and confirms the team.'
+                    : form.registrationMode === 'DepartmentalQR'
+                      ? `✨ Departmental QR Mode Active: Public registration link ${isEditing ? `${window.location.origin}/departmentalregister?eventId=${id}` : 'will be available after saving the event'}.`
                     : '✨ Type 1 Mode Active: Solo registration or leader enters all teammate IDs at the time of form submission.'}
                 </p>
               </div>

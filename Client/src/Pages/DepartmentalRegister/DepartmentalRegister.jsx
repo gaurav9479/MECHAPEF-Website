@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../../services/api';
 
@@ -9,11 +9,24 @@ const DepartmentalRegister = () => {
   const [loading, setLoading] = useState(false);
   const eventId = new URLSearchParams(window.location.search).get('eventId');
 
+  useEffect(() => {
+    if (!eventId) return;
+    try {
+      const saved = localStorage.getItem(`departmental_qr_${eventId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.result && parsed?.form) { setForm(parsed.form); setResult(parsed.result); }
+      }
+    } catch { /* Ignore invalid local browser data. */ }
+  }, [eventId]);
+
   const submit = async (e) => {
     e.preventDefault(); setError(''); setLoading(true);
     try {
       const res = await api.post('/departmental-registrations', { ...form, eventId });
-      setResult(res.data.data);
+      const nextResult = res.data.data;
+      setResult(nextResult);
+      localStorage.setItem(`departmental_qr_${eventId}`, JSON.stringify({ form, result: nextResult }));
     } catch (err) { setError(err.response?.data?.message || 'Registration failed'); }
     finally { setLoading(false); }
   };

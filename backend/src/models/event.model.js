@@ -208,7 +208,7 @@ const eventSchema = new mongoose.Schema(
 
         registrationMode: {
             type: String,
-            enum: ['Standard', 'JoinRequests'],
+            enum: ['Standard', 'JoinRequests', 'DepartmentalQR'],
             default: 'Standard'
         },
 
