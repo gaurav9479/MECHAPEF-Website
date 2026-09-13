@@ -518,11 +518,21 @@ export const exportRegistrationsCSV = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
 
-    const registrations = await Registration.find({ eventId, deletedAt: null })
+    const filter = {
+        eventId,
+        deletedAt: null,
+        registrationStatus: { $ne: 'Draft' }
+    };
+
+    if (req.query.verifiedOnly === 'true') {
+        filter.isVerified = true;
+    }
+
+    const registrations = await Registration.find(filter)
         .populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy');
 
     if (registrations.length === 0) {
-        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'No registrations found for this event');
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'No confirmed registrations found for this event');
     }
 
     const customFieldsSet = new Set();
