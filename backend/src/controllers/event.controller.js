@@ -5,7 +5,7 @@ import APIResponse from '../utils/APIResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import logFootprint from '../utils/logFootprint.js';
-import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, PAGINATION } from '../constants/index.js';
+import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, PAGINATION, EVENT_CATEGORIES } from '../constants/index.js';
 import ImageKit from 'imagekit';
 import { checkAndToggleRedis } from '../queues/registrationQueue.js';
 import { normalizeEventDates } from '../utils/dates.js';
@@ -44,11 +44,17 @@ export const createEvent = asyncHandler(async (req, res) => {
         );
     }
 
+    const normalizedCategory = String(category).trim() === 'Departmental Event'
+        ? EVENT_CATEGORIES.DEPARTMENTAL
+        : String(category).trim() === 'Mechapef Event'
+            ? EVENT_CATEGORIES.MECHAPEF_EVENT
+            : String(category).trim();
+
     const newEvent = new Event({
         title,
         description,
         descriptionBlocks: descriptionBlocks || [],
-        category,
+        category: normalizedCategory,
         startTime: startTime instanceof Date ? startTime : new Date(startTime),
         endTime: endTime instanceof Date ? endTime : new Date(endTime),
         venue,
@@ -92,10 +98,11 @@ export const createEvent = asyncHandler(async (req, res) => {
 export const getAllEvents = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
     const limit = Math.min(parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT, PAGINATION.MAX_LIMIT);
-    const { category, featured } = req.query;
+    const { category, featured, includeArchived } = req.query;
 
 
     const filter = { deletedAt: null };
+    if (includeArchived !== 'true') filter.endTime = { $gte: new Date() };
     if (category) filter.category = category;
     if (featured === 'true') filter.featured = true;
 
@@ -106,6 +113,11 @@ export const getAllEvents = asyncHandler(async (req, res) => {
         .limit(limit)
         .skip((page - 1) * limit)
         .populate('createdBy', 'name email');
+
+    // Stored status can be stale until the next write; expose the time-based status immediately.
+    events.forEach(event => {
+        if (event.hasEnded) event.status = 'Archived';
+    });
 
     const response = new APIResponse(
         HTTP_STATUS.OK,
@@ -158,6 +170,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'title',
         'description',
         'descriptionBlocks',
+        'category',
         'startTime',
         'endTime',
         'venue',
@@ -190,7 +203,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
 
     allowedUpdates.forEach(key => {
         if (req.body[key] !== undefined) {
-            event[key] = req.body[key];
+            event[key] = key === 'category' ? String(req.body[key]).trim() : req.body[key];
         }
     });
 

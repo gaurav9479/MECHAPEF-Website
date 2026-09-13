@@ -73,7 +73,7 @@ const AdminEvents = () => {
 
   const fetchEvents = async () => {
     try {
-      const res = await eventService.getAll({ limit: 50 });
+      const res = await eventService.getAll({ limit: 50, includeArchived: true });
       setEvents(res.data.data?.events || []);
     } catch { showToast('Failed to load events', 'error'); }
     finally { setLoading(false); }
@@ -153,7 +153,7 @@ const AdminEvents = () => {
                         ⏳ VANISHES IN 7 DAYS ({ev.deletionState.vanishAt ? formatEventDate(ev.deletionState.vanishAt) : 'Queued'})
                       </span>
                     ) : (
-                      <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`} style={{ whiteSpace: 'nowrap' }}>
+                      <span className={`tag ${['ended', 'archived'].includes(ev.status?.toLowerCase()) ? 'bg-danger' : 'bg-success'}`} style={{ whiteSpace: 'nowrap' }}>
                         {ev.status || 'Upcoming'}
                       </span>
                     )}
