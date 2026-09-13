@@ -1,0 +1,48 @@
+.about {
+  /* CRITICAL UPDATES FOR THE STRIPS */
+  position: relative; /* Keeps the absolute-positioned strips contained here */
+  min-height: 100vh; /* Ensures the section is tall enough for the diagonal slice */
+  width: 100%;
+  background-color: transparent; /* Lets the strips show clearly */
+  overflow: hidden; /* Stops the strips from breaking page width */
+  
+  /* Original layout properties */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the inner wrapper */
+  padding: 0 6%;
+}
+
+/* NEW: We target the inner wrapper to manage the layout and 
+  ensure it sits ABOVE the red strips (z-index: 2)
+*/
+.about-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+  width: 100%;
+  position: relative;
+  z-index: 2; /* Keeps text and images on top of the background strips */
+}
+
+.about-text h2 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.about-text p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.7;
+  max-width: 400px;
+}
+
+.drone {
+  width: 40%;
+  max-width: 400px;
+  /* Tweaked slightly to match your brand red */
+  filter: drop-shadow(0 0 40px rgba(255, 31, 1, 0.4)); 
+}

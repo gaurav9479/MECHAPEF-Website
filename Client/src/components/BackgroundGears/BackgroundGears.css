@@ -1,0 +1,62 @@
+.bg-gears-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  background-color: #050505;
+  display: none; /* Hidden on desktop */
+}
+
+.bg-gear-wrapper {
+  position: absolute;
+}
+
+/* 
+  Positioning to make them mesh.
+  Overlap slightly (margin).
+*/
+.bg-gears-container .gear-1 {
+  /* Size 300 */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.bg-gears-container .gear-2 {
+  /* Size 450, meshing with 300. Distance = (300/2 + 450/2) - overlap = 150 + 225 - 15 = 360 */
+  top: 50%;
+  left: 50%;
+  transform: translate(calc(-50% - 355px), calc(-50% - 50px)); /* left and up slightly */
+}
+
+.bg-gears-container .gear-3 {
+  /* Size 200, meshing with 300 on the other side. Distance = 150 + 100 - 10 = 240 */
+  top: 50%;
+  left: 50%;
+  transform: translate(calc(-50% + 235px), calc(-50% + 60px)); /* right and down slightly */
+}
+
+@media (max-width: 768px) {
+  .bg-gears-container {
+    display: flex;
+  }
+  /* Scale them down for mobile so they still fit and mesh */
+  .bg-gear-wrapper {
+    transform-origin: center center;
+  }
+  .bg-gears-container .gear-1 {
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  .bg-gears-container .gear-2 {
+    transform: translate(calc(-50% - 213px), calc(-50% - 30px)) scale(0.6);
+  }
+  .bg-gears-container .gear-3 {
+    transform: translate(calc(-50% + 141px), calc(-50% + 36px)) scale(0.6);
+  }
+}

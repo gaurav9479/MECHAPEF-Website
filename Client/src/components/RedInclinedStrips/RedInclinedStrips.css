@@ -1,0 +1,36 @@
+.red-strips-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.strip-main, .strip-secondary, .strip-third {
+  position: absolute;
+  top: -5%;
+  height: 120%;
+  transform-origin: top right;
+  transform: skewX(-25deg);
+  filter: blur(8px);
+}
+
+.strip-main {
+  width: 15%;
+  background: linear-gradient(to right, #9e0312, #ff1f01, #9e0312);
+  box-shadow: -20px 0 50px rgba(169, 24, 5, 0.2);
+}
+
+.strip-secondary {
+  width: 10%;
+  background: #ff1f01;
+}
+
+.strip-third {
+  width: 15%;
+  background: linear-gradient(to right, #90070e, #660e03);
+  box-shadow: 0 0 30px rgba(116, 16, 3, 0.2);
+}

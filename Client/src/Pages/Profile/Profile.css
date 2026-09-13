@@ -1,0 +1,349 @@
+.profile-page-container {
+  min-height: 100vh;
+  background-color: #000;
+  color: #fff;
+  padding-top: 100px;
+  padding-bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.profile-banner {
+  background: linear-gradient(135deg, rgba(0, 200, 100, 0.2), rgba(0, 100, 50, 0.1));
+  border: 1px solid #00c864;
+  padding: 20px clamp(18px, 5vw, 40px);
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 40px;
+  width: 90%;
+  max-width: 800px;
+  box-shadow: 0 4px 15px rgba(0, 200, 100, 0.1);
+}
+
+.profile-banner h2 {
+  color: #00c864;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+}
+
+.profile-banner p {
+  color: #ddd;
+  font-family: 'sans-serif';
+  font-size: 1.1rem;
+}
+
+.profile-content {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  padding: clamp(18px, 4vw, 40px);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #333;
+}
+
+.profile-img-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #00c864;
+}
+
+.profile-img-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #222;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  border: 2px solid #333;
+}
+
+.profile-header-info h1 {
+  margin: 0 0 5px 0;
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  color: #fff;
+}
+
+.profile-main-section {
+  background: linear-gradient(160deg, #111 0%, #0a0a0a 100%);
+  border-radius: 12px;
+  padding: 30px;
+  border: 1px solid #333;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.profile-role {
+  color: #ff1f01;
+  font-weight: bold;
+  margin: 0 0 5px 0;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.profile-email {
+  color: #888;
+  font-family: sans-serif;
+  margin: 0;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-section-title {
+  font-family: 'Orbitron', sans-serif;
+  color: #ff1f01;
+  font-size: 1.2rem;
+  margin-top: 20px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 31, 1, 0.2);
+  padding-bottom: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #bbb;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px 16px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #ff1f01;
+  background: rgba(255, 31, 1, 0.05);
+  box-shadow: 0 0 10px rgba(255, 31, 1, 0.1);
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 15px;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+}
+
+.profile-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  animation: slideUp 0.3s ease;
+  z-index: 1000;
+  font-family: sans-serif;
+}
+
+.profile-toast.success { background: #00c864; color: #000; }
+.profile-toast.error { background: #ff3333; }
+
+@keyframes slideUp {
+  from { transform: translateY(100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* My Registrations Layout */
+.profile-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .profile-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-main-section {
+    padding: 15px;
+  }
+  
+  .registrations-card {
+    padding: 15px;
+  }
+  
+  .profile-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .profile-page-container {
+    padding: 88px 14px 24px;
+  }
+
+  .profile-banner,
+  .profile-content {
+    width: 100%;
+  }
+
+  .profile-banner h2 {
+    font-size: 1.35rem;
+  }
+
+  .profile-banner p {
+    font-size: 0.95rem;
+  }
+
+  .registration-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .ticket-btn {
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .profile-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    text-align: center;
+  }
+}
+
+.registrations-card {
+  background: #111;
+  border-radius: 12px;
+  padding: 25px;
+  border: 1px solid #333;
+}
+
+.registrations-card h3 {
+  color: #ff1f01;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 15px;
+}
+
+.no-data {
+  color: #888;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+.registrations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.registration-item {
+  background: #1a1a1a;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #222;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.3s;
+}
+
+.registration-item:hover {
+  border-color: #ff1f01;
+}
+
+.reg-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.reg-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.reg-status.upcoming {
+  background: rgba(255, 170, 0, 0.1);
+  color: #ffaa00;
+}
+
+.reg-status.attended {
+  background: rgba(0, 200, 100, 0.1);
+  color: #00c864;
+}
+
+.ticket-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #222;
+  color: #ff1f01;
+  border: 1px solid #ff1f01;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.ticket-btn:hover {
+  background: #ff1f01;
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .registration-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .ticket-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

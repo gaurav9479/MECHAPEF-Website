@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=UnifrakturMaguntia&display=swap');
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+html{
+  overflow-x: clip;
+}
+
+:root {
+  --special-brand-font: inherit;
+  --special-brand-color: #ff1f01;
+}
+
+body{
+  background:#050505;
+  color:white;
+  font-family:Poppins,sans-serif;
+  overflow-x: clip;
+}
+
+/* Special Sponsor Brand Typography Takeover */
+.mh-sec-title,
+.past-sponsors-container h2,
+.section-header h2,
+.brand-font-takeover {
+  font-family: var(--special-brand-font, inherit);
+}
+
+/* Hide scrollbar globally for a cleaner look */
+::-webkit-scrollbar {
+  display: none;
+}
+html {
+  scrollbar-width: none;
+}
+
+section{
+  padding:clamp(64px, 8vw, 100px) clamp(16px, 6vw, 10%);
+}
+
+img,
+video,
+canvas,
+svg{
+  max-width:100%;
+}
+
+button,
+a,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button,
+a{
+  min-height:44px;
+}
+
+input,
+select,
+textarea{
+  max-width:100%;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 56px 16px;
+  }
+  /* Hide desktop components on mobile */
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  section {
+    padding: 48px 14px;
+  }
+}
+
+/* Global Fixed Gradient (Bottom) */
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 25vh;
+  background: linear-gradient(to top, #050505 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+body.admin-mode::after {
+  display: none !important;
+  background: none !important;
+}

@@ -1,0 +1,294 @@
+.live-events-slider-wrapper {
+  width: 100%;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  background-color: #050505;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.slider-container {
+  width: 100%;
+  height: 380px;
+  position: relative;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  z-index: 1;
+}
+
+.slide.active {
+  opacity: 1;
+  z-index: 2;
+}
+
+.slide-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 20% 50%, rgba(255, 31, 1, 0.15) 0%, rgba(5, 5, 5, 0.95) 60%, rgba(0, 0, 0, 0.98) 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(24px, 8vw, 10%);
+}
+
+.slide-content {
+  max-width: 720px;
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+}
+
+.slide.active .slide-content {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Sexy Co-Brand Hero Card Container */
+.sexy-cobrand-hero-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cobrand-badge-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 31, 1, 0.12);
+  border: 1px solid rgba(255, 31, 1, 0.35);
+  padding: 5px 14px;
+  border-radius: 30px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 15px rgba(255, 31, 1, 0.2);
+}
+
+.cobrand-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ff1f01;
+  animation: pulseDot 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.cobrand-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #ff3318;
+  text-transform: uppercase;
+}
+
+.slide-cobranding-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.cobranded-slide-title, .standard-slide-title {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  margin: 0;
+  text-transform: uppercase;
+  color: #ffffff;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 25px rgba(0, 0, 0, 0.9), 0 4px 15px rgba(255, 31, 1, 0.3);
+  line-height: 1.1;
+}
+
+.cobrand-x-divider {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.x-line {
+  width: 12px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.cobranding-cross {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(255, 31, 1, 0.8);
+  transform: translateY(-2px);
+  animation: floatX 3s infinite ease-in-out;
+}
+
+@keyframes floatX {
+  0%, 100% { transform: translateY(-2px) scale(1); }
+  50% { transform: translateY(2px) scale(1.1); }
+}
+
+.cobrand-logo-glow-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.cobranding-slide-logo {
+  height: clamp(40px, 6vw, 60px);
+  max-width: 240px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.3));
+}
+
+.cobranding-brand-text {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-shadow: 0 0 15px currentColor;
+}
+
+/* Arrows */
+.slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.3s;
+}
+
+.slider-arrow:hover {
+  background: #ff1f01;
+}
+
+.slider-arrow.prev { left: 20px; }
+.slider-arrow.next { right: 20px; }
+
+/* Dots */
+.slider-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.dot.active {
+  background: #ff1f01;
+  transform: scale(1.2);
+}
+
+@media (max-width: 768px) {
+  .live-events-slider-wrapper {
+    width: 100%;
+    left: 0;
+    right: 0;
+    margin-left: 0;
+    margin-right: 0;
+    min-height: 350px;
+    height: auto;
+  }
+  .slider-container {
+    height: 350px;
+  }
+  .slide-content h2 { font-size: 2rem; }
+  .slide-content p {
+    font-size: 0.95rem;
+    margin-bottom: 22px;
+  }
+  .explore-btn { font-size: 1rem; padding: 10px 20px; }
+  .slider-arrow { width: 40px; height: 40px; font-size: 1.2rem; }
+}
+
+@media (max-width: 480px) {
+  .slider-arrow {
+    top: auto;
+    bottom: 14px;
+    transform: none;
+  }
+
+  .slider-arrow.prev { left: 14px; }
+  .slider-arrow.next { right: 14px; }
+}
+
+.event-sponsors-horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+.event-sponsors-horizontal-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sponsors-chain-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg width='40' height='16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='2' y='4' width='24' height='8' rx='4' fill='none' stroke='%23ff1f01' stroke-width='2'/%3E%3Crect x='26' y='6' width='14' height='4' rx='2' fill='%23ff1f01'/%3E%3C/svg%3E") repeat-x;
+  filter: drop-shadow(0 0 8px rgba(255, 31, 1, 0.8));
+  z-index: 0;
+  transform: translateY(-50%);
+  animation: moveChain 1.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes moveChain {
+  0% { background-position: 0 0; }
+  100% { background-position: -40px 0; }
+}
+
+.sponsors-chain-wrapper:hover::before {
+  animation-play-state: paused;
+}

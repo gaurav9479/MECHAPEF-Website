@@ -1,0 +1,372 @@
+.ll-section {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding: 60px 20px;
+  background-color: #030303;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* Blueprint Grid Background */
+.ll-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 31, 1, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 31, 1, 0.035) 1px, transparent 1px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Header */
+.ll-header {
+  text-align: center;
+  margin-bottom: 30px;
+  z-index: 5;
+}
+
+.ll-sec-tag {
+  display: inline-block;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  color: #ff1f01;
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(255, 31, 1, 0.4);
+}
+
+.ll-title {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-family: 'Michroma', sans-serif;
+  color: #ffffff;
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.ll-subtitle {
+  font-size: clamp(0.85rem, 1.5vw, 1.05rem);
+  color: rgba(255, 255, 255, 0.45);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Desktop container layout split */
+.ll-desktop-container {
+  display: flex;
+  width: 100%;
+  max-width: 1100px;
+  height: 520px;
+  background: rgba(8, 8, 8, 0.85);
+  border: 1px solid rgba(255, 31, 1, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(12px);
+  z-index: 5;
+  overflow: hidden;
+}
+
+/* Left side: Interlocking gears blueprint */
+.ll-blueprint-view {
+  flex: 6.5;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(255, 31, 1, 0.12);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 31, 1, 0.02) 0%, transparent 80%);
+}
+
+.ll-svg-workspace {
+  width: 95%;
+  height: 95%;
+}
+
+/* Gear Nodes Styling */
+.gear-node polygon {
+  transition: stroke 0.3s ease, stroke-width 0.3s ease, fill 0.3s ease;
+}
+
+.gear-node.gear-active polygon {
+  stroke: #ff1f01 !important;
+  stroke-width: 1.8px !important;
+  fill: rgba(255, 31, 1, 0.08) !important;
+}
+
+.gear-node.gear-active .gear-active-border {
+  opacity: 0.8 !important;
+  animation: pulseActiveBorder 1.5s infinite alternate;
+}
+
+.gear-node.gear-active text {
+  fill: #ffffff !important;
+  font-weight: bold;
+  filter: drop-shadow(0 0 5px rgba(255,255,255,0.8));
+}
+
+/* Electric Sparks Particle */
+.hud-spark-particle {
+  position: absolute;
+  background: #ff7700;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ff1f01, 0 0 16px #ff7700;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Right side: Cyber HUD Panel */
+.ll-hud-panel {
+  flex: 3.5;
+  display: flex;
+  flex-direction: column;
+  background: rgba(3, 3, 3, 0.95);
+  font-family: 'Courier New', Courier, monospace;
+  color: #a0a0a0;
+  box-sizing: border-box;
+}
+
+.hud-header {
+  position: relative;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 31, 1, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hud-header h4 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+/* Scrolling neon scan line */
+.hud-scanner-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #ff1f01;
+  box-shadow: 0 0 10px #ff1f01;
+  animation: scan 3s linear infinite;
+  opacity: 0.45;
+}
+
+.hud-laser-indicator {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  background: rgba(255, 31, 1, 0.15);
+  border: 1px solid #ff1f01;
+  color: #ff1f01;
+  text-shadow: 0 0 8px rgba(255, 31, 1, 0.6);
+  border-radius: 4px;
+  font-weight: bold;
+  animation: pulseActiveBorder 1.5s infinite alternate;
+}
+
+/* Content Area inside HUD */
+.hud-content {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-idle {
+  text-align: center;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.hud-logo-watermark {
+  font-size: 3.5rem;
+  opacity: 0.15;
+  animation: cogSpin 12s linear infinite;
+}
+
+.hud-hint {
+  color: #ff1f01;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.hud-skill-details {
+  width: 100%;
+  animation: panelFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hud-icon-wrap {
+  font-size: 2.8rem;
+  margin-bottom: 12px;
+}
+
+.hud-skill-details h3 {
+  font-family: 'Michroma', sans-serif;
+  color: #ffffff;
+  font-size: 1.3rem;
+  margin: 0 0 10px 0;
+  letter-spacing: 1px;
+}
+
+.hud-divider {
+  width: 40px;
+  height: 2px;
+  background: #ff1f01;
+  margin-bottom: 16px;
+  box-shadow: 0 0 8px #ff1f01;
+}
+
+.hud-skill-details p {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+  color: #d0d0d0;
+}
+
+.hud-status {
+  font-size: 0.8rem;
+  color: #ff1f01;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+}
+
+.blink-dot {
+  width: 6px;
+  height: 6px;
+  background: #ff1f01;
+  border-radius: 50%;
+  animation: pulseActiveBorder 0.6s infinite alternate;
+}
+
+.hud-footer {
+  padding: 12px 20px;
+  border-top: 1px solid rgba(255, 31, 1, 0.12);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.3);
+}
+
+/* Animations */
+@keyframes scan {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
+
+@keyframes pulseActiveBorder {
+  0% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cogSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* MOBILE FALLBACK GRID STYLE */
+.ll-mobile-view {
+  width: 100%;
+  max-width: 480px;
+  z-index: 5;
+}
+
+.ll-mobile-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ll-mobile-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.ll-mobile-card.assembled {
+  border-color: rgba(255, 31, 1, 0.35);
+  background: rgba(255, 31, 1, 0.02);
+}
+
+.ll-mobile-card.active {
+  border-color: #ff1f01;
+  background: rgba(255, 31, 1, 0.06);
+  box-shadow: 0 4px 15px rgba(255, 31, 1, 0.15);
+}
+
+.m-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.m-card-icon {
+  font-size: 1.5rem;
+}
+
+.m-card-label {
+  font-family: 'Michroma', sans-serif;
+  color: #fff;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.m-card-check {
+  margin-left: auto;
+  color: #ff1f01;
+  font-weight: bold;
+}
+
+.m-card-desc {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 31, 1, 0.2);
+  animation: panelFadeIn 0.3s ease-out;
+}
+
+.m-card-desc p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+.ll-mobile-footer {
+  text-align: center;
+  margin-top: 20px;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.8rem;
+}
+
+/* Responsiveness overrides */
+@media (max-width: 900px) and (min-width: 769px) {
+  .ll-desktop-container {
+    height: 440px;
+  }
+}

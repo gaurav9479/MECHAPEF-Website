@@ -1,0 +1,472 @@
+import Event from '../models/event.model.js';
+import Registration from '../models/registration.model.js';
+import User from '../models/user.model.js';
+import APIResponse from '../utils/APIResponse.js';
+import ApiError from '../utils/ApiError.js';
+import asyncHandler from '../utils/asyncHandler.js';
+import logFootprint from '../utils/logFootprint.js';
+import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, PAGINATION } from '../constants/index.js';
+import ImageKit from 'imagekit';
+import { checkAndToggleRedis } from '../queues/registrationQueue.js';
+import { normalizeEventDates } from '../utils/dates.js';
+
+export const createEvent = asyncHandler(async (req, res) => {
+    normalizeEventDates(req.body);
+
+    const {
+        title,
+        description,
+        descriptionBlocks,
+        category,
+        startTime,
+        endTime,
+        venue,
+        minTeamSize,
+        maxTeamSize,
+        registrationStartDate,
+        registrationDeadline,
+        featured,
+        bannerURL,
+        rules,
+        prizes,
+        registrationFee,
+        customFormFields,
+        eligibleBranches,
+        eligibleYears,
+        registrationMode,
+        isTBD,
+        liveInteractive
+    } = req.body;
+    if (!title || !description || !category || !startTime || !endTime || !venue || !registrationDeadline) {
+        throw new ApiError(
+            HTTP_STATUS.BAD_REQUEST,
+            'Required fields: title, description, category, startTime, endTime, venue, registrationDeadline'
+        );
+    }
+
+    const newEvent = new Event({
+        title,
+        description,
+        descriptionBlocks: descriptionBlocks || [],
+        category,
+        startTime: startTime instanceof Date ? startTime : new Date(startTime),
+        endTime: endTime instanceof Date ? endTime : new Date(endTime),
+        venue,
+        minTeamSize: minTeamSize ? Number(minTeamSize) : 1,
+        maxTeamSize: maxTeamSize ? Number(maxTeamSize) : 1,
+        registrationStartDate: registrationStartDate ? (registrationStartDate instanceof Date ? registrationStartDate : new Date(registrationStartDate)) : null,
+        registrationDeadline: registrationDeadline instanceof Date ? registrationDeadline : new Date(registrationDeadline),
+        featured: featured || false,
+        bannerURL: bannerURL || null,
+        rules: rules || [],
+        prizes: prizes || null,
+        registrationFee: registrationFee || 0,
+        customFormFields: customFormFields || [],
+        eligibleBranches: eligibleBranches || [],
+        eligibleYears: eligibleYears || [1, 2, 3, 4],
+        ticketStages: req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in'],
+        enableQRScanning: req.body.enableQRScanning !== undefined ? req.body.enableQRScanning : true,
+        attendanceMethod: req.body.attendanceMethod || 'qr',
+        registrationMode: registrationMode || 'Standard',
+        isTBD: isTBD || false,
+        liveInteractive: liveInteractive || undefined,
+        createdBy: req.user.userId
+    });
+
+    await newEvent.save();
+    await newEvent.populate('createdBy', 'name email');
+
+    logFootprint(req, 'CREATE', 'Event', `Created event: ${newEvent.title}`);
+
+
+    checkAndToggleRedis().catch(err => console.error(err));
+
+    return res
+        .status(HTTP_STATUS.CREATED)
+        .json(
+            new APIResponse(HTTP_STATUS.CREATED, { event: newEvent }, SUCCESS_MESSAGES.EVENT_CREATED)
+        );
+});
+
+
+export const getAllEvents = asyncHandler(async (req, res) => {
+    const page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
+    const limit = Math.min(parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT, PAGINATION.MAX_LIMIT);
+    const { category, featured } = req.query;
+
+
+    const filter = { deletedAt: null };
+    if (category) filter.category = category;
+    if (featured === 'true') filter.featured = true;
+
+    const totalCount = await Event.countDocuments(filter);
+
+    const events = await Event.find(filter)
+        .sort({ startTime: 1 })
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .populate('createdBy', 'name email');
+
+    const response = new APIResponse(
+        HTTP_STATUS.OK,
+        {
+            events,
+            pagination: {
+                page,
+                limit,
+                totalCount,
+                totalPages: Math.ceil(totalCount / limit),
+                hasNextPage: page < Math.ceil(totalCount / limit),
+                hasPrevPage: page > 1
+            }
+        },
+        'Events retrieved'
+    );
+
+    return res.status(HTTP_STATUS.OK).json(response);
+});
+
+export const getFeaturedEvents = asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit) || 3;
+    const events = await Event.getFeaturedEvents(limit);
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(new APIResponse(HTTP_STATUS.OK, { events }, 'Featured events retrieved'));
+});
+
+export const getEventById = asyncHandler(async (req, res) => {
+    const event = await Event.findOne({
+        _id: req.params.id,
+        deletedAt: null
+    }).populate('createdBy', 'name email');
+
+    if (!event) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event retrieved'));
+});
+
+
+export const updateEvent = asyncHandler(async (req, res) => {
+    normalizeEventDates(req.body);
+
+    const allowedUpdates = [
+        'title',
+        'description',
+        'descriptionBlocks',
+        'startTime',
+        'endTime',
+        'venue',
+        'minTeamSize',
+        'maxTeamSize',
+        'registrationStartDate',
+        'registrationDeadline',
+        'featured',
+        'bannerURL',
+        'rules',
+        'prizes',
+        'registrationFee',
+        'isActive',
+        'customFormFields',
+        'eligibleBranches',
+        'eligibleYears',
+        'ticketStages',
+        'enableQRScanning',
+        'attendanceMethod',
+        'registrationMode',
+        'isTBD',
+        'liveInteractive'
+    ];
+
+    const event = await Event.findById(req.params.id);
+
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    allowedUpdates.forEach(key => {
+        if (req.body[key] !== undefined) {
+            event[key] = req.body[key];
+        }
+    });
+
+    await event.save();
+    await event.populate('createdBy', 'name email');
+
+    logFootprint(req, 'UPDATE', 'Event', `Updated event: ${event.title}`);
+
+
+    checkAndToggleRedis().catch(err => console.error(err));
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event updated successfully'));
+});
+
+
+export const deleteEvent = asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const event = await Event.findById(req.params.id);
+
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (event.deletionState?.status === 'PENDING_APPROVAL') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event deletion request is already pending multi-admin approval');
+    }
+
+    if (event.deletionState?.status === 'APPROVED_RETENTION') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event is already approved for deletion and queued in 7-day retention period');
+    }
+
+
+    event.deletionState = {
+        status: 'PENDING_APPROVAL',
+        initiatedBy: userId,
+        initiatedAt: new Date(),
+        approvals: [{ approvedBy: userId, approvedAt: new Date() }],
+        approvedAt: null,
+        vanishAt: null
+    };
+
+    await event.save();
+    logFootprint(req, 'DELETE_INITIATED', 'Event', `Initiated deletion request for event: ${event.title}`);
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event deletion initiated. Requires approval from 2 additional SuperAdmins (3 total votes).'));
+});
+
+export const approveEventDeletion = asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const event = await Event.findById(req.params.id).populate('deletionState.approvals.approvedBy', 'name email');
+
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (!event.deletionState || event.deletionState.status !== 'PENDING_APPROVAL') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No pending deletion request found for this event');
+    }
+
+    const alreadyApproved = event.deletionState.approvals.some(
+        a => (a.approvedBy?._id || a.approvedBy).toString() === userId.toString()
+    );
+
+    if (alreadyApproved) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You have already approved this event deletion request');
+    }
+
+    event.deletionState.approvals.push({ approvedBy: userId, approvedAt: new Date() });
+
+    let csvData = null;
+    let csvFileName = null;
+
+
+    if (event.deletionState.approvals.length >= 3) {
+        event.deletionState.status = 'APPROVED_RETENTION';
+        event.deletionState.approvedAt = new Date();
+
+        event.deletionState.vanishAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+
+        event.isActive = false;
+        event.isRegistrationOpen = false;
+
+
+        const registrations = await Registration.find({ eventId: event._id, deletedAt: null })
+            .populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy');
+
+        const customFieldsSet = new Set();
+        registrations.forEach(reg => {
+            if (reg.customData) {
+                Object.keys(reg.customData).forEach(key => customFieldsSet.add(key));
+            }
+        });
+        const customFields = Array.from(customFieldsSet);
+
+        const escapeCSV = (val) => {
+            if (val === null || val === undefined) return '';
+            const str = String(val);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        let csvString = 'Name,Email,College Reg No,Phone Number,Branch,Year of Study,Registration Type,Team Name,Verified,';
+        csvString += customFields.join(',') + '\n';
+
+        registrations.forEach(reg => {
+            const user = reg.registeredBy || {};
+            const row = [
+                escapeCSV(user.name),
+                escapeCSV(user.email),
+                escapeCSV(user.collegeRegNo),
+                escapeCSV(user.phoneNumber),
+                escapeCSV(user.branch),
+                escapeCSV(user.yearOfStudy),
+                escapeCSV(reg.registrationType),
+                escapeCSV(reg.teamName),
+                escapeCSV(reg.isVerified ? 'Yes' : 'No')
+            ];
+
+            customFields.forEach(field => {
+                row.push(escapeCSV(reg.customData ? reg.customData[field] : ''));
+            });
+
+            csvString += row.join(',') + '\n';
+        });
+
+        csvData = csvString;
+        const sanitizedTitle = (event.title || 'Event').replace(/[^a-zA-Z0-9_-]/g, '_');
+        csvFileName = `FINAL_BACKUP_${sanitizedTitle}_Registrations.csv`;
+    }
+
+    await event.save();
+
+    const totalApprovals = event.deletionState.approvals.length;
+    const isFullyApproved = totalApprovals >= 3;
+
+    logFootprint(req, 'DELETE_APPROVED', 'Event', `Approved deletion for event ${event.title} (${totalApprovals}/3 approvals)`);
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(
+            HTTP_STATUS.OK,
+            { event, totalApprovals, isFullyApproved, csvData, csvFileName },
+            isFullyApproved
+                ? 'Event deletion fully approved by 3 SuperAdmins! Automatic CSV backup generated and registration data queued to vanish in 7 days.'
+                : `Approval recorded (${totalApprovals}/3 SuperAdmin votes). Needs ${3 - totalApprovals} more approval(s).`
+        )
+    );
+});
+
+export const cancelEventDeletion = asyncHandler(async (req, res) => {
+    const event = await Event.findById(req.params.id);
+
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (event.deletionState?.status === 'PURGED') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event has already been permanently purged');
+    }
+
+    event.deletionState = {
+        status: 'ACTIVE',
+        initiatedBy: null,
+        initiatedAt: null,
+        approvals: [],
+        approvedAt: null,
+        vanishAt: null
+    };
+    event.isActive = true;
+
+    await event.save();
+    logFootprint(req, 'DELETE_CANCELLED', 'Event', `Cancelled deletion request for event: ${event.title}`);
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, { event }, 'Event deletion request cancelled. Event restored to Active state.')
+    );
+});
+
+export const endEvent = asyncHandler(async (req, res) => {
+    const event = await Event.findById(req.params.id);
+
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (event.status === 'Ended') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event is already ended');
+    }
+
+    event.status = 'Ended';
+    event.endedAt = new Date();
+    await event.save();
+
+
+    checkAndToggleRedis().catch(err => console.error(err));
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(new APIResponse(HTTP_STATUS.OK, { event }, 'Event ended successfully'));
+});
+
+export const getEventStats = asyncHandler(async (req, res) => {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    const totalRegistrations = await Registration.getEventRegistrationCount(event._id);
+    const totalAttendees = await Registration.getEventAttendeeCount(event._id);
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(
+            new APIResponse(HTTP_STATUS.OK, {
+                stats: {
+                    eventTitle: event.title,
+                    totalRegistrations,
+                    totalAttendees,
+                    registrationRate: totalRegistrations > 0
+                        ? ((totalAttendees / totalRegistrations) * 100).toFixed(2) + '%'
+                        : '0%'
+                }
+            }, 'Event statistics retrieved')
+        );
+});
+
+export const wipeEventData = asyncHandler(async (req, res) => {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    if (event.status !== 'Ended') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You can only wipe data for events that have ended');
+    }
+
+    const imagekit = new ImageKit({
+        publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+        privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+        urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+    });
+
+    const registrations = await Registration.find({ eventId: event._id });
+    let deletedFilesCount = 0;
+
+    for (const reg of registrations) {
+        let hasChanges = false;
+        const newCustomData = { ...reg.customData };
+
+        for (const [key, value] of Object.entries(newCustomData)) {
+            if (value && typeof value === 'object' && value.fileId) {
+                try {
+                    await imagekit.deleteFile(value.fileId);
+                    deletedFilesCount++;
+                } catch (err) {
+                    console.error(`Failed to delete file from ImageKit (${value.fileId}):`, err.message);
+                }
+            }
+        }
+
+
+        reg.customData = { wiped: "Data has been wiped to save storage" };
+        await reg.save();
+    }
+
+    return res
+        .status(HTTP_STATUS.OK)
+        .json(
+            new APIResponse(HTTP_STATUS.OK, { deletedFilesCount }, 'Event inputs and files wiped successfully')
+        );
+});

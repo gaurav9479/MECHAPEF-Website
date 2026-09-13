@@ -1,0 +1,149 @@
+.footer-section {
+  background: #020202;
+  border-top: 1px solid rgba(255, 31, 1, 0.2);
+  padding: 80px 5vw 20px 5vw;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.footer-left {
+  flex: 1;
+  min-width: 300px;
+}
+
+.footer-title {
+  font-family: 'Michroma', sans-serif;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.footer-title .highlight-text {
+  color: transparent;
+  -webkit-text-stroke: 1.5px #ff1f01;
+}
+
+.footer-subtitle {
+  color: #aaa;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 15px 20px;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #ff1f01;
+}
+
+.submit-btn {
+  align-self: flex-start;
+  padding: 12px 30px;
+  font-size: 1rem;
+}
+
+.form-status {
+  color: #ff1f01;
+  font-size: 0.9rem;
+  margin-top: -10px;
+}
+
+.footer-right {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.footer-info h3,
+.footer-socials h3 {
+  font-family: 'Michroma', sans-serif;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  color: #ff1f01;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  color: #ccc;
+  font-size: 1.1rem;
+}
+
+.info-icon {
+  color: #ff1f01;
+  font-size: 1.2rem;
+}
+
+.social-icons {
+  display: flex;
+  gap: 15px;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.2rem;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+
+.social-link:hover {
+  background: #ff1f01;
+  border-color: #ff1f01;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(255, 31, 1, 0.3);
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 80px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: #666;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    flex-direction: column;
+    gap: 50px;
+  }
+}

@@ -1,0 +1,279 @@
+/* MobileMagazine.css - Exclusive Mobile Styles */
+
+.mobile-magazine-root {
+  background-color: var(--np-bg, #f5f4ef);
+  color: var(--np-text, #1a1a1a);
+  font-family: var(--font-body, 'Inter', sans-serif);
+  min-height: 100vh;
+  padding-bottom: 50px;
+}
+
+.mobile-magazine-content {
+  padding: 20px 5%;
+  /* Assuming the navbar is sticky/fixed top and has height ~70px.
+     We don't need top padding if Navbar pushes content naturally, 
+     but if Navbar is fixed, we might need padding-top: 80px */
+}
+
+/* ----------------------------------
+   Masthead
+---------------------------------- */
+.mm-masthead {
+  text-align: center;
+  border-bottom: 4px double #111;
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+  margin-top: 20px;
+}
+
+.mm-masthead-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-bottom: 1px solid #111;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+  color: #444;
+}
+
+.mm-masthead-title {
+  font-family: var(--font-head, 'Playfair Display', serif);
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -1px;
+  margin: 10px 0;
+  color: #111;
+}
+
+.mm-masthead-categories {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #555;
+  border-top: 1px solid #111;
+  padding-top: 10px;
+}
+
+/* ----------------------------------
+   Sticky Headings
+---------------------------------- */
+.mm-sticky-heading {
+  font-family: var(--font-head, 'Playfair Display', serif);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 15px 0;
+  color: #111;
+  /* The Magic Sticky Effect */
+  position: sticky;
+  top: 70px; /* Adjust based on navbar height */
+  background-color: var(--np-bg, #f5f4ef);
+  z-index: 10;
+  padding: 15px 0 10px 0;
+  border-bottom: 2px solid #111;
+  box-shadow: 0 5px 10px -5px rgba(245, 244, 239, 0.9);
+}
+
+/* ----------------------------------
+   Hero Story (Edge to Edge)
+---------------------------------- */
+.mm-hero-story {
+  margin-bottom: 40px;
+}
+
+.mm-hero-image-container {
+  width: 100vw;
+  margin-left: -5%; /* Pull out of standard padding */
+  position: relative;
+  height: 50vh;
+  margin-bottom: 20px;
+}
+
+.mm-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(10%) contrast(110%);
+}
+
+.mm-hero-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-weight: 600;
+}
+
+.mm-hero-text {
+  padding: 10px 0;
+}
+
+.mm-tag {
+  color: var(--np-red, #d32f2f);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.mm-hero-text h3 {
+  font-family: var(--font-head, 'Playfair Display', serif);
+  font-size: 1.4rem;
+  line-height: 1.3;
+  margin-bottom: 15px;
+  color: #222;
+}
+
+.mm-hero-text p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #444;
+}
+
+/* ----------------------------------
+   Feed Sections
+---------------------------------- */
+.mm-section-divider {
+  display: flex;
+  align-items: center;
+  margin: 30px 0 20px;
+}
+
+.mm-section-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 3px double #111;
+  margin-left: 10px;
+}
+
+.mm-section-divider span {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #111;
+}
+
+.mm-feed-card {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.mm-feed-card:last-child {
+  border-bottom: none;
+}
+
+.mm-feed-img-container {
+  width: 100%;
+  height: 250px;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.mm-feed-img-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(10%) contrast(110%);
+}
+
+.mm-feed-text p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #444;
+}
+
+/* ----------------------------------
+   Opinions Section
+---------------------------------- */
+.mm-opinions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mm-opinion-card {
+  border-left: 3px solid var(--np-red, #d32f2f);
+  padding-left: 15px;
+  background: rgba(0,0,0,0.02);
+  padding: 15px;
+}
+
+.mm-author {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--np-red, #d32f2f);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.mm-opinion-card h4 {
+  font-family: var(--font-head, 'Playfair Display', serif);
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.mm-opinion-card p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #444;
+}
+
+/* ----------------------------------
+   Ad Banner
+---------------------------------- */
+.mm-ad-banner {
+  margin: 40px 0;
+  text-align: center;
+  position: relative;
+}
+
+.mm-ad-label {
+  display: block;
+  font-size: 0.6rem;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.mm-ad-banner img {
+  width: 100%;
+  max-height: 150px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid #eaeaea;
+}
+
+/* ----------------------------------
+   Date Badge Scaling
+---------------------------------- */
+.mm-date-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #111;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  z-index: 2;
+  transform: scale(0.85);
+  transform-origin: top right;
+}

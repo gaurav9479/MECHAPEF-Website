@@ -1,0 +1,364 @@
+/* ════════════════════════════════════════════════════════════
+   OurTeam — Cyberpunk Spotlight & Glitch Edition
+   ════════════════════════════════════════════════════════════ */
+
+
+@keyframes scanline {
+  0%   { background-position: 0 -100%; }
+  100% { background-position: 0  200%; }
+}
+
+@keyframes badgePop {
+  0%   { opacity: 0; transform: scale(0.6) translateY(-4px); }
+  60%  { transform: scale(1.1) translateY(0);                }
+  100% { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+
+@keyframes cogSpin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Section ────────────────────────────────────────────────── */
+.our-team-section {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  padding: 80px 0;
+  background:
+    radial-gradient(
+      600px circle at var(--mouse-x) var(--mouse-y),
+      rgba(255, 31, 1, 0.06),
+      transparent 40%
+    ),
+    #020202;
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  overflow: hidden;
+  position: relative;
+  z-index: 3;
+  transition: background 0.1s ease;
+}
+
+/* ── Section Header ─────────────────────────────────────────── */
+.team-header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 60px;
+  padding: 0 5vw;
+}
+
+.team-ghost-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  font-size: clamp(5rem, 18vw, 12rem);
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 31, 1, 0.08);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.team-heading {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  color: #ff1f01;
+  margin: 0 0 12px 0;
+  letter-spacing: 4px;
+  text-shadow:
+    0 0 20px rgba(255, 31, 1, 0.5),
+    0 0 60px rgba(255, 31, 1, 0.2);
+}
+
+.team-subtitle {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 2px;
+  margin: 0;
+  font-family: sans-serif;
+  text-transform: uppercase;
+}
+
+/* ── Scroll Container ───────────────────────────────────────── */
+.team-scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  padding: 0 5vw 40px 5vw;
+}
+
+.layer-scroll-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #ff1f01 #111;
+  padding-bottom: 15px; /* space for scrollbar */
+}
+.layer-scroll-wrapper::-webkit-scrollbar        { height: 6px; }
+.layer-scroll-wrapper::-webkit-scrollbar-track  { background: #111; border-radius: 3px; }
+.layer-scroll-wrapper::-webkit-scrollbar-thumb  { background: #ff1f01; border-radius: 3px; }
+
+/* ── Layer ──────────────────────────────────────────────────── */
+.team-layer {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.layer-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  color: #c0c0c0;
+  margin: 0;
+  width: max-content;
+  border-left: 3px solid #ff1f01;
+  padding-left: 12px;
+  letter-spacing: 2px;
+}
+
+.layer-icon {
+  color: #ff1f01;
+  font-size: 1rem;
+  transition: transform 0.6s ease;
+}
+.layer-title:hover .layer-icon {
+  animation: cogSpin 1s linear infinite;
+}
+
+.layer-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+}
+
+/* ── Team Card ──────────────────────────────────────────────── */
+.team-card {
+  position: relative;
+  width: clamp(190px, 28vw, 240px);
+  background-color: #080808;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition:
+    transform       0.35s ease,
+    border-color    0.35s ease,
+    box-shadow      0.35s ease;
+}
+
+/* Hover: neon border glow + lift */
+.team-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 31, 1, 0.7);
+  box-shadow:
+    0 0 20px rgba(255, 31, 1, 0.4),
+    inset 0 0 20px rgba(255, 31, 1, 0.05);
+}
+
+/* ── Corner Accents ─────────────────────────────────────────── */
+.corner-accent {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: #ff1f01;
+  border-style: solid;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+  pointer-events: none;
+}
+.corner-tr {
+  top: 6px; right: 6px;
+  border-width: 2px 2px 0 0;
+  border-radius: 0 4px 0 0;
+}
+.corner-bl {
+  bottom: 6px; left: 6px;
+  border-width: 0 0 2px 2px;
+  border-radius: 0 0 0 4px;
+}
+.team-card:hover .corner-accent {
+  opacity: 1;
+}
+
+
+
+/* ── Card Image Wrapper ─────────────────────────────────────── */
+.card-img-placeholder {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  height: auto;
+  background: linear-gradient(135deg, #141414, #0a0a0a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+/* ── Card Image (grayscale default) ─────────────────────────── */
+.card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.1) brightness(0.8);
+  transition: filter 0.4s ease;
+}
+
+/* On hover: full color */
+.team-card:hover .card-img {
+  filter: grayscale(0%) contrast(1) brightness(1);
+}
+
+
+.placeholder-text {
+  color: #333;
+  font-size: 1rem;
+  z-index: 1;
+}
+
+/* ── Card Info ──────────────────────────────────────────────── */
+.card-info {
+  padding: 14px 15px;
+  text-align: center;
+}
+
+.card-name {
+  margin: 0 0 5px 0;
+  font-size: 1rem;
+  color: #fff;
+  letter-spacing: 1px;
+  transition: text-shadow 0.3s ease;
+}
+.team-card:hover .card-name {
+  text-shadow:
+    0 0 8px rgba(255, 31, 1, 0.8),
+    0 0 20px rgba(255, 31, 1, 0.4);
+  color: #ff6655;
+}
+
+.card-info p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #ff1f01;
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+/* ── Final Year Seniors Special Styling (Red & Black Cyberpunk) ── */
+@keyframes seniorPulse {
+  0%   { box-shadow: 0 5px 15px rgba(255, 31, 1, 0.2); border-color: rgba(255, 31, 1, 0.4); }
+  50%  { box-shadow: 0 10px 30px rgba(255, 31, 1, 0.6); border-color: rgba(255, 31, 1, 1); }
+  100% { box-shadow: 0 5px 15px rgba(255, 31, 1, 0.2); border-color: rgba(255, 31, 1, 0.4); }
+}
+
+.final-year-card {
+  background: linear-gradient(135deg, #1f0402, #000000);
+  animation: seniorPulse 2.5s infinite alternate;
+  position: relative;
+  width: clamp(210px, 30vw, 260px); /* Slightly larger */
+  border-bottom: 3px solid #ff1f01;
+}
+
+.final-year-card .card-img-placeholder {
+  height: clamp(280px, 40vw, 346px); /* 3:4 ratio */
+}
+
+/* Full color for Seniors always */
+.final-year-card .card-img {
+  filter: grayscale(0%) contrast(1.1) brightness(0.9);
+}
+.final-year-card:hover .card-img {
+  filter: grayscale(0%) contrast(1.2) brightness(1.1);
+}
+
+/* Micro cyber grid overlay for final year */
+.final-year-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('data:image/svg+xml;utf8,<svg width="6" height="6" viewBox="0 0 6 6" xmlns="http://www.w3.org/2000/svg"><rect width="6" height="6" fill="none"/><rect width="1" height="1" fill="rgba(255,31,1,0.06)"/></svg>') repeat;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.final-year-card .corner-accent {
+  border-color: #ff1f01;
+  opacity: 1;
+  border-width: 2px;
+}
+
+.final-year-card:hover {
+  animation: none;
+  border-color: #ff1f01;
+  box-shadow:
+    0 15px 40px rgba(255, 31, 1, 0.8),
+    inset 0 0 20px rgba(255, 31, 1, 0.3);
+  transform: translateY(-8px) scale(1.02);
+}
+
+.final-year-card .card-info {
+  background: linear-gradient(to top, rgba(255, 31, 1, 0.1), transparent);
+  border-top: 1px solid rgba(255, 31, 1, 0.15);
+}
+
+.final-year-card:hover .card-name {
+  color: #fff;
+  text-shadow:
+    0 0 10px #ff1f01,
+    0 0 20px #ff1f01,
+    0 0 40px #ff1f01;
+}
+
+.final-year-card .card-info p {
+  color: #ff1f01;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(255, 31, 1, 0.7);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .team-heading        { font-size: 2rem; margin-bottom: 8px; }
+  .team-header         { margin-bottom: 30px; }
+  .team-scroll-container { gap: 30px; padding: 0 16px 20px; }
+  .layer-track         { gap: 14px; }
+  .card-name           { font-size: 0.85rem; }
+
+  /* Keep images on mobile — just smaller */
+  .team-card            { width: 150px; }
+
+  /* Final year seniors - maintain 3:4 aspect ratio and keep them slightly larger than normal on mobile */
+  .final-year-card {
+    width: 170px;
+    border-bottom: 2px solid #ff1f01;
+  }
+
+  /* Make final year hover effects persistent or more pronounced on mobile tap */
+  .final-year-card {
+    box-shadow: 0 5px 20px rgba(255, 31, 1, 0.4);
+    animation: seniorPulseMobile 3s infinite alternate;
+  }
+
+  .team-ghost-text      { display: none; }
+}
+
+@keyframes seniorPulseMobile {
+  0%   { box-shadow: 0 0 10px rgba(255, 31, 1, 0.3); border-color: rgba(255, 31, 1, 0.4); }
+  50%  { box-shadow: 0 5px 25px rgba(255, 31, 1, 0.8); border-color: rgba(255, 31, 1, 1); }
+  100% { box-shadow: 0 0 10px rgba(255, 31, 1, 0.3); border-color: rgba(255, 31, 1, 0.4); }
+}

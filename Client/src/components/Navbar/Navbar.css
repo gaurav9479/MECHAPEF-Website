@@ -1,0 +1,488 @@
+.navbar-hover-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px; /* Hidden zone at the top of the screen */
+  z-index: 991;
+}
+
+.navbar {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px clamp(12px, 3vw, 8%);
+  z-index: 990;
+  transition: top 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease; /* Instant but smooth drop */
+}
+
+.navbar-visible {
+  top: 0;
+  background: transparent;
+}
+
+.navbar-hidden {
+  top: -120px; /* Hidden by default */
+  background: rgba(5, 5, 5, 0.75);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Show the hidden navbar when hovering the zone, OR when hovering the navbar itself */
+.navbar-hover-zone:hover + .navbar-hidden,
+.navbar-hidden:hover {
+  top: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 28px;
+  color: #ff1f01;
+  animation: spin 6s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.logo-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.logo-main {
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  font-weight: 800;
+  color: #ffffff;
+  font-style: italic;
+  letter-spacing: 0.5px;
+}
+
+.logo-main span {
+  color: #ff0000;
+}
+
+.logo-sub {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  font-size: clamp(0.55rem, 1vw, 0.7rem);
+  color: #ff0000;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+.navbar ul {
+  display: flex;
+  list-style: none;
+  gap: clamp(4px, 1.2vw, 20px);
+}
+
+.navbar ul li {
+  position: relative;
+  cursor: pointer;
+  font-size: clamp(0.75rem, 1vw, 0.95rem);
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  padding: clamp(4px, 0.6vw, 8px) clamp(8px, 1.2vw, 18px);
+  border-radius: 30px;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.navbar ul li span {
+  position: relative;
+  z-index: 2;
+}
+
+.navbar ul li.active {
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+.navbar ul li:hover:not(.active) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.contact-btn {
+  padding: clamp(8px, 1.2vw, 12px) clamp(20px, 2.5vw, 35px);
+  background: #c9182b;
+  border: none;
+  color: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  transition: all 0.2s;
+}
+
+.contact-btn:hover {
+  background: #a81121;
+}
+
+.mobile-toggle {
+  display: none;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+  z-index: 995;
+}
+
+.desktop-only-btn {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-right: clamp(55px, 6vw, 90px); /* Shift profile button to left to avoid overlapping Notice Board string */
+}
+
+@media (max-width: 768px) {
+  .mobile-toggle {
+    display: block;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    height: 100dvh;
+    width: min(86vw, 340px);
+    background: rgba(10, 10, 10, 0.98);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 8px;
+    transition: right 0.3s ease;
+    z-index: 994;
+    padding: 90px 22px 28px;
+    border-left: 1px solid rgba(255, 0, 0, 0.2);
+    overflow-y: auto;
+  }
+
+  .nav-links.open {
+    right: 0;
+  }
+
+  .navbar {
+    padding: 14px 18px;
+    background: rgba(5, 5, 5, 0.8);
+    backdrop-filter: blur(10px);
+  }
+
+  .navbar-hidden {
+    top: 0;
+  }
+
+  .navbar ul li {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .desktop-only-btn {
+    display: none;
+  }
+
+  /* Fix for hamburger menu not clickable and navbar disappearing on mobile */
+  .navbar-hover-zone {
+    pointer-events: none;
+  }
+  
+  .navbar-hidden {
+    top: 0;
+    background: rgba(5, 5, 5, 0.95);
+  }
+}
+
+.mobile-only-btn {
+  display: none;
+  width: 100%;
+}
+
+.mobile-only-btn .contact-btn {
+  width: 80%;
+  margin: 0 auto;
+  display: block;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .mobile-only-btn {
+    display: block;
+    margin-top: 12px;
+  }
+}
+
+/* Avatar & Dropdown Styles */
+.nav-avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #222;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.nav-avatar:hover {
+  border-color: #ff0000;
+}
+
+.nav-avatar.verified-avatar {
+  border-color: #00c864;
+  box-shadow: 0 0 10px rgba(0, 200, 100, 0.4);
+}
+
+.nav-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 200px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+
+  z-index: 995;
+  pointer-events: auto;
+}
+
+.dropdown-user-info {
+  padding: 10px 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-user-info strong {
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.dropdown-user-info span {
+  color: #aaa;
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #333;
+  margin: 5px 0;
+}
+
+.avatar-dropdown button {
+  background: transparent;
+  border: none;
+  color: #ddd;
+  padding: 10px 15px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s, color 0.2s;
+  width: 100%;
+}
+
+.avatar-dropdown button:hover {
+  background: #222;
+  color: #fff;
+}
+
+.avatar-dropdown button.logout-btn:hover {
+  color: #ff4444;
+}
+
+@media (max-width: 768px) {
+  .avatar-dropdown {
+    top: auto;
+    bottom: calc(100% + 10px);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(280px, 78vw);
+  }
+}
+@media (min-width: 769px) {
+  .nav-links {
+    position: relative;
+  }
+}
+
+.nav-sliding-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 31, 1, 0.25), rgba(201, 24, 43, 0.05));
+  border: 1px solid rgba(255, 31, 1, 0.4);
+  box-shadow: 0 4px 15px rgba(255, 31, 1, 0.25), inset 0 0 12px rgba(255, 31, 1, 0.15);
+  backdrop-filter: blur(8px);
+  border-radius: 30px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .nav-sliding-pill {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-main {
+    font-size: 1.2rem;
+  }
+
+  .logo-icon {
+    font-size: 24px;
+  }
+
+  .contact-btn {
+    width: 100%;
+    padding: 12px 20px;
+  }
+}
+
+/* ==========================================
+   VERTICAL NAVBAR (For Magazine/Sidebar)
+========================================== */
+.navbar-vertical {
+  width: 180px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--np-bg, #f5f4ef);
+  padding: 40px 15px;
+  border-right: 2px solid var(--np-border, #333);
+  z-index: 990;
+}
+
+.navbar-vertical .logo {
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 50px;
+}
+
+.navbar-vertical .logo-main {
+  color: var(--np-text, #111) !important;
+}
+
+.navbar-vertical .nav-links {
+  width: 100%;
+  padding: 0;
+  list-style: none;
+  border-top: 2px solid var(--np-border, #333);
+  border-bottom: 2px solid var(--np-border, #333);
+  padding: 20px 0;
+}
+
+.navbar-vertical .nav-links li {
+  width: 100%;
+  text-align: left;
+  padding: 12px 15px;
+  color: var(--np-text, #111);
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navbar-vertical .nav-links li:last-child {
+  border-bottom: none;
+}
+
+.navbar-vertical .nav-links li:hover {
+  background: rgba(0,0,0,0.03);
+  padding-left: 20px;
+}
+
+.navbar-vertical .nav-sliding-pill {
+  background: rgba(0,0,0,0.05); /* subtle highlight instead of white */
+  border-radius: 4px;
+}
+
+.navbar-vertical .mobile-toggle {
+  display: none; /* Hide hamburger icon in sidebar mode by default */
+}
+
+/* Force dark text for specific elements that are white by default */
+.navbar-vertical .logo-icon {
+  color: #d32f2f; 
+}
+.navbar-vertical .contact-btn {
+  background-color: #d32f2f;
+  color: white;
+  margin-top: 20px;
+}
+.navbar-vertical .avatar-dropdown {
+  right: auto !important;
+  left: 0 !important;
+  top: auto !important;
+  bottom: calc(100% + 10px) !important;
+}
+
+/* Responsive adjustments for vertical navbar */
+@media (max-width: 1024px) {
+  .navbar-vertical {
+    width: 200px;
+  }
+}
+@media (max-width: 768px) {
+  /* On mobile, revert back to top-fixed or hide it for magazine */
+  .navbar-vertical {
+    display: none; /* simple solution: hide sidebar on mobile */
+  }
+}
