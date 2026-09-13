@@ -6,8 +6,7 @@ import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
-const ALLOWED_REG_PREFIXES = ['20269', '20247', '20246', '20257', '20256'];
-const REG_NO_PATTERN = new RegExp(`^(?:${ALLOWED_REG_PREFIXES.join('|')})[A-Z0-9]+$`, 'i');
+const REG_NO_PATTERN = /^[A-Z0-9]{4,20}$/i;
 const EMAIL_PATTERN = /^([a-z0-9]+)\.([0-9A-Z]+)@mnnit\.ac\.in$/i;
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
@@ -38,7 +37,7 @@ export const createDepartmentalRegistration = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Event, name, phone number, registration number and college email are required');
     }
     if (!REG_NO_PATTERN.test(normalizedRegNo)) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Registration number must start with one of: ${ALLOWED_REG_PREFIXES.join(', ')}`);
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Enter a valid registration number from the approved student list');
     }
     if (!emailMatch || emailMatch[2].toUpperCase() !== normalizedRegNo) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Email must be name.REGNO@mnnit.ac.in and REGNO must match exactly');
