@@ -61,7 +61,11 @@ export const normalizeEventDates = (body) => {
 
   dateFields.forEach((field) => {
     if (body[field] !== undefined && body[field] !== null && body[field] !== '') {
-      const parsed = toIST(body[field]);
+      // A date-only end date means the whole local calendar day, not midnight.
+      const raw = String(body[field]).trim();
+      const parsed = field === 'endTime' && /^\d{4}-\d{2}-\d{2}$/.test(raw)
+        ? toIST(`${raw}T23:59:59`)
+        : toIST(body[field]);
       if (parsed) {
         body[field] = parsed;
       }
