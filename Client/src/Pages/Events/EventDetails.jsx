@@ -98,7 +98,10 @@ const EventDetails = () => {
 
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || event?.registrationMode === 'DepartmentalQR') {
+      setUserRegistration(false);
+      return;
+    }
     const checkRegistration = async () => {
       try {
         const res = await api.get(`/events/${id}/my-registration`);
@@ -157,6 +160,10 @@ const EventDetails = () => {
 
 
   const handleRegisterClick = () => {
+    if (event?.registrationMode === 'DepartmentalQR') {
+      navigate(`/departmentalregister?eventId=${id}`);
+      return;
+    }
     if (!user) {
       showToast('Please login to register', 'error');
       sessionStorage.setItem('redirect_after_login', window.location.pathname + window.location.search);
