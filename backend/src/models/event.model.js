@@ -172,6 +172,12 @@ const eventSchema = new mongoose.Schema(
             default: false
         },
 
+        departmentalAllowedStudents: [{
+            name: { type: String, required: true, trim: true },
+            collegeRegNo: { type: String, required: true, trim: true, uppercase: true },
+            branch: { type: String, required: true, trim: true }
+        }],
+
         totalAttendees: {
             type: Number,
             default: 0

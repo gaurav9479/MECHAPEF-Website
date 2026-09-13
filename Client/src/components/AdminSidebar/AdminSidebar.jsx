@@ -203,6 +203,11 @@ const AdminSidebar = () => {
                   <FaQrcode /> Scan Tickets
                 </Link>
               )}
+              {isRole('super-admin', 'event-lead') && (
+                <Link to="/admin/department-qr" className={`sidebar-link ${location.pathname === '/admin/department-qr' ? 'active' : ''}`} onClick={(e) => handleNav(e, '/admin/department-qr')}>
+                  <FaQrcode /> Department QR
+                </Link>
+              )}
             </>
           )}
 

@@ -38,6 +38,7 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import MagazineContainer from './Pages/Magazine/MagazineContainer';
 import LivePoll from './Pages/LivePoll/LivePoll';
 import DepartmentalRegister from './Pages/DepartmentalRegister/DepartmentalRegister';
+import AdminDepartmentalQR from './Pages/Admin/AdminDepartmentalQR';
 
 const Unauthorized = () => (
   <div
@@ -90,6 +91,7 @@ const AnimatedRoutes = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/departmentalregister" element={<DepartmentalRegister />} />
+        <Route path="/admin/department-qr" element={<ProtectedRoute allowedRoles={['super-admin', 'event-lead']} fallbackPath="/admin"><AdminDepartmentalQR /></ProtectedRoute>} />
         <Route path="/live-poll/:eventId/:questionId" element={<LivePoll />} />
         <Route path="/sponsors" element={<Sponsors />} />
         <Route path="/team" element={<Team />} />

@@ -13,10 +13,20 @@ const EMAIL_PATTERN = /^([a-z0-9]+)\.([0-9A-Z]+)@mnnit\.ac\.in$/i;
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 const getEnabledEvent = async (eventId) => {
-    const event = await Event.findOne({ _id: eventId, deletedAt: null, registrationMode: 'DepartmentalQR' });
+    const event = await Event.findOne({ _id: eventId, deletedAt: null, registrationMode: 'DepartmentalQR', departmentalRegistrationEnabled: true });
     if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Departmental registration is not enabled for this event');
     return event;
 };
+
+export const endorseDepartmentalRegistration = asyncHandler(async (req, res) => {
+    const event = await Event.findOneAndUpdate(
+        { _id: req.params.eventId, category: 'Departmental', registrationMode: 'DepartmentalQR', deletedAt: null },
+        { departmentalRegistrationEnabled: true },
+        { new: true }
+    );
+    if (!event) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Select Departmental QR mode for a Departmental event first');
+    return res.json(new APIResponse(HTTP_STATUS.OK, { eventId: event._id }, 'Departmental QR registration endorsed'));
+});
 
 export const createDepartmentalRegistration = asyncHandler(async (req, res) => {
     const { eventId, name, phoneNumber, collegeRegNo, collegeEmail } = req.body;
@@ -34,7 +44,15 @@ export const createDepartmentalRegistration = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Email must be name.REGNO@mnnit.ac.in and REGNO must match exactly');
     }
 
-    await getEnabledEvent(eventId);
+    const event = await getEnabledEvent(eventId);
+    const allowedStudent = event.departmentalAllowedStudents?.find(student => student.collegeRegNo === normalizedRegNo);
+    if (!allowedStudent) throw new ApiError(HTTP_STATUS.FORBIDDEN, 'This registration number is not present in the approved Mechanical student list');
+    if (allowedStudent.name.trim().toLowerCase() !== String(name).trim().toLowerCase()) {
+        throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Name does not match the approved student list');
+    }
+    if (!allowedStudent.branch.toLowerCase().includes('mechanical')) {
+        throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Only approved Mechanical Engineering students can register');
+    }
     const existing = await DepartmentalRegistration.findOne({ eventId, collegeRegNo: normalizedRegNo }).select('+qrToken');
     if (existing) {
         const sameDetails = existing.name.trim().toLowerCase() === String(name).trim().toLowerCase()
@@ -59,6 +77,16 @@ export const createDepartmentalRegistration = asyncHandler(async (req, res) => {
         registration: { id: registration._id, name, collegeRegNo: normalizedRegNo, eventId },
         qrToken: token
     }, 'Departmental registration created'));
+});
+
+export const uploadDepartmentalAllowlist = asyncHandler(async (req, res) => {
+    const { students } = req.body;
+    if (!Array.isArray(students) || students.length === 0) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'A student list is required');
+    const normalized = students.map(student => ({ name: String(student.name || '').trim(), collegeRegNo: String(student.collegeRegNo || '').trim().toUpperCase(), branch: String(student.branch || '').trim() }));
+    if (normalized.some(student => !student.name || !student.collegeRegNo || !student.branch)) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Every student must have name, registration number and branch');
+    const event = await Event.findByIdAndUpdate(req.params.eventId, { departmentalAllowedStudents: normalized }, { new: true });
+    if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
+    return res.json(new APIResponse(HTTP_STATUS.OK, { count: normalized.length }, 'Approved student list uploaded'));
 });
 
 export const scanDepartmentalRegistration = asyncHandler(async (req, res) => {
