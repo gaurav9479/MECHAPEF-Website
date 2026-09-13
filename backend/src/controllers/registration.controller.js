@@ -1030,8 +1030,16 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
     }
 
 
-    // Create a pending join request for the member instead of confirming directly
-    registration.joinRequests.push({
+    // Check if this user already has a pending invitation
+    const existingInvite = registration.invitations?.find(
+        inv => inv.userId?.toString() === targetUser._id.toString() && inv.status === 'Pending'
+    );
+    if (existingInvite) {
+        throw new ApiError(HTTP_STATUS.CONFLICT, `An invitation has already been sent to ${targetUser.name}`);
+    }
+
+    // Send an invitation — target user must Accept/Reject on their side
+    registration.invitations.push({
         userId: targetUser._id,
         name: targetUser.name,
         email: targetUser.email,
@@ -1042,7 +1050,77 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
     await registration.save();
 
     return res.status(HTTP_STATUS.OK).json(
-        new APIResponse(HTTP_STATUS.OK, null, 'Join request sent for the member. Leader must approve.')
+        new APIResponse(HTTP_STATUS.OK, null, `Invitation sent to ${targetUser.name}! They must accept to join your team.`)
+    );
+});
+
+
+/**
+ * POST /registrations/:teamRegId/respond-invitation
+ * The invited user accepts or rejects a leader-sent invitation.
+ * Body: { action: "Accept" | "Reject" }
+ */
+export const respondToInvitation = asyncHandler(async (req, res) => {
+    const { teamRegId } = req.params;
+    const { action } = req.body;
+    const userId = req.user.userId;
+
+    if (!['Accept', 'Reject'].includes(action)) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Action must be Accept or Reject');
+    }
+
+    const registration = await Registration.findById(teamRegId);
+    if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Team registration not found');
+
+    if (registration.registrationStatus !== 'Draft') {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'This team is already finalized and not accepting new members');
+    }
+
+    const inviteIdx = registration.invitations.findIndex(
+        inv => inv.userId?.toString() === userId.toString() && inv.status === 'Pending'
+    );
+    if (inviteIdx === -1) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'No pending invitation found for you on this team');
+    }
+
+    if (action === 'Accept') {
+        const event = await Event.findById(registration.eventId);
+        if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
+
+        const confirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1;
+        if (confirmedCount >= event.maxTeamSize) {
+            throw new ApiError(HTTP_STATUS.CONFLICT, 'This team is already full');
+        }
+
+        const existingReg = await Registration.findOne({
+            eventId: registration.eventId,
+            $or: [
+                { registeredBy: userId },
+                { 'teamMembers.userId': userId, 'teamMembers.status': 'Confirmed' }
+            ],
+            deletedAt: null
+        });
+        if (existingReg && existingReg._id.toString() !== teamRegId) {
+            throw new ApiError(HTTP_STATUS.CONFLICT, 'You are already part of another team for this event');
+        }
+
+        const invite = registration.invitations[inviteIdx];
+        registration.invitations[inviteIdx].status = 'Accepted';
+        registration.teamMembers.push({
+            userId: invite.userId,
+            name: invite.name,
+            email: invite.email,
+            collegeRegNo: invite.collegeRegNo,
+            status: 'Confirmed'
+        });
+    } else {
+        registration.invitations[inviteIdx].status = 'Rejected';
+    }
+
+    await registration.save();
+
+    return res.status(HTTP_STATUS.OK).json(
+        new APIResponse(HTTP_STATUS.OK, null, `Invitation ${action === 'Accept' ? 'accepted! You are now part of the team.' : 'declined.'}`)
     );
 });
 
@@ -1377,6 +1455,35 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
 
         return res.status(HTTP_STATUS.OK).json(
             new APIResponse(HTTP_STATUS.OK, { role: 'requester', requests: result }, 'Your join request(s) found')
+        );
+    }
+
+    // Check if user has been invited by a leader
+    const teamsWithInvite = await Registration.find({
+        eventId,
+        'invitations.userId': userId,
+        'invitations.status': 'Pending',
+        deletedAt: null
+    }).populate('registeredBy', 'name collegeRegNo').lean();
+
+    if (teamsWithInvite.length > 0) {
+        const invitations = teamsWithInvite.map(team => {
+            const myInvite = team.invitations.find(
+                inv => inv.userId?.toString() === userId && inv.status === 'Pending'
+            );
+            return {
+                teamId: team._id,
+                teamName: team.teamName,
+                leaderName: team.registeredBy?.name,
+                leaderRegNo: team.registeredBy?.collegeRegNo,
+                currentSize: team.teamMembers.filter(m => m.status === 'Confirmed').length + 1,
+                inviteStatus: myInvite?.status || 'Pending',
+                sentAt: myInvite?.sentAt
+            };
+        });
+
+        return res.status(HTTP_STATUS.OK).json(
+            new APIResponse(HTTP_STATUS.OK, { role: 'invitee', invitations }, 'You have pending invitation(s)')
         );
     }
 

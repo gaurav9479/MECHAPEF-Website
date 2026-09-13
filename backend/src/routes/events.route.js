@@ -87,12 +87,11 @@ router.get(
     registrationController.getEventRegistrations
 );
 
-router.get(
-    '/:eventId/registrations/export',
-    authenticate,
-    checkRole(['super-admin', 'content-lead', 'media-lead']),
-    registrationController.exportRegistrationsCSV
-);
+    router.get(
+        '/:eventId/registrations/export',
+        authenticate,
+        registrationController.exportRegistrationsCSV
+    );
 
 router.put(
     '/:eventId/registrations/:id/attendance',

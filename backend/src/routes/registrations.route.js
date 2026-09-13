@@ -36,6 +36,12 @@ router.post(
 );
 
 router.post(
+    '/:teamRegId/respond-invitation',
+    authenticate,
+    registrationController.respondToInvitation
+);
+
+router.post(
     '/:teamRegId/add-member',
     authenticate,
     registrationController.addMemberByRegNo

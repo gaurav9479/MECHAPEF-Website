@@ -79,6 +79,21 @@ const registrationSchema = new mongoose.Schema(
             default: []
         },
 
+        invitations: {
+            type: [
+                {
+                    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+                    name: String,
+                    email: String,
+                    collegeRegNo: String,
+                    status: { type: String, enum: ['Pending', 'Accepted', 'Rejected'], default: 'Pending' },
+                    sentAt: { type: Date, default: Date.now }
+                }
+            ],
+            default: []
+        },
+
+
 
         registrationStatus: {
             type: String,

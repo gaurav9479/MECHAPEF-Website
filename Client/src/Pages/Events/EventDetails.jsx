@@ -433,6 +433,20 @@ const EventDetails = () => {
     }
   };
 
+  const handleRespondInvitation = async (teamRegId, action) => {
+    setRespondingTo(teamRegId);
+    try {
+      const res = await api.post(`/registrations/${teamRegId}/respond-invitation`, { action });
+      showToast(res.data?.message || (action === 'Accept' ? 'Invitation accepted!' : 'Invitation declined.'), 'success');
+      await refreshJoinStatus();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to respond to invitation', 'error');
+    } finally {
+      setRespondingTo(null);
+    }
+  };
+
+
   const handleSaveDraftChanges = async () => {
     if (!draftRegistration) return;
     setSubmitting(true);
@@ -792,6 +806,42 @@ const EventDetails = () => {
                         ))}
                       </div>
                     )}
+
+                    {/* INVITEE: leader sent an invitation to this user */}
+                    {myJoinStatus.role === 'invitee' && myJoinStatus.invitations?.length > 0 && (
+                      <div style={{ background: 'rgba(0,180,255,0.07)', border: '1px solid rgba(0,180,255,0.3)', borderRadius: '10px', padding: '14px' }}>
+                        <h4 style={{ color: '#00b4ff', margin: '0 0 10px', fontSize: '0.95rem' }}>📬 You've Been Invited to Join a Team!</h4>
+                        {myJoinStatus.invitations.map((inv, i) => (
+                          <div key={i} style={{ background: '#0d1a22', borderRadius: '8px', padding: '12px 14px', marginBottom: i < myJoinStatus.invitations.length - 1 ? '10px' : 0, border: '1px solid #1a3040' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                              <div>
+                                <p style={{ margin: '0 0 3px', fontWeight: 'bold', fontSize: '0.92rem', color: '#fff' }}>{inv.teamName}</p>
+                                <p style={{ margin: 0, color: '#aaa', fontSize: '0.8rem' }}>
+                                  Leader: <strong style={{ color: '#00b4ff' }}>{inv.leaderName}</strong> ({inv.leaderRegNo}) · {inv.currentSize}/{event.maxTeamSize} members
+                                </p>
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                  style={{ padding: '6px 16px', background: '#00c864', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 'bold' }}
+                                  disabled={respondingTo === inv.teamId}
+                                  onClick={() => handleRespondInvitation(inv.teamId, 'Accept')}
+                                >
+                                  {respondingTo === inv.teamId ? '...' : '✓ Accept'}
+                                </button>
+                                <button
+                                  style={{ padding: '6px 16px', background: 'rgba(255,51,51,0.15)', color: '#ff5555', border: '1px solid #ff3333', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem' }}
+                                  disabled={respondingTo === inv.teamId}
+                                  onClick={() => handleRespondInvitation(inv.teamId, 'Reject')}
+                                >
+                                  {respondingTo === inv.teamId ? '...' : '✕ Decline'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                   </div>
                 )}
               </>
@@ -1102,7 +1152,7 @@ const EventDetails = () => {
                     </button>
                   </div>
                   <small style={{ color: '#888', fontSize: '0.75rem', marginTop: '6px', display: 'block' }}>
-                    Auto-adds teammate directly when 8 digits are entered.
+                    Sends an invitation to the user — they must accept to join your team.
                   </small>
                 </div>
               )}
@@ -1146,6 +1196,30 @@ const EventDetails = () => {
                 </p>
               )}
             </div>
+
+            {/* Invitations Sent by leader */}
+            {draftRegistration.invitations?.length > 0 && (
+              <div style={{ marginBottom: '20px', background: '#0a0a0a', border: '1px solid #1a3040', borderRadius: '10px', padding: '14px' }}>
+                <h4 style={{ color: '#00b4ff', borderBottom: '1px solid #1a3040', paddingBottom: '8px', marginBottom: '10px', marginTop: 0 }}>
+                  📤 Invitations Sent ({draftRegistration.invitations.filter(inv => inv.status === 'Pending').length} pending)
+                </h4>
+                {draftRegistration.invitations.map((inv, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0d1a22', borderRadius: '8px', padding: '10px 14px', marginBottom: '8px', border: '1px solid #1a3040' }}>
+                    <div>
+                      <strong style={{ color: '#fff', fontSize: '0.92rem' }}>{inv.name}</strong>
+                      <span style={{ color: '#00b4ff', fontSize: '0.82rem', marginLeft: '10px' }}>{inv.collegeRegNo}</span>
+                    </div>
+                    <span style={{
+                      padding: '3px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold',
+                      background: inv.status === 'Pending' ? 'rgba(255,170,0,0.15)' : inv.status === 'Accepted' ? 'rgba(0,200,100,0.15)' : 'rgba(255,51,51,0.15)',
+                      color: inv.status === 'Pending' ? '#ffaa00' : inv.status === 'Accepted' ? '#00c864' : '#ff5555'
+                    }}>
+                      {inv.status === 'Pending' ? '⏳ Awaiting Response' : inv.status === 'Accepted' ? '✓ Accepted' : '✕ Declined'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
 
 
             {event.customFormFields?.length > 0 && (
