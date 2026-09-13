@@ -163,20 +163,23 @@ export const registerForEvent = asyncHandler(async (req, res) => {
 
     let teamMembers = [];
     if (registrationType === REGISTRATION_TYPES.TEAM) {
+        const requestedTeamMemberIds = Array.isArray(teamMemberIds) ? teamMemberIds : [];
         if (!teamName) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Team name is required for team registration');
         }
 
-        if (!teamMemberIds || teamMemberIds.length === 0) {
+        // The leader counts as the first team member, so an event with min size 1
+        // may be confirmed with no additional members.
+        if ((event.minTeamSize || 1) > 1 && (!teamMemberIds || teamMemberIds.length === 0)) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
         }
 
-        if (teamMemberIds.length + 1 > event.maxTeamSize) {
+        if (requestedTeamMemberIds.length + 1 > event.maxTeamSize) {
             throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Maximum team size is ${event.maxTeamSize}`);
         }
 
-        const members = await User.find({ _id: { $in: teamMemberIds } });
-        if (members.length !== teamMemberIds.length) {
+        const members = await User.find({ _id: { $in: requestedTeamMemberIds } });
+        if (members.length !== requestedTeamMemberIds.length) {
             throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.INVALID_TEAM_MEMBERS);
         }
 
@@ -209,7 +212,7 @@ export const registerForEvent = asyncHandler(async (req, res) => {
 
         const registeredMembers = await Registration.find({
             eventId,
-            'teamMembers.userId': { $in: teamMemberIds },
+            'teamMembers.userId': { $in: requestedTeamMemberIds },
             deletedAt: null
         });
 
@@ -1273,7 +1276,7 @@ export const finalizeTeamRegistration = asyncHandler(async (req, res) => {
     const event = await Event.findById(registration.eventId);
     if (!event) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Event not found');
 
-    const minSize = event.minTeamSize || 2;
+    const minSize = event.minTeamSize || 1;
     const maxSize = event.maxTeamSize || 5;
     const currentConfirmedCount = registration.teamMembers.filter(m => m.status === 'Confirmed').length + 1;
 

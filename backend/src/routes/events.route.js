@@ -83,7 +83,7 @@ router.post(
 router.get(
     '/:eventId/registrations',
     authenticate,
-    checkRole(['super-admin', 'content-lead', 'media-lead']),
+    checkRole(['super-admin', 'event-lead', 'content-lead', 'media-lead']),
     registrationController.getEventRegistrations
 );
 

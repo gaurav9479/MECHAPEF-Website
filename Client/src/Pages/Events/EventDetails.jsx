@@ -1262,13 +1262,13 @@ const EventDetails = () => {
                   className="btn-primary"
                   disabled={
                     submitting ||
-                    (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2) ||
+                    (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 1) ||
                     (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) > event.maxTeamSize
                   }
                   onClick={handleFinalizeRegistration}
                   title={
-                    (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 2)
-                      ? `Team must have at least ${event.minTeamSize || 2} members to finalize`
+                    (draftRegistration.teamMembers?.filter(m => m.status === 'Confirmed').length + 1) < (event.minTeamSize || 1)
+                      ? `Team must have at least ${event.minTeamSize || 1} members to finalize`
                       : `Finalize Team Registration (No changes allowed after this)`
                   }
                   style={{ minWidth: '180px', padding: '9px 20px', fontSize: '0.85rem', fontWeight: 'bold' }}
@@ -1289,4 +1289,3 @@ const EventDetails = () => {
 };
 
 export default EventDetails;
-

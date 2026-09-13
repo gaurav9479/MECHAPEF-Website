@@ -213,10 +213,6 @@ registrationSchema.pre('save', async function (next) {
             }
         }
 
-        if (this.registrationType === 'Team' && this.registrationStatus === 'Confirmed' && this.teamMembers.length === 0) {
-            throw new Error('Team registration must have at least one team member');
-        }
-
         next();
     } catch (error) {
         next(error);

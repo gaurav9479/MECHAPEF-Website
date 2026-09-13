@@ -11,6 +11,7 @@ const AdminRegistrations = () => {
   const [event, setEvent] = useState(null);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [toast, setToast] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
@@ -24,6 +25,7 @@ const AdminRegistrations = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const [evRes, regRes] = await Promise.all([
         eventService.getById(eventId),
         api.get(`/events/${eventId}/registrations`)
@@ -31,6 +33,7 @@ const AdminRegistrations = () => {
       setEvent(evRes.data.data.event);
       setRegistrations(regRes.data.data.registrations);
     } catch (err) {
+      setLoadError(err.response?.data?.message || 'Failed to load registrations');
       showToast('Failed to load data', 'error');
     } finally {
       setLoading(false);
@@ -116,6 +119,8 @@ const AdminRegistrations = () => {
             <tbody>
               {loading ? (
                 <tr><td colSpan="8" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
+              ) : loadError ? (
+                <tr><td colSpan="8" style={{ textAlign: 'center', color: '#ff4444', padding: '30px' }}>{loadError}</td></tr>
               ) : registrations.length === 0 ? (
                 <tr><td colSpan="8" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No registrations yet.</td></tr>
               ) : registrations.map(reg => {
