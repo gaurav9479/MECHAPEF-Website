@@ -10,6 +10,13 @@ const REG_NO_PATTERN = /^[A-Z0-9]{4,20}$/i;
 const EMAIL_PATTERN = /^([a-z0-9]+)\.([0-9A-Z]+)@mnnit\.ac\.in$/i;
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+const normalizeName = (value) => String(value || '')
+    .replace(/^\uFEFF/, '')
+    .replace(/["'`]/g, '')
+    .replace(/[^a-z0-9]+/gi, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
 
 const getEnabledEvent = async (eventId) => {
     const event = await Event.findOne({ _id: eventId, deletedAt: null, registrationMode: 'DepartmentalQR', departmentalRegistrationEnabled: true });
@@ -46,7 +53,7 @@ export const createDepartmentalRegistration = asyncHandler(async (req, res) => {
     const event = await getEnabledEvent(eventId);
     const allowedStudent = event.departmentalAllowedStudents?.find(student => student.collegeRegNo === normalizedRegNo);
     if (!allowedStudent) throw new ApiError(HTTP_STATUS.FORBIDDEN, 'This registration number is not present in the approved Mechanical student list');
-    if (allowedStudent.name.trim().toLowerCase() !== String(name).trim().toLowerCase()) {
+    if (normalizeName(allowedStudent.name) !== normalizeName(name)) {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Name does not match the approved student list');
     }
     if (!allowedStudent.branch.toLowerCase().includes('mechanical')) {
@@ -54,7 +61,7 @@ export const createDepartmentalRegistration = asyncHandler(async (req, res) => {
     }
     const existing = await DepartmentalRegistration.findOne({ eventId, collegeRegNo: normalizedRegNo }).select('+qrToken');
     if (existing) {
-        const sameDetails = existing.name.trim().toLowerCase() === String(name).trim().toLowerCase()
+        const sameDetails = normalizeName(existing.name) === normalizeName(name)
             && existing.phoneNumber === String(phoneNumber).trim()
             && existing.collegeEmail === normalizedEmail;
         if (!sameDetails) {
