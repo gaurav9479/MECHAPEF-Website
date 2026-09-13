@@ -333,8 +333,9 @@ eventSchema.index({ deletedAt: 1, isActive: 1 });
 
 eventSchema.virtual('currentStatus').get(function () {
     const now = new Date();
+    const endTime = this.endTimeAtEndOfDay;
     if (now < this.startTime) return 'Upcoming';
-    if (now <= this.endTime) return 'Ongoing';
+    if (now <= endTime) return 'Ongoing';
     return 'Ended';
 });
 
@@ -344,7 +345,21 @@ eventSchema.virtual('duration').get(function () {
 });
 
 eventSchema.virtual('hasEnded').get(function () {
-    return new Date() > this.endTime;
+    return new Date() > this.endTimeAtEndOfDay;
+});
+
+// Treat a date saved at exactly midnight as an inclusive calendar end date.
+eventSchema.virtual('endTimeAtEndOfDay').get(function () {
+    const endTime = new Date(this.endTime);
+    if (Number.isNaN(endTime.getTime())) return endTime;
+    const ist = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    }).formatToParts(endTime).reduce((out, part) => ({ ...out, [part.type]: part.value }), {});
+    if (ist.hour === '00' && ist.minute === '00' && ist.second === '00') {
+        return new Date(`${ist.year}-${ist.month}-${ist.day}T23:59:59+05:30`);
+    }
+    return endTime;
 });
 
 eventSchema.virtual('isUpcoming').get(function () {
