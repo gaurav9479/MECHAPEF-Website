@@ -171,6 +171,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'description',
         'descriptionBlocks',
         'category',
+        'departmentalRegistrationEnabled',
         'startTime',
         'endTime',
         'venue',

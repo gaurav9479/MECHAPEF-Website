@@ -34,6 +34,7 @@ const emptyForm = {
   ticketStages: ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
   enableQRScanning: true,
   attendanceMethod: 'qr',
+  departmentalRegistrationEnabled: false,
   bannerURL: '',
   liveInteractive: {
     enabled: false,
@@ -105,6 +106,7 @@ const AdminEventEditor = () => {
             ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
             enableQRScanning: ev.enableQRScanning !== undefined ? ev.enableQRScanning : true,
             attendanceMethod: ev.attendanceMethod || (ev.enableQRScanning === false ? 'id-card' : 'qr'),
+            departmentalRegistrationEnabled: ev.departmentalRegistrationEnabled || false,
             bannerURL: ev.bannerURL || '',
             liveInteractive: {
               enabled: ev.liveInteractive?.enabled || false,
@@ -647,6 +649,7 @@ const AdminEventEditor = () => {
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
+              {form.category === 'Departmental' && <div style={{ marginTop: '12px' }}><label style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><input type="checkbox" checked={form.departmentalRegistrationEnabled} onChange={e => f('departmentalRegistrationEnabled', e.target.checked)} /> Enable public departmental QR registration</label>{isEditing && form.departmentalRegistrationEnabled && <small style={{ display: 'block', color: '#00c864', marginTop: '6px' }}>Public link: {window.location.origin}/departmentalregister?eventId={id}</small>}</div>}
 
               <div className="form-group">
                 <label>Venue {!form.isTBD && '*'}</label>
@@ -1403,4 +1406,3 @@ const AdminEventEditor = () => {
 };
 
 export default AdminEventEditor;
-

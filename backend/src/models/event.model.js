@@ -167,6 +167,11 @@ const eventSchema = new mongoose.Schema(
             default: 0
         },
 
+        departmentalRegistrationEnabled: {
+            type: Boolean,
+            default: false
+        },
+
         totalAttendees: {
             type: Number,
             default: 0

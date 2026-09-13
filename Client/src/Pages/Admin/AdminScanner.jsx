@@ -121,6 +121,21 @@ const AdminScanner = () => {
     setStatusMessage(res.data.message || (payload.alreadyMarked ? `Already scanned for ${stageToVerify}` : `${stageToVerify} Verified!`));
   };
 
+  const verifyDepartmentalQr = async (token) => {
+    setLoading(true); setError(null); setScanResult(null); setCooldownActive(false); setStatusMessage('');
+    try {
+      const res = await api.post('/departmental-registrations/scan', { token });
+      const payload = res.data.data || {};
+      setScanResult({ _id: payload.registration?.collegeRegNo, ...payload.registration });
+      setStatusMessage(res.data.message || 'Departmental registration verified');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid departmental QR');
+    } finally {
+      setLoading(false); isProcessingRef.current = false;
+      setTimeout(() => { setScanResult(null); setError(null); setStatusMessage(''); setCooldownActive(false); lastScannedRef.current = null; }, 4000);
+    }
+  };
+
   useEffect(() => {
     if (!selectedEventId) return undefined;
 
@@ -169,7 +184,9 @@ const AdminScanner = () => {
           data = null;
         }
 
-        if (data?.eventId && data?.registrationId) {
+        if (data?.type === 'departmental-registration' && data?.token) {
+          await verifyDepartmentalQr(data.token);
+        } else if (data?.eventId && data?.registrationId) {
           await verifyAndMarkAttendance(data.eventId, data.registrationId);
         } else if (attendanceMethod === 'id-card' && scannedValue) {
           await verifyBarcodeAttendance(scannedValue);

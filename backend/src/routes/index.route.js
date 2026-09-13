@@ -15,6 +15,7 @@ import footprintRoutes from './footprint.route.js';
 import contactRoutes from './contact.route.js';
 import systemRoutes from './system.routes.js';
 import projectRoutes from './project.routes.js';
+import departmentalRegistrationRoutes from './departmentalRegistration.route.js';
 
 const router = Router();
 
@@ -34,6 +35,7 @@ router.use('/footprints', footprintRoutes);
 router.use('/contact', contactRoutes);
 router.use('/system', systemRoutes);
 router.use('/projects', projectRoutes);
+router.use('/departmental-registrations', departmentalRegistrationRoutes);
 
 router.get('/health', (req, res) => {
     res.status(200).json({
