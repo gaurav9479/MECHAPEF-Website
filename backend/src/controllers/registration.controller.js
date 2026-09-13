@@ -1030,26 +1030,19 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
     }
 
 
-    registration.teamMembers.push({
+    // Create a pending join request for the member instead of confirming directly
+    registration.joinRequests.push({
         userId: targetUser._id,
         name: targetUser.name,
         email: targetUser.email,
         collegeRegNo: targetUser.collegeRegNo,
-        status: 'Confirmed'
+        status: 'Pending'
     });
-
-
-    const pendingReqIdx = registration.joinRequests.findIndex(
-        r => r.userId?.toString() === targetUser._id.toString() && r.status === 'Pending'
-    );
-    if (pendingReqIdx !== -1) {
-        registration.joinRequests[pendingReqIdx].status = 'Accepted';
-    }
 
     await registration.save();
 
     return res.status(HTTP_STATUS.OK).json(
-        new APIResponse(HTTP_STATUS.OK, { member: targetUser }, `🎉 ${targetUser.name} added to your team!`)
+        new APIResponse(HTTP_STATUS.OK, null, 'Join request sent for the member. Leader must approve.')
     );
 });
 
