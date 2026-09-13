@@ -807,11 +807,7 @@ export const checkUserEligibilityForEvent = asyncHandler(async (req, res) => {
 });
 
 
-/**
- * POST /registrations/:teamRegId/send-join-request
- * A non-leader user sends a join request to a Draft team.
- * Body: {} (user is taken from req.user)
- */
+
 export const sendJoinRequest = asyncHandler(async (req, res) => {
     const { teamRegId } = req.params;
     const userId = req.user.userId;
@@ -839,6 +835,14 @@ export const sendJoinRequest = asyncHandler(async (req, res) => {
     );
     if (alreadyMember) throw new ApiError(HTTP_STATUS.CONFLICT, 'You are already a member of this team');
 
+    // ── FIX: leader ki pending INVITATION hai toh naya poke block —
+    // overlap ban hi na paye (ek user-team ka max ek pending token)
+    const pendingInvite = registration.invitations?.find(
+        inv => inv.userId?.toString() === userId.toString() && inv.status === 'Pending'
+    );
+    if (pendingInvite) {
+        throw new ApiError(HTTP_STATUS.CONFLICT, 'You already have a pending invitation for this team — accept or reject it instead');
+    }
 
     const pendingRequest = registration.joinRequests.find(
         r => r.userId?.toString() === userId && r.status === 'Pending'
@@ -878,11 +882,8 @@ export const sendJoinRequest = asyncHandler(async (req, res) => {
 });
 
 
-/**
- * POST /registrations/:teamRegId/respond-join
- * Team leader accepts or rejects an incoming join request.
- * Body: { requesterId: "userId", action: "Accept" | "Reject" }
- */
+
+
 export const respondToJoinRequest = asyncHandler(async (req, res) => {
     const { teamRegId } = req.params;
     const { requesterId, action } = req.body;
@@ -942,6 +943,14 @@ export const respondToJoinRequest = asyncHandler(async (req, res) => {
             collegeRegNo: requester.collegeRegNo,
             status: 'Confirmed'
         });
+
+        // ── FIX: poke accept hui toh usi user ki pending INVITATION bhi settle —
+        // warna member ko invite card bhi dikhta rahega
+        (registration.invitations || []).forEach(inv => {
+            if (inv.userId?.toString() === requesterId?.toString() && inv.status === 'Pending') {
+                inv.status = 'Accepted';
+            }
+        });
     } else {
         registration.joinRequests[requestIdx].status = 'Rejected';
     }
@@ -954,11 +963,7 @@ export const respondToJoinRequest = asyncHandler(async (req, res) => {
 });
 
 
-/**
- * POST /registrations/:teamRegId/add-member
- * Leader directly endorses/adds a team member by entering their 8-digit College Reg No.
- * Body: { collegeRegNo: "20249013" }
- */
+
 export const addMemberByRegNo = asyncHandler(async (req, res) => {
     const { teamRegId } = req.params;
     const { collegeRegNo } = req.body;
@@ -1029,6 +1034,28 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.CONFLICT, `${targetUser.name} is already registered for this event`);
     }
 
+    // ── FIX (CORE): pending POKE hai toh alag invitation mat banao —
+    // usi poke ko auto-accept karke member bana do. Warna poke 'Pending'
+    // padi reh jaati hai aur leader ko usi user ke liye dobara
+    // Accept/Decline dikhta hai (tumhara Bug 2).
+    const pendingReqIdx = registration.joinRequests.findIndex(
+        r => r.userId?.toString() === targetUser._id.toString() && r.status === 'Pending'
+    );
+    if (pendingReqIdx !== -1) {
+        registration.joinRequests[pendingReqIdx].status = 'Accepted';
+        registration.teamMembers.push({
+            userId: targetUser._id,
+            name: targetUser.name,
+            email: targetUser.email,
+            collegeRegNo: targetUser.collegeRegNo,
+            status: 'Confirmed'
+        });
+        await registration.save();
+
+        return res.status(HTTP_STATUS.OK).json(
+            new APIResponse(HTTP_STATUS.OK, null, `${targetUser.name} had already requested to join — request auto-accepted and they are now in your team.`)
+        );
+    }
 
     // Check if this user already has a pending invitation
     const existingInvite = registration.invitations?.find(
@@ -1054,12 +1081,6 @@ export const addMemberByRegNo = asyncHandler(async (req, res) => {
     );
 });
 
-
-/**
- * POST /registrations/:teamRegId/respond-invitation
- * The invited user accepts or rejects a leader-sent invitation.
- * Body: { action: "Accept" | "Reject" }
- */
 export const respondToInvitation = asyncHandler(async (req, res) => {
     const { teamRegId } = req.params;
     const { action } = req.body;
@@ -1113,6 +1134,14 @@ export const respondToInvitation = asyncHandler(async (req, res) => {
             collegeRegNo: invite.collegeRegNo,
             status: 'Confirmed'
         });
+
+        // ── FIX: invite accept hua toh usi user ki pending POKE bhi settle —
+        // warna leader ko usi user ke liye phir se Accept/Decline dikhta hai
+        (registration.joinRequests || []).forEach(r => {
+            if (r.userId?.toString() === userId.toString() && r.status === 'Pending') {
+                r.status = 'Accepted';
+            }
+        });
     } else {
         registration.invitations[inviteIdx].status = 'Rejected';
     }
@@ -1123,8 +1152,6 @@ export const respondToInvitation = asyncHandler(async (req, res) => {
         new APIResponse(HTTP_STATUS.OK, null, `Invitation ${action === 'Accept' ? 'accepted! You are now part of the team.' : 'declined.'}`)
     );
 });
-
-
 /**
  * POST /registrations/:teamRegId/leave
  * A confirmed team member leaves a Draft team, OR withdraws their pending join request.
@@ -1415,16 +1442,28 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
     }).populate('registeredBy', 'name collegeRegNo email').lean();
 
     if (asLeader) {
+        // ── FIX: decided requests actionable list se bahar —
+        // Accept/Decline sirf PENDING pe render hona chahiye
+        const allRequests = asLeader.joinRequests || [];
+        const pendingRequests = allRequests.filter(r => r.status === 'Pending');
+        const decidedRequests = allRequests.filter(r => r.status !== 'Pending');
+
         return res.status(HTTP_STATUS.OK).json(
-            new APIResponse(HTTP_STATUS.OK, { role: 'leader', registration: asLeader }, 'You are the team leader')
+            new APIResponse(HTTP_STATUS.OK, {
+                role: 'leader',
+                registration: asLeader,
+                pendingRequests,
+                decidedRequests
+            }, 'You are the team leader')
         );
     }
 
+    // ── FIX: $elemMatch — same array element me userId AND Confirmed dono ho
+    // (pehle do alag elements match ho sakte the)
     const asMember = await Registration.findOne({
         eventId,
-        'teamMembers.userId': userId,
-        'teamMembers.status': 'Confirmed',
-        deletedAt: null
+        deletedAt: null,
+        teamMembers: { $elemMatch: { userId: userId, status: 'Confirmed' } }
     }).populate('registeredBy', 'name collegeRegNo').lean();
 
     if (asMember) {
@@ -1435,20 +1474,24 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
 
     const teamsWithMyRequest = await Registration.find({
         eventId,
-        'joinRequests.userId': userId,
-        deletedAt: null
+        deletedAt: null,
+        joinRequests: { $elemMatch: { userId: userId } }
     }).populate('registeredBy', 'name collegeRegNo').lean();
 
     if (teamsWithMyRequest.length > 0) {
         const result = teamsWithMyRequest.map(team => {
-            const myReq = team.joinRequests.find(r => r.userId?.toString() === userId);
+            const mine = (team.joinRequests || []).filter(r => r.userId?.toString() === userId.toString());
+            // ── FIX (Bug 1 core): LATEST entry authoritative — find() pehli
+            // (purani 'Rejected') entry utha leta tha re-poke ke case me
+            const myReq = mine[mine.length - 1];
             return {
                 teamId: team._id,
                 teamName: team.teamName,
                 leaderName: team.registeredBy?.name,
                 leaderRegNo: team.registeredBy?.collegeRegNo,
                 currentSize: team.teamMembers.filter(m => m.status === 'Confirmed').length + 1,
-                requestStatus: myReq?.status || 'Unknown',
+                requestStatus: myReq?.status || 'Pending',
+                isPending: (myReq?.status || 'Pending') === 'Pending',
                 requestedAt: myReq?.requestedAt
             };
         });
@@ -1468,9 +1511,10 @@ export const getMyJoinStatus = asyncHandler(async (req, res) => {
 
     if (teamsWithInvite.length > 0) {
         const invitations = teamsWithInvite.map(team => {
-            const myInvite = team.invitations.find(
-                inv => inv.userId?.toString() === userId && inv.status === 'Pending'
+            const mine = (team.invitations || []).filter(
+                inv => inv.userId?.toString() === userId.toString() && inv.status === 'Pending'
             );
+            const myInvite = mine[mine.length - 1];
             return {
                 teamId: team._id,
                 teamName: team.teamName,
