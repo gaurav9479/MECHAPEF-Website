@@ -1,10 +1,10 @@
 
 
-const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzPRCwHaYSh98X2Nin6iFvHtG1gzsduTWCtu38j3JF-vl9tACkBI8RRvhb0KAjuuKcAtw/exec';
-
-
 export const syncWithGoogleSheet = async (user, eventTitle, registrationPayload) => {
     try {
+        const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+        if (!webhookUrl) return;
+
         const teamMembersFormatted = Array.isArray(registrationPayload.teamMembers) 
             ? registrationPayload.teamMembers
                 .filter(m => m.status === 'Confirmed' || !m.status)
@@ -28,7 +28,7 @@ export const syncWithGoogleSheet = async (user, eventTitle, registrationPayload)
         };
 
 
-        fetch(WEBHOOK_URL, {
+        fetch(webhookUrl, {
             method: 'POST',
             body: JSON.stringify(data),
             headers: { 'Content-Type': 'application/json' }
