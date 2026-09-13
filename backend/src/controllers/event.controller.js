@@ -8,8 +8,11 @@ import logFootprint from '../utils/logFootprint.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, PAGINATION } from '../constants/index.js';
 import ImageKit from 'imagekit';
 import { checkAndToggleRedis } from '../queues/registrationQueue.js';
+import { normalizeEventDates } from '../utils/dates.js';
 
 export const createEvent = asyncHandler(async (req, res) => {
+    normalizeEventDates(req.body);
+
     const {
         title,
         description,
@@ -23,6 +26,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         registrationStartDate,
         registrationDeadline,
         featured,
+        bannerURL,
         rules,
         prizes,
         registrationFee,
@@ -45,14 +49,15 @@ export const createEvent = asyncHandler(async (req, res) => {
         description,
         descriptionBlocks: descriptionBlocks || [],
         category,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        startTime: startTime instanceof Date ? startTime : new Date(startTime),
+        endTime: endTime instanceof Date ? endTime : new Date(endTime),
         venue,
         minTeamSize: minTeamSize ? Number(minTeamSize) : 1,
         maxTeamSize: maxTeamSize ? Number(maxTeamSize) : 1,
-        registrationStartDate: registrationStartDate ? new Date(registrationStartDate) : null,
-        registrationDeadline: new Date(registrationDeadline),
+        registrationStartDate: registrationStartDate ? (registrationStartDate instanceof Date ? registrationStartDate : new Date(registrationStartDate)) : null,
+        registrationDeadline: registrationDeadline instanceof Date ? registrationDeadline : new Date(registrationDeadline),
         featured: featured || false,
+        bannerURL: bannerURL || null,
         rules: rules || [],
         prizes: prizes || null,
         registrationFee: registrationFee || 0,
@@ -147,6 +152,8 @@ export const getEventById = asyncHandler(async (req, res) => {
 
 
 export const updateEvent = asyncHandler(async (req, res) => {
+    normalizeEventDates(req.body);
+
     const allowedUpdates = [
         'title',
         'description',
@@ -159,6 +166,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'registrationStartDate',
         'registrationDeadline',
         'featured',
+        'bannerURL',
         'rules',
         'prizes',
         'registrationFee',
@@ -174,22 +182,20 @@ export const updateEvent = asyncHandler(async (req, res) => {
         'liveInteractive'
     ];
 
-    const updates = {};
-    Object.keys(req.body).forEach(key => {
-        if (allowedUpdates.includes(key)) {
-            updates[key] = req.body[key];
+    const event = await Event.findById(req.params.id);
+
+    if (!event || event.deletedAt) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
+    }
+
+    allowedUpdates.forEach(key => {
+        if (req.body[key] !== undefined) {
+            event[key] = req.body[key];
         }
     });
 
-    const event = await Event.findByIdAndUpdate(
-        req.params.id,
-        updates,
-        { new: true, runValidators: true }
-    ).populate('createdBy', 'name email');
-
-    if (!event) {
-        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);
-    }
+    await event.save();
+    await event.populate('createdBy', 'name email');
 
     logFootprint(req, 'UPDATE', 'Event', `Updated event: ${event.title}`);
 

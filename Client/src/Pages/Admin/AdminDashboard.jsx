@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { FaCalendarAlt, FaUsers, FaBullhorn, FaHandshake, FaCog, FaImages, FaSignOutAlt, FaHome } from 'react-icons/fa';
 import api from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
+import { formatEventDate } from '../../utils/datetime';
 import './AdminDashboard.css';
 
 import { Navigate } from 'react-router-dom';
@@ -133,7 +134,7 @@ const AdminDashboard = () => {
                 <tr key={ev._id}>
                   <td>{ev.title}</td>
                   <td><span className="tag">{ev.category}</span></td>
-                  <td>{new Date(ev.startTime).toLocaleDateString()}</td>
+                  <td>{formatEventDate(ev.startTime)}</td>
                   <td>{ev.venue}</td>
                   <td><Link to={`/admin/events`} className="table-action-btn">Manage</Link></td>
                 </tr>

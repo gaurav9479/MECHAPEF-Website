@@ -5,6 +5,7 @@ import { FaCalendarAlt, FaMapMarkerAlt, FaCogs } from 'react-icons/fa';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import { eventService } from '../../services/services';
+import { formatEventDate } from '../../utils/datetime';
 import './Events.css';
 
 const Events = () => {
@@ -117,7 +118,7 @@ const Events = () => {
                           <h2>{ev.title}</h2>
                           
                           <div className="event-meta">
-                            <p><FaCalendarAlt /> {ev.isTBD ? 'To Be Decided' : new Date(ev.startTime).toLocaleDateString('en-IN', {
+                            <p><FaCalendarAlt /> {ev.isTBD ? 'To Be Decided' : formatEventDate(ev.startTime, {
                               weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
                             })}</p>
                             <p><FaMapMarkerAlt /> {ev.isTBD && ev.venue.toLowerCase() === 'tbd' ? 'To Be Decided' : ev.venue}</p>

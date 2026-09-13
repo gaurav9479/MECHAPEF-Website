@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { FaTimes, FaCalendarAlt, FaMapMarkerAlt, FaTicketAlt } from 'react-icons/fa';
+import { formatEventDateTime } from '../../utils/datetime';
 import './TicketModal.css';
 
 const TicketModal = ({ registration, onClose }) => {
@@ -72,7 +73,7 @@ const TicketModal = ({ registration, onClose }) => {
                 <div className="bp-block">
                   <span className="bp-label">DATE & TIME</span>
                   <strong className="bp-value">
-                    <FaCalendarAlt /> {event.startTime ? new Date(event.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA'}
+                    <FaCalendarAlt /> {event.startTime ? formatEventDateTime(event.startTime) : 'TBA'}
                   </strong>
                 </div>
                 <div className="bp-block">

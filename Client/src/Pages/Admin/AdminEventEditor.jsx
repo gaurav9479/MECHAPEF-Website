@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fa';
 import { eventService } from '../../services/services';
 import CropperInput from '../../components/CropperInput/CropperInput';
+import { localInputToISO, isoToLocalInput } from '../../utils/datetime';
 import './AdminDashboard.css';
 
 const CATEGORIES = ['Mechapef-Event', 'Departmental'];
@@ -41,32 +42,6 @@ const emptyForm = {
     isAcceptingSubmissions: false,
     questions: []
   }
-};
-
-const formatLocal = (isoString) => {
-  if (!isoString) return '';
-  if (typeof isoString === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(isoString)) {
-    return isoString;
-  }
-  const d = new Date(isoString);
-  if (isNaN(d.getTime())) return '';
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-const toISO = (dateStr) => {
-  if (!dateStr) return null;
-  if (typeof dateStr === 'string' && dateStr.endsWith('Z')) return dateStr;
-  let normalized = dateStr;
-  if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateStr)) {
-    normalized = `${dateStr}:00`;
-  }
-  const d = new Date(normalized);
-  return isNaN(d.getTime()) ? null : d.toISOString();
 };
 
 const AdminEventEditor = () => {
@@ -112,10 +87,10 @@ const AdminEventEditor = () => {
               : [{ type: 'paragraph', text: ev.description || '' }],
             category: ev.category || 'Mechapef-Event',
             venue: ev.venue || '',
-            startTime: formatLocal(ev.startTime),
-            endTime: formatLocal(ev.endTime),
-            registrationStartDate: formatLocal(ev.registrationStartDate),
-            registrationDeadline: formatLocal(ev.registrationDeadline),
+            startTime: isoToLocalInput(ev.startTime),
+            endTime: isoToLocalInput(ev.endTime),
+            registrationStartDate: isoToLocalInput(ev.registrationStartDate),
+            registrationDeadline: isoToLocalInput(ev.registrationDeadline),
             minTeamSize: ev.minTeamSize || 1,
             maxTeamSize: ev.maxTeamSize || 1,
             registrationMode: ev.registrationMode || 'Standard',
@@ -189,10 +164,6 @@ const AdminEventEditor = () => {
       showToast('At least one eligible branch must be selected', 'error');
       return;
     }
-    if (!form.isTBD && form.startTime && form.endTime && new Date(form.endTime) < new Date(form.startTime)) {
-      showToast('Event End Time cannot be earlier than Start Time', 'error');
-      return;
-    }
     if (Number(form.minTeamSize) > Number(form.maxTeamSize)) {
       showToast('Minimum Team Size cannot be greater than Maximum Team Size', 'error');
       return;
@@ -202,10 +173,10 @@ const AdminEventEditor = () => {
     const payload = {
       ...form,
       venue: form.isTBD && !form.venue ? 'TBD' : form.venue,
-      startTime: form.isTBD && !form.startTime ? new Date('2099-12-31T00:00:00.000Z').toISOString() : (toISO(form.startTime) || form.startTime),
-      endTime: form.isTBD && !form.endTime ? new Date('2099-12-31T23:59:59.000Z').toISOString() : (toISO(form.endTime) || form.endTime),
-      registrationStartDate: form.isTBD && !form.registrationStartDate ? new Date('2099-12-01T00:00:00.000Z').toISOString() : (toISO(form.registrationStartDate) || undefined),
-      registrationDeadline: form.isTBD && !form.registrationDeadline ? new Date('2099-12-30T23:59:59.000Z').toISOString() : (toISO(form.registrationDeadline) || form.registrationDeadline),
+      startTime: form.isTBD && !form.startTime ? new Date('2099-12-31T00:00:00.000Z').toISOString() : (localInputToISO(form.startTime) || form.startTime),
+      endTime: form.isTBD && !form.endTime ? new Date('2099-12-31T23:59:59.000Z').toISOString() : (localInputToISO(form.endTime) || form.endTime),
+      registrationStartDate: form.isTBD && !form.registrationStartDate ? new Date('2099-12-01T00:00:00.000Z').toISOString() : (localInputToISO(form.registrationStartDate) || undefined),
+      registrationDeadline: form.isTBD && !form.registrationDeadline ? new Date('2099-12-30T23:59:59.000Z').toISOString() : (localInputToISO(form.registrationDeadline) || form.registrationDeadline),
       rules: form.rules ? (typeof form.rules === 'string' ? form.rules.split('\n').filter(Boolean) : form.rules) : [],
       description: (form.descriptionBlocks || []).map(block => block.text).filter(Boolean).join('\n\n'),
       minTeamSize: Math.max(1, Number(form.minTeamSize) || 1),

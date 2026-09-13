@@ -5,6 +5,7 @@ import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import { FaPlus, FaEdit, FaTrash, FaUsers, FaCheckCircle, FaBolt } from 'react-icons/fa';
 import api from '../../services/api';
 import { eventService } from '../../services/services';
+import { formatEventDate, formatEventDateTime } from '../../utils/datetime';
 import './AdminDashboard.css';
 
 const AdminEvents = () => {
@@ -140,7 +141,7 @@ const AdminEvents = () => {
                       </span>
                     )}
                   </td>
-                  <td>{ev.isTBD ? 'TBD' : new Date(ev.startTime).toLocaleDateString()}</td>
+                  <td>{ev.isTBD ? 'TBD' : formatEventDate(ev.startTime)}</td>
                   <td>{ev.isTBD && ev.venue === 'TBD' ? 'TBD' : ev.venue}</td>
                   <td>
                     {ev.deletionState?.status === 'PENDING_APPROVAL' ? (
@@ -149,7 +150,7 @@ const AdminEvents = () => {
                       </span>
                     ) : ev.deletionState?.status === 'APPROVED_RETENTION' ? (
                       <span className="tag" style={{ background: 'rgba(255, 31, 1, 0.2)', color: '#ff4444', border: '1px solid #ff4444', whiteSpace: 'nowrap' }}>
-                        ⏳ VANISHES IN 7 DAYS ({ev.deletionState.vanishAt ? new Date(ev.deletionState.vanishAt).toLocaleDateString() : 'Queued'})
+                        ⏳ VANISHES IN 7 DAYS ({ev.deletionState.vanishAt ? formatEventDate(ev.deletionState.vanishAt) : 'Queued'})
                       </span>
                     ) : (
                       <span className={`tag ${ev.status?.toLowerCase() === 'ended' ? 'bg-danger' : 'bg-success'}`} style={{ whiteSpace: 'nowrap' }}>

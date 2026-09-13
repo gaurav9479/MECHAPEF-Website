@@ -49,14 +49,7 @@ const eventSchema = new mongoose.Schema(
 
         endTime: {
             type: Date,
-            required: [true, 'End time is required'],
-            validate: {
-                validator(value) {
-                    if (!this.startTime) return true;
-                    return value >= this.startTime;
-                },
-                message: 'End time must be after or equal to start time'
-            }
+            required: [true, 'End time is required']
         },
 
         venue: {
@@ -94,26 +87,12 @@ const eventSchema = new mongoose.Schema(
 
         registrationStartDate: {
             type: Date,
-            default: null,
-            validate: {
-                validator(value) {
-                    if (!value || !this.registrationDeadline) return true;
-                    return value <= this.registrationDeadline;
-                },
-                message: 'Registration start date must be before or equal to registration deadline'
-            }
+            default: null
         },
 
         registrationDeadline: {
             type: Date,
-            required: [true, 'Registration deadline is required'],
-            validate: {
-                validator(value) {
-                    if (!this.endTime) return true;
-                    return value <= this.endTime;
-                },
-                message: 'Registration deadline must be before or equal to event end time'
-            }
+            required: [true, 'Registration deadline is required']
         },
 
         featured: {
@@ -428,13 +407,45 @@ eventSchema.statics.getUpcomingEvents = async function (limit = 10) {
 eventSchema.pre('save', function (next) {
     const now = new Date();
 
-    if (now < this.startTime) {
+    if (this.isTBD) {
+        this.status = 'Upcoming';
+    } else if (now < this.startTime) {
         this.status = 'Upcoming';
     } else if (now <= this.endTime) {
         this.status = 'Ongoing';
     } else {
         this.status = 'Ended';
-        if (!this.endedAt) this.endedAt = now; // only set once
+        if (!this.endedAt) this.endedAt = now;
+    }
+
+    next();
+});
+
+eventSchema.pre('findOneAndUpdate', function (next) {
+    const update = this.getUpdate();
+    if (!update) return next();
+
+    const startTime = update.startTime || update.$set?.startTime;
+    const endTime = update.endTime || update.$set?.endTime;
+    const isTBD = update.isTBD !== undefined ? update.isTBD : update.$set?.isTBD;
+
+    const now = new Date();
+    if (isTBD) {
+        if (update.$set) update.$set.status = 'Upcoming';
+        else update.status = 'Upcoming';
+    } else if (startTime && endTime) {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        let status = 'Upcoming';
+        if (now < start) {
+            status = 'Upcoming';
+        } else if (now <= end) {
+            status = 'Ongoing';
+        } else {
+            status = 'Ended';
+        }
+        if (update.$set) update.$set.status = status;
+        else update.status = status;
     }
 
     next();

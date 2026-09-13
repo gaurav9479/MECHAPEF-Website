@@ -9,6 +9,7 @@ import api from '../../services/api';
 import { Helmet } from 'react-helmet-async';
 import './EventDetails.css';
 import TeamDetailView from './TeamDetailView';
+import { formatEventDate, formatEventDateTime } from '../../utils/datetime';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -23,6 +24,7 @@ const EventDetails = () => {
   const [toast, setToast] = useState(null);
   const [userRegistration, setUserRegistration] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
+  const [imgError, setImgError] = useState(false);
 
 
 
@@ -497,11 +499,16 @@ const EventDetails = () => {
 
           {/* Left Column: 1:1 Poster */}
           <div className="event-poster-container">
-            {event.bannerURL ? (
-              <img src={event.bannerURL} alt={event.title} className="event-poster-image" />
+            {event.bannerURL && !imgError ? (
+              <img
+                src={event.bannerURL}
+                alt={event.title}
+                className="event-poster-image"
+                onError={() => setImgError(true)}
+              />
             ) : (
               <div className="event-poster-placeholder">
-                <h2>{event.title.substring(0, 2).toUpperCase()}</h2>
+                <h2>{event.title ? event.title.substring(0, 2).toUpperCase() : 'EV'}</h2>
               </div>
             )}
           </div>
@@ -513,7 +520,7 @@ const EventDetails = () => {
               <h1>{event.title}</h1>
               <div className="event-meta-pills">
                 <span className="meta-pill">📍 {event.isTBD && event.venue.toLowerCase() === 'tbd' ? 'To Be Decided' : event.venue}</span>
-                <span className="meta-pill">📅 {event.isTBD ? 'To Be Decided' : new Date(event.startTime).toLocaleDateString()}</span>
+                <span className="meta-pill">📅 {event.isTBD ? 'To Be Decided' : formatEventDateTime(event.startTime)}</span>
               </div>
             </div>
 
@@ -638,9 +645,9 @@ const EventDetails = () => {
               <>
                 <div className="event-card-info">
                   {event.registrationStartDate && (
-                    <p><strong>Starts:</strong> {new Date(event.registrationStartDate).toLocaleString()}</p>
+                    <p><strong>Starts:</strong> {formatEventDateTime(event.registrationStartDate)}</p>
                   )}
-                  <p><strong>Deadline:</strong> {new Date(event.registrationDeadline).toLocaleDateString()}</p>
+                  <p><strong>Deadline:</strong> {formatEventDateTime(event.registrationDeadline)}</p>
                   <p><strong>Fee:</strong> {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}</p>
                   <p><strong>Team Size:</strong> {event.minTeamSize && event.minTeamSize > 1 ? `${event.minTeamSize}–${event.maxTeamSize} members` : `Up to ${event.maxTeamSize} members`}</p>
                   <p><strong>Mode:</strong> {event.registrationMode === 'JoinRequests' ? <span style={{ color: '#00c864', fontWeight: 'bold' }}>Type 2 (Join Requests)</span> : 'Type 1 (Standard)'}</p>
