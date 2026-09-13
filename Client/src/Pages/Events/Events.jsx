@@ -87,7 +87,8 @@ const Events = () => {
               
               <div className="timeline-events">
                 {events.map((ev, index) => {
-                  const isPast = new Date(ev.startTime).getTime() < now;
+                  // An event remains normal until its end time, not its start time.
+                  const isPast = new Date(ev.endTime || ev.startTime).getTime() < now;
                   const isEven = index % 2 === 0;
                   
                   return (
