@@ -67,6 +67,17 @@ const AdminRegistrations = () => {
     }
   };
 
+  const handleUnkick = async (regId) => {
+    try {
+      const response = await api.post(`/registrations/${regId}/restore`);
+      const restoredRegistration = response.data?.data?.registration;
+      setRegistrations(prev => prev.map(r => r._id === regId ? (restoredRegistration || { ...r, deletedAt: null }) : r));
+      showToast('Registration restored successfully!');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to restore registration', 'error');
+    }
+  };
+
   const handleExport = async () => {
     try {
       const response = await api.get(`/events/${eventId}/registrations/export`, { responseType: 'blob' });
@@ -160,6 +171,13 @@ const AdminRegistrations = () => {
                         onClick={() => handleVerify(reg._id, reg.isVerified)}
                       >
                         {reg.isVerified ? 'Unverify' : 'Verify'}
+                      </button>}
+                      {reg.deletedAt && <button
+                        className="btn-primary"
+                        style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                        onClick={() => handleUnkick(reg._id)}
+                      >
+                        Unkick
                       </button>}
                       {!reg.deletedAt && <button
                         className="btn-danger"

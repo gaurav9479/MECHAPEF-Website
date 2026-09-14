@@ -507,6 +507,26 @@ export const cancelRegistration = asyncHandler(async (req, res) => {
         .json(new APIResponse(HTTP_STATUS.OK, { registration }, 'Registration cancelled successfully'));
 });
 
+export const restoreRegistration = asyncHandler(async (req, res) => {
+    const registration = await Registration.findById(req.params.id);
+    if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
+    if (!registration.deletedAt) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Registration is already active');
+
+    const activeRegistration = await Registration.findOne({
+        eventId: registration.eventId,
+        registeredBy: registration.registeredBy,
+        deletedAt: null
+    });
+    if (activeRegistration) {
+        throw new ApiError(HTTP_STATUS.CONFLICT, 'Cannot unkick: this user has already registered again for this event');
+    }
+
+    registration.deletedAt = null;
+    await registration.save();
+    await registration.populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy');
+    return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { registration }, 'Registration restored successfully'));
+});
+
 export const verifyRegistration = asyncHandler(async (req, res) => {
     const { isVerified } = req.body;
 

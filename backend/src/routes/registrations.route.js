@@ -16,6 +16,13 @@ router.delete(
     registrationController.cancelRegistration
 );
 
+router.post(
+    '/:id/restore',
+    authenticate,
+    checkRole(['super-admin']),
+    registrationController.restoreRegistration
+);
+
 router.patch(
     '/:id/verify',
     authenticate,
