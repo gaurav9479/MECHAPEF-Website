@@ -70,7 +70,9 @@ export const createEvent = asyncHandler(async (req, res) => {
         customFormFields: customFormFields || [],
         eligibleBranches: eligibleBranches || [],
         eligibleYears: eligibleYears || [1, 2, 3, 4],
-        ticketStages: req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in'],
+        ticketStages: req.body.attendanceMethod === 'none'
+            ? []
+            : (req.body.ticketStages && req.body.ticketStages.length > 0 ? req.body.ticketStages : ['Stage 1: Check-in']),
         enableQRScanning: req.body.enableQRScanning !== undefined ? req.body.enableQRScanning : true,
         attendanceMethod: req.body.attendanceMethod || 'qr',
         registrationMode: registrationMode || 'Standard',
@@ -207,6 +209,13 @@ export const updateEvent = asyncHandler(async (req, res) => {
             event[key] = key === 'category' ? String(req.body[key]).trim() : req.body[key];
         }
     });
+
+    if (event.attendanceMethod === 'none') {
+        event.ticketStages = [];
+        event.enableQRScanning = false;
+    } else if (!Array.isArray(event.ticketStages) || event.ticketStages.length === 0) {
+        event.ticketStages = ['Stage 1: Check-in'];
+    }
 
     await event.save();
     await event.populate('createdBy', 'name email');

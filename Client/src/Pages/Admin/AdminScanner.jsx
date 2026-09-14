@@ -43,7 +43,7 @@ const AdminScanner = () => {
         const matchedEv = evList.find(e => e._id === assignedEvId);
         if (matchedEv) {
           setSelectedEventId(matchedEv._id);
-          const stages = matchedEv.ticketStages && matchedEv.ticketStages.length > 0 ? matchedEv.ticketStages : ['Stage 1: Check-in'];
+          const stages = matchedEv.attendanceMethod === 'none' ? [] : (matchedEv.ticketStages && matchedEv.ticketStages.length > 0 ? matchedEv.ticketStages : ['Stage 1: Check-in']);
           setAvailableStages(stages);
           const targetStg = user.assignedStage || stages[0];
           setSelectedStage(targetStg);
@@ -55,7 +55,7 @@ const AdminScanner = () => {
 
       if (evList.length > 0) {
         setSelectedEventId(evList[0]._id);
-        const stages = evList[0].ticketStages && evList[0].ticketStages.length > 0 ? evList[0].ticketStages : ['Stage 1: Check-in'];
+        const stages = evList[0].attendanceMethod === 'none' ? [] : (evList[0].ticketStages && evList[0].ticketStages.length > 0 ? evList[0].ticketStages : ['Stage 1: Check-in']);
         setAvailableStages(stages);
         setSelectedStage(stages[0]);
         setAttendanceMethod(evList[0].attendanceMethod || (evList[0].enableQRScanning === false ? 'id-card' : 'qr'));
@@ -66,7 +66,7 @@ const AdminScanner = () => {
   const handleEventChange = (eventId) => {
     setSelectedEventId(eventId);
     const ev = events.find(e => e._id === eventId);
-    const stages = ev?.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Check-in'];
+    const stages = ev?.attendanceMethod === 'none' ? [] : (ev?.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Check-in']);
     setAvailableStages(stages);
     setSelectedStage(stages[0]);
     setAttendanceMethod(ev?.attendanceMethod || (ev?.enableQRScanning === false ? 'id-card' : 'qr'));
@@ -148,6 +148,8 @@ const AdminScanner = () => {
       scannerRef.current.clear().catch(() => { });
       scannerRef.current = null;
     }
+
+    if (attendanceMethod === 'none') return undefined;
 
     const scanner = new Html5QrcodeScanner(
       'reader',
@@ -248,7 +250,7 @@ const AdminScanner = () => {
           <FaArrowLeft /> {user?.role === 'endorsed-volunteer' ? 'Back to Home' : 'Back to Admin'}
         </button>
         <h1><FaQrcode /> Ticket Scanner</h1>
-        <p>Scan participant {attendanceMethod === 'id-card' ? 'ID card barcodes' : 'QR codes'} at entry & verification stations.</p>
+        <p>{attendanceMethod === 'none' ? 'This event is configured for registration only.' : `Scan participant ${attendanceMethod === 'id-card' ? 'ID card barcodes' : 'QR codes'} at entry & verification stations.`}</p>
       </div>
 
       <div className="scanner-container">
@@ -281,7 +283,7 @@ const AdminScanner = () => {
               <select
                 value={selectedStage}
                 onChange={(e) => setSelectedStage(e.target.value)}
-                disabled={isEndorsed}
+                disabled={isEndorsed || attendanceMethod === 'none'}
                 style={{ width: '100%', padding: '10px 14px', background: '#0d2d3a', color: '#00e5ff', border: '1px solid #00e5ff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold', opacity: isEndorsed ? 0.8 : 1 }}
               >
                 {availableStages.map((stg, i) => (
@@ -293,7 +295,7 @@ const AdminScanner = () => {
         </div>
 
         <div className="scanner-grid">
-          {selectedEventId ? (
+          {selectedEventId && attendanceMethod !== 'none' ? (
             <div id="reader" className="qr-reader-box"></div>
           ) : (
             <div style={{
@@ -304,7 +306,9 @@ const AdminScanner = () => {
               <span style={{ fontSize: '3rem' }}>🚫</span>
               <h2 style={{ color: '#ff1f01', margin: 0, fontSize: '1.3rem' }}>Scanner Unavailable</h2>
               <p style={{ color: '#aaa', margin: 0, fontSize: '0.9rem', maxWidth: '280px' }}>
-                Select an event to start the {attendanceMethod === 'id-card' ? 'ID card barcode' : 'QR code'} scanner.
+                {attendanceMethod === 'none'
+                  ? 'This event has no scanning stages. Registrations do not require gate verification.'
+                  : `Select an event to start the ${attendanceMethod === 'id-card' ? 'ID card barcode' : 'QR code'} scanner.`}
               </p>
             </div>
           )}

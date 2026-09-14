@@ -153,10 +153,10 @@ const AdminRegistrations = () => {
                     <td>{reg.registeredBy?.branch || '-'}</td>
                     <td>{reg.registeredBy?.yearOfStudy ? `${reg.registeredBy.yearOfStudy} Yr` : '-'}</td>
                     <td>{reg.registeredBy?.email || '-'}</td>
-                    <td><span className="tag">{reg.deletedAt ? 'Kicked' : reg.registrationType}</span></td>
+                    <td><span className="tag">{reg.deletedReason === 'disbanded' ? 'Leader Disbanded Team' : reg.deletedAt ? 'Kicked' : reg.registrationType}</span></td>
                     <td>
                       {reg.deletedAt ?
-                        <span style={{ color: '#ff4444', display: 'flex', alignItems: 'center', gap: '5px' }}><FaTimesCircle /> Kicked</span> : reg.isVerified ?
+                        <span style={{ color: '#ff4444', display: 'flex', alignItems: 'center', gap: '5px' }}><FaTimesCircle /> {reg.deletedReason === 'disbanded' ? 'Disbanded' : 'Kicked'}</span> : reg.isVerified ?
                         <span style={{ color: '#00c864', display: 'flex', alignItems: 'center', gap: '5px' }}><FaCheckCircle /> Yes</span> :
                         <span style={{ color: '#ff4444', display: 'flex', alignItems: 'center', gap: '5px' }}><FaTimesCircle /> No</span>
                       }
@@ -172,7 +172,7 @@ const AdminRegistrations = () => {
                       >
                         {reg.isVerified ? 'Unverify' : 'Verify'}
                       </button>}
-                      {reg.deletedAt && <button
+                      {reg.deletedReason === 'kicked' && <button
                         className="btn-primary"
                         style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                         onClick={() => handleUnkick(reg._id)}

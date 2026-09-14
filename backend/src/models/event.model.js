@@ -207,7 +207,7 @@ const eventSchema = new mongoose.Schema(
 
         attendanceMethod: {
             type: String,
-            enum: ['qr', 'id-card'],
+            enum: ['qr', 'id-card', 'none'],
             default: 'qr'
         },
 

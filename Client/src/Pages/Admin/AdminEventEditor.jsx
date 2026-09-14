@@ -110,7 +110,9 @@ const AdminEventEditor = () => {
             customFormFields: ev.registrationMode === 'DepartmentalQR' ? DEPARTMENTAL_QR_FIELDS : (ev.customFormFields || []),
             eligibleBranches: ev.eligibleBranches && ev.eligibleBranches.length > 0 ? ev.eligibleBranches : [...BRANCHES],
             eligibleYears: ev.eligibleYears && ev.eligibleYears.length > 0 ? ev.eligibleYears : [1, 2, 3, 4, 5],
-            ticketStages: ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection'],
+            ticketStages: ev.attendanceMethod === 'none'
+              ? []
+              : (ev.ticketStages && ev.ticketStages.length > 0 ? ev.ticketStages : ['Stage 1: Gate Entry', 'Stage 2: Kit / Food Collection']),
             enableQRScanning: ev.enableQRScanning !== undefined ? ev.enableQRScanning : true,
             attendanceMethod: ev.attendanceMethod || (ev.enableQRScanning === false ? 'id-card' : 'qr'),
             bannerURL: ev.bannerURL || '',
@@ -264,9 +266,26 @@ const AdminEventEditor = () => {
   };
 
   const setStagePreset = (count) => {
+    if (count === 0) {
+      f('ticketStages', []);
+      f('attendanceMethod', 'none');
+      f('enableQRScanning', false);
+      return;
+    }
+    f('attendanceMethod', 'qr');
+    f('enableQRScanning', true);
     if (count === 1) f('ticketStages', ['Stage 1: Main Gate Entry']);
     if (count === 2) f('ticketStages', ['Stage 1: Main Gate Entry', 'Stage 2: Kit / Food Collection']);
     if (count === 3) f('ticketStages', ['Stage 1: Main Gate Entry', 'Stage 2: Food & Refreshment', 'Stage 3: Certificate / Stage Entry']);
+  };
+
+  const handleAttendanceMethodChange = (method) => {
+    f('attendanceMethod', method);
+    f('enableQRScanning', method === 'qr');
+
+    if (method !== 'none' && (form.ticketStages || []).length === 0) {
+      f('ticketStages', ['Stage 1: Main Gate Entry']);
+    }
   };
 
   const addQuestion = () => {
@@ -920,7 +939,7 @@ const AdminEventEditor = () => {
                     Configure verification checkpoints for volunteer scanning (Gate Entry, Kit / Food collection, Certification desk).
                   </p>
                 </div>
-                <button type="button" className="btn-secondary" onClick={addTicketStage} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>
+                <button type="button" className="btn-secondary" onClick={addTicketStage} disabled={form.attendanceMethod === 'none'} style={{ padding: '6px 14px', fontSize: '0.85rem', opacity: form.attendanceMethod === 'none' ? 0.5 : 1 }}>
                   <FaPlus style={{ marginRight: '6px' }} /> Add Stage
                 </button>
               </div>
@@ -928,6 +947,7 @@ const AdminEventEditor = () => {
               {/* Stage Presets */}
               <div style={{ display: 'flex', gap: '10px', marginBottom: '18px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.82rem', color: '#aaa' }}>Quick Presets:</span>
+                <button type="button" onClick={() => setStagePreset(0)} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.78rem', borderColor: '#888', color: '#bbb' }}>0-Stage (Registration Only)</button>
                 <button type="button" onClick={() => setStagePreset(1)} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.78rem' }}>1-Stage (Gate)</button>
                 <button type="button" onClick={() => setStagePreset(2)} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.78rem', borderColor: '#ff1f01', color: '#ff1f01' }}>2-Stage (Gate + Kit)</button>
                 <button type="button" onClick={() => setStagePreset(3)} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.78rem', borderColor: '#00e5ff', color: '#00e5ff' }}>3-Stage (Gate + Food + Cert)</button>
@@ -953,17 +973,24 @@ const AdminEventEditor = () => {
                 </div>
               ))}
 
+              {form.attendanceMethod === 'none' && (
+                <p style={{ color: '#aaa', margin: '0 0 4px', fontSize: '0.9rem' }}>
+                  This event has no verification stage. Registrants will receive a confirmed ticket without a scan code.
+                </p>
+              )}
+
               <div style={{ marginTop: '28px', borderTop: '1px solid #282830', paddingTop: '20px' }}>
                 <label style={{ display: 'block', color: '#fff', fontSize: '0.95rem', fontWeight: 'bold', marginBottom: '8px' }}>
                   Scanner Attendance Verification Mode
                 </label>
                 <select
                   value={form.attendanceMethod || 'qr'}
-                  onChange={e => f('attendanceMethod', e.target.value)}
+                  onChange={e => handleAttendanceMethodChange(e.target.value)}
                   style={{ width: '100%', maxWidth: '450px', background: '#101014', color: '#ffffff', border: '1px solid #3a3a48', padding: '10px 14px', borderRadius: '8px' }}
                 >
                   <option value="qr">QR Code (Ticket pass generated per registration)</option>
                   <option value="id-card">ID Card Barcode (Participant college ID scan)</option>
+                  <option value="none">No Scanning Stages (Registration only)</option>
                 </select>
               </div>
             </div>

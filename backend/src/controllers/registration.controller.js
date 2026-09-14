@@ -457,8 +457,9 @@ export const getEventRegistrations = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
     const { page = 1, limit = 20, attendanceMarked, includeKicked } = req.query;
 
-    const filter = { eventId };
-    if (includeKicked !== 'true') filter.deletedAt = null;
+    const filter = includeKicked === 'true'
+        ? { eventId, $or: [{ deletedAt: null }, { deletedReason: { $in: ['kicked', 'disbanded'] } }] }
+        : { eventId, deletedAt: null };
     if (attendanceMarked !== undefined) {
         filter.attendanceMarked = attendanceMarked === 'true';
     }
@@ -500,6 +501,7 @@ export const cancelRegistration = asyncHandler(async (req, res) => {
     }
 
     registration.deletedAt = new Date();
+    registration.deletedReason = req.user.role === 'super-admin' ? 'kicked' : 'cancelled';
     await registration.save();
 
     return res
@@ -522,6 +524,7 @@ export const restoreRegistration = asyncHandler(async (req, res) => {
     }
 
     registration.deletedAt = null;
+    registration.deletedReason = null;
     await registration.save();
     await registration.populate('registeredBy', 'name email collegeRegNo phoneNumber branch yearOfStudy');
     return res.status(HTTP_STATUS.OK).json(new APIResponse(HTTP_STATUS.OK, { registration }, 'Registration restored successfully'));
@@ -1452,6 +1455,7 @@ export const deleteDraftTeam = asyncHandler(async (req, res) => {
     }
 
     registration.deletedAt = new Date();
+    registration.deletedReason = 'disbanded';
     await registration.save();
 
     return res.status(HTTP_STATUS.OK).json(

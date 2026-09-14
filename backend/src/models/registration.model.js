@@ -177,6 +177,12 @@ const registrationSchema = new mongoose.Schema(
         deletedAt: {
             type: Date,
             default: null
+        },
+
+        deletedReason: {
+            type: String,
+            enum: ['kicked', 'cancelled', 'disbanded'],
+            default: null
         }
     },
     {
