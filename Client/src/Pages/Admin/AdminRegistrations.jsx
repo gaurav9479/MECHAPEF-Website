@@ -4,7 +4,10 @@ import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import { eventService } from '../../services/services';
 import api from '../../services/api';
 import './AdminDashboard.css';
-import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaDownload, FaEye, FaTrash } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaDownload, FaEye, FaTrash, FaRedo } from 'react-icons/fa';
+
+
+const PAGE_SIZE = 300; 
 
 const AdminRegistrations = () => {
   const { eventId } = useParams();
@@ -22,16 +25,53 @@ const AdminRegistrations = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const fetchAllRegistrations = async () => {
+    const seen = new Set();
+    const all = [];
+    let page = 1;
+
+    for (;;) {
+      const res = await api.get(`/events/${eventId}/registrations`, {
+        params: { includeKicked: 'true', page, limit: PAGE_SIZE }
+      });
+
+      const payload = res.data?.data || res.data || {};
+      const batch = Array.isArray(payload.registrations) ? payload.registrations : [];
+
+      let added = 0;
+      for (const item of batch) {
+        const key = item?._id || JSON.stringify(item);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        all.push(item);
+        added += 1;
+      }
+
+      const meta = payload.pagination || payload.meta || payload;
+      const total = Number(meta.total ?? meta.totalCount ?? meta.count) || 0;
+      const totalPages = Number(meta.totalPages ?? meta.pages) || 0;
+
+      if (added === 0) break;                    // server ignored page/limit
+      if (batch.length < PAGE_SIZE) break;       // last (partial) page
+      if (totalPages && page >= totalPages) break;
+      if (total && all.length >= total) break;
+      page += 1;
+      if (page > 100) break;                     // hard safety valve
+    }
+
+    return all;
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
       setLoadError('');
-      const [evRes, regRes] = await Promise.all([
+      const [evRes, regs] = await Promise.all([
         eventService.getById(eventId),
-        api.get(`/events/${eventId}/registrations`, { params: { includeKicked: 'true' } })
+        fetchAllRegistrations()
       ]);
       setEvent(evRes.data.data.event);
-      setRegistrations(regRes.data.data.registrations);
+      setRegistrations(regs);
     } catch (err) {
       setLoadError(err.response?.data?.message || 'Failed to load registrations');
       showToast('Failed to load data', 'error');
@@ -49,6 +89,7 @@ const AdminRegistrations = () => {
       await api.patch(`/registrations/${regId}/verify`, { isVerified: !currentStatus });
       showToast(`Registration ${!currentStatus ? 'verified' : 'unverified'}!`);
       setRegistrations(prev => prev.map(r => r._id === regId ? { ...r, isVerified: !currentStatus } : r));
+      setSelectedReg(prev => (prev && prev._id === regId ? { ...prev, isVerified: !currentStatus } : prev));
     } catch (err) {
       showToast('Failed to verify', 'error');
     }
@@ -80,30 +121,45 @@ const AdminRegistrations = () => {
 
   const handleExport = async () => {
     try {
-      const response = await api.get(`/events/${eventId}/registrations/export`, { responseType: 'blob' });
+      const response = await api.get(`/events/${eventId}/registrations/export`, {
+        responseType: 'blob',
+        params: { includeKicked: 'true', limit: PAGE_SIZE }
+      });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${event?.title?.replace(/\\s+/g, '_')}_Registrations.csv`);
+      link.setAttribute('download', `${event?.title?.replace(/\s+/g, '_')}_Registrations.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       showToast('Failed to export CSV', 'error');
     }
   };
 
-  const openDetails = async (reg) => {
-    try {
-      const response = await api.get(`/events/${eventId}/registrations`, { params: {  includeKicked: 'true' } });
-      const freshRegistration = response.data?.data?.registrations?.find(item => item._id === reg._id);
-      setSelectedReg(freshRegistration || reg);
-      if (freshRegistration) setRegistrations(prev => prev.map(item => item._id === reg._id ? freshRegistration : item));
-    } catch {
-      setSelectedReg(reg);
-    }
+  /* FIX: the old openDetails re-fetched the ENTIRE (paginated) list on every
+     single "Details" click just to read one row. Use the row we already have;
+     the modal gets a Refresh button for freshness. */
+  const openDetails = (reg) => {
+    setSelectedReg(reg);
     setShowModal(true);
   };
+
+  const refreshDetails = async () => {
+    if (!selectedReg?._id) return;
+    try {
+      const fresh = await fetchAllRegistrations();
+      setRegistrations(fresh);
+      const updated = fresh.find(item => item._id === selectedReg._id);
+      if (updated) setSelectedReg(updated);
+      showToast('Details refreshed');
+    } catch {
+      showToast('Failed to refresh details', 'error');
+    }
+  };
+
+  const removedCount = registrations.filter(r => r.deletedAt).length;
 
   return (
     <div className="admin-layout">
@@ -114,11 +170,23 @@ const AdminRegistrations = () => {
             <Link to="/admin/events" style={{ color: '#ff1f01', textDecoration: 'none', fontSize: '1.2rem' }}>
               <FaArrowLeft />
             </Link>
-            <h1>{event?.title ? `${event.title} - Registrations` : 'Registrations'}</h1>
+            <div>
+              <h1 style={{ margin: 0 }}>{event?.title ? `${event.title} - Registrations` : 'Registrations'}</h1>
+              {!loading && !loadError && (
+                <span style={{ color: '#888', fontSize: '0.85rem' }}>
+                  {registrations.length} total{removedCount > 0 ? ` (${removedCount} kicked/disbanded)` : ''}
+                </span>
+              )}
+            </div>
           </div>
-          <button className="btn-primary" onClick={handleExport}>
-            <FaDownload /> Export CSV
-          </button>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button className="btn-secondary" onClick={fetchData} disabled={loading} title="Reload list">
+              <FaRedo /> Refresh
+            </button>
+            <button className="btn-primary" onClick={handleExport}>
+              <FaDownload /> Export CSV
+            </button>
+          </div>
         </div>
 
         <div className="admin-table-wrap">
@@ -225,7 +293,12 @@ const AdminRegistrations = () => {
       {showModal && selectedReg && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
-            <h2>Registration Details</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+              <h2 style={{ margin: 0 }}>Registration Details</h2>
+              <button type="button" className="btn-secondary" onClick={refreshDetails} style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
+                <FaRedo /> Refresh
+              </button>
+            </div>
             <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ backgroundColor: '#111', padding: '15px', borderRadius: '8px' }}>
                 <h4 style={{ color: '#ff1f01', marginBottom: '10px' }}>User Info</h4>
