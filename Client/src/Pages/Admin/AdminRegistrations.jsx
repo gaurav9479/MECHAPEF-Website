@@ -95,7 +95,7 @@ const AdminRegistrations = () => {
 
   const openDetails = async (reg) => {
     try {
-      const response = await api.get(`/events/${eventId}/registrations`, { params: { limit: 100, includeKicked: 'true' } });
+      const response = await api.get(`/events/${eventId}/registrations`, { params: {  includeKicked: 'true' } });
       const freshRegistration = response.data?.data?.registrations?.find(item => item._id === reg._id);
       setSelectedReg(freshRegistration || reg);
       if (freshRegistration) setRegistrations(prev => prev.map(item => item._id === reg._id ? freshRegistration : item));
