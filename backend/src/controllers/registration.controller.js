@@ -455,9 +455,10 @@ export const markAttendanceByCollegeRegNo = asyncHandler(async (req, res, next) 
 
 export const getEventRegistrations = asyncHandler(async (req, res) => {
     const { eventId } = req.params;
-    const { page = 1, limit = 20, attendanceMarked } = req.query;
+    const { page = 1, limit = 20, attendanceMarked, includeKicked } = req.query;
 
-    const filter = { eventId, deletedAt: null };
+    const filter = { eventId };
+    if (includeKicked !== 'true') filter.deletedAt = null;
     if (attendanceMarked !== undefined) {
         filter.attendanceMarked = attendanceMarked === 'true';
     }
@@ -503,7 +504,7 @@ export const cancelRegistration = asyncHandler(async (req, res) => {
 
     return res
         .status(HTTP_STATUS.OK)
-        .json(new APIResponse(HTTP_STATUS.OK, {}, 'Registration cancelled successfully'));
+        .json(new APIResponse(HTTP_STATUS.OK, { registration }, 'Registration cancelled successfully'));
 });
 
 export const verifyRegistration = asyncHandler(async (req, res) => {

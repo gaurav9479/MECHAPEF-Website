@@ -28,7 +28,7 @@ const AdminRegistrations = () => {
       setLoadError('');
       const [evRes, regRes] = await Promise.all([
         eventService.getById(eventId),
-        api.get(`/events/${eventId}/registrations`)
+        api.get(`/events/${eventId}/registrations`, { params: { includeKicked: 'true', limit: 100 } })
       ]);
       setEvent(evRes.data.data.event);
       setRegistrations(regRes.data.data.registrations);
@@ -57,9 +57,10 @@ const AdminRegistrations = () => {
   const handleKickTeam = async (regId) => {
     if (window.confirm("Are you sure you want to completely remove this registration? This action cannot be undone.")) {
       try {
-        await api.delete(`/registrations/${regId}`);
-        showToast('Registration deleted successfully!');
-        setRegistrations(prev => prev.filter(r => r._id !== regId));
+        const response = await api.delete(`/registrations/${regId}`);
+        const kickedRegistration = response.data?.data?.registration;
+        showToast('Registration kicked. The user can register again.');
+        setRegistrations(prev => prev.map(r => r._id === regId ? (kickedRegistration || { ...r, deletedAt: new Date().toISOString() }) : r));
       } catch (err) {
         showToast('Failed to delete registration', 'error');
       }
@@ -83,7 +84,7 @@ const AdminRegistrations = () => {
 
   const openDetails = async (reg) => {
     try {
-      const response = await api.get(`/events/${eventId}/registrations`, { params: { limit: 100 } });
+      const response = await api.get(`/events/${eventId}/registrations`, { params: { limit: 100, includeKicked: 'true' } });
       const freshRegistration = response.data?.data?.registrations?.find(item => item._id === reg._id);
       setSelectedReg(freshRegistration || reg);
       if (freshRegistration) setRegistrations(prev => prev.map(item => item._id === reg._id ? freshRegistration : item));
@@ -133,7 +134,7 @@ const AdminRegistrations = () => {
               ) : registrations.map(reg => {
                 const name = reg.registeredBy?.name;
                 return (
-                  <tr key={reg._id}>
+                  <tr key={reg._id} style={reg.deletedAt ? { opacity: 0.58, background: 'rgba(255, 68, 68, 0.05)' } : undefined}>
                     <td style={{ fontWeight: 600, color: '#fff' }}>
                       {name ? name : <span style={{ color: '#ff4444' }}>Not Registered</span>}
                     </td>
@@ -141,9 +142,10 @@ const AdminRegistrations = () => {
                     <td>{reg.registeredBy?.branch || '-'}</td>
                     <td>{reg.registeredBy?.yearOfStudy ? `${reg.registeredBy.yearOfStudy} Yr` : '-'}</td>
                     <td>{reg.registeredBy?.email || '-'}</td>
-                    <td><span className="tag">{reg.registrationType}</span></td>
+                    <td><span className="tag">{reg.deletedAt ? 'Kicked' : reg.registrationType}</span></td>
                     <td>
-                      {reg.isVerified ?
+                      {reg.deletedAt ?
+                        <span style={{ color: '#ff4444', display: 'flex', alignItems: 'center', gap: '5px' }}><FaTimesCircle /> Kicked</span> : reg.isVerified ?
                         <span style={{ color: '#00c864', display: 'flex', alignItems: 'center', gap: '5px' }}><FaCheckCircle /> Yes</span> :
                         <span style={{ color: '#ff4444', display: 'flex', alignItems: 'center', gap: '5px' }}><FaTimesCircle /> No</span>
                       }
@@ -152,21 +154,21 @@ const AdminRegistrations = () => {
                       <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => openDetails(reg)}>
                         <FaEye /> Details
                       </button>
-                      <button
+                      {!reg.deletedAt && <button
                         className={reg.isVerified ? 'btn-danger' : 'btn-primary'}
                         style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                         onClick={() => handleVerify(reg._id, reg.isVerified)}
                       >
                         {reg.isVerified ? 'Unverify' : 'Verify'}
-                      </button>
-                      <button
+                      </button>}
+                      {!reg.deletedAt && <button
                         className="btn-danger"
                         style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                         onClick={() => handleKickTeam(reg._id)}
                         title="Delete Registration"
                       >
                         <FaTrash /> Kick
-                      </button>
+                      </button>}
                     </td>
                   </tr>
                 );
