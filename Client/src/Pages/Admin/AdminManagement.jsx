@@ -16,6 +16,84 @@ import '../Admin/AdminDashboard.css';
 import './AdminManagement.css';
 import '../../components/CropperInput/CropperInput.css';
 
+/*
+ * FIX: "only the first page of members visible" (same bug as AdminRegistrations)
+ * ---------------------------------------------------------------------------
+ * The old code asked for `/auth/users?limit=5000`, but the server clamps limit
+ * to PAGINATION.MAX_LIMIT (300) — and this component never requested page 2,
+ * so the Members table silently showed a truncated list. The Endorse modal's
+ * event dropdown (`/events`) had the same risk.
+ *
+ * fetchAllPages() now walks every page and merges with _id dedupe, stopping on:
+ *   - a page that adds no NEW ids (server ignored paging params)
+ *   - a short page (last page)
+ *   - pagination meta reached, or 100 pages (hard valve)
+ * Each page is cached individually by apiGetCached, so the 10-minute cache
+ * still works; clearUsersCache() now clears by PREFIX because the keys carry
+ * page/limit query strings.
+ *
+ * SERVER NOTE (only if the list is STILL capped after this): the users/events
+ * controllers must honour `page` + `limit`, e.g.
+ *   const limit = Math.min(Number(req.query.limit) || PAGINATION.DEFAULT_LIMIT, PAGINATION.MAX_LIMIT);
+ *   const page  = Math.max(1, Number(req.query.page) || PAGINATION.DEFAULT_PAGE);
+ *   ... .skip((page - 1) * limit).limit(limit)
+ */
+const PAGE_SIZE = 300; // must equal PAGINATION.MAX_LIMIT on the server
+const USERS_CACHE_MS = 10 * 60 * 1000;
+
+const extractPage = (envelope, listKey) => {
+  const payload = envelope?.data || envelope || {};
+  const list = Array.isArray(payload[listKey]) ? payload[listKey] : [];
+  const meta = payload.pagination || payload.meta || payload;
+  return { list, meta };
+};
+
+const fetchAllPages = async (path, params, listKey, { useCache = false, cacheDuration = USERS_CACHE_MS } = {}) => {
+  const seen = new Set();
+  const all = [];
+  let page = 1;
+
+  for (;;) {
+    let list = [];
+    let meta = null;
+    const query = new URLSearchParams({ ...params, page: String(page), limit: String(PAGE_SIZE) }).toString();
+
+    if (useCache) {
+      await apiGetCached(`${path}?${query}`, (envelope) => {
+        const extracted = extractPage(envelope, listKey);
+        list = extracted.list;
+        meta = extracted.meta;
+      }, { cacheDuration });
+    } else {
+      const res = await api.get(path, { params: { ...params, page, limit: PAGE_SIZE } });
+      const extracted = extractPage(res.data, listKey);
+      list = extracted.list;
+      meta = extracted.meta;
+    }
+
+    let added = 0;
+    for (const item of list) {
+      const key = item?._id || JSON.stringify(item);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      all.push(item);
+      added += 1;
+    }
+
+    const total = Number(meta?.total ?? meta?.totalCount ?? meta?.count) || 0;
+    const totalPages = Number(meta?.totalPages ?? meta?.pages) || 0;
+
+    if (added === 0) break;                  // server ignored page/limit
+    if (list.length < PAGE_SIZE) break;      // last (partial) page
+    if (totalPages && page >= totalPages) break;
+    if (total && all.length >= total) break;
+    page += 1;
+    if (page > 100) break;                   // hard safety valve
+  }
+
+  return all;
+};
+
 const BASE_SECTION_KEYS = [
   { key: 'dept_1', label: 'Dept Image 1 (Desktop)', aspectRatio: 1/1.25 },
   { key: 'dept_1_mob', label: 'Dept Image 1 (Mobile)', aspectRatio: 9/13 },
@@ -83,18 +161,8 @@ const AdminManagement = () => {
   const [verifyingId, setVerifyingId] = useState(null);
   const [toast, setToast] = useState(null);
 
-  const fetchSystemConfig = async () => {
-
-  };
-
-  useEffect(() => {
-    fetchSystemConfig();
-  }, []);
-
-  const updateSystemConfig = async () => {
-
-  };
-
+  /* FIX: removed the empty fetchSystemConfig / updateSystemConfig stubs and
+     the effect that called them (dead code, ran on every mount). */
 
   const [endorseModalUser, setEndorseModalUser] = useState(null);
   const [endorseEvents, setEndorseEvents] = useState([]);
@@ -130,16 +198,21 @@ const AdminManagement = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
+  /* FIX: cache keys now carry page/limit, so clear by prefix instead of one
+     hardcoded key (the old line leaked stale pages 2..N). */
   const clearUsersCache = () => {
-    localStorage.removeItem('api_cache_/auth/users?limit=5000');
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('api_cache_/auth/users')) localStorage.removeItem(key);
+      });
+    } catch (e) {}
   };
 
   const fetchUsers = useCallback(async () => {
     setUsersLoading(true);
     try {
-      await apiGetCached('/auth/users?limit=5000', (data) => {
-        setUsers(data.data?.users || []);
-      }, { cacheDuration: 10 * 60 * 1000 }); // Cache for 10 minutes
+      const all = await fetchAllPages('/auth/users', {}, 'users', { useCache: true, cacheDuration: USERS_CACHE_MS });
+      setUsers(all);
     } catch { 
       showToast('Failed to load users', 'error'); 
     } finally { 
@@ -152,8 +225,8 @@ const AdminManagement = () => {
   const openEndorseModal = async (u) => {
     setEndorseModalUser(u);
     try {
-      const res = await api.get('/events');
-      const evList = res.data.data?.events || [];
+      // FIX: /events is paginated too — the dropdown used to show page 1 only
+      const evList = await fetchAllPages('/events', {}, 'events');
       setEndorseEvents(evList);
       if (evList.length > 0) {
         const firstEv = u.assignedEvent ? (evList.find(e => e._id === (typeof u.assignedEvent === 'object' ? u.assignedEvent._id : u.assignedEvent)) || evList[0]) : evList[0];
@@ -228,10 +301,11 @@ const AdminManagement = () => {
   };
 
   const filteredUsers = users.filter(u => {
+    // FIX: guard against missing fields crashing the whole table
     const matchesSearch = !search ||
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
-      u.collegeRegNo?.toLowerCase().includes(search.toLowerCase());
+      (u.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (u.email || '').toLowerCase().includes(search.toLowerCase()) ||
+      (u.collegeRegNo || '').toLowerCase().includes(search.toLowerCase());
 
     const matchesRole = !filterRole || u.role === filterRole;
 
@@ -456,9 +530,9 @@ const AdminManagement = () => {
                 </thead>
                 <tbody>
                   {usersLoading ? (
-                    <tr><td colSpan="7" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
+                    <tr><td colSpan="8" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
                   ) : filteredUsers.length === 0 ? (
-                    <tr><td colSpan="7" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No users found</td></tr>
+                    <tr><td colSpan="8" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No users found</td></tr>
                   ) : filteredUsers.map(u => (
                     <tr key={u._id}>
                       <td style={{ fontWeight: 600, color: '#fff' }}>{u.name}</td>
@@ -725,7 +799,7 @@ const AdminManagement = () => {
                         <option key={s.key} value={s.key}>
                           {s.key.startsWith('team_') ? `[#${currentOrder}] ` : ''}{displayName} {imgData?.imageURL ? ' (✓ Image)' : ' (No image)'}
                         </option>
-                      )
+                      );
                     })}
                 </select>
               </div>
