@@ -5,6 +5,10 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import './Register.css';
 
+// ADD: official Microsoft / Office 365 Education signup — where an MNNIT student
+// activates their college email account (required before "Sign up with Microsoft" works)
+const MS_ACCOUNT_ACTIVATION_URL = 'https://share.google/A2V29y45hFCHFZYe9';
+
 const Register = () => {
   const navigate = useNavigate();
   const { login } = useAuth(); // If we want to auto-login after register, or we can just navigate to login
@@ -104,6 +108,15 @@ const Register = () => {
           <p style={{ color: '#aaa', marginBottom: '30px', lineHeight: '1.6' }}>
             Your account has been created successfully. You can now login.
           </p>
+
+          {/* ADD */}
+          <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '20px' }}>
+            Facing a problem? Activate your email here —{' '}
+            <a href={MS_ACCOUNT_ACTIVATION_URL} target="_blank" rel="noopener noreferrer" style={{ color: '#0078d4' }}>
+              visit this link
+            </a>
+          </p>
+
           <p style={{ color: '#555', fontSize: '0.9rem' }}>Redirecting to login...</p>
           <Link to="/login" className="auth-btn" style={{ display: 'inline-block', marginTop: '20px', textDecoration: 'none' }}>Go to Login</Link>
         </div>
@@ -241,6 +254,19 @@ const Register = () => {
           <button type="button" className="auth-btn" style={{ background: '#0078d4', borderColor: '#0078d4' }} onClick={handleMicrosoftLogin} disabled={loading}>
             Sign up with Microsoft
           </button>
+
+          {/* ADD */}
+          <p style={{ margin: '12px 0 0 0', textAlign: 'center', fontSize: '0.82rem', color: '#888', lineHeight: '1.5' }}>
+            If you are facing a problem, activate your email through this —{' '}
+            <a
+              href={MS_ACCOUNT_ACTIVATION_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#0078d4', fontWeight: 'bold', textDecoration: 'underline' }}
+            >
+              visit here
+            </a>
+          </p>
         </form>
 
         <div className="auth-footer">
