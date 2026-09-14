@@ -288,12 +288,24 @@ export const getUserRegistrations = asyncHandler(async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
 
     const [registrations, totalCount] = await Promise.all([
-        Registration.find({ registeredBy: req.user.userId, deletedAt: null })
+        Registration.find({
+            deletedAt: null,
+            $or: [
+                { registeredBy: req.user.userId },
+                { 'teamMembers.userId': req.user.userId, 'teamMembers.status': 'Confirmed' }
+            ]
+        })
             .sort({ registeredAt: -1 })
             .limit(limit)
             .skip((page - 1) * limit)
             .populate('eventId', 'title startTime venue category enableQRScanning ticketStages'),
-        Registration.countDocuments({ registeredBy: req.user.userId, deletedAt: null })
+        Registration.countDocuments({
+            deletedAt: null,
+            $or: [
+                { registeredBy: req.user.userId },
+                { 'teamMembers.userId': req.user.userId, 'teamMembers.status': 'Confirmed' }
+            ]
+        })
     ]);
 
     return res
