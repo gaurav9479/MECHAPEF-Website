@@ -132,19 +132,21 @@ const AdminRegistrations = () => {
                 <th>Year</th>
                 <th>Email</th>
                 <th>Type</th>
+                <th>Team Members</th>
                 <th>Verified</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="9" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
+                <tr><td colSpan="10" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
               ) : loadError ? (
-                <tr><td colSpan="9" style={{ textAlign: 'center', color: '#ff4444', padding: '30px' }}>{loadError}</td></tr>
+                <tr><td colSpan="10" style={{ textAlign: 'center', color: '#ff4444', padding: '30px' }}>{loadError}</td></tr>
               ) : registrations.length === 0 ? (
-                <tr><td colSpan="9" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No registrations yet.</td></tr>
+                <tr><td colSpan="10" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No registrations yet.</td></tr>
               ) : registrations.map((reg, index) => {
                 const name = reg.registeredBy?.name;
+                const confirmedMembers = (reg.teamMembers || []).filter(member => member.status === 'Confirmed');
                 return (
                   <tr key={reg._id} style={reg.deletedAt ? { opacity: 0.58, background: 'rgba(255, 68, 68, 0.05)' } : undefined}>
                     <td style={{ fontWeight: 700, color: '#aaa' }}>{index + 1}</td>
@@ -156,6 +158,27 @@ const AdminRegistrations = () => {
                     <td>{reg.registeredBy?.yearOfStudy ? `${reg.registeredBy.yearOfStudy} Yr` : '-'}</td>
                     <td>{reg.registeredBy?.email || '-'}</td>
                     <td><span className="tag">{reg.deletedReason === 'disbanded' ? 'Leader Disbanded Team' : reg.deletedAt ? 'Kicked' : reg.registrationType}</span></td>
+                    <td>
+                      {reg.registrationType === 'Team' ? (
+                        <details style={{ minWidth: '190px' }}>
+                          <summary style={{ color: '#00e5ff', cursor: 'pointer', fontWeight: 700 }}>
+                            {reg.teamName || 'Team'} ({confirmedMembers.length + 1})
+                          </summary>
+                          <div style={{ marginTop: '8px', display: 'grid', gap: '7px', color: '#ddd', fontSize: '0.82rem' }}>
+                            <div>
+                              <strong>{reg.registeredBy?.name || 'Unknown'}</strong> <span style={{ color: '#ffaa00' }}>Leader</span>
+                              <div style={{ color: '#888' }}>{reg.registeredBy?.collegeRegNo || '-'} {reg.registeredBy?.email ? `| ${reg.registeredBy.email}` : ''}</div>
+                            </div>
+                            {confirmedMembers.map((member, memberIndex) => (
+                              <div key={member.userId || `${member.collegeRegNo}-${memberIndex}`}>
+                                <strong>{member.name || 'Unknown'}</strong>
+                                <div style={{ color: '#888' }}>{member.collegeRegNo || '-'} {member.email ? `| ${member.email}` : ''}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      ) : '-'}
+                    </td>
                     <td>
                       {reg.deletedAt ?
                         <span style={{ color: '#ff4444', display: 'flex', alignItems: 'center', gap: '5px' }}><FaTimesCircle /> {reg.deletedReason === 'disbanded' ? 'Disbanded' : 'Kicked'}</span> : reg.isVerified ?
