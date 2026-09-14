@@ -125,6 +125,7 @@ const AdminRegistrations = () => {
           <table className="admin-table">
             <thead>
               <tr>
+                <th>S.No.</th>
                 <th>Name</th>
                 <th>Reg No</th>
                 <th>Branch</th>
@@ -137,15 +138,16 @@ const AdminRegistrations = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>Loading...</td></tr>
               ) : loadError ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', color: '#ff4444', padding: '30px' }}>{loadError}</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', color: '#ff4444', padding: '30px' }}>{loadError}</td></tr>
               ) : registrations.length === 0 ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No registrations yet.</td></tr>
-              ) : registrations.map(reg => {
+                <tr><td colSpan="9" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No registrations yet.</td></tr>
+              ) : registrations.map((reg, index) => {
                 const name = reg.registeredBy?.name;
                 return (
                   <tr key={reg._id} style={reg.deletedAt ? { opacity: 0.58, background: 'rgba(255, 68, 68, 0.05)' } : undefined}>
+                    <td style={{ fontWeight: 700, color: '#aaa' }}>{index + 1}</td>
                     <td style={{ fontWeight: 600, color: '#fff' }}>
                       {name ? name : <span style={{ color: '#ff4444' }}>Not Registered</span>}
                     </td>
