@@ -28,7 +28,7 @@ const AdminRegistrations = () => {
       setLoadError('');
       const [evRes, regRes] = await Promise.all([
         eventService.getById(eventId),
-        api.get(`/events/${eventId}/registrations`, { params: { includeKicked: 'true', limit: 100 } })
+        api.get(`/events/${eventId}/registrations`, { params: { includeKicked: 'true' } })
       ]);
       setEvent(evRes.data.data.event);
       setRegistrations(regRes.data.data.registrations);
