@@ -81,8 +81,15 @@ const AdminRegistrations = () => {
     }
   };
 
-  const openDetails = (reg) => {
-    setSelectedReg(reg);
+  const openDetails = async (reg) => {
+    try {
+      const response = await api.get(`/events/${eventId}/registrations`, { params: { limit: 100 } });
+      const freshRegistration = response.data?.data?.registrations?.find(item => item._id === reg._id);
+      setSelectedReg(freshRegistration || reg);
+      if (freshRegistration) setRegistrations(prev => prev.map(item => item._id === reg._id ? freshRegistration : item));
+    } catch {
+      setSelectedReg(reg);
+    }
     setShowModal(true);
   };
 
@@ -194,7 +201,7 @@ const AdminRegistrations = () => {
               )}
 
               <div style={{ backgroundColor: '#111', padding: '15px', borderRadius: '8px' }}>
-                <h4 style={{ color: '#ff1f01', marginBottom: '10px' }}>Custom Form Data</h4>
+                <h4 style={{ color: '#ff1f01', marginBottom: '10px' }}>Saved Registration Details</h4>
                 {selectedReg.customData && Object.keys(selectedReg.customData).length > 0 ? (
                   <div style={{ display: 'grid', gap: '10px' }}>
                     {Object.entries(selectedReg.customData).map(([key, value]) => {
