@@ -2,14 +2,14 @@ import { Router } from 'express';
 import * as eventController from '../controllers/event.controller.js';
 import * as registrationController from '../controllers/registration.controller.js';
 import * as liveEventController from '../controllers/liveEvent.controller.js';
-import { authenticate, checkRole } from '../middleware/auth.middleware.js';
+import { authenticate, checkRole, optionalAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
 
-router.get('/', eventController.getAllEvents);
+router.get('/', optionalAuth, eventController.getAllEvents);
 router.get('/featured', eventController.getFeaturedEvents);
-router.get('/:id', eventController.getEventById);
+router.get('/:id', optionalAuth, eventController.getEventById);
 
 
 router.post(

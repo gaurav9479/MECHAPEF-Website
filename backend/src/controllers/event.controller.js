@@ -100,10 +100,12 @@ export const createEvent = asyncHandler(async (req, res) => {
 export const getAllEvents = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
     const limit = Math.min(parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT, PAGINATION.MAX_LIMIT);
-    const { category, featured, includeArchived } = req.query;
+    const { category, featured, includeArchived, includeInactive } = req.query;
+    const canViewInactive = ['super-admin', 'content-lead', 'media-lead'].includes(req.user?.role);
 
 
     const filter = { deletedAt: null };
+    if (!(includeInactive === 'true' && canViewInactive)) filter.isActive = true;
     if (includeArchived !== 'true') filter.endTime = { $gte: new Date() };
     if (category) filter.category = category;
     if (featured === 'true') filter.featured = true;
@@ -150,10 +152,14 @@ export const getFeaturedEvents = asyncHandler(async (req, res) => {
 });
 
 export const getEventById = asyncHandler(async (req, res) => {
-    const event = await Event.findOne({
+    const canViewInactive = ['super-admin', 'content-lead', 'media-lead'].includes(req.user?.role);
+    const filter = {
         _id: req.params.id,
         deletedAt: null
-    }).populate('createdBy', 'name email');
+    };
+    if (!canViewInactive) filter.isActive = true;
+
+    const event = await Event.findOne(filter).populate('createdBy', 'name email');
 
     if (!event) {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.EVENT_NOT_FOUND);

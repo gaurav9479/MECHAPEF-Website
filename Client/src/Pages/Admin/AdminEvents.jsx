@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
-import { FaPlus, FaEdit, FaTrash, FaUsers, FaCheckCircle, FaBolt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaUsers, FaCheckCircle, FaBolt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import api from '../../services/api';
 import { eventService } from '../../services/services';
 import { formatEventDate, formatEventDateTime } from '../../utils/datetime';
@@ -73,7 +73,7 @@ const AdminEvents = () => {
 
   const fetchEvents = async () => {
     try {
-      const res = await eventService.getAll({ limit: 50, includeArchived: true });
+      const res = await eventService.getAll({ limit: 50, includeArchived: true, includeInactive: true });
       setEvents(res.data.data?.events || []);
     } catch { showToast('Failed to load events', 'error'); }
     finally { setLoading(false); }
@@ -98,6 +98,20 @@ const AdminEvents = () => {
       showToast(`Wiped successfully. ${res.data.data.deletedFilesCount} files removed from ImageKit.`);
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to wipe data', 'error');
+    }
+  };
+
+  const handleVisibilityToggle = async (event) => {
+    const nextIsActive = !event.isActive;
+    const action = nextIsActive ? 'unhide' : 'hide';
+    if (!window.confirm(`Are you sure you want to ${action} "${event.title}"? ${nextIsActive ? 'It will become visible on the public website.' : 'It will remain available in this admin list only.'}`)) return;
+
+    try {
+      await eventService.update(event._id, { isActive: nextIsActive });
+      setEvents(prev => prev.map(item => item._id === event._id ? { ...item, isActive: nextIsActive } : item));
+      showToast(nextIsActive ? 'Event is visible on the website.' : 'Event hidden from the public website.');
+    } catch (err) {
+      showToast(err.response?.data?.message || `Failed to ${action} event`, 'error');
     }
   };
 
@@ -127,10 +141,11 @@ const AdminEvents = () => {
               ) : events.length === 0 ? (
                 <tr><td colSpan="5" style={{ textAlign: 'center', color: '#555', padding: '30px' }}>No events yet. Create one!</td></tr>
               ) : events.map(ev => (
-                <tr key={ev._id} style={{ background: ev.deletionState?.status === 'APPROVED_RETENTION' ? 'rgba(255, 31, 1, 0.05)' : ev.deletionState?.status === 'PENDING_APPROVAL' ? 'rgba(255, 170, 0, 0.05)' : 'transparent' }}>
+                <tr key={ev._id} style={{ opacity: ev.isActive === false ? 0.62 : 1, background: ev.deletionState?.status === 'APPROVED_RETENTION' ? 'rgba(255, 31, 1, 0.05)' : ev.deletionState?.status === 'PENDING_APPROVAL' ? 'rgba(255, 170, 0, 0.05)' : 'transparent' }}>
                   <td>
                     <strong style={{ color: '#fff' }}>{ev.title}</strong>
                     {ev.featured && <span className="tag" style={{ marginLeft: '8px', backgroundColor: '#222' }}>Featured</span>}
+                    {ev.isActive === false && <span className="tag" style={{ marginLeft: '8px', backgroundColor: 'rgba(255, 170, 0, 0.15)', color: '#ffaa00', border: '1px solid rgba(255, 170, 0, 0.4)' }}>Hidden</span>}
                     {ev.registrationMode === 'JoinRequests' ? (
                       <span className="tag" style={{ marginLeft: '8px', backgroundColor: 'rgba(0, 200, 100, 0.15)', color: '#00c864', border: '1px solid rgba(0, 200, 100, 0.3)' }}>
                         Type 2: Join Requests
@@ -224,6 +239,14 @@ const AdminEvents = () => {
                       <Link to={`/admin/events/${ev._id}/edit`} className="btn-secondary" title="Edit Event Page & Live Settings" style={{ padding: '6px 10px' }}>
                         <FaEdit />
                       </Link>
+                      <button
+                        className="btn-secondary"
+                        title={ev.isActive === false ? 'Unhide Event' : 'Hide Event'}
+                        onClick={() => handleVisibilityToggle(ev)}
+                        style={{ padding: '6px 10px', color: ev.isActive === false ? '#00e5ff' : '#ffaa00', borderColor: ev.isActive === false ? '#00e5ff' : '#ffaa00' }}
+                      >
+                        {ev.isActive === false ? <FaEye /> : <FaEyeSlash />}
+                      </button>
 
                       {user?.role === 'super-admin' && ev.deletionState?.status === 'ACTIVE' && (
                         <button className="btn-secondary" title="Initiate Multi-Sig Deletion" onClick={() => handleDelete(ev._id)} style={{ padding: '6px 10px', color: '#ff1f01', borderColor: '#ff1f01' }}>
