@@ -182,14 +182,14 @@
 }
 
 .scanner-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 50;
-  backdrop-filter: blur(8px);
+  z-index: 5000;
   animation: overlayFadeIn 0.2s ease forwards;
+  padding: 24px;
 }
 
 .scanner-overlay.success-overlay {
@@ -212,6 +212,11 @@
   color: #fff;
 }
 
+.scanner-overlay.already-overlay {
+  background: rgba(255, 190, 0, 0.96);
+  color: #1b1600;
+}
+
 .scanner-overlay.loading-overlay {
   background: rgba(0, 0, 0, 0.85);
   color: #ffaa00;
@@ -230,7 +235,7 @@
 .overlay-icon {
   font-size: 6rem;
   margin-bottom: 10px;
-  drop-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
 }
 
 .overlay-content h2 {
@@ -246,6 +251,31 @@
   margin: 0;
   opacity: 0.95;
   font-weight: 600;
+}
+
+.overlay-content .overlay-person {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.scan-again-button {
+  margin-top: 16px;
+  min-width: 190px;
+  min-height: 50px;
+  padding: 12px 22px;
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.16);
+  color: inherit;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.scan-again-button:active {
+  transform: scale(0.97);
 }
 
 .scanner-spinner {
@@ -297,5 +327,21 @@
 
   .scanner-container {
     padding: 10px;
+  }
+
+  .overlay-content h2 {
+    font-size: 2.25rem;
+  }
+
+  .overlay-content p {
+    font-size: 1.1rem;
+  }
+
+  .overlay-icon {
+    font-size: 7rem;
+  }
+
+  .scan-again-button {
+    width: min(100%, 280px);
   }
 }

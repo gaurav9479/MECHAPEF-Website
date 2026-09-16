@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { FaQrcode, FaCheckCircle, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
+import { FaQrcode, FaCheckCircle, FaExclamationTriangle, FaArrowLeft, FaTimesCircle } from 'react-icons/fa';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import './AdminScanner.css';
@@ -27,10 +27,37 @@ const AdminScanner = () => {
   const lastScannedRef = useRef(null);
   const scannerRef = useRef(null);
   const selectedStageRef = useRef(selectedStage);
+  const feedbackTimerRef = useRef(null);
 
   useEffect(() => {
     selectedStageRef.current = selectedStage;
   }, [selectedStage]);
+
+  const clearScanFeedback = () => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = null;
+    setScanResult(null);
+    setError(null);
+    setAlreadyMarked(false);
+    setCooldownActive(false);
+    setStatusMessage('');
+    lastScannedRef.current = null;
+    isProcessingRef.current = false;
+  };
+
+  const showScanFeedback = ({ registration = null, message = '', already = false, cooldown = false, errorMessage = '' }) => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    setScanResult(registration);
+    setError(errorMessage || null);
+    setAlreadyMarked(already);
+    setCooldownActive(cooldown);
+    setStatusMessage(message || errorMessage);
+    feedbackTimerRef.current = setTimeout(clearScanFeedback, 2000);
+  };
+
+  useEffect(() => () => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+  }, []);
 
   useEffect(() => {
     api.get('/events').then(res => {
@@ -87,23 +114,16 @@ const AdminScanner = () => {
       });
       const payload = res.data.data || {};
       const reg = payload.registration || payload;
-      setScanResult(reg);
-      setAlreadyMarked(!!payload.alreadyMarked);
-      setCooldownActive(!!payload.cooldownActive);
-      setStatusMessage(res.data.message || (payload.alreadyMarked ? `Already scanned for ${stageToVerify}` : `${stageToVerify} Verified!`));
+      showScanFeedback({
+        registration: reg,
+        already: !!payload.alreadyMarked,
+        cooldown: !!payload.cooldownActive,
+        message: res.data.message || (payload.alreadyMarked ? `Already scanned for ${stageToVerify}` : `${stageToVerify} Verified!`)
+      });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to verify ticket.');
+      showScanFeedback({ errorMessage: err.response?.data?.message || 'Failed to verify ticket.' });
     } finally {
       setLoading(false);
-      isProcessingRef.current = false;
-
-      setTimeout(() => {
-        setScanResult(null);
-        setError(null);
-        setCooldownActive(false);
-        setStatusMessage('');
-        lastScannedRef.current = null;
-      }, 4000);
     }
   };
 
@@ -115,10 +135,12 @@ const AdminScanner = () => {
     );
     const payload = res.data.data || {};
     const reg = payload.registration || payload;
-    setScanResult(reg);
-    setAlreadyMarked(!!payload.alreadyMarked);
-    setCooldownActive(!!payload.cooldownActive);
-    setStatusMessage(res.data.message || (payload.alreadyMarked ? `Already scanned for ${stageToVerify}` : `${stageToVerify} Verified!`));
+    showScanFeedback({
+      registration: reg,
+      already: !!payload.alreadyMarked,
+      cooldown: !!payload.cooldownActive,
+      message: res.data.message || (payload.alreadyMarked ? `Already scanned for ${stageToVerify}` : `${stageToVerify} Verified!`)
+    });
   };
 
   const verifyDepartmentalQr = async (token) => {
@@ -126,13 +148,14 @@ const AdminScanner = () => {
     try {
       const res = await api.post('/departmental-registrations/scan', { token });
       const payload = res.data.data || {};
-      setScanResult({ _id: payload.registration?.collegeRegNo, ...payload.registration });
-      setStatusMessage(res.data.message || 'Departmental registration verified');
+      showScanFeedback({
+        registration: { _id: payload.registration?.collegeRegNo, ...payload.registration },
+        message: res.data.message || 'Departmental registration verified'
+      });
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid departmental QR');
+      showScanFeedback({ errorMessage: err.response?.data?.message || 'Invalid departmental QR' });
     } finally {
-      setLoading(false); isProcessingRef.current = false;
-      setTimeout(() => { setScanResult(null); setError(null); setStatusMessage(''); setCooldownActive(false); lastScannedRef.current = null; }, 4000);
+      setLoading(false);
     }
   };
 
@@ -196,11 +219,8 @@ const AdminScanner = () => {
           throw new Error('Invalid ticket barcode.');
         }
       } catch (err) {
-        setError(err.response?.data?.message || `Invalid ${attendanceMethod === 'id-card' ? 'ID card barcode' : 'QR ticket'}.`);
-        setScanResult(null);
-        isProcessingRef.current = false;
-
-        setTimeout(() => { lastScannedRef.current = null; }, 3000);
+        setLoading(false);
+        showScanFeedback({ errorMessage: err.response?.data?.message || `Invalid ${attendanceMethod === 'id-card' ? 'ID card barcode' : 'QR ticket'}.` });
       }
     };
 
@@ -351,6 +371,28 @@ const AdminScanner = () => {
           </div>
         </div>
       </div>
+
+      {(scanResult || error) && !loading && (() => {
+        const isAlreadyScanned = cooldownActive || alreadyMarked;
+        const feedbackKind = error ? 'error' : (isAlreadyScanned ? 'already' : 'success');
+        const heading = error ? 'INVALID SCAN' : (isAlreadyScanned ? 'ALREADY SCANNED' : 'VALID ENTRY');
+        const feedbackMessage = error || statusMessage || (isAlreadyScanned ? 'This ticket has already been used for this stage.' : 'Attendance marked successfully.');
+        const participantName = scanResult?.name || scanResult?.registeredBy?.name;
+
+        return (
+          <div className={`scanner-overlay ${feedbackKind}-overlay`} role="status" aria-live="assertive">
+            <div className="overlay-content">
+              <div className="overlay-icon">
+                {feedbackKind === 'success' ? <FaCheckCircle /> : feedbackKind === 'already' ? <FaExclamationTriangle /> : <FaTimesCircle />}
+              </div>
+              <h2>{heading}</h2>
+              <p>{feedbackMessage}</p>
+              {participantName && <p className="overlay-person">{participantName}</p>}
+              <button type="button" className="scan-again-button" onClick={clearScanFeedback}>Scan Again</button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import PendingEmail from '../models/pendingEmail.model.js';
 import sendEmail from '../utils/sendEmail.js';
 
+const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 120000);
 let isProcessing = false;
 let intervalId = null;
 
@@ -69,6 +70,7 @@ export const startDbEmailWorker = () => {
                     await PendingEmail.findByIdAndUpdate(email._id, {
                         $inc: { attempts: 1 },
                         status: 'failed',
+                        executeAt: new Date(Date.now() + EMAIL_DELAY_MS),
                         lastError: err.message
                     });
                 }

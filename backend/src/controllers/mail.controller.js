@@ -12,7 +12,7 @@ import { HTTP_STATUS, USER_ROLES } from '../constants/index.js';
 import validator from 'validator';
 import { getPublicAppUrl, toPublicEmailUrl } from '../utils/publicAppUrl.js';
 
-const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 1500);
+const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 120000);
 
 const escapeHtml = (value = '') => String(value)
     .replace(/&/g, '&amp;')
@@ -173,7 +173,7 @@ export const sendMail = asyncHandler(async (req, res) => {
         let jobDelay = 0;
         if (scheduleType === 'smart_batch') {
 
-            jobDelay = index * 60000;
+            jobDelay = index * EMAIL_DELAY_MS;
         }
 
         return {
@@ -301,4 +301,3 @@ export const deleteFailedMails = asyncHandler(async (req, res) => {
         new APIResponse(HTTP_STATUS.OK, { deletedCount: result.deletedCount }, `${result.deletedCount} failed email log(s) deleted successfully!`)
     );
 });
-

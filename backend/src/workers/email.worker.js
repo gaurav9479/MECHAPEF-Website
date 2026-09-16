@@ -2,6 +2,8 @@ import { Worker } from 'bullmq';
 import { connection } from '../config/redis.js';
 import sendEmail from '../utils/sendEmail.js';
 
+const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 120000);
+
 export const emailWorker = new Worker('emailQueue', async job => {
     const { to, subject, text, html } = job.data;
     
@@ -16,10 +18,10 @@ export const emailWorker = new Worker('emailQueue', async job => {
     }
 }, { 
     connection,
-    concurrency: 5, 
+    concurrency: 1,
     limiter: {
-        max: 10,
-        duration: 1000, 
+        max: 1,
+        duration: EMAIL_DELAY_MS,
     }
 });
 
