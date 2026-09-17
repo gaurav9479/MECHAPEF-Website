@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { FaQrcode, FaCheckCircle, FaExclamationTriangle, FaArrowLeft, FaTimesCircle } from 'react-icons/fa';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -168,17 +168,18 @@ const AdminScanner = () => {
     }
 
     if (scannerRef.current) {
-      scannerRef.current.clear().catch(() => { });
+      const previousScanner = scannerRef.current;
       scannerRef.current = null;
+      previousScanner.stop()
+        .catch(() => { })
+        .finally(() => previousScanner.clear().catch(() => { }));
     }
 
     if (attendanceMethod === 'none') return undefined;
 
-    const scanner = new Html5QrcodeScanner(
+    const scanner = new Html5Qrcode(
       'reader',
       {
-        fps: 10,
-        qrbox: { width: 280, height: 180 },
         formatsToSupport: [
           Html5QrcodeSupportedFormats.QR_CODE,
           Html5QrcodeSupportedFormats.CODE_128,
@@ -224,17 +225,22 @@ const AdminScanner = () => {
       }
     };
 
-    scanner.render(onScanSuccess, () => { });
+    scanner.start(
+      { facingMode: { exact: 'environment' } },
+      { fps: 10, qrbox: { width: 340, height: 220 } },
+      onScanSuccess,
+      () => { }
+    ).catch(() => {
+      showScanFeedback({ errorMessage: 'Rear camera is unavailable. Please use a device with a rear camera and allow camera access.' });
+    });
 
     return () => {
-      const reader = document.getElementById('reader');
-      if (reader) {
-        reader.innerHTML = '';
-      }
-
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(() => { });
+        const activeScanner = scannerRef.current;
         scannerRef.current = null;
+        activeScanner.stop()
+          .catch(() => { })
+          .finally(() => activeScanner.clear().catch(() => { }));
       }
     };
   }, [attendanceMethod, selectedEventId]);
