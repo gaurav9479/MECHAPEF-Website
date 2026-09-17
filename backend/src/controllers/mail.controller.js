@@ -12,7 +12,7 @@ import { HTTP_STATUS, USER_ROLES } from '../constants/index.js';
 import validator from 'validator';
 import { getPublicAppUrl, toPublicEmailUrl } from '../utils/publicAppUrl.js';
 
-const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 120000);
+const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 45000);
 
 const escapeHtml = (value = '') => String(value)
     .replace(/&/g, '&amp;')

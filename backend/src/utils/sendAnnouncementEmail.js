@@ -3,7 +3,7 @@ import Announcement from '../models/announcement.model.js';
 import sendEmail from './sendEmail.js';
 import { getPublicAppUrl } from './publicAppUrl.js';
 
-const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 120000);
+const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 45000);
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

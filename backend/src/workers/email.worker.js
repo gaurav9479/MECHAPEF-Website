@@ -2,7 +2,7 @@ import { Worker } from 'bullmq';
 import { connection } from '../config/redis.js';
 import sendEmail from '../utils/sendEmail.js';
 
-const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 120000);
+const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 45000);
 
 export const emailWorker = new Worker('emailQueue', async job => {
     const { to, subject, text, html } = job.data;

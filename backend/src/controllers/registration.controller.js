@@ -337,6 +337,17 @@ export const markAttendance = asyncHandler(async (req, res) => {
         throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND);
     }
 
+    if (req.user.role === 'endorsed-volunteer') {
+        const assignedEventId = req.user.assignedEvent?.toString();
+        const registrationEventId = registration.eventId?._id?.toString();
+        if (!assignedEventId || assignedEventId !== registrationEventId) {
+            throw new ApiError(HTTP_STATUS.FORBIDDEN, 'You can only scan tickets for your assigned event');
+        }
+        if (req.user.assignedStage && stageName !== req.user.assignedStage) {
+            throw new ApiError(HTTP_STATUS.FORBIDDEN, 'You can only scan tickets at your assigned stage');
+        }
+    }
+
 
     if (!isManualOverride && registration.eventId?.enableQRScanning === false && registration.eventId?.attendanceMethod !== 'id-card') {
         throw new ApiError(HTTP_STATUS.FORBIDDEN, 'QR ticket scanning is disabled for this event. Use manual attendance marking.');

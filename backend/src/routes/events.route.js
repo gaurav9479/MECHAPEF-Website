@@ -96,7 +96,7 @@ router.get(
 router.put(
     '/:eventId/registrations/:id/attendance',
     authenticate,
-    checkRole(['super-admin', 'content-lead', 'media-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'endorsed-volunteer']),
     registrationController.markAttendance
 );
 
@@ -158,7 +158,7 @@ router.post(
 router.put(
     '/:eventId/registrations/by-college-reg-no/:collegeRegNo/attendance',
     authenticate,
-    checkRole(['super-admin', 'content-lead', 'media-lead']),
+    checkRole(['super-admin', 'content-lead', 'media-lead', 'endorsed-volunteer']),
     registrationController.markAttendanceByCollegeRegNo
 );
 

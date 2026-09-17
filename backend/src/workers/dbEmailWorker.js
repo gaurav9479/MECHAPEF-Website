@@ -1,7 +1,8 @@
 import PendingEmail from '../models/pendingEmail.model.js';
 import sendEmail from '../utils/sendEmail.js';
 
-const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 120000);
+const EMAIL_DELAY_MS = Number(process.env.ANNOUNCEMENT_EMAIL_DELAY_MS || 45000);
+const POLL_INTERVAL_MS = Math.min(10000, EMAIL_DELAY_MS);
 let isProcessing = false;
 let intervalId = null;
 
@@ -85,7 +86,7 @@ export const startDbEmailWorker = () => {
         } finally {
             isProcessing = false;
         }
-    }, 60000); 
+    }, POLL_INTERVAL_MS);
 };
 
 export const stopDbEmailWorker = () => {
