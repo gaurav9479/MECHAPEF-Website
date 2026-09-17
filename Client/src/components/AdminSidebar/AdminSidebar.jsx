@@ -75,6 +75,33 @@ const AdminSidebar = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+    let timeoutId;
+
+    const handleAutoLogout = async () => {
+      console.warn('Admin idle timeout reached (15m inactivity). Auto logging out...');
+      await logout();
+      alert('You have been logged out automatically due to 15 minutes of inactivity for security.');
+      navigate('/');
+    };
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleAutoLogout, IDLE_TIMEOUT);
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(event => window.addEventListener(event, resetTimer));
+
+    resetTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [logout, navigate]);
+
   return (
     <>
       {/* Mobile Hamburger Button */}

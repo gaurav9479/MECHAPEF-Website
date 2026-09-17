@@ -101,9 +101,6 @@ export const scanDepartmentalRegistration = asyncHandler(async (req, res) => {
 
     const registration = await DepartmentalRegistration.findOne({ qrTokenHash: hashToken(token) });
     if (!registration) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Invalid departmental QR');
-    if (req.user.role === 'endorsed-volunteer' && req.user.assignedEvent?.toString() !== registration.eventId.toString()) {
-        throw new ApiError(HTTP_STATUS.FORBIDDEN, 'You can only scan tickets for your assigned event');
-    }
     await getEnabledEvent(registration.eventId);
 
     const now = new Date();

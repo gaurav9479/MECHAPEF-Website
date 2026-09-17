@@ -18,7 +18,7 @@ export const authenticate = async (req, res, next) => {
 
         const decoded = verifyAccessToken(token);
 
-        const user = await User.findById(decoded.userId).select('+isActive +sessionVersion assignedEvent assignedStage');
+        const user = await User.findById(decoded.userId).select('+isActive +sessionVersion');
 
         if (!user || !user.isActive) {
             throw new ApiError(
@@ -41,9 +41,7 @@ export const authenticate = async (req, res, next) => {
             userId: user._id,
             email: user.email,
             role: user.role,
-            name: user.name,
-            assignedEvent: user.assignedEvent,
-            assignedStage: user.assignedStage
+            name: user.name
         };
 
         next();
